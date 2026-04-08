@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
-  // 1. STATE: This tracks which page of the form we are on
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
-  // 2. STATE: This holds all the data the student types in
   const [formData, setFormData] = useState({
-    // student info
     firstName: '',
     middleName: '',
     lastName: '',
@@ -14,8 +13,7 @@ const Register = () => {
     address: '',
     grade: 'Grade 7',
     regYear: new Date().getFullYear().toString(),
-    // parent info
-    emergencyContactName: '',
+    emergencyFirstName: '', // Fixed to match your input fields
     emergencyMiddleName: '',
     emergencyLastName: '',
     relationship: '',
@@ -24,165 +22,141 @@ const Register = () => {
     contactEmail: ''
   });
 
-  // 3. LOGIC: Helper to update the data object without losing old values
   const updateData = (fields) => {
     setFormData(prev => ({ ...prev, ...fields }));
   };
 
-  // 4. FLOW CONTROL: Moving forward and backward
   const nextStep = () => {
-    if (step == 1 && formData.fullName === "") {
-        alert("Please enter your full name before proceeding.")
+    // FIX: Changed from fullName to firstName validation
+    if (step === 1 && formData.firstName.trim() === "") {
+        alert("Please enter at least the First Name before proceeding.");
         return;
     }
     setStep(step + 1);
   };
+
   const prevStep = () => setStep(step - 1);
 
   const submitData = async () => {
-  try {
-    const response = await fetch('https://church-api-3l2c.onrender.com/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData) // Sending our "Data Bucket"
-    });
+    try {
+      // FIX: Using the correct new Render URL
+      const response = await fetch('https://sunday-school-management-system.onrender.com/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
 
-    if (response.ok) {
-      alert("Hooray! You are now registered in the Church System.");
+      if (response.ok) {
+        alert("Hooray! Registration Successful.");
+        navigate('/dashboard'); // Take the user back to see the updated list
+      } else {
+        const errorData = await response.json();
+        alert("Registration failed: " + (errorData.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Connection Error:", error);
+      alert("Could not connect to the server. Please check your internet.");
     }
-  } catch (error) {
-    console.error("Connection Error:", error);
-  }
-};
-return (
-  <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-lg p-8">
-      
-      {/* Progress Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-blue-900 text-center">Student Registration</h1>
-        <p className="text-center text-slate-500">Step {step} of 2</p>
-      </div>
+  };
 
-      {/* STEP 1: STUDENT PERSONAL INFORMATION */}
-      {step === 1 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold border-b pb-2">Student Details</h2>
-          
-          {/* Name Grid: 3 columns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" placeholder="First Name" className="border p-3 rounded-lg w-full" 
-              onChange={(e) => updateData({ firstName: e.target.value })} />
-            <input type="text" placeholder="Middle Name" className="border p-3 rounded-lg w-full" 
-              onChange={(e) => updateData({ middleName: e.target.value })} />
-            <input type="text" placeholder="Last Name" className="border p-3 rounded-lg w-full" 
-              onChange={(e) => updateData({ lastName: e.target.value })} />
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-lg p-8">
+        
+        {/* Progress Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+             <button onClick={() => navigate('/dashboard')} className="text-blue-600 text-sm font-bold">← Back to Dashboard</button>
+             <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Step {step} of 3</span>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-slate-600 block mb-1">Date of Birth</label>
-              <input type="date" className="border p-3 rounded-lg w-full" 
-                onChange={(e) => updateData({ dob: e.target.value })} />
-            </div>
-            <div>
-              <label className="text-sm text-slate-600 block mb-1">Grade Level</label>
-              <select className="border p-3 rounded-lg w-full" onChange={(e) => updateData({ grade: e.target.value })}>
-                {[7, 8, 9, 10, 11, 12].map(g => <option key={g} value={g}>Grade {g}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Current Home Address" className="border p-3 rounded-lg w-full" 
-              onChange={(e) => updateData({ address: e.target.value })} />
-            <select className="border p-3 rounded-lg w-full" onChange={(e) => updateData({ regYear: e.target.value })}>
-              <option value="2025">Year: 2025</option>
-              <option value="2026">Year: 2026</option>
-            </select>
-          </div>
-
-          <button onClick={nextStep} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold mt-4 hover:bg-blue-700 transition">
-            Continue to Emergency Contact
-          </button>
+          <h1 className="text-3xl font-black text-blue-900 text-center">Student Registration</h1>
         </div>
-      )}
 
-      {/* STEP 2: EMERGENCY CONTACT INFORMATION */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold border-b pb-2 text-red-600">Emergency Contact Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input type="text" placeholder="First Name" className="border p-3 rounded-lg" onChange={(e) => updateData({ emergencyFirstName: e.target.value })} />
-            <input type="text" placeholder="Middle Name" className="border p-3 rounded-lg" onChange={(e) => updateData({ emergencyMiddleName: e.target.value })} />
-            <input type="text" placeholder="Last Name" className="border p-3 rounded-lg" onChange={(e) => updateData({ emergencyLastName: e.target.value })} />
-          </div>
+        {/* STEP 1: STUDENT DETAILS */}
+        {step === 1 && (
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-lg font-bold text-slate-700 border-b pb-2">Student Personal Info</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input type="text" placeholder="First Name" className="border p-3 rounded-xl w-full focus:ring-2 focus:ring-blue-500 outline-none" 
+                onChange={(e) => updateData({ firstName: e.target.value })} value={formData.firstName} />
+              <input type="text" placeholder="Middle Name" className="border p-3 rounded-xl w-full focus:ring-2 focus:ring-blue-500 outline-none" 
+                onChange={(e) => updateData({ middleName: e.target.value })} value={formData.middleName} />
+              <input type="text" placeholder="Last Name" className="border p-3 rounded-xl w-full focus:ring-2 focus:ring-blue-500 outline-none" 
+                onChange={(e) => updateData({ lastName: e.target.value })} value={formData.lastName} />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" placeholder="Relationship (e.g., Mother)" className="border p-3 rounded-lg" onChange={(e) => updateData({ relationship: e.target.value })} />
-            <input type="tel" placeholder="Contact Phone Number" className="border p-3 rounded-lg" onChange={(e) => updateData({ contactPhone: e.target.value })} />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Date of Birth</label>
+                <input type="date" className="border p-3 rounded-xl w-full outline-none" 
+                  onChange={(e) => updateData({ dob: e.target.value })} value={formData.dob} />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase mb-1 block">Grade Level</label>
+                <select className="border p-3 rounded-xl w-full outline-none bg-white" onChange={(e) => updateData({ grade: e.target.value })} value={formData.grade}>
+                  {[7, 8, 9, 10, 11, 12].map(g => <option key={g} value={`Grade ${g}`}>Grade {g}</option>)}
+                </select>
+              </div>
+            </div>
 
-          <input type="email" placeholder="Contact Email Address" className="w-full border p-3 rounded-lg" onChange={(e) => updateData({ contactEmail: e.target.value })} />
-          <input type="text" placeholder="Contact Home Address" className="w-full border p-3 rounded-lg" onChange={(e) => updateData({ contactAddress: e.target.value })} />
+            <input type="text" placeholder="Current Home Address" className="border p-3 rounded-xl w-full outline-none" 
+              onChange={(e) => updateData({ address: e.target.value })} value={formData.address} />
 
-          <div className="flex gap-4 mt-6">
-            <button onClick={prevStep} className="flex-1 bg-slate-200 py-3 rounded-lg font-semibold">Back</button>
-            <button onClick={nextStep} className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold">
-             Review Details
+            <button onClick={nextStep} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold mt-4 hover:bg-blue-700 transition shadow-lg">
+              Continue to Emergency Contact
             </button>
           </div>
-        </div>
-      )}
-      {/* STEP 3: REVIEW & CONFIRM */}
-{step === 3 && (
-  <div className="space-y-6">
-    <h2 className="text-xl font-bold text-blue-900 border-b pb-2">Review Your Details</h2>
-    
-    <div className="bg-slate-50 p-6 rounded-xl space-y-4 text-sm">
-      {/* Student Summary */}
-      <section>
-        <h3 className="font-bold text-slate-400 uppercase tracking-wider text-xs mb-2">Student</h3>
-        <p><strong>Name:</strong> {formData.firstName} {formData.middleName} {formData.lastName}</p>
-        <p><strong>Grade & Year:</strong> Grade {formData.grade} ({formData.regYear})</p>
-        <p><strong>DOB:</strong> {formData.dob}</p>
-        <p><strong>Address:</strong> {formData.address}</p>
-      </section>
+        )}
 
-      <hr className="border-slate-200" />
+        {/* STEP 2: EMERGENCY CONTACT */}
+        {step === 2 && (
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-lg font-bold text-red-600 border-b pb-2">Emergency Contact</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input type="text" placeholder="First Name" className="border p-3 rounded-xl" onChange={(e) => updateData({ emergencyFirstName: e.target.value })} value={formData.emergencyFirstName} />
+              <input type="text" placeholder="Middle Name" className="border p-3 rounded-xl" onChange={(e) => updateData({ emergencyMiddleName: e.target.value })} value={formData.emergencyMiddleName} />
+              <input type="text" placeholder="Last Name" className="border p-3 rounded-xl" onChange={(e) => updateData({ emergencyLastName: e.target.value })} value={formData.emergencyLastName} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" placeholder="Relationship (e.g., Mother)" className="border p-3 rounded-xl" onChange={(e) => updateData({ relationship: e.target.value })} value={formData.relationship} />
+              <input type="tel" placeholder="Contact Phone Number" className="border p-3 rounded-xl" onChange={(e) => updateData({ contactPhone: e.target.value })} value={formData.contactPhone} />
+            </div>
+            <input type="email" placeholder="Contact Email Address" className="w-full border p-3 rounded-xl" onChange={(e) => updateData({ contactEmail: e.target.value })} value={formData.contactEmail} />
+            
+            <div className="flex gap-4 mt-6">
+              <button onClick={prevStep} className="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-slate-600">Back</button>
+              <button onClick={nextStep} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-md">Review Details</button>
+            </div>
+          </div>
+        )}
 
-      {/* Emergency Summary */}
-      <section>
-        <h3 className="font-bold text-slate-400 uppercase tracking-wider text-xs mb-2">Emergency Contact</h3>
-        <p><strong>Contact:</strong> {formData.emergencyFirstName} {formData.emergencyLastName} ({formData.relationship})</p>
-        <p><strong>Phone:</strong> {formData.contactPhone}</p>
-        <p><strong>Email:</strong> {formData.contactEmail}</p>
-      </section>
+        {/* STEP 3: REVIEW */}
+        {step === 3 && (
+          <div className="space-y-6 animate-fadeIn">
+            <h2 className="text-xl font-bold text-blue-900 border-b pb-2">Review Summary</h2>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase">Student</p>
+                <p className="font-bold text-lg">{formData.firstName} {formData.lastName}</p>
+                <p className="text-sm text-slate-600">{formData.grade} | Born: {formData.dob}</p>
+              </div>
+              <div className="pt-4 border-t border-slate-200">
+                <p className="text-[10px] font-black text-slate-400 uppercase">Parent/Contact</p>
+                <p className="font-bold">{formData.emergencyFirstName} {formData.emergencyLastName}</p>
+                <p className="text-sm text-slate-600">{formData.contactPhone} | {formData.contactEmail}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+               <button onClick={submitData} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-xl hover:bg-green-700 transition">
+                 Confirm & Save to System
+               </button>
+               <button onClick={() => setStep(1)} className="text-slate-400 text-sm font-bold hover:text-blue-600 transition">Edit Details</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-
-    <div className="flex flex-col gap-3">
-      <button 
-        onClick={() => setStep(1)} 
-        className="w-full py-3 text-blue-600 font-semibold hover:underline"
-      >
-        ← Something is wrong? Edit Information
-      </button>
-      
-      <button 
-        onClick={submitData} 
-        className="w-full bg-green-600 text-white py-4 rounded-lg font-bold text-lg shadow-lg hover:bg-green-700 transition"
-      >
-        Confirm & Submit Registration
-      </button>
-      
-      <button onClick={prevStep} className="text-slate-400 text-sm">Back to Emergency Contact</button>
-    </div>
-  </div>
-)}
-    </div>
-  </div>
-);
+  );
 };
 
 export default Register;

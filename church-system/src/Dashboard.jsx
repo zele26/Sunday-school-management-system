@@ -152,8 +152,13 @@ const Dashboard = ({ onLogout }) => {
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-black text-gray-800">Students List</h1>
               <div className="flex gap-2">
-                <button onClick={() => window.print()} className="bg-gray-100 p-2 px-4 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition">Print</button>
-                <button className="bg-blue-600 p-2 px-4 rounded-xl font-bold text-white shadow-lg hover:bg-blue-700 transition">+ New</button>
+                <button onClick={() => Maps('/register')} className="bg-gray-100 p-2 px-4 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition">Print</button>
+                <button 
+    onClick={() => navigate('/register')} 
+    className="bg-blue-600 p-2 px-4 rounded-xl font-bold text-white shadow-lg hover:bg-blue-700 transition"
+  >
+    + uNew
+  </button>
               </div>
             </header>
 
