@@ -1,26 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
+import Scanner from './Scanner'; // Ensure Scanner.jsx is in the same folder
 
 const Dashboard = ({ onLogout }) => {
   const [students, setStudents] = useState([]);
-  const [attendanceList, setAttendanceList] = useState([]); // New state for QR scans
+  const [attendanceList, setAttendanceList] = useState([]);
   const [activeTab, setActiveTab] = useState('students'); 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("All");
 
+  // Update this base URL to your new Render service
+  const API_BASE_URL = 'https://sunday-school-management-system.onrender.com';
+
   // 1. Fetch Students List
   useEffect(() => {
-    fetch('https://church-api-3l2c.onrender.com/api/students')
+    fetch(`${API_BASE_URL}/api/students`)
       .then(res => res.json())
       .then(data => setStudents(data))
-      .catch(err => console.error("Error:", err));
+      .catch(err => console.error("Error fetching students:", err));
   }, []);
 
   // 2. Fetch Live Attendance (Polls every 5 seconds)
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await fetch('https://church-api-3l2c.onrender.com/api/attendance/today');
+        const res = await fetch(`${API_BASE_URL}/api/attendance/today`);
         const data = await res.json();
         setAttendanceList(data);
       } catch (err) {
@@ -29,7 +33,7 @@ const Dashboard = ({ onLogout }) => {
     };
 
     fetchAttendance();
-    const interval = setInterval(fetchAttendance, 5000); // Auto-refresh
+    const interval = setInterval(fetchAttendance, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -49,6 +53,12 @@ const Dashboard = ({ onLogout }) => {
           <button onClick={() => setActiveTab('students')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'students' ? 'bg-blue-600 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>👥</span> Students List
           </button>
+          
+          {/* New Scanner Tab Button */}
+          <button onClick={() => setActiveTab('scanner')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'scanner' ? 'bg-orange-500 shadow-lg' : 'hover:bg-blue-800'}`}>
+            <span>📷</span> Open Scanner
+          </button>
+
           <button onClick={() => setActiveTab('attendance')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'attendance' ? 'bg-blue-600 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>📸</span> Live Attendance
           </button>
@@ -69,7 +79,7 @@ const Dashboard = ({ onLogout }) => {
       {/* --- MAIN CONTENT --- */}
       <div className="flex-1 p-4 md:p-10 overflow-y-auto">
         
-        {/* QUICK STATS (Always Visible) */}
+        {/* QUICK STATS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 no-print">
           <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-600">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Students</p>
@@ -87,7 +97,19 @@ const Dashboard = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* --- TAB: ATTENDANCE (NEW) --- */}
+        {/* --- TAB: SCANNER --- */}
+        {activeTab === 'scanner' && (
+          <div className="animate-fadeIn flex flex-col items-center">
+             <div className="w-full flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-black text-gray-800 tracking-tight">QR መገኘት መቆጣጠሪያ</h1>
+             </div>
+             <div className="w-full max-w-md bg-white p-4 rounded-3xl shadow-2xl border border-gray-100">
+                <Scanner />
+             </div>
+          </div>
+        )}
+
+        {/* --- TAB: ATTENDANCE --- */}
         {activeTab === 'attendance' && (
           <div className="animate-fadeIn">
             <div className="flex justify-between items-center mb-6">
@@ -124,7 +146,7 @@ const Dashboard = ({ onLogout }) => {
           </div>
         )}
 
-        {/* --- TAB: STUDENTS (Existing) --- */}
+        {/* --- TAB: STUDENTS --- */}
         {activeTab === 'students' && (
           <>
             <header className="flex justify-between items-center mb-8">
@@ -190,7 +212,7 @@ const Dashboard = ({ onLogout }) => {
           </>
         )}
 
-        {/* ... (Feedback and Profile tabs stay as you had them) ... */}
+        {/* --- TAB: FEEDBACK --- */}
         {activeTab === 'feedback' && (
            <div className="max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
              <h2 className="text-2xl font-bold mb-4">Send Student Feedback</h2>
@@ -199,6 +221,7 @@ const Dashboard = ({ onLogout }) => {
            </div>
         )}
 
+        {/* --- TAB: PROFILE --- */}
         {activeTab === 'profile' && (
           <div className="max-w-md bg-white p-8 rounded-2xl shadow-lg text-center">
             <div className="h-24 w-24 bg-blue-900 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold shadow-xl">S</div>

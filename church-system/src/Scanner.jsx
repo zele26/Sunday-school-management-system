@@ -23,7 +23,7 @@ const Scanner = () => {
         setStatus("በመመዝገብ ላይ... (Saving...)");
 
         // 2. Send the scan to the Backend
-        const response = await fetch('https://church-api-3l2c.onrender.com/api/attendance/scan', {
+        const response = await fetch('https://sunday-school-management-system.onrender.com/api/attendance/scan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ studentId })
