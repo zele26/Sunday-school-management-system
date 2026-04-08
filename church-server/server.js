@@ -5,50 +5,36 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
+
+// --- MIDDLEWARE ---
 app.use(express.json());
 app.use(cors({
-  origin: "*", // This allows your phone to connect
+  origin: "*", // Allows connection from Vercel and mobile devices
   methods: ["GET", "POST"]
 }));
-// Use an Environment Variable for security
-// 1. Wrap the string in double quotes ""
-// 2. Make sure you replaced <db_password> with your actual password
+
+// --- DATABASE CONNECTION ---
 const MONGO_URI = "mongodb+srv://zelalemfiseha26_db_user:zolazola@workconnect.pj2hwsn.mongodb.net/church_db?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("Connected to Cloud MongoDB! ✅"))
   .catch(err => console.error("Cloud Connection Error: ❌", err));
 
-//mongoose.connect('mongodb://localhost:27017/churchDB')
- // .then(() => console.log("✅ MongoDB Connected"))
- // .catch(err => console.error("❌ MongoDB Connection Error:", err));
-
-// --- THE SCHEMA (Made very flexible to avoid 400 errors) ---
+// --- 1. USER SCHEMA (For Login/Signup) ---
 const userSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  // All other fields are optional Strings
-  city: String,
-  wereda: String,
-  kebele: String,
-  phoneNumber: String,
-  emergencyPersonName: String,
-  emergencyPhone: String,
-  emergencyAddress: String,
   registrationDate: { type: Date, default: Date.now }
 });
 
-// FIXED: Encrypt password before saving
+// Hash password before saving
 userSchema.pre('save', async function() {
-  // If password isn't changed, don't re-hash it
   if (!this.isModified('password')) return;
-
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    // Notice: We don't need to call 'next()' in modern Mongoose async hooks!
   } catch (err) {
     throw err; 
   }
@@ -56,28 +42,52 @@ userSchema.pre('save', async function() {
 
 const User = mongoose.model('User', userSchema);
 
-// --- THE SIGNUP ROUTE ---
+// --- 2. STUDENT SCHEMA (For the 3-Step Registration Form) ---
+const studentSchema = new mongoose.Schema({
+  firstName: String,
+  middleName: String,
+  lastName: String,
+  dob: String,
+  address: String,
+  grade: String,
+  regYear: String,
+  emergencyFirstName: String,
+  emergencyMiddleName: String,
+  emergencyLastName: String,
+  relationship: String,
+  contactPhone: String,
+  contactAddress: String,
+  contactEmail: String,
+  registrationDate: { type: Date, default: Date.now }
+});
+
+const Student = mongoose.model('Student', studentSchema);
+
+// --- 3. ATTENDANCE SCHEMA ---
+const scanSchema = new mongoose.Schema({
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' }, // Linked to Student
+  fullName: String,
+  date: { type: String, default: () => new Date().toLocaleDateString() },
+  time: { type: String, default: () => new Date().toLocaleTimeString() },
+  status: { type: String, default: "Present" }
+});
+
+const Scan = mongoose.model('Scan', scanSchema);
+
+// --- ROUTES ---
+
+// Auth: Signup
 app.post('/api/auth/signup', async (req, res) => {
-  console.log("📥 Received Data:", req.body); // Check your VS Code terminal for this!
-  
   try {
     const newUser = new User(req.body);
     await newUser.save();
-    console.log("👤 User Saved Successfully!");
     res.status(201).json({ message: "Success" });
   } catch (err) {
-    console.error("🔥 DATABASE ERROR:", err.message); // THIS LINE TELLS US THE TRUTH
-    
-    // Check for duplicate email
-    if (err.code === 11000) {
-      return res.status(400).json({ message: "Email already registered." });
-    }
-    
     res.status(400).json({ message: err.message });
   }
 });
 
-// --- THE LOGIN ROUTE ---
+// Auth: Login
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -94,68 +104,58 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- GET USER PROFILE (Protected) ---
-app.get('/api/auth/profile', async (req, res) => {
+// Student: Register New Student (From the 3-Step Form)
+app.post('/api/register', async (req, res) => {
+  console.log("📥 Received Student Registration:", req.body);
   try {
-    // 1. Get the token from the header
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: "No token provided" });
-
-    // 2. Verify the token
-    const decoded = jwt.verify(token, 'SECRET_KEY');
-    
-    // 3. Find the user in DB (excluding the password for security)
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    res.json(user);
+    const newStudent = new Student(req.body);
+    await newStudent.save();
+    res.status(201).json({ message: "Student registered successfully!" });
   } catch (err) {
-    res.status(401).json({ message: "Invalid Token" });
+    console.error("❌ Registration Error:", err);
+    res.status(400).json({ message: "Failed to save student info." });
   }
 });
 
-
-// --- NEW ATTENDANCE RECORD SCHEMA ---
-const scanSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  fullName: String, // Storing name here makes reports faster
-  date: { type: String, default: () => new Date().toLocaleDateString() }, // e.g., "4/7/2026"
-  time: { type: String, default: () => new Date().toLocaleTimeString() }, // e.g., "09:30:15 AM"
-  status: { type: String, default: "Present" }
+// Student: Get All Students (For Dashboard List)
+app.get('/api/students', async (req, res) => {
+  try {
+    const students = await Student.find().sort({ registrationDate: -1 });
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching students" });
+  }
 });
 
-const Scan = mongoose.model('Scan', scanSchema);
-
-// --- API TO RECORD A SCAN ---
+// Attendance: Record a Scan
 app.post('/api/attendance/scan', async (req, res) => {
   try {
     const { studentId } = req.body;
-    const student = await User.findById(studentId);
+    const student = await Student.findById(studentId); // Find from Student collection
     
     if (!student) return res.status(404).json({ message: "Student not found" });
 
     const newScan = new Scan({
       studentId: student._id,
-      fullName: student.fullName
+      fullName: `${student.firstName} ${student.lastName}`
     });
 
     await newScan.save();
-    res.status(201).json({ message: `መገኘት ተመዝግቧል: ${student.fullName}`, time: newScan.time });
+    res.status(201).json({ message: `መገኘት ተመዝግቧል: ${student.firstName}`, time: newScan.time });
   } catch (err) {
     res.status(500).json({ message: "Scan failed" });
   }
 });
 
-// --- API FOR ADMIN/TEACHER TO SEE TODAY'S ATTENDANCE ---
+// Attendance: Get Today's List
 app.get('/api/attendance/today', async (req, res) => {
   const today = new Date().toLocaleDateString();
   const list = await Scan.find({ date: today }).sort({ time: -1 });
   res.json(list);
 });
 
-// Render provides a port automatically, or uses 5000 for local testing
+// --- SERVER START ---
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
