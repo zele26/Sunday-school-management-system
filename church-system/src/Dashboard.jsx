@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Added for navigation
 import * as XLSX from 'xlsx';
-import Scanner from './Scanner'; // Ensure Scanner.jsx is in the same folder
+import Scanner from './Scanner'; 
 
 const Dashboard = ({ onLogout }) => {
+  const navigate = useNavigate(); // Initialize navigation
   const [students, setStudents] = useState([]);
   const [attendanceList, setAttendanceList] = useState([]);
   const [activeTab, setActiveTab] = useState('students'); 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("All");
 
-  // Update this base URL to your new Render service
+  // Centralized API URL for your new Render service
   const API_BASE_URL = 'https://sunday-school-management-system.onrender.com';
 
   // 1. Fetch Students List
@@ -54,7 +56,6 @@ const Dashboard = ({ onLogout }) => {
             <span>👥</span> Students List
           </button>
           
-          {/* New Scanner Tab Button */}
           <button onClick={() => setActiveTab('scanner')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'scanner' ? 'bg-orange-500 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>📷</span> Open Scanner
           </button>
@@ -62,12 +63,15 @@ const Dashboard = ({ onLogout }) => {
           <button onClick={() => setActiveTab('attendance')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'attendance' ? 'bg-blue-600 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>📸</span> Live Attendance
           </button>
+          
           <button onClick={() => setActiveTab('feedback')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'feedback' ? 'bg-blue-600 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>📩</span> Send Feedback
           </button>
+          
           <button onClick={() => setActiveTab('profile')} className={`w-full text-left p-3 rounded-xl transition flex items-center gap-3 ${activeTab === 'profile' ? 'bg-blue-600 shadow-lg' : 'hover:bg-blue-800'}`}>
             <span>👤</span> My Profile
           </button>
+          
           <div className="pt-10">
             <button onClick={onLogout} className="w-full text-left p-3 rounded-xl text-red-300 hover:bg-red-900/30 transition flex items-center gap-3">
               <span>🚪</span> Logout
@@ -152,16 +156,18 @@ const Dashboard = ({ onLogout }) => {
             <header className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-black text-gray-800">Students List</h1>
               <div className="flex gap-2">
-                <button onClick={() => Maps('/register')} className="bg-gray-100 p-2 px-4 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition">Print</button>
+                <button onClick={() => window.print()} className="bg-gray-100 p-2 px-4 rounded-xl font-bold text-gray-600 hover:bg-gray-200 transition">Print</button>
+                {/* FIXED: Added Navigation to Register */}
                 <button 
-    onClick={() => navigate('/register')} 
-    className="bg-blue-600 p-2 px-4 rounded-xl font-bold text-white shadow-lg hover:bg-blue-700 transition"
-  >
-    + uNew
-  </button>
+                  onClick={() => navigate('/register')} 
+                  className="bg-blue-600 p-2 px-4 rounded-xl font-bold text-white shadow-lg hover:bg-blue-700 transition"
+                >
+                  + New
+                </button>
               </div>
             </header>
 
+            {/* Search and Filters */}
             <div className="bg-white p-3 rounded-2xl shadow-sm mb-6 flex gap-4 no-print">
               <input 
                 type="text" 
@@ -217,7 +223,7 @@ const Dashboard = ({ onLogout }) => {
           </>
         )}
 
-        {/* --- TAB: FEEDBACK --- */}
+        {/* ... Feedback and Profile tabs ... */}
         {activeTab === 'feedback' && (
            <div className="max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
              <h2 className="text-2xl font-bold mb-4">Send Student Feedback</h2>
@@ -226,7 +232,6 @@ const Dashboard = ({ onLogout }) => {
            </div>
         )}
 
-        {/* --- TAB: PROFILE --- */}
         {activeTab === 'profile' && (
           <div className="max-w-md bg-white p-8 rounded-2xl shadow-lg text-center">
             <div className="h-24 w-24 bg-blue-900 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-3xl font-bold shadow-xl">S</div>
