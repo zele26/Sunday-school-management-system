@@ -10,7 +10,7 @@ const Dashboard = ({ onLogout }) => {
 
   // 1. Fetch Students List
   useEffect(() => {
-    fetch('http://localhost:5000/api/students')
+    fetch('https://church-api-3l2c.onrender.com/api/students')
       .then(res => res.json())
       .then(data => setStudents(data))
       .catch(err => console.error("Error:", err));
@@ -20,7 +20,7 @@ const Dashboard = ({ onLogout }) => {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/attendance/today');
+        const res = await fetch('https://church-api-3l2c.onrender.com/api/attendance/today');
         const data = await res.json();
         setAttendanceList(data);
       } catch (err) {

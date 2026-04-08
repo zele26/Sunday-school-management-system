@@ -16,7 +16,7 @@ const Login = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
   e.preventDefault();
-  const res = await fetch('http://10.14.214.51:5000/api/auth/login', {
+  const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: formData.email, password: formData.password })
@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
   const handleSignup = async (e) => {
     e.preventDefault();
     console.log("DEBUG: Data being sent to server ->", formData); // Check your F12 console for this!
-    const res = await fetch('http://localhost:5000/api/auth/signup', {
+    const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
