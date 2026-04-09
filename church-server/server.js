@@ -20,7 +20,7 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("Connected to Cloud MongoDB! ✅"))
   .catch(err => console.error("Cloud Connection Error: ❌", err));
 
-// --- 1. USER SCHEMA (Auth) ---
+// --- 1. USER SCHEMA ---
 const userSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
   fullName: { type: String, required: true },
@@ -77,7 +77,7 @@ const Scan = mongoose.model('Scan', scanSchema);
 
 // Health Check
 app.get('/api/test', (req, res) => {
-  res.json({ status: "Online", message: "Server is reading new code!" });
+  res.json({ status: "Online", message: "System is working!" });
 });
 
 // Auth
@@ -109,17 +109,16 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Student Registration
 app.post('/api/register', async (req, res) => {
-  console.log("📥 Received Student Registration:", req.body);
   try {
     const newStudent = new Student(req.body);
     await newStudent.save();
     res.status(201).json({ message: "Student registered successfully!" });
   } catch (err) {
-    console.error("❌ Registration Error:", err);
-    res.status(400).json({ message: "Failed to save student info." });
+    res.status(400).json({ message: "Error: " + err.message });
   }
 });
 
+// Get Students List
 app.get('/api/students', async (req, res) => {
   try {
     const students = await Student.find().sort({ registrationDate: -1 });
@@ -129,7 +128,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-// Attendance
+// Attendance Scan
 app.post('/api/attendance/scan', async (req, res) => {
   try {
     const { studentId } = req.body;
@@ -142,31 +141,14 @@ app.post('/api/attendance/scan', async (req, res) => {
     });
 
     await newScan.save();
-    res.status(201).json({ message: `Success: ${student.firstName}`, time: newScan.time });
+    res.status(201).json({ message: "Present", time: newScan.time });
   } catch (err) {
     res.status(500).json({ message: "Scan failed" });
   }
 });
 
-app.get('/api/attendance/today', async (req, res) => {
-  const today = new Date().toLocaleDateString();
-  const list = await Scan.find({ date: today }).sort({ time: -1 });
-  res.json(list);
-});
-
-// --- SERVER START (Only One app.listen!) ---
+// --- SERVER START (Single block, no extra code) ---
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  
-  // Debug: Log all registered routes to Render console
-  setImmediate(() => {
-    console.log("--- 📋 Registered Routes ---");
-    app._router.stack.forEach(r => {
-      if (r.route && r.route.path) {
-        console.log(`[${Object.keys(r.route.methods).join(',').toUpperCase()}] ${r.route.path}`);
-      }
-    });
-  });
+  console.log(`✅ Server live on port ${PORT}`);
 });
