@@ -14,7 +14,7 @@ app.use(cors({
 }));
 
 // --- DATABASE CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = "mongodb+srv://zelalemfiseha26_db_user:zolazola@workconnect.pj2hwsn.mongodb.net/church_db?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("Connected to Cloud MongoDB! ✅"))
@@ -155,8 +155,12 @@ app.get('/api/attendance/today', async (req, res) => {
 });
 
 // --- SERVER START ---
-
 const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+// --- SERVER START ---
+// --- SERVER START ---
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
