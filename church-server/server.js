@@ -14,7 +14,7 @@ app.use(cors({
 }));
 
 // --- DATABASE CONNECTION ---
-const MONGO_URI = "mongodb+srv://zelalemfiseha26_db_user:zolazola@workconnect.pj2hwsn.mongodb.net/church_db?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("Connected to Cloud MongoDB! ✅"))
@@ -155,26 +155,26 @@ app.get('/api/attendance/today', async (req, res) => {
 });
 
 // --- SERVER START ---
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
-});
-// --- SERVER START ---
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
-  
-  // Using setImmediate ensures this runs after the current event loop cycle,
-  // giving Express time to fully initialize the router object.
+  console.log("Connected to Cloud MongoDB! ✅");
+
+  // We use setImmediate to wait for the next cycle of the event loop.
+  // This ensures Express has finished building the internal _router object.
   setImmediate(() => {
     if (app._router && app._router.stack) {
-      console.log("--- Registered Routes ---");
+      console.log("--- 📋 Registered Routes ---");
       app._router.stack.forEach(function(r) {
         if (r.route && r.route.path) {
-          console.log(`✅ ${Object.keys(r.route.methods).join(', ').toUpperCase()}: ${r.route.path}`);
+          const methods = Object.keys(r.route.methods).join(', ').toUpperCase();
+          console.log(`[${methods}] ${r.route.path}`);
         }
       });
     } else {
-      console.log("Note: Router stack not available for logging yet.");
+      console.log("Router not yet initialized. Skipping route log.");
     }
   });
 });
