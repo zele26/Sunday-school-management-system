@@ -16,22 +16,28 @@ const Login = ({ onLogin }) => {
 
   const handleLogin = async (e) => {
   e.preventDefault();
-  const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: formData.email, password: formData.password })
-  });
-  const data = await res.json();
-  
-  if (res.ok) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.user.role);
-    
-    // Crucial: Tell the parent (App.jsx) the login is finished
-    // and pass the role immediately so it switches screens
-    onLogin(true, data.user.role); 
-  } else {
-    setError(data.message);
+  try {
+    const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // --- ADD THE CODE HERE ---
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.user.role); // This saves 'admin' or 'student'
+      localStorage.setItem('userName', data.user.name);
+
+      // Then redirect to the dashboard
+      window.location.href = '/dashboard'; 
+    } else {
+      alert(data.message || "Login failed");
+    }
+  } catch (error) {
+    console.error("Login error:", error);
   }
 };
   const handleSignup = async (e) => {

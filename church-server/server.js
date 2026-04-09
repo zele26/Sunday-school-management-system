@@ -100,8 +100,17 @@ app.post('/api/auth/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
+    // Include the role in the token
     const token = jwt.sign({ id: user._id, role: user.role }, 'SECRET_KEY', { expiresIn: '2h' });
-    res.json({ token, user: { name: user.fullName, role: user.role } });
+
+    // Send the role back in the response
+    res.json({ 
+      token, 
+      user: { 
+        name: user.fullName, 
+        role: user.role // IMPORTANT: Send this to the frontend
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -131,8 +140,21 @@ app.get('/api/students', async (req, res) => {
 app.post('/api/attendance/scan', async (req, res) => {
   try {
     const { studentId } = req.body;
-    const student = await Student.findById(studentId);
-    if (!student) return res.status(404).json({ message: "Student not found" });
+    
+    // 1. Try to find by Database ID
+    let student = null;
+    if (mongoose.Types.ObjectId.isValid(studentId)) {
+      student = await Student.findById(studentId);
+    }
+
+    // 2. If not found by ID, try finding by First Name (useful for testing)
+    if (!student) {
+      student = await Student.findOne({ firstName: studentId });
+    }
+
+    if (!student) {
+      return res.status(404).json({ message: "ተማሪው አልተገኘም (Student not found)" });
+    }
 
     const newScan = new Scan({
       studentId: student._id,
@@ -140,9 +162,11 @@ app.post('/api/attendance/scan', async (req, res) => {
     });
 
     await newScan.save();
-    res.status(201).json({ message: "Present", time: newScan.time });
+    res.status(201).json({ message: `ሰላም ${student.firstName}! ተመዝግቧል`, time: newScan.time });
+    
   } catch (err) {
-    res.status(500).json({ message: "Scan failed" });
+    console.error("Scan Error:", err);
+    res.status(500).json({ message: "የቴክኒክ ስህተት (Scan failed)" });
   }
 });
 
