@@ -26,11 +26,12 @@ const Scanner = () => {
     <div className="flex flex-col items-center">
       <div id="reader" className="w-full max-w-md"></div>
       <button 
-        onClick={startScanner} 
-        className="bg-blue-600 text-white px-6 py-3 rounded-lg mt-4 active:scale-95 transition-all"
-      >
-        መረጃ ለመቀበል ዝግጁ (Ready to Scan)
-      </button>
+  onClick={startScanner} 
+  style={{ position: 'relative', zIndex: 999, cursor: 'pointer' }}
+  className="bg-blue-600 text-white px-6 py-3 rounded-lg mt-4"
+>
+  መረጃ ለመቀበል ዝግጁ (Ready to Scan)
+</button>
     </div>
   );
 };
