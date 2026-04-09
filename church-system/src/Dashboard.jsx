@@ -12,7 +12,7 @@ const Dashboard = ({ onLogout }) => {
   const [selectedGrade, setSelectedGrade] = useState("All");
 
   // Centralized API URL for your new Render service
-  const API_BASE_URL = 'https://sunday-school-management-system.onrender.com';
+  const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
   // 1. Fetch Students List
   useEffect(() => {

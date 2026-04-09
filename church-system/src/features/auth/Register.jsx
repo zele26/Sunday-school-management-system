@@ -40,7 +40,7 @@ const Register = () => {
   const submitData = async () => {
     try {
       // FIX: Using the correct new Render URL
-      const response = await fetch('https://sunday-school-management-system.onrender.com/api/register', {
+      const response = await fetch('https://church-api-3l2c.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
