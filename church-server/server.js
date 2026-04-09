@@ -159,3 +159,9 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
+// This will print all routes to your Render logs on startup
+app._router.stack.forEach(function(r){
+  if (r.route && r.route.path){
+    console.log("Registered Route: ✅", r.route.path)
+  }
+})
