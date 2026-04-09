@@ -1,65 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false);
 
   const startScanner = (e) => {
-    // Prevent the page from refreshing if it's inside a form
-    e.preventDefault(); 
+    // 1. Force prevent any parent component from stopping this click
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
-    console.log("Scanner starting...");
+    alert("Button logic triggered! Check if camera opens now.");
     setScanning(true);
 
-    const scanner = new Html5QrcodeScanner("reader", { 
-      fps: 10, 
-      qrbox: { width: 250, height: 250 } 
-    });
+    // We use a small delay to ensure the 'reader' div is rendered before the library looks for it
+    setTimeout(() => {
+      const scanner = new Html5QrcodeScanner("reader", { 
+        fps: 10, 
+        qrbox: { width: 250, height: 250 },
+        rememberLastUsedCamera: true
+      });
 
-    scanner.render(onScanSuccess, (err) => {
-      // We don't log errors here to keep the console clean
-    });
-
-    async function onScanSuccess(decodedText) {
-      scanner.clear(); // Stop scanning after success
-      try {
-        const response = await fetch('https://church-api-3l2c.onrender.com/api/attendance/scan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ studentId: decodedText })
-        });
-        const data = await response.json();
-        alert("ተመዝግቧል: " + data.message);
-        setScanning(false);
-      } catch (err) {
-        alert("Error sending scan to server");
-      }
-    }
+      scanner.render(async (decodedText) => {
+        scanner.clear(); // Stop camera on success
+        try {
+          const res = await fetch('https://church-api-3l2c.onrender.com/api/attendance/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId: decodedText })
+          });
+          const data = await res.json();
+          alert("Success: " + data.message);
+          setScanning(false);
+        } catch (err) {
+          alert("Server Error: " + err.message);
+        }
+      }, (err) => {
+        // Silent error for failed frames
+      });
+    }, 100);
   };
 
   return (
-    <div className="flex flex-col items-center p-4">
-      {/* 1. The Camera Box - Make sure this is NOT overlapping the button */}
-      <div id="reader" style={{ width: '100%', maxWidth: '400px', minHeight: scanning ? '300px' : '0px' }}></div>
+    <div style={{ position: 'relative', width: '100%', textAlign: 'center', padding: '20px' }}>
+      {/* The Camera Box */}
+      <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}></div>
 
-      {/* 2. The Button - High Z-Index to stay on top */}
+      {/* The Button - Guaranteed to be on top */}
       {!scanning && (
         <button 
           onClick={startScanner}
           style={{ 
-            position: 'relative', 
-            zIndex: 9999, 
-            cursor: 'pointer',
-            marginTop: '20px',
+            position: 'fixed', // Fixed makes it ignore other divs blocking it
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 99999, // Extremely high Z-index
             backgroundColor: '#2563eb',
             color: 'white',
-            padding: '15px 30px',
-            borderRadius: '12px',
+            padding: '20px 40px',
+            borderRadius: '50px',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
+            cursor: 'pointer',
             border: 'none',
-            fontSize: '18px',
-            fontWeight: 'bold'
+            display: 'block'
           }}
-          className="hover:bg-blue-700 active:scale-95 shadow-lg"
         >
           መረጃ ለመቀበል ዝግጁ (Ready to Scan)
         </button>
