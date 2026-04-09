@@ -5,25 +5,29 @@ const QRScanner = () => {
   const [scanning, setScanning] = useState(false);
 
   const startScanner = (e) => {
-    // 1. Force prevent any parent component from stopping this click
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
-    alert("Button logic triggered! Check if camera opens now.");
     setScanning(true);
 
-    // We use a small delay to ensure the 'reader' div is rendered before the library looks for it
     setTimeout(() => {
       const scanner = new Html5QrcodeScanner("reader", { 
         fps: 10, 
         qrbox: { width: 250, height: 250 },
-        rememberLastUsedCamera: true
+        rememberLastUsedCamera: false, // Set to false to force fresh settings
+        // THIS IS THE KEY FIX FOR BACK CAMERA
+        videoConstraints: {
+          facingMode: "environment" 
+        }
       });
 
       scanner.render(async (decodedText) => {
-        scanner.clear(); // Stop camera on success
+        // Success Logic
+        console.log("QR Decoded:", decodedText);
+        scanner.clear(); // Stop the camera
+        
         try {
           const res = await fetch('https://church-api-3l2c.onrender.com/api/attendance/scan', {
             method: 'POST',
@@ -31,13 +35,15 @@ const QRScanner = () => {
             body: JSON.stringify({ studentId: decodedText })
           });
           const data = await res.json();
-          alert("Success: " + data.message);
+          alert("ተመዝግቧል: " + (data.message || "Success"));
           setScanning(false);
         } catch (err) {
-          alert("Server Error: " + err.message);
+          alert("የአገልጋይ ስህተት (Server Error): " + err.message);
+          setScanning(false);
         }
-      }, (err) => {
-        // Silent error for failed frames
+      }, (errorMessage) => {
+        // Silent: This prevents "Scan Failed" alerts from popping up 
+        // while the camera is still searching for a code.
       });
     }, 100);
   };
