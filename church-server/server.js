@@ -80,7 +80,7 @@ app.get('/api/test', (req, res) => {
   res.json({ status: "Online", message: "System is working!" });
 });
 
-// Auth
+// Auth: Signup & Login
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const newUser = new User(req.body);
@@ -107,7 +107,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Student Registration
+// Student: Registration & List
 app.post('/api/register', async (req, res) => {
   try {
     const newStudent = new Student(req.body);
@@ -118,7 +118,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Get Students List
 app.get('/api/students', async (req, res) => {
   try {
     const students = await Student.find().sort({ registrationDate: -1 });
@@ -128,7 +127,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-// Attendance Scan
+// Attendance: POST Scan & GET Today's List
 app.post('/api/attendance/scan', async (req, res) => {
   try {
     const { studentId } = req.body;
@@ -147,7 +146,18 @@ app.post('/api/attendance/scan', async (req, res) => {
   }
 });
 
-// --- SERVER START (Single block, no extra code) ---
+// THIS WAS THE MISSING ROUTE CAUSING THE 404 ERROR
+app.get('/api/attendance/today', async (req, res) => {
+  try {
+    const today = new Date().toLocaleDateString();
+    const list = await Scan.find({ date: today }).sort({ time: -1 });
+    res.json(list || []); 
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching attendance" });
+  }
+});
+
+// --- SERVER START ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server live on port ${PORT}`);
