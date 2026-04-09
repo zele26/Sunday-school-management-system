@@ -80,7 +80,7 @@ app.get('/api/test', (req, res) => {
   res.json({ status: "Online", message: "System is working!" });
 });
 
-// Auth: Signup & Login
+// Auth
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const newUser = new User(req.body);
@@ -107,7 +107,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Student: Registration & List
+// Student Registration
 app.post('/api/register', async (req, res) => {
   try {
     const newStudent = new Student(req.body);
@@ -127,7 +127,7 @@ app.get('/api/students', async (req, res) => {
   }
 });
 
-// Attendance: POST Scan & GET Today's List
+// Attendance Scan
 app.post('/api/attendance/scan', async (req, res) => {
   try {
     const { studentId } = req.body;
@@ -146,7 +146,7 @@ app.post('/api/attendance/scan', async (req, res) => {
   }
 });
 
-// THIS WAS THE MISSING ROUTE CAUSING THE 404 ERROR
+// FIXED: Added missing route to stop the 404/JSON error
 app.get('/api/attendance/today', async (req, res) => {
   try {
     const today = new Date().toLocaleDateString();
