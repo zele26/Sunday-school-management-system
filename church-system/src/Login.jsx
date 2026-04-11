@@ -15,31 +15,33 @@ const Login = ({ onLogin }) => {
   };
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    e.preventDefault();
+    const { email, password } = formData;
+    try {
+      const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      // --- ADD THE CODE HERE ---
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userRole', data.user.role); // This saves 'admin' or 'student'
-      localStorage.setItem('userName', data.user.name);
+      if (response.ok) {
+        setError("");
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user.role);
+        localStorage.setItem('userName', data.user.name);
 
-      // Then redirect to the dashboard
-      window.location.href = '/dashboard'; 
-    } else {
-      alert(data.message || "Login failed");
+        if (onLogin) onLogin();
+        window.location.href = '/dashboard';
+      } else {
+        setError(data.message || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("An unexpected error occurred. Please try again.");
     }
-  } catch (error) {
-    console.error("Login error:", error);
-  }
-};
+  };
   const handleSignup = async (e) => {
     e.preventDefault();
     console.log("DEBUG: Data being sent to server ->", formData); // Check your F12 console for this!
