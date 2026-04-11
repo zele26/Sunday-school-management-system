@@ -3,31 +3,32 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState("");
 
-  const startScanner = (e) => {
+  const startScanner = async (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
-    setScanning(true);
 
-    setTimeout(() => {
-      const scanner = new Html5QrcodeScanner("reader", { 
-        fps: 10, 
+    setScanning(true);
+    setError("");
+
+    try {
+      const scanner = new Html5QrcodeScanner("reader", {
+        fps: 10,
         qrbox: { width: 250, height: 250 },
-        rememberLastUsedCamera: false, // Set to false to force fresh settings
-        // THIS IS THE KEY FIX FOR BACK CAMERA
+        rememberLastUsedCamera: false,
         videoConstraints: {
-          facingMode: "environment" 
+          facingMode: "environment"
         }
       });
 
       scanner.render(async (decodedText) => {
-        // Success Logic
         console.log("QR Decoded:", decodedText);
-        scanner.clear(); // Stop the camera
-        
+        scanner.clear();
+        setScanning(false);
+
         try {
           const res = await fetch('https://church-api-3l2c.onrender.com/api/attendance/scan', {
             method: 'POST',
@@ -35,45 +36,31 @@ const QRScanner = () => {
             body: JSON.stringify({ studentId: decodedText })
           });
           const data = await res.json();
-          alert("ተመዝግቧል: " + (data.message || "Success"));
-          setScanning(false);
+          if (res.ok) {
+            alert("ተመዝግቧል: " + (data.message || "Success"));
+          } else {
+            alert("Error: " + (data.message || "Failed"));
+          }
         } catch (err) {
-          alert("የአገልጋይ ስህተት (Server Error): " + err.message);
-          setScanning(false);
+          alert("Server Error: " + err.message);
         }
       }, (errorMessage) => {
-        // Silent: This prevents "Scan Failed" alerts from popping up 
-        // while the camera is still searching for a code.
+        // Silent
       });
-    }, 100);
+    } catch (err) {
+      setError("Camera access failed. Please allow camera permissions.");
+      setScanning(false);
+    }
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', textAlign: 'center', padding: '20px' }}>
-      {/* The Camera Box */}
-      <div id="reader" style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}></div>
-
-      {/* The Button - Guaranteed to be on top */}
+    <div className="flex flex-col items-center space-y-4">
+      <div id="reader" className="w-full max-w-sm"></div>
+      {error && <p className="text-red-500">{error}</p>}
       {!scanning && (
-        <button 
+        <button
           onClick={startScanner}
-          style={{ 
-            position: 'fixed', // Fixed makes it ignore other divs blocking it
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 99999, // Extremely high Z-index
-            backgroundColor: '#2563eb',
-            color: 'white',
-            padding: '20px 40px',
-            borderRadius: '50px',
-            fontSize: '1.2rem',
-            fontWeight: 'bold',
-            boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
-            cursor: 'pointer',
-            border: 'none',
-            display: 'block'
-          }}
+          className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition"
         >
           መረጃ ለመቀበል ዝግጁ (Ready to Scan)
         </button>

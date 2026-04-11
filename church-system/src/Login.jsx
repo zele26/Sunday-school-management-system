@@ -63,7 +63,7 @@ const Login = ({ onLogin }) => {
          style={{ backgroundImage: `url(${bgImage})` }}>
       <div className="absolute inset-0 bg-blue-900/30 backdrop-blur-[2px]"></div>
 
-      <div className="max-w-5xl w-full bg-white/95 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10">
+      <div className="max-w-5xl w-full bg-white/95 rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 backdrop-blur-sm">
         
         {/* Left Branding */}
         <div className="md:w-1/3 bg-blue-900/85 p-10 text-white flex flex-col justify-center items-center text-center">
@@ -72,7 +72,7 @@ const Login = ({ onLogin }) => {
         </div>
 
         {/* Right Forms */}
-        <div className="md:w-2/3 p-8 bg-white max-h-[90vh] overflow-y-auto">
+        <div className="md:w-2/3 p-8 bg-white max-h-[90vh] overflow-y-auto rounded-r-3xl">
           {error && <p className="text-red-500 bg-red-50 p-2 mb-4 rounded text-center">{error}</p>}
 
           {view === 'login' ? (
