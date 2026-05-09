@@ -13,12 +13,12 @@ const TeacherDashboard = ({ onLogout }) => {
   const [selectedWereda, setSelectedWereda] = useState("All");
   const [sortBy, setSortBy] = useState("name");
 
-  const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+  const API_BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
     const fetchTeacherData = async () => {
       const token = localStorage.getItem('token');
-      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/profile', {
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
 
     const fetchStudents = async () => {
       try {

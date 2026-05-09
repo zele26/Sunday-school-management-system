@@ -14,7 +14,7 @@ const StudentProfile = ({ onLogout }) => {
       }
 
       try {
-        const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/profile', {
+        const response = await fetch('http://localhost:5000/api/auth/profile', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

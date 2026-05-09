@@ -15,7 +15,7 @@ const Dashboard = () => {
   // --- NEW: Get User Role ---
   const userRole = localStorage.getItem('userRole'); 
 
-  const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+  const API_BASE_URL = 'http://localhost:5000';
 
   // FIX: Redirect if not logged in at all
   useEffect(() => {
