@@ -116,6 +116,22 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Profile route
+app.get('/api/auth/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: "No token provided" });
+
+    const decoded = jwt.verify(token, 'SECRET_KEY');
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Student Registration
 app.post('/api/register', async (req, res) => {
   try {
