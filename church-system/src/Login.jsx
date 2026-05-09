@@ -33,7 +33,12 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('userName', data.user.name);
 
         if (onLogin) onLogin();
-        window.location.href = '/dashboard';
+        // Redirect based on role
+        if (data.user.role === 'student') {
+          window.location.href = '/profile';
+        } else {
+          window.location.href = '/dashboard';
+        }
       } else {
         setError(data.message || "Login failed");
       }
