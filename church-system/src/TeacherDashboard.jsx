@@ -7,18 +7,29 @@ const TeacherDashboard = ({ onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [students, setStudents] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("All");
-  const [selectedCity, setSelectedCity] = useState("All");
-  const [selectedWereda, setSelectedWereda] = useState("All");
-  const [sortBy, setSortBy] = useState("name");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('All');
+  const [selectedCity, setSelectedCity] = useState('All');
+  const [selectedWereda, setSelectedWereda] = useState('All');
+  const [sortBy, setSortBy] = useState('name');
 
   const API_BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
     const fetchTeacherData = async () => {
-      const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setTeacher(data);
+      } catch (err) {
+        console.error('Error fetching teacher data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     const fetchStudents = async () => {
       try {
@@ -26,43 +37,66 @@ const TeacherDashboard = ({ onLogout }) => {
         const data = await res.json();
         setStudents(data);
       } catch (err) {
-        console.error("Error fetching students:", err);
+        console.error('Error fetching students:', err);
       }
-  const filteredStudents = students.filter(student => {
-    const fullName = `${student.firstName || student.fullName} ${student.lastName || ''}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchTerm.toLowerCase());
-    const matchesGrade = selectedGrade === "All" || student.grade === selectedGrade;
-    const matchesCity = selectedCity === "All" || student.city === selectedCity;
-    const matchesWereda = selectedWereda === "All" || student.wereda === selectedWereda;
-    return matchesSearch && matchesGrade && matchesCity && matchesWereda;
-  }).sort((a, b) => {
-    if (sortBy === "name") {
-      const nameA = `${a.firstName || a.fullName} ${a.lastName || ''}`.toLowerCase();
-      const nameB = `${b.firstName || b.fullName} ${b.lastName || ''}`.toLowerCase();
-      return nameA.localeCompare(nameB);
-    } else if (sortBy === "grade") {
-      return (a.grade || "").localeCompare(b.grade || "");
-    } else if (sortBy === "city") {
-      return (a.city || "").localeCompare(b.city || "");
-    }
-    return 0;
-  });
-
-  const uniqueGrades = [...new Set(students.map(student => student.grade).filter(Boolean))].sort();
-  const uniqueCities = [...new Set(students.map(student => student.city).filter(Boolean))].sort();
-  const uniqueWeredas = [...new Set(students.map(student => student.wereda).filter(Boolean))].sort();
-
-    fetchTeacherData();
-    fetchStudentsAuthorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (res.ok) setTeacher(data);
-      setLoading(false);
     };
+
     fetchTeacherData();
-  }, []);gradient-to-r from-blue-900 to-blue-800 text-white p-4 shadow-lg flex justify-between items-center">
+    fetchStudents();
+  }, []);
+
+  const filteredStudents = students
+    .filter((student) => {
+      const fullName = `${student.firstName || student.fullName || ''} ${student.lastName || ''}`.toLowerCase();
+      const matchesSearch = fullName.includes(searchTerm.toLowerCase());
+      const matchesGrade = selectedGrade === 'All' || student.grade === selectedGrade;
+      const matchesCity = selectedCity === 'All' || student.city === selectedCity;
+      const matchesWereda = selectedWereda === 'All' || student.wereda === selectedWereda;
+      return matchesSearch && matchesGrade && matchesCity && matchesWereda;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name') {
+        const nameA = `${a.firstName || a.fullName || ''} ${a.lastName || ''}`.toLowerCase();
+        const nameB = `${b.firstName || b.fullName || ''} ${b.lastName || ''}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      } else if (sortBy === 'grade') {
+        return (a.grade || '').localeCompare(b.grade || '');
+      } else if (sortBy === 'city') {
+        return (a.city || '').localeCompare(b.city || '');
+      }
+      return 0;
+    });
+
+  const uniqueGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
+  const uniqueCities = [...new Set(students.map((s) => s.city).filter(Boolean))].sort();
+  const uniqueWeredas = [...new Set(students.map((s) => s.wereda).filter(Boolean))].sort();
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedGrade('All');
+    setSelectedCity('All');
+    setSelectedWereda('All');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-500 text-lg">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Navbar */}
+      <nav className="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 shadow-lg flex justify-between items-center">
         <h1 className="font-bold text-lg italic">ተክለሳዊሮስ መምህራን መድረክ</h1>
-        <button onClick={() => { onLogout(); navigate('/'); }} className="bg-red-500 px-4 py-1 rounded-lg text-sm hover:bg-red-600 transition">ውጣ (Logout)</button>
+        <button
+          onClick={() => { onLogout(); navigate('/'); }}
+          className="bg-red-500 px-4 py-1 rounded-lg text-sm hover:bg-red-600 transition"
+        >
+          ውጣ (Logout)
+        </button>
       </nav>
 
       <div className="p-6 max-w-6xl mx-auto">
@@ -70,7 +104,9 @@ const TeacherDashboard = ({ onLogout }) => {
         <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mb-8 flex items-center gap-6 hover:shadow-xl transition-shadow">
           <div className="text-5xl">👨‍🏫</div>
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">እንኳን ደህና መጡ፣ መምህር {teacher?.fullName.split(' ')[0]}!</h2>
+            <h2 className="text-3xl font-bold text-gray-800">
+              እንኳን ደህና መጡ፣ መምህር {teacher?.fullName?.split(' ')[0]}!
+            </h2>
             <p className="text-gray-500">ዛሬ የእርስዎን ክፍል ያስተዳድሩ</p>
           </div>
         </div>
@@ -99,7 +135,7 @@ const TeacherDashboard = ({ onLogout }) => {
           </button>
         </div>
 
-        {/* Tab Content */}
+        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Attendance Card */}
@@ -128,6 +164,7 @@ const TeacherDashboard = ({ onLogout }) => {
           </div>
         )}
 
+        {/* Students Tab */}
         {activeTab === 'students' && (
           <div className="space-y-6">
             {/* Quick Stats */}
@@ -172,6 +209,7 @@ const TeacherDashboard = ({ onLogout }) => {
                 </div>
               </div>
             </div>
+
             {/* Search and Filter Controls */}
             <div className="bg-white p-6 rounded-2xl shadow-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
@@ -207,7 +245,7 @@ const TeacherDashboard = ({ onLogout }) => {
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="All">ሁሉም ክፍሎች (All Grades)</option>
-                    {uniqueGrades.map(grade => (
+                    {uniqueGrades.map((grade) => (
                       <option key={grade} value={grade}>ክፍል {grade}</option>
                     ))}
                   </select>
@@ -221,14 +259,14 @@ const TeacherDashboard = ({ onLogout }) => {
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="All">ሁሉም ከተሞች (All Cities)</option>
-                    {uniqueCities.map(city => (
+                    {uniqueCities.map((city) => (
                       <option key={city} value={city}>{city}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Second Row for Wereda Filter */}
+              {/* Second Row: Wereda Filter + Clear Button */}
               <div className="flex justify-between items-center">
                 <div className="w-48">
                   <select
@@ -237,23 +275,14 @@ const TeacherDashboard = ({ onLogout }) => {
                     className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="All">ሁሉም ወረዳዎች (All Weredas)</option>
-                    {uniqueWeredas.map(wereda => (
+                    {uniqueWeredas.map((wereda) => (
                       <option key={wereda} value={wereda}>{wereda}</option>
                     ))}
                   </select>
                 </div>
 
                 <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedGrade("All");
-                    setSelectedCity("All"); flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  ተማሪዎች ዝርዝር ({filteredStudents.length})
-                </h2>
-                <div className="text-sm text-gray-500">
-                  ከ {students.length} ተማሪዎች አንጻር
-                </div
+                  onClick={clearFilters}
                   className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
                 >
                   ሁሉንም አፅዳ (Clear All Filters)
@@ -263,10 +292,13 @@ const TeacherDashboard = ({ onLogout }) => {
 
             {/* Students List */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-800">
                   ተማሪዎች ዝርዝር ({filteredStudents.length})
                 </h2>
+                <div className="text-sm text-gray-500">
+                  ከ {students.length} ተማሪዎች አንጻር
+                </div>
               </div>
 
               <div className="divide-y divide-gray-200">
@@ -276,7 +308,10 @@ const TeacherDashboard = ({ onLogout }) => {
                   </div>
                 ) : (
                   filteredStudents.map((student, index) => (
-                    <div key={student._id || index} className="p-6 hover:bg-gray-50 transition-colors">
+                    <div
+                      key={student._id || index}
+                      className="p-6 hover:bg-gray-50 transition-colors"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
@@ -289,16 +324,22 @@ const TeacherDashboard = ({ onLogout }) => {
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
                               <span>📧 {student.email}</span>
                               <span>📱 {student.phoneNumber || 'N/A'}</span>
-                              {student.grade && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">ክፍል {student.grade}</span>}
-                              {student.emergencyPersonName && <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">🚨 አደጋ</span>}
+                              {student.grade && (
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                  ክፍል {student.grade}
+                                </span>
+                              )}
+                              {student.emergencyPersonName && (
+                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                                  🚨 አደጋ
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm text-gray-500">
-                            {student.city && <div>🏠 {student.city}</div>}
-                            {student.wereda && <div>📍 {student.wereda}</div>}
-                          </div>
+                        <div className="text-right text-sm text-gray-500">
+                          {student.city && <div>🏠 {student.city}</div>}
+                          {student.wereda && <div>📍 {student.wereda}</div>}
                         </div>
                       </div>
                     </div>
@@ -307,14 +348,7 @@ const TeacherDashboard = ({ onLogout }) => {
               </div>
             </div>
           </div>
-        )}Lessons Card */}
-          <div className="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-orange-500 hover:scale-105 transition-transform cursor-pointer hover:shadow-xl">
-            <div className="text-3xl mb-4">📚</div>
-            <h3 className="text-xl font-bold mb-2">ትምህርቶች (Lessons)</h3>
-            <p className="text-gray-500 text-sm">የሳምንቱን የትምህርት ዝግጅት ይስቀሉ</p>
-          </div>
-
-        </div>
+        )}
       </div>
     </div>
   );
