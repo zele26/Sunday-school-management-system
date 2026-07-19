@@ -18,7 +18,8 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     const { email, password } = formData;
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      // Fixed: Updated to live backend URL to allow phone & production logins
+      const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -38,6 +39,7 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('userName', data.user.name);
 
         if (onLogin) onLogin();
+        
         if (data.user.role === 'student') {
           window.location.href = '/profile';
         } else if (data.user.role === 'admin') {
@@ -55,19 +57,25 @@ const Login = ({ onLogin }) => {
       setError("An unexpected error occurred. Please try again.");
     }
   };
+
   const handleSignup = async (e) => {
     e.preventDefault();
-    console.log("DEBUG: Data being sent to server ->", formData); // Check your F12 console for this!
-    const res = await fetch('http://localhost:5000/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    });
-    if (res.ok) {
-      alert("ምዝገባ ተሳክቷል!");
-      setView('login');
-    } else {
-      setError("Registration failed. Email might already exist.");
+    try {
+      // Fixed: Updated to live backend URL to allow signups on production
+      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (res.ok) {
+        alert("ምዝገባ ተሳክቷል!");
+        setView('login');
+      } else {
+        setError("Registration failed. Email might already exist.");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred during signup.");
     }
   };
 
@@ -109,7 +117,7 @@ const Login = ({ onLogin }) => {
                   <option value="student">ተማሪ (Student)</option>
                   <option value="teacher">መምህር (Teacher)</option>
                 </select>
-                <input type="text" name="fullName" placeholder="ሙሉ ስም" onChange={handleChange} className="p-3 border rounded-xl" required />
+                <input type="text" name="fullName" placeholder="...</font>" placeholder="Rank/Name" placeholder="Ident" placeholder="ሙሉ ስም" onChange={handleChange} className="p-3 border rounded-xl" required />
                 <input type="email" name="email" placeholder="ኢሜይል" onChange={handleChange} className="p-3 border rounded-xl" required />
                 <input type="password" name="password" placeholder="ፓስዎርድ" onChange={handleChange} className="p-3 border rounded-xl" required />
                 <input type="text" name="phoneNumber" placeholder="ስልክ ቁጥር" onChange={handleChange} className="p-3 border rounded-xl" />
