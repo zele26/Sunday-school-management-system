@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 app.use(cors({
   origin: "*", 
-  methods: ["GET", "POST"]
+  methods: ["GET", "POST", "PUT"]
 }));
 
 const frontendDistPath = path.join(__dirname, '..', 'church-system', 'dist');
@@ -33,17 +33,25 @@ app.get('/', (req, res) => {
 });
 
 // --- DATABASE CONNECTION ---
+// --- DATABASE CONNECTION ---
 const MONGO_URI = process.env.MONGO_URI || '';
 let dbAvailable = false;
 let mongoServer;
 
 const connectToDatabase = async () => {
   try {
+    // 1. Force IPv4 resolution to prevent local network DNS hiccups (ESERVFAIL)
+    require('dns').setDefaultResultOrder('ipv4first');
+
     if (MONGO_URI) {
       try {
+        // Set an explicit timeout threshold to catch network degradation early
         await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 15000 });
         dbAvailable = true;
         console.log('Connected to MongoDB Atlas or configured MongoDB! ✅');
+        
+        // Log exactly which cluster we are communicating with to verify cloud routing
+        console.log(`Active Database Connection Target: ${mongoose.connection.host}/${mongoose.connection.name}`);
       } catch (atlasError) {
         console.warn('Atlas connection failed, trying local fallback...', atlasError.message);
         mongoServer = await MongoMemoryServer.create();

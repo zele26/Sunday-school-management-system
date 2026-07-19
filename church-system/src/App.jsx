@@ -4,7 +4,8 @@ import Login from './Login';
 import Dashboard from './Dashboard'; 
 import StudentProfile from './StudentProfile';
 import TeacherDashboard from './TeacherDashboard';
-import Register from './features/auth/Register'; 
+import Register from './features/auth/Register';
+import AdminPanel from './AdminPanel';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,13 +29,14 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={!isLoggedIn ? <Login onLogin={handleLoginSuccess} /> : <Navigate to="/dashboard" />} />
-      
-      {/* These routes are now accessible to anyone logged in */}
+      <Route path="/" element={!isLoggedIn ? <Login onLogin={handleLoginSuccess} /> : <Navigate to={localStorage.getItem('userRole') === 'admin' ? '/admin' : localStorage.getItem('userRole') === 'teacher' ? '/teacher' : '/dashboard'} />} />
+
       <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
       <Route path="/register" element={<Register />} />
       <Route path="/teacher-dashboard" element={<TeacherDashboard onLogout={handleLogout} />} />
       <Route path="/profile" element={<StudentProfile onLogout={handleLogout} />} />
+      <Route path="/admin/*" element={<AdminPanel onLogout={handleLogout} />} />
+      <Route path="/teacher" element={<TeacherDashboard onLogout={handleLogout} />} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

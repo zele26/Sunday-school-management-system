@@ -1,21 +1,170 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const defaultClasses = [
+  {
+    id: 1,
+    name: 'Grade 1A',
+    subject: 'Mathematics',
+    students: [
+      { id: 1, name: 'Selam Tadesse', attendance: 'Present', performance: 92 },
+      { id: 2, name: 'Mulugeta Bekele', attendance: 'Absent', performance: 78 },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Grade 5B',
+    subject: 'Science',
+    students: [
+      { id: 3, name: 'Hana Bekele', attendance: 'Present', performance: 88 },
+    ],
+  },
+];
+
+const defaultLessons = [
+  { id: 1, title: 'Fractions Basics', className: 'Grade 1A', topic: 'Numeracy', status: 'Planned' },
+  { id: 2, title: 'Human Body Systems', className: 'Grade 5B', topic: 'Science', status: 'Ready' },
+];
+
+const defaultAssignments = [
+  { id: 1, title: 'Math Practice Worksheet', className: 'Grade 1A', dueDate: '2026-07-24', status: 'Active' },
+];
+
+const defaultQuizzes = [
+  { id: 1, title: 'Quick Quiz: Fractions', className: 'Grade 1A', status: 'Draft' },
+];
+
+const defaultExams = [
+  { id: 1, title: 'Midterm Exam', className: 'Grade 5B', status: 'Pending Approval' },
+];
+
+const defaultMaterials = [
+  { id: 1, title: 'Algebra Notes', type: 'PDF', link: '#' },
+];
+
+const defaultAnnouncements = [
+  { id: 1, title: 'Parent meeting reminder', body: 'Please confirm your attendance for Friday.', date: '2026-07-19' },
+];
+
+const defaultCourses = [
+  {
+    id: 1,
+    title: 'Mathematics Foundations',
+    description: 'Build arithmetic, problem solving, and confidence.',
+    grade: 'Grade 1',
+    subject: 'Mathematics',
+    teacher: 'Teacher A',
+    duration: '8 weeks',
+    startDate: '2026-07-01',
+    endDate: '2026-08-26',
+    schedule: 'Monday 10:00',
+    status: 'Active',
+    maxStudents: 30,
+    materials: ['PDF Notes', 'Video Lesson'],
+    assignments: ['Week 1 Worksheet'],
+    exams: ['Midterm Quiz'],
+    prerequisites: 'None',
+  },
+];
+
+const defaultGrades = [
+  { id: 1, student: 'Selam Tadesse', title: 'Math Practice Worksheet', score: '92', feedback: 'Excellent work and clear reasoning.' },
+];
+
 const TeacherDashboard = ({ onLogout }) => {
   const navigate = useNavigate();
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [students, setStudents] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('All');
-  const [selectedCity, setSelectedCity] = useState('All');
-  const [selectedWereda, setSelectedWereda] = useState('All');
-  const [sortBy, setSortBy] = useState('name');
+  const [classes, setClasses] = useState(defaultClasses);
+  const [lessons, setLessons] = useState(defaultLessons);
+  const [assignments, setAssignments] = useState(defaultAssignments);
+  const [quizzes, setQuizzes] = useState(defaultQuizzes);
+  const [exams, setExams] = useState(defaultExams);
+  const [materials, setMaterials] = useState(defaultMaterials);
+  const [announcements, setAnnouncements] = useState(defaultAnnouncements);
+  const [courses, setCourses] = useState(defaultCourses);
+  const [grades, setGrades] = useState(defaultGrades);
+  const [selectedClass, setSelectedClass] = useState(defaultClasses[0]?.name || '');
+  const [lessonForm, setLessonForm] = useState({ title: '', className: 'Grade 1A', topic: '', status: 'Planned' });
+  const [assignmentForm, setAssignmentForm] = useState({ title: '', className: 'Grade 1A', dueDate: '', status: 'Active' });
+  const [quizForm, setQuizForm] = useState({ title: '', className: 'Grade 1A', status: 'Draft' });
+  const [examForm, setExamForm] = useState({ title: '', className: 'Grade 1A', status: 'Pending Approval' });
+  const [materialForm, setMaterialForm] = useState({ title: '', type: 'PDF', link: '' });
+  const [announcementForm, setAnnouncementForm] = useState({ title: '', body: '' });
+  const [courseForm, setCourseForm] = useState({
+    title: '',
+    description: '',
+    grade: 'Grade 1',
+    subject: '',
+    teacher: 'Teacher A',
+    duration: '',
+    startDate: '',
+    endDate: '',
+    schedule: '',
+    status: 'Draft',
+    maxStudents: '',
+    materials: '',
+    assignments: '',
+    exams: '',
+    prerequisites: '',
+  });
+  const [gradeForm, setGradeForm] = useState({ student: '', title: '', score: '', feedback: '' });
 
   const API_BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
+    let active = true;
+
+    const loadData = async () => {
+      try {
+        const response = await fetch('/api/teacher/dashboard-data');
+        if (!response.ok) throw new Error('Server returned an error');
+
+        const payload = await response.json();
+        const data = payload?.data || payload;
+
+        if (!active) return;
+
+        setClasses(data.classes || defaultClasses);
+        setLessons(data.lessons || defaultLessons);
+        setAssignments(data.assignments || defaultAssignments);
+        setQuizzes(data.quizzes || defaultQuizzes);
+        setExams(data.exams || defaultExams);
+        setMaterials(data.materials || defaultMaterials);
+        setAnnouncements(data.announcements || defaultAnnouncements);
+        setCourses(data.courses || defaultCourses);
+        setGrades(data.grades || defaultGrades);
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Unable to load teacher dashboard data', error);
+        const stored = localStorage.getItem('teacherDashboardData');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed) {
+              setClasses(parsed.classes || defaultClasses);
+              setLessons(parsed.lessons || defaultLessons);
+              setAssignments(parsed.assignments || defaultAssignments);
+              setQuizzes(parsed.quizzes || defaultQuizzes);
+              setExams(parsed.exams || defaultExams);
+              setMaterials(parsed.materials || defaultMaterials);
+              setAnnouncements(parsed.announcements || defaultAnnouncements);
+              setCourses(parsed.courses || defaultCourses);
+              setGrades(parsed.grades || defaultGrades);
+            }
+          } catch (parseError) {
+            console.error('Unable to parse cached teacher dashboard data', parseError);
+          }
+        }
+        if (active) {
+          setIsLoaded(true);
+        }
+      }
+    };
+
     const fetchTeacherData = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -41,41 +190,109 @@ const TeacherDashboard = ({ onLogout }) => {
       }
     };
 
+    loadData();
     fetchTeacherData();
     fetchStudents();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const filteredStudents = students
-    .filter((student) => {
-      const fullName = `${student.firstName || student.fullName || ''} ${student.lastName || ''}`.toLowerCase();
-      const matchesSearch = fullName.includes(searchTerm.toLowerCase());
-      const matchesGrade = selectedGrade === 'All' || student.grade === selectedGrade;
-      const matchesCity = selectedCity === 'All' || student.city === selectedCity;
-      const matchesWereda = selectedWereda === 'All' || student.wereda === selectedWereda;
-      return matchesSearch && matchesGrade && matchesCity && matchesWereda;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'name') {
-        const nameA = `${a.firstName || a.fullName || ''} ${a.lastName || ''}`.toLowerCase();
-        const nameB = `${b.firstName || b.fullName || ''} ${b.lastName || ''}`.toLowerCase();
-        return nameA.localeCompare(nameB);
-      } else if (sortBy === 'grade') {
-        return (a.grade || '').localeCompare(b.grade || '');
-      } else if (sortBy === 'city') {
-        return (a.city || '').localeCompare(b.city || '');
-      }
-      return 0;
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const payload = {
+      classes,
+      lessons,
+      assignments,
+      quizzes,
+      exams,
+      materials,
+      announcements,
+      courses,
+      grades,
+    };
+
+    localStorage.setItem('teacherDashboardData', JSON.stringify(payload));
+
+    fetch('/api/teacher/dashboard-data', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch((error) => {
+      console.error('Unable to save teacher dashboard data', error);
     });
+  }, [isLoaded, classes, lessons, assignments, quizzes, exams, materials, announcements, courses, grades]);
 
-  const uniqueGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
-  const uniqueCities = [...new Set(students.map((s) => s.city).filter(Boolean))].sort();
-  const uniqueWeredas = [...new Set(students.map((s) => s.wereda).filter(Boolean))].sort();
+  const activeClass = classes.find((item) => item.name === selectedClass) || classes[0];
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedGrade('All');
-    setSelectedCity('All');
-    setSelectedWereda('All');
+  const addLesson = (e) => {
+    e.preventDefault();
+    if (!lessonForm.title) return;
+    setLessons([{ id: Date.now(), ...lessonForm }, ...lessons]);
+    setLessonForm({ title: '', className: lessonForm.className, topic: '', status: 'Planned' });
+  };
+
+  const addAssignment = (e) => {
+    e.preventDefault();
+    if (!assignmentForm.title) return;
+    setAssignments([{ id: Date.now(), ...assignmentForm }, ...assignments]);
+    setAssignmentForm({ title: '', className: assignmentForm.className, dueDate: '', status: 'Active' });
+  };
+
+  const addQuiz = (e) => {
+    e.preventDefault();
+    if (!quizForm.title) return;
+    setQuizzes([{ id: Date.now(), ...quizForm }, ...quizzes]);
+    setQuizForm({ title: '', className: quizForm.className, status: 'Draft' });
+  };
+
+  const publishExam = (id) => {
+    setExams(exams.map((item) => item.id === id ? { ...item, status: 'Published' } : item));
+  };
+
+  const addMaterial = (e) => {
+    e.preventDefault();
+    if (!materialForm.title) return;
+    setMaterials([{ id: Date.now(), ...materialForm }, ...materials]);
+    setMaterialForm({ title: '', type: 'PDF', link: '' });
+  };
+
+  const addAnnouncement = (e) => {
+    e.preventDefault();
+    if (!announcementForm.title) return;
+    setAnnouncements([{ id: Date.now(), title: announcementForm.title, body: announcementForm.body, date: new Date().toISOString().slice(0, 10) }, ...announcements]);
+    setAnnouncementForm({ title: '', body: '' });
+  };
+
+  const addCourse = (e) => {
+    e.preventDefault();
+    if (!courseForm.title) return;
+    setCourses([{ id: Date.now(), ...courseForm, materials: courseForm.materials.split(','), assignments: courseForm.assignments.split(','), exams: courseForm.exams.split(',') }, ...courses]);
+    setCourseForm({
+      title: '',
+      description: '',
+      grade: 'Grade 1',
+      subject: '',
+      teacher: 'Teacher A',
+      duration: '',
+      startDate: '',
+      endDate: '',
+      schedule: '',
+      status: 'Draft',
+      maxStudents: '',
+      materials: '',
+      assignments: '',
+      exams: '',
+      prerequisites: '',
+    });
+  };
+
+  const addGrade = (e) => {
+    e.preventDefault();
+    if (!gradeForm.student || !gradeForm.title) return;
+    setGrades([{ id: Date.now(), ...gradeForm }, ...grades]);
+    setGradeForm({ student: '', title: '', score: '', feedback: '' });
   };
 
   if (loading) {
@@ -88,7 +305,6 @@ const TeacherDashboard = ({ onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Navbar */}
       <nav className="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-4 shadow-lg flex justify-between items-center">
         <h1 className="font-bold text-lg italic">ተክለሳዊሮስ መምህራን መድረክ</h1>
         <button
@@ -99,252 +315,320 @@ const TeacherDashboard = ({ onLogout }) => {
         </button>
       </nav>
 
-      <div className="p-6 max-w-6xl mx-auto">
-        {/* Welcome Header */}
-        <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mb-8 flex items-center gap-6 hover:shadow-xl transition-shadow">
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mb-8 flex items-center gap-6">
           <div className="text-5xl">👨‍🏫</div>
           <div>
             <h2 className="text-3xl font-bold text-gray-800">
-              እንኳን ደህና መጡ፣ መምህር {teacher?.fullName?.split(' ')[0]}!
+              እንኳን ደህና መጡ፣ መምህር {teacher?.fullName?.split(' ')[0] || 'Teacher'}!
             </h2>
-            <p className="text-gray-500">ዛሬ የእርስዎን ክፍል ያስተዳድሩ</p>
+            <p className="text-gray-500">Manage classes, learning materials, assessments, attendance, and communication from one workspace.</p>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-8 bg-white p-2 rounded-2xl shadow-lg">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
-              activeTab === 'overview'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            አጠቃላይ እይታ (Overview)
-          </button>
-          <button
-            onClick={() => setActiveTab('students')}
-            className={`flex-1 py-3 px-6 rounded-xl font-bold transition-all ${
-              activeTab === 'students'
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            ተማሪዎች (Students)
-          </button>
+        <div className="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-2xl shadow-lg">
+          {['overview', 'classes', 'courses', 'content', 'grading', 'communication', 'reports'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-3 rounded-xl font-semibold capitalize ${activeTab === tab ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
-        {/* Overview Tab */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Attendance Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-green-500 hover:scale-105 transition-transform cursor-pointer hover:shadow-xl">
-              <div className="text-3xl mb-4">📝</div>
-              <h3 className="text-xl font-bold mb-2">የተማሪዎች መገኘት (Attendance)</h3>
-              <p className="text-gray-500 text-sm">የዛሬውን የክፍል መገኘት እዚህ ይሙሉ</p>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <p className="text-sm text-gray-500">Assigned Classes</p>
+              <p className="text-3xl font-black mt-2">{classes.length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <p className="text-sm text-gray-500">Students</p>
+              <p className="text-3xl font-black mt-2">{students.length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <p className="text-sm text-gray-500">Assignments</p>
+              <p className="text-3xl font-black mt-2">{assignments.length}</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <p className="text-sm text-gray-500">Pending Exams</p>
+              <p className="text-3xl font-black mt-2">{exams.filter((item) => item.status !== 'Published').length}</p>
             </div>
 
-            {/* Student List Card */}
-            <div
-              className="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-blue-500 hover:scale-105 transition-transform cursor-pointer hover:shadow-xl"
-              onClick={() => setActiveTab('students')}
-            >
-              <div className="text-3xl mb-4">👥</div>
-              <h3 className="text-xl font-bold mb-2">የእኔ ተማሪዎች</h3>
-              <p className="text-gray-500 text-sm">የክፍልዎን ተማሪዎች ዝርዝር እና መረጃ ይመልከቱ</p>
+            <div className="md:col-span-2 bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-3">Recent class activity</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Created a new lesson plan for Grade 1A.</li>
+                <li>• Published a reminder announcement for parents.</li>
+                <li>• Reviewed student performance and uploaded new materials.</li>
+              </ul>
             </div>
 
-            {/* Lessons Card */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-b-4 border-orange-500 hover:scale-105 transition-transform cursor-pointer hover:shadow-xl">
-              <div className="text-3xl mb-4">📚</div>
-              <h3 className="text-xl font-bold mb-2">ትምህርቶች (Lessons)</h3>
-              <p className="text-gray-500 text-sm">የሳምንቱን የትምህርት ዝግጅት ይስቀሉ</p>
+            <div className="md:col-span-2 bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-3">Quick tasks</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button onClick={() => setActiveTab('content')} className="bg-blue-600 text-white py-2 rounded-lg">Create lesson or assessment</button>
+                <button onClick={() => setActiveTab('grading')} className="bg-green-600 text-white py-2 rounded-lg">Grade submissions</button>
+                <button onClick={() => setActiveTab('communication')} className="bg-purple-600 text-white py-2 rounded-lg">Send announcement</button>
+                <button onClick={() => setActiveTab('reports')} className="bg-orange-600 text-white py-2 rounded-lg">Generate report</button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Students Tab */}
-        {activeTab === 'students' && (
-          <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-blue-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">አጠቃላይ ተማሪዎች</p>
-                    <p className="text-3xl font-bold text-gray-800">{students.length}</p>
-                  </div>
-                  <div className="text-3xl">👥</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-green-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">ተመረጡ ተማሪዎች</p>
-                    <p className="text-3xl font-bold text-gray-800">{filteredStudents.length}</p>
-                  </div>
-                  <div className="text-3xl">✅</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-orange-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">ክፍሎች ብዛት</p>
-                    <p className="text-3xl font-bold text-gray-800">{uniqueGrades.length}</p>
-                  </div>
-                  <div className="text-3xl">📚</div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-purple-500">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">ከተሞች ብዛት</p>
-                    <p className="text-3xl font-bold text-gray-800">{uniqueCities.length}</p>
-                  </div>
-                  <div className="text-3xl">🏙️</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Search and Filter Controls */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                {/* Search Input */}
-                <div className="md:col-span-2">
-                  <input
-                    type="text"
-                    placeholder="ተማሪ ስም ያስገቡ... (Search student name...)"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Sort By */}
-                <div>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="name">በስም አስቀምጥ (Sort by Name)</option>
-                    <option value="grade">በክፍል አስቀምጥ (Sort by Grade)</option>
-                    <option value="city">በከተማ አስቀምጥ (Sort by City)</option>
-                  </select>
-                </div>
-
-                {/* Grade Filter */}
-                <div>
-                  <select
-                    value={selectedGrade}
-                    onChange={(e) => setSelectedGrade(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="All">ሁሉም ክፍሎች (All Grades)</option>
-                    {uniqueGrades.map((grade) => (
-                      <option key={grade} value={grade}>ክፍል {grade}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* City Filter */}
-                <div>
-                  <select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="All">ሁሉም ከተሞች (All Cities)</option>
-                    {uniqueCities.map((city) => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Second Row: Wereda Filter + Clear Button */}
-              <div className="flex justify-between items-center">
-                <div className="w-48">
-                  <select
-                    value={selectedWereda}
-                    onChange={(e) => setSelectedWereda(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                  >
-                    <option value="All">ሁሉም ወረዳዎች (All Weredas)</option>
-                    {uniqueWeredas.map((wereda) => (
-                      <option key={wereda} value={wereda}>{wereda}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-                >
-                  ሁሉንም አፅዳ (Clear All Filters)
-                </button>
-              </div>
-            </div>
-
-            {/* Students List */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  ተማሪዎች ዝርዝር ({filteredStudents.length})
-                </h2>
-                <div className="text-sm text-gray-500">
-                  ከ {students.length} ተማሪዎች አንጻር
-                </div>
-              </div>
-
-              <div className="divide-y divide-gray-200">
-                {filteredStudents.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500">
-                    ተማሪ አልተገኘም (No students found)
-                  </div>
-                ) : (
-                  filteredStudents.map((student, index) => (
-                    <div
-                      key={student._id || index}
-                      className="p-6 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                            {(student.firstName || student.fullName || 'U').charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-800">
-                              {student.firstName || student.fullName} {student.lastName || ''}
-                            </h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span>📧 {student.email}</span>
-                              <span>📱 {student.phoneNumber || 'N/A'}</span>
-                              {student.grade && (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                                  ክፍል {student.grade}
-                                </span>
-                              )}
-                              {student.emergencyPersonName && (
-                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
-                                  🚨 አደጋ
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right text-sm text-gray-500">
-                          {student.city && <div>🏠 {student.city}</div>}
-                          {student.wereda && <div>📍 {student.wereda}</div>}
-                        </div>
-                      </div>
+        {activeTab === 'classes' && (
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-4">
+              {classes.map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl p-5 shadow">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold">{item.name}</h3>
+                      <p className="text-sm text-gray-500">{item.subject}</p>
                     </div>
-                  ))
-                )}
+                    <button onClick={() => setSelectedClass(item.name)} className="bg-blue-600 text-white px-3 py-2 rounded-lg">View roster</button>
+                  </div>
+                  <div className="mt-4">
+                    {item.students.map((student) => (
+                      <div key={student.id} className="flex justify-between border rounded-lg p-3 mb-2">
+                        <div>
+                          <p className="font-semibold">{student.name}</p>
+                          <p className="text-sm text-gray-500">Attendance: {student.attendance}</p>
+                        </div>
+                        <span className="text-sm font-semibold text-green-700">Performance: {student.performance}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Current class focus</h3>
+              <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="w-full border p-2 rounded-lg mb-4">
+                {classes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+              </select>
+              {activeClass && (
+                <div>
+                  <p className="font-semibold">{activeClass.name}</p>
+                  <p className="text-sm text-gray-500">{activeClass.subject}</p>
+                  <p className="mt-3 text-sm">Use this view to monitor student attendance and performance for the selected class.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'courses' && (
+          <div className="bg-white rounded-2xl p-5 shadow">
+            <h3 className="font-bold text-lg mb-4">Manage assigned courses</h3>
+            <form onSubmit={addCourse} className="space-y-3 mb-4">
+              <input value={courseForm.title} onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} placeholder="Course title" className="w-full border p-2 rounded-lg" />
+              <textarea value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} placeholder="Description and objectives" className="w-full border p-2 rounded-lg" rows="3" />
+              <div className="grid md:grid-cols-2 gap-3">
+                <input value={courseForm.grade} onChange={(e) => setCourseForm({ ...courseForm, grade: e.target.value })} placeholder="Grade/Class" className="border p-2 rounded-lg" />
+                <input value={courseForm.subject} onChange={(e) => setCourseForm({ ...courseForm, subject: e.target.value })} placeholder="Subject" className="border p-2 rounded-lg" />
+                <input value={courseForm.duration} onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })} placeholder="Duration" className="border p-2 rounded-lg" />
+                <input value={courseForm.schedule} onChange={(e) => setCourseForm({ ...courseForm, schedule: e.target.value })} placeholder="Weekly schedule" className="border p-2 rounded-lg" />
+                <input value={courseForm.startDate} type="date" onChange={(e) => setCourseForm({ ...courseForm, startDate: e.target.value })} className="border p-2 rounded-lg" />
+                <input value={courseForm.endDate} type="date" onChange={(e) => setCourseForm({ ...courseForm, endDate: e.target.value })} className="border p-2 rounded-lg" />
+                <input value={courseForm.maxStudents} onChange={(e) => setCourseForm({ ...courseForm, maxStudents: e.target.value })} placeholder="Max students" className="border p-2 rounded-lg" />
+                <input value={courseForm.materials} onChange={(e) => setCourseForm({ ...courseForm, materials: e.target.value })} placeholder="Materials" className="border p-2 rounded-lg" />
+                <input value={courseForm.assignments} onChange={(e) => setCourseForm({ ...courseForm, assignments: e.target.value })} placeholder="Assignments" className="border p-2 rounded-lg" />
+                <input value={courseForm.exams} onChange={(e) => setCourseForm({ ...courseForm, exams: e.target.value })} placeholder="Exams" className="border p-2 rounded-lg" />
+              </div>
+              <input value={courseForm.prerequisites} onChange={(e) => setCourseForm({ ...courseForm, prerequisites: e.target.value })} placeholder="Prerequisites" className="w-full border p-2 rounded-lg" />
+              <button className="w-full bg-blue-700 text-white py-2 rounded-lg">Save course</button>
+            </form>
+            <div className="space-y-2">
+              {courses.map((course) => (
+                <div key={course.id} className="border rounded-lg p-3">
+                  <p className="font-semibold">{course.title}</p>
+                  <p className="text-sm text-gray-500">{course.grade} • {course.subject} • {course.status}</p>
+                  <p className="text-sm mt-1">{course.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">Schedule: {course.schedule || 'TBD'} • Materials: {course.materials?.join(', ') || 'None'}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'content' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Create lesson plan</h3>
+              <form onSubmit={addLesson} className="space-y-3">
+                <input value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} placeholder="Lesson title" className="w-full border p-2 rounded-lg" />
+                <input value={lessonForm.topic} onChange={(e) => setLessonForm({ ...lessonForm, topic: e.target.value })} placeholder="Topic" className="w-full border p-2 rounded-lg" />
+                <select value={lessonForm.className} onChange={(e) => setLessonForm({ ...lessonForm, className: e.target.value })} className="w-full border p-2 rounded-lg">
+                  {classes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                </select>
+                <button className="w-full bg-blue-600 text-white py-2 rounded-lg">Save lesson</button>
+              </form>
+              <div className="mt-4 space-y-2">
+                {lessons.map((item) => (
+                  <div key={item.id} className="border rounded-lg p-3">
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="text-sm text-gray-500">{item.className} • {item.topic} • {item.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-5 shadow">
+                <h3 className="font-bold text-lg mb-4">Assignments</h3>
+                <form onSubmit={addAssignment} className="space-y-3">
+                  <input value={assignmentForm.title} onChange={(e) => setAssignmentForm({ ...assignmentForm, title: e.target.value })} placeholder="Assignment title" className="w-full border p-2 rounded-lg" />
+                  <input value={assignmentForm.dueDate} type="date" onChange={(e) => setAssignmentForm({ ...assignmentForm, dueDate: e.target.value })} className="w-full border p-2 rounded-lg" />
+                  <select value={assignmentForm.className} onChange={(e) => setAssignmentForm({ ...assignmentForm, className: e.target.value })} className="w-full border p-2 rounded-lg">
+                    {classes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
+                  <button className="w-full bg-green-600 text-white py-2 rounded-lg">Create assignment</button>
+                </form>
+                <div className="mt-4 space-y-2">
+                  {assignments.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-3">
+                      <p className="font-semibold">{item.title}</p>
+                      <p className="text-sm text-gray-500">{item.className} • Due {item.dueDate || 'TBD'} • {item.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-5 shadow">
+                <h3 className="font-bold text-lg mb-4">Quizzes and exams</h3>
+                <form onSubmit={addQuiz} className="space-y-3 mb-4">
+                  <input value={quizForm.title} onChange={(e) => setQuizForm({ ...quizForm, title: e.target.value })} placeholder="Quiz title" className="w-full border p-2 rounded-lg" />
+                  <select value={quizForm.className} onChange={(e) => setQuizForm({ ...quizForm, className: e.target.value })} className="w-full border p-2 rounded-lg">
+                    {classes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
+                  <button className="w-full bg-purple-600 text-white py-2 rounded-lg">Save quiz</button>
+                </form>
+                <form onSubmit={(e) => { e.preventDefault(); if (!examForm.title) return; setExams([{ id: Date.now(), ...examForm }, ...exams]); setExamForm({ title: '', className: examForm.className, status: 'Pending Approval' }); }} className="space-y-3">
+                  <input value={examForm.title} onChange={(e) => setExamForm({ ...examForm, title: e.target.value })} placeholder="Exam title" className="w-full border p-2 rounded-lg" />
+                  <select value={examForm.className} onChange={(e) => setExamForm({ ...examForm, className: e.target.value })} className="w-full border p-2 rounded-lg">
+                    {classes.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
+                  </select>
+                  <button className="w-full bg-orange-600 text-white py-2 rounded-lg">Create exam</button>
+                </form>
+                <div className="mt-4 space-y-2">
+                  {exams.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-3 flex justify-between items-center">
+                      <div>
+                        <p className="font-semibold">{item.title}</p>
+                        <p className="text-sm text-gray-500">{item.className} • {item.status}</p>
+                      </div>
+                      {item.status !== 'Published' && <button onClick={() => publishExam(item.id)} className="bg-green-600 text-white px-3 py-2 rounded-lg">Publish</button>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'grading' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Grade submissions</h3>
+              <form onSubmit={addGrade} className="space-y-3">
+                <input value={gradeForm.student} onChange={(e) => setGradeForm({ ...gradeForm, student: e.target.value })} placeholder="Student name" className="w-full border p-2 rounded-lg" />
+                <input value={gradeForm.title} onChange={(e) => setGradeForm({ ...gradeForm, title: e.target.value })} placeholder="Assessment title" className="w-full border p-2 rounded-lg" />
+                <input value={gradeForm.score} onChange={(e) => setGradeForm({ ...gradeForm, score: e.target.value })} placeholder="Score" className="w-full border p-2 rounded-lg" />
+                <textarea value={gradeForm.feedback} onChange={(e) => setGradeForm({ ...gradeForm, feedback: e.target.value })} placeholder="Feedback" className="w-full border p-2 rounded-lg" rows="3" />
+                <button className="w-full bg-green-700 text-white py-2 rounded-lg">Save grade</button>
+              </form>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Results and feedback</h3>
+              <div className="space-y-2">
+                {grades.map((item) => (
+                  <div key={item.id} className="border rounded-lg p-3">
+                    <p className="font-semibold">{item.student} • {item.title}</p>
+                    <p className="text-sm text-gray-500">Score: {item.score}</p>
+                    <p className="text-sm mt-1">{item.feedback}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'communication' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Announcements and notifications</h3>
+              <form onSubmit={addAnnouncement} className="space-y-3">
+                <input value={announcementForm.title} onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })} placeholder="Title" className="w-full border p-2 rounded-lg" />
+                <textarea value={announcementForm.body} onChange={(e) => setAnnouncementForm({ ...announcementForm, body: e.target.value })} placeholder="Message" className="w-full border p-2 rounded-lg" rows="4" />
+                <button className="w-full bg-purple-700 text-white py-2 rounded-lg">Post announcement</button>
+              </form>
+              <div className="mt-4 space-y-2">
+                {announcements.map((item) => (
+                  <div key={item.id} className="border rounded-lg p-3">
+                    <p className="font-semibold">{item.title}</p>
+                    <p className="text-sm text-gray-500">{item.date}</p>
+                    <p className="text-sm mt-1">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Upload learning materials</h3>
+              <form onSubmit={addMaterial} className="space-y-3">
+                <input value={materialForm.title} onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })} placeholder="Material title" className="w-full border p-2 rounded-lg" />
+                <input value={materialForm.type} onChange={(e) => setMaterialForm({ ...materialForm, type: e.target.value })} placeholder="Type (PDF, Video, Note)" className="w-full border p-2 rounded-lg" />
+                <input value={materialForm.link} onChange={(e) => setMaterialForm({ ...materialForm, link: e.target.value })} placeholder="Link or file name" className="w-full border p-2 rounded-lg" />
+                <button className="w-full bg-indigo-700 text-white py-2 rounded-lg">Upload material</button>
+              </form>
+              <div className="mt-4 space-y-2">
+                {materials.map((item) => (
+                  <div key={item.id} className="border rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                      <p className="font-semibold">{item.title}</p>
+                      <p className="text-sm text-gray-500">{item.type}</p>
+                    </div>
+                    <a href={item.link || '#'} className="text-blue-600 text-sm">Open</a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Student performance snapshot</h3>
+              <div className="space-y-2">
+                {students.slice(0, 5).map((student, index) => (
+                  <div key={student._id || index} className="border rounded-lg p-3 flex justify-between">
+                    <span>{student.firstName || student.fullName} {student.lastName || ''}</span>
+                    <span className="font-semibold text-green-700">{student.grade || 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-5 shadow">
+              <h3 className="font-bold text-lg mb-4">Class report summary</h3>
+              <div className="space-y-3">
+                <div className="border rounded-lg p-3">
+                  <p className="text-sm text-gray-500">Attendance</p>
+                  <p className="text-2xl font-black">94%</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <p className="text-sm text-gray-500">Average assignment score</p>
+                  <p className="text-2xl font-black">86%</p>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <p className="text-sm text-gray-500">Pending follow-up</p>
+                  <p className="text-2xl font-black">3 Students</p>
+                </div>
               </div>
             </div>
           </div>

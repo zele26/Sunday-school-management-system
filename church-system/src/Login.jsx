@@ -40,6 +40,10 @@ const Login = ({ onLogin }) => {
         if (onLogin) onLogin();
         if (data.user.role === 'student') {
           window.location.href = '/profile';
+        } else if (data.user.role === 'admin') {
+          window.location.href = '/admin';
+        } else if (data.user.role === 'teacher') {
+          window.location.href = '/teacher';
         } else {
           window.location.href = '/dashboard';
         }
