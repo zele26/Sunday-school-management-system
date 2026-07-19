@@ -123,7 +123,7 @@ const AdminPanel = ({ onLogout }) => {
 
     const loadData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/panel-data');
+        const response = await fetch('https://church-api-3l2c.onrender.com/api/admin/panel-data');
         if (!response.ok) throw new Error('Server returned an error');
 
         const payload = await response.json();
@@ -197,11 +197,11 @@ const AdminPanel = ({ onLogout }) => {
 
     localStorage.setItem('adminPanelData', JSON.stringify(payload));
 
-fetch('http://localhost:5000/api/admin/panel-data', {
-  method: 'PUT',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(payload),
-}).catch((error) => {
+    fetch('https://church-api-3l2c.onrender.com/api/admin/panel-data', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch((error) => {
       console.error('Unable to save admin panel data', error);
     });
   }, [isLoaded, users, approvals, classes, courses, announcements, resources, attendance, complaints, certificates, settings]);
