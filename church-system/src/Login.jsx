@@ -24,7 +24,12 @@ const Login = ({ onLogin }) => {
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = { message: 'The server returned an invalid response.' };
+      }
 
       if (response.ok) {
         setError("");
@@ -33,7 +38,6 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('userName', data.user.name);
 
         if (onLogin) onLogin();
-        // Redirect based on role
         if (data.user.role === 'student') {
           window.location.href = '/profile';
         } else {
