@@ -13,7 +13,7 @@ const app = express();
 // --- MIDDLEWARE ---
 app.use(express.json());
 app.use(cors({
-  origin: "*", 
+  origin: "https://sunday-school-management-system.vercel.app", 
   methods: ["GET", "POST", "PUT"]
 }));
 
