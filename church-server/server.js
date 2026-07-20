@@ -46,8 +46,6 @@ app.get('/', (req, res) => {
 
 // Force IPv4 lookup first before any connection attempts
 dns.setDefaultResultOrder('ipv4first');
-
-const app = express();
 app.use(express.json());
 
 // --- 2. DATABASE CONNECTION FUNCTION ---
