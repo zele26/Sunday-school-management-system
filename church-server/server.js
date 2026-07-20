@@ -40,7 +40,6 @@ app.get('/', (req, res) => {
 });
 
 // --- 1. IMPORTS & GLOBAL CONFIG AT TOP ---
-const express = require('express');
 const mongoose = require('mongoose');
 const dns = require('dns');
 
