@@ -1,63 +1,12 @@
-// import React, { useState, useEffect } from 'react';
-// import { Routes, Route, Navigate } from 'react-router-dom';
-// import Login from './Login';
-// import Dashboard from './Dashboard'; 
-// import StudentProfile from './StudentProfile';
-// import TeacherDashboard from './TeacherDashboard';
-// import Register from './features/auth/Register';
-// import AdminPanel from './AdminPanel';
-
-// function App() {
-//   const [isLoggedIn, setIsLoggedIn] = useState(false);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       setIsLoggedIn(true);
-//     }
-//     setLoading(false);
-//   }, []);
-
-//   const handleLoginSuccess = () => setIsLoggedIn(true);
-//   const handleLogout = () => {
-//     localStorage.clear();
-//     setIsLoggedIn(false);
-//   };
-
-//   if (loading) return <div>Loading...</div>;
-
-//   return (
-//     <Routes>
-//       <Route path="/" element={!isLoggedIn ? <Login onLogin={handleLoginSuccess} /> : <Navigate to={localStorage.getItem('userRole') === 'admin' ? '/admin' : localStorage.getItem('userRole') === 'teacher' ? '/teacher' : '/dashboard'} />} />
-
-//       <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
-//       <Route path="/register" element={<Register />} />
-//       <Route path="/teacher-dashboard" element={<TeacherDashboard onLogout={handleLogout} />} />
-//       <Route path="/profile" element={<StudentProfile onLogout={handleLogout} />} />
-//       <Route path="/admin/*" element={<AdminPanel onLogout={handleLogout} />} />
-//       <Route path="/teacher" element={<TeacherDashboard onLogout={handleLogout} />} />
-
-//       <Route path="*" element={<Navigate to="/" />} />
-//     </Routes>
-//   );
-// }
-
-// export default App;
-
-
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Core Pages
+// Auth Pages
 import Login from './Login';
-import Dashboard from './Dashboard'; 
-import StudentProfile from './StudentProfile';
-import TeacherDashboard from './TeacherDashboard';
 import Register from './features/auth/Register';
 
-// Admin Modular Imports
+// Admin Modular System
 import AdminLayout from './features/admin/AdminLayout';
 import AdminOverview from './features/admin/AdminOverview';
 import UsersManagement from './features/admin/UsersManagement';
@@ -73,13 +22,30 @@ import CertificatesManagement from './features/admin/CertificatesManagement';
 import SettingsManagement from './features/admin/SettingsManagement';
 import AuditLogsManagement from './features/admin/AuditLogsManagement';
 
+// Teacher Modular System
+import TeacherLayout from './features/teacher/TeacherLayout';
+import TeacherOverview from './features/teacher/TeacherOverview';
+import TeacherClasses from './features/teacher/TeacherClasses';
+import TeacherCourses from './features/teacher/TeacherCourses';
+import TeacherContent from './features/teacher/TeacherContent';
+import TeacherGrading from './features/teacher/TeacherGrading';
+import TeacherCommunication from './features/teacher/TeacherCommunication';
+import TeacherReports from './features/teacher/TeacherReports';
+
+// Student Modular System
+import StudentLayout from './features/student/StudentLayout';
+import StudentOverview from './features/student/StudentOverview';
+import StudentCourses from './features/student/StudentCourses';
+import StudentAttendance from './features/student/StudentAttendance';
+import StudentAnnouncements from './features/student/StudentAnnouncements';
+import StudentProfileModule from './features/student/StudentProfileModule';
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Safely check authentication status on initial mount
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole');
 
@@ -107,13 +73,13 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 font-sans">
         <div className="flex flex-col items-center gap-2">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm">በመጫን ላይ ነው... (Loading...)</p>
+          <p className="text-xs font-semibold">በመጫን ላይ ነው... (Loading...)</p>
         </div>
       </div>
     );
   }
 
-  // Determine post-login redirect path based on user role
+  // Redirect based on user role upon landing on root '/'
   const getRedirectPath = () => {
     if (userRole === 'admin') return '/admin';
     if (userRole === 'teacher') return '/teacher';
@@ -122,7 +88,7 @@ function App() {
 
   return (
     <Routes>
-      {/* Root Route: Shows Login if logged out, or Redirects if logged in */}
+      {/* Landing / Login Route */}
       <Route
         path="/"
         element={
@@ -134,16 +100,30 @@ function App() {
         }
       />
 
-      {/* Auth & Public Routes */}
+      {/* Registration Route */}
       <Route path="/register" element={<Register />} />
 
-      {/* Authenticated User Routes */}
-      <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
-      <Route path="/teacher-dashboard" element={<TeacherDashboard onLogout={handleLogout} />} />
-      <Route path="/profile" element={<StudentProfile onLogout={handleLogout} />} />
-      <Route path="/teacher" element={<TeacherDashboard onLogout={handleLogout} />} />
+      {/* Student Portal Nested Routes */}
+      <Route path="/dashboard/*" element={<StudentLayout onLogout={handleLogout} />}>
+        <Route index element={<StudentOverview />} />
+        <Route path="courses" element={<StudentCourses />} />
+        <Route path="attendance" element={<StudentAttendance />} />
+        <Route path="announcements" element={<StudentAnnouncements />} />
+        <Route path="profile" element={<StudentProfileModule />} />
+      </Route>
 
-      {/* Admin Sub-System (Nested Routing) */}
+      {/* Teacher Portal Nested Routes */}
+      <Route path="/teacher/*" element={<TeacherLayout onLogout={handleLogout} />}>
+        <Route index element={<TeacherOverview />} />
+        <Route path="classes" element={<TeacherClasses />} />
+        <Route path="courses" element={<TeacherCourses />} />
+        <Route path="content" element={<TeacherContent />} />
+        <Route path="grading" element={<TeacherGrading />} />
+        <Route path="communication" element={<TeacherCommunication />} />
+        <Route path="reports" element={<TeacherReports />} />
+      </Route>
+
+      {/* Admin Portal Nested Routes */}
       <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />}>
         <Route index element={<AdminOverview />} />
         <Route path="users" element={<UsersManagement />} />
@@ -160,7 +140,7 @@ function App() {
         <Route path="audit-logs" element={<AuditLogsManagement />} />
       </Route>
 
-      {/* Fallback for undefined routes */}
+      {/* Catch-all fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
