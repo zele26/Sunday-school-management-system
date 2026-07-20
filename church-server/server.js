@@ -58,13 +58,14 @@ const connectToDatabase = async () => {
 
     console.log('Connecting to MongoDB Atlas...');
     await mongoose.connect(MONGO_URI, { 
+      dbName: 'church_db', // 👈 THIS FORCES ALL OPERATIONS INTO church_db
       serverSelectionTimeoutMS: 30000 
     });
 
-    dbAvailable = true; // Set flag to true when connection succeeds
+    dbAvailable = true;
     console.log('Connected to MongoDB Atlas successfully! ✅');
     console.log(`📌 Active Database Host: ${mongoose.connection.host}`);
-    console.log(`📌 Active Database Name: ${mongoose.connection.name}`);
+    console.log(`📌 Active Database Name: ${mongoose.connection.name}`); // Will now print 'church_db'
 
     if (typeof seedAdminUser === 'function') {
       await seedAdminUser();
