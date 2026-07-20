@@ -8,7 +8,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const dns = require('dns');
 
+// Force IPv4 lookup first before any connection attempts
+dns.setDefaultResultOrder('ipv4first');
+
 const app = express();
+
+// --- GLOBAL VARIABLES ---
+let dbAvailable = false;
 
 // --- MIDDLEWARE ---
 app.use(express.json());
@@ -40,15 +46,7 @@ app.get('/', (req, res) => {
   res.send('Church Management System API is running.');
 });
 
-// --- 1. IMPORTS & GLOBAL CONFIG AT TOP ---
-
-
-
-// Force IPv4 lookup first before any connection attempts
-dns.setDefaultResultOrder('ipv4first');
-app.use(express.json());
-
-// --- 2. DATABASE CONNECTION FUNCTION ---
+// --- DATABASE CONNECTION FUNCTION ---
 const MONGO_URI = process.env.MONGO_URI || '';
 
 const connectToDatabase = async () => {
@@ -63,6 +61,7 @@ const connectToDatabase = async () => {
       serverSelectionTimeoutMS: 30000 
     });
 
+    dbAvailable = true; // Set flag to true when connection succeeds
     console.log('Connected to MongoDB Atlas successfully! ✅');
     console.log(`📌 Active Database Host: ${mongoose.connection.host}`);
     console.log(`📌 Active Database Name: ${mongoose.connection.name}`);
@@ -71,6 +70,7 @@ const connectToDatabase = async () => {
       await seedAdminUser();
     }
   } catch (err) {
+    dbAvailable = false;
     console.error('❌ Database connection error to MongoDB Atlas:', err.message);
   }
 };
@@ -345,7 +345,7 @@ app.get('/api/auth/profile', async (req, res) => {
   }
 });
 
-// --- ADMIN DIRECT ENDPOINTS (Resolves 404 console errors) ---
+// --- ADMIN DIRECT ENDPOINTS ---
 app.get('/api/admin/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -555,10 +555,5 @@ app.get(/^(?!\/api).*/, (req, res) => {
 });
 
 // --- SERVER START ---
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, '0.0.0.0', () => {
-//   console.log(`✅ Server live on port ${PORT}`);
-// });
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
