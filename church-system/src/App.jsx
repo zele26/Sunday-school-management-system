@@ -46,8 +46,11 @@
 // export default App;
 
 
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Core Pages
 import Login from './Login';
 import Dashboard from './Dashboard'; 
 import StudentProfile from './StudentProfile';
@@ -72,52 +75,75 @@ import AuditLogsManagement from './features/admin/AuditLogsManagement';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Safely check authentication status on initial mount
     const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole');
+
     if (token) {
       setIsLoggedIn(true);
+      setUserRole(role);
     }
     setLoading(false);
   }, []);
 
-  const handleLoginSuccess = () => setIsLoggedIn(true);
+  const handleLoginSuccess = () => {
+    const role = localStorage.getItem('userRole');
+    setUserRole(role);
+    setIsLoggedIn(true);
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
+    setUserRole(null);
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 font-sans">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm">በመጫን ላይ ነው... (Loading...)</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine post-login redirect path based on user role
+  const getRedirectPath = () => {
+    if (userRole === 'admin') return '/admin';
+    if (userRole === 'teacher') return '/teacher';
+    return '/dashboard';
+  };
 
   return (
     <Routes>
+      {/* Root Route: Shows Login if logged out, or Redirects if logged in */}
       <Route
         path="/"
         element={
           !isLoggedIn ? (
             <Login onLogin={handleLoginSuccess} />
           ) : (
-            <Navigate
-              to={
-                localStorage.getItem('userRole') === 'admin'
-                  ? '/admin'
-                  : localStorage.getItem('userRole') === 'teacher'
-                  ? '/teacher'
-                  : '/dashboard'
-              }
-            />
+            <Navigate to={getRedirectPath()} replace />
           )
         }
       />
 
-      <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
+      {/* Auth & Public Routes */}
       <Route path="/register" element={<Register />} />
+
+      {/* Authenticated User Routes */}
+      <Route path="/dashboard" element={<Dashboard onLogout={handleLogout} />} />
       <Route path="/teacher-dashboard" element={<TeacherDashboard onLogout={handleLogout} />} />
       <Route path="/profile" element={<StudentProfile onLogout={handleLogout} />} />
       <Route path="/teacher" element={<TeacherDashboard onLogout={handleLogout} />} />
 
-      {/* Modular Admin Nested Sub-Routes */}
+      {/* Admin Sub-System (Nested Routing) */}
       <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />}>
         <Route index element={<AdminOverview />} />
         <Route path="users" element={<UsersManagement />} />
@@ -134,7 +160,8 @@ function App() {
         <Route path="audit-logs" element={<AuditLogsManagement />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" />} />
+      {/* Fallback for undefined routes */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
