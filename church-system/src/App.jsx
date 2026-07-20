@@ -60,19 +60,26 @@ import AdminLayout from './features/admin/AdminLayout';
 import AdminOverview from './features/admin/AdminOverview';
 import UsersManagement from './features/admin/UsersManagement';
 import ApprovalsManagement from './features/admin/ApprovalsManagement';
+import ResourcesManagement from './features/admin/ResourcesManagement';
+import AttendanceManagement from './features/admin/AttendanceManagement';
+import ReportsManagement from './features/admin/ReportsManagement';
+import ComplaintsManagement from './features/admin/ComplaintsManagement';
+import CertificatesManagement from './features/admin/CertificatesManagement';
+import SettingsManagement from './features/admin/SettingsManagement';
+import AuditLogsManagement from './features/admin/AuditLogsManagement';
 
 // Temporary placeholders for remaining admin modules
 //const ApprovalsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">✅ Approvals Module</div>;
-const ClassesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">🏫 Classes Module</div>;
-const CoursesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📚 Courses Module</div>;
-const AnnouncementsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📢 Announcements Module</div>;
-const ResourcesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📄 Resources Module</div>;
-const AttendanceManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📝 Attendance Module</div>;
-const ReportsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📊 Reports Module</div>;
-const ComplaintsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">⚠️ Complaints Module</div>;
-const CertificatesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">🎓 Certificates Module</div>;
-const SettingsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">⚙️ Settings Module</div>;
-const AuditLogsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📋 Audit Logs Module</div>;
+// const ClassesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">🏫 Classes Module</div>;
+// const CoursesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📚 Courses Module</div>;
+// const AnnouncementsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📢 Announcements Module</div>;
+// const ResourcesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📄 Resources Module</div>;
+// const AttendanceManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📝 Attendance Module</div>;
+// const ReportsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📊 Reports Module</div>;
+// const ComplaintsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">⚠️ Complaints Module</div>;
+// const CertificatesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">🎓 Certificates Module</div>;
+// const SettingsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">⚙️ Settings Module</div>;
+// const AuditLogsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📋 Audit Logs Module</div>;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
