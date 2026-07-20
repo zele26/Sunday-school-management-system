@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const dns = require('dns');
 
 const app = express();
 
@@ -40,8 +41,8 @@ app.get('/', (req, res) => {
 });
 
 // --- 1. IMPORTS & GLOBAL CONFIG AT TOP ---
-const mongoose = require('mongoose');
-const dns = require('dns');
+
+
 
 // Force IPv4 lookup first before any connection attempts
 dns.setDefaultResultOrder('ipv4first');
