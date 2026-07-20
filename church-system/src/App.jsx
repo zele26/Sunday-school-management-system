@@ -1,10 +1,11 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 
 // Auth Pages
 import Login from './Login';
 import Register from './features/auth/Register';
+import ForgotPassword from './ForgotPassword'; // <-- Adjusted path for password reset
 
 // Admin Modular System
 import AdminLayout from './features/admin/AdminLayout';
@@ -40,6 +41,27 @@ import StudentAttendance from './features/student/StudentAttendance';
 import StudentAnnouncements from './features/student/StudentAnnouncements';
 import StudentProfileModule from './features/student/StudentProfileModule';
 
+// --- Route Protection Wrappers ---
+const ProtectedRoute = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+};
+
+const RoleRoute = ({ allowedRoles }) => {
+  const userRole = localStorage.getItem('userRole');
+
+  if (!allowedRoles.includes(userRole)) {
+    if (userRole === 'admin') return <Navigate to="/admin" replace />;
+    if (userRole === 'teacher') return <Navigate to="/teacher" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <Outlet />;
+};
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -68,21 +90,20 @@ function App() {
     localStorage.clear();
     setIsLoggedIn(false);
     setUserRole(null);
-    navigate('/', { replace: true });
+    navigate('/login', { replace: true });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-400 font-sans">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-xs font-semibold">በመጫን ላይ ነው... (Loading...)</p>
         </div>
       </div>
     );
   }
 
-  // Redirect based on user role upon landing on root '/'
   const getRedirectPath = () => {
     if (userRole === 'admin') return '/admin';
     if (userRole === 'teacher') return '/teacher';
@@ -91,9 +112,20 @@ function App() {
 
   return (
     <Routes>
-      {/* Landing / Login Route */}
+      {/* Public Landing & Login Routes */}
       <Route
         path="/"
+        element={
+          !isLoggedIn ? (
+            <Navigate to="/login" replace />
+          ) : (
+            <Navigate to={getRedirectPath()} replace />
+          )
+        }
+      />
+
+      <Route
+        path="/login"
         element={
           !isLoggedIn ? (
             <Login onLogin={handleLoginSuccess} />
@@ -103,47 +135,77 @@ function App() {
         }
       />
 
-      {/* Registration Route */}
-      <Route path="/register" element={<Register />} />
+      {/* Public Registration Route */}
+      <Route
+        path="/register"
+        element={
+          !isLoggedIn ? (
+            <Register />
+          ) : (
+            <Navigate to={getRedirectPath()} replace />
+          )
+        }
+      />
 
-      {/* Student Portal Nested Routes */}
-      <Route path="/dashboard/*" element={<StudentLayout onLogout={handleLogout} />}>
-        <Route index element={<StudentOverview />} />
-        <Route path="courses" element={<StudentCourses />} />
-        <Route path="attendance" element={<StudentAttendance />} />
-        <Route path="announcements" element={<StudentAnnouncements />} />
-        <Route path="profile" element={<StudentProfileModule />} />
+      {/* Public Forgot Password Route */}
+      <Route
+        path="/forgot-password"
+        element={
+          !isLoggedIn ? (
+            <ForgotPassword />
+          ) : (
+            <Navigate to={getRedirectPath()} replace />
+          )
+        }
+      />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        {/* Student Portal */}
+        <Route element={<RoleRoute allowedRoles={['student', 'admin']} />}>
+          <Route path="/dashboard/*" element={<StudentLayout onLogout={handleLogout} />}>
+            <Route index element={<StudentOverview />} />
+            <Route path="courses" element={<StudentCourses />} />
+            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="announcements" element={<StudentAnnouncements />} />
+            <Route path="profile" element={<StudentProfileModule />} />
+          </Route>
+        </Route>
+
+        {/* Teacher Portal */}
+        <Route element={<RoleRoute allowedRoles={['teacher', 'admin']} />}>
+          <Route path="/teacher/*" element={<TeacherLayout onLogout={handleLogout} />}>
+            <Route index element={<TeacherOverview />} />
+            <Route path="classes" element={<TeacherClasses />} />
+            <Route path="courses" element={<TeacherCourses />} />
+            <Route path="content" element={<TeacherContent />} />
+            <Route path="grading" element={<TeacherGrading />} />
+            <Route path="communication" element={<TeacherCommunication />} />
+            <Route path="reports" element={<TeacherReports />} />
+          </Route>
+        </Route>
+
+        {/* Admin Portal */}
+        <Route element={<RoleRoute allowedRoles={['admin']} />}>
+          <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />}>
+            <Route index element={<AdminOverview />} />
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="approvals" element={<ApprovalsManagement />} />
+            <Route path="classes" element={<ClassesManagement />} />
+            <Route path="courses" element={<CoursesManagement />} />
+            <Route path="announcements" element={<AnnouncementsManagement />} />
+            <Route path="resources" element={<ResourcesManagement />} />
+            <Route path="attendance" element={<AttendanceManagement />} />
+            <Route path="reports" element={<ReportsManagement />} />
+            <Route path="complaints" element={<ComplaintsManagement />} />
+            <Route path="certificates" element={<CertificatesManagement />} />
+            <Route path="settings" element={<SettingsManagement />} />
+            <Route path="audit-logs" element={<AuditLogsManagement />} />
+          </Route>
+        </Route>
       </Route>
 
-      {/* Teacher Portal Nested Routes */}
-      <Route path="/teacher/*" element={<TeacherLayout onLogout={handleLogout} />}>
-        <Route index element={<TeacherOverview />} />
-        <Route path="classes" element={<TeacherClasses />} />
-        <Route path="courses" element={<TeacherCourses />} />
-        <Route path="content" element={<TeacherContent />} />
-        <Route path="grading" element={<TeacherGrading />} />
-        <Route path="communication" element={<TeacherCommunication />} />
-        <Route path="reports" element={<TeacherReports />} />
-      </Route>
-
-      {/* Admin Portal Nested Routes */}
-      <Route path="/admin/*" element={<AdminLayout onLogout={handleLogout} />}>
-        <Route index element={<AdminOverview />} />
-        <Route path="users" element={<UsersManagement />} />
-        <Route path="approvals" element={<ApprovalsManagement />} />
-        <Route path="classes" element={<ClassesManagement />} />
-        <Route path="courses" element={<CoursesManagement />} />
-        <Route path="announcements" element={<AnnouncementsManagement />} />
-        <Route path="resources" element={<ResourcesManagement />} />
-        <Route path="attendance" element={<AttendanceManagement />} />
-        <Route path="reports" element={<ReportsManagement />} />
-        <Route path="complaints" element={<ComplaintsManagement />} />
-        <Route path="certificates" element={<CertificatesManagement />} />
-        <Route path="settings" element={<SettingsManagement />} />
-        <Route path="audit-logs" element={<AuditLogsManagement />} />
-      </Route>
-
-      {/* Catch-all fallback */}
+      {/* Fallback Catch-all Route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
