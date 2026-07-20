@@ -39,17 +39,25 @@ app.get('/', (req, res) => {
   res.send('Church Management System API is running.');
 });
 
-// --- DATABASE CONNECTION (FORCED MONGO ATLAS PERSISTENCE) ---
+// --- 1. IMPORTS & GLOBAL CONFIG AT TOP ---
+const express = require('express');
+const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Force IPv4 lookup first before any connection attempts
+dns.setDefaultResultOrder('ipv4first');
+
+const app = express();
+app.use(express.json());
+
+// --- 2. DATABASE CONNECTION FUNCTION ---
 const MONGO_URI = process.env.MONGO_URI || '';
-let dbAvailable = false;
 
 const connectToDatabase = async () => {
   try {
-    require('dns').setDefaultResultOrder('ipv4first');
-
     if (!MONGO_URI) {
       console.error('❌ CRITICAL: MONGO_URI environment variable is missing on Render!');
-      return;
+      process.exit(1);
     }
 
     console.log('Connecting to MongoDB Atlas...');
@@ -57,17 +65,19 @@ const connectToDatabase = async () => {
       serverSelectionTimeoutMS: 30000 
     });
 
-    dbAvailable = true;
     console.log('Connected to MongoDB Atlas successfully! ✅');
-    console.log(`Active Database Connection Target: ${mongoose.connection.host}/${mongoose.connection.name}`);
+    console.log(`📌 Active Database Host: ${mongoose.connection.host}`);
+    console.log(`📌 Active Database Name: ${mongoose.connection.name}`);
 
-    await seedAdminUser();
+    if (typeof seedAdminUser === 'function') {
+      await seedAdminUser();
+    }
   } catch (err) {
-    dbAvailable = false;
     console.error('❌ Database connection error to MongoDB Atlas:', err.message);
   }
 };
 
+// Call database connection
 connectToDatabase();
 
 // --- SCHEMAS & MODELS ---
@@ -547,7 +557,10 @@ app.get(/^(?!\/api).*/, (req, res) => {
 });
 
 // --- SERVER START ---
+// const PORT = process.env.PORT || 5000;
+// app.listen(PORT, '0.0.0.0', () => {
+//   console.log(`✅ Server live on port ${PORT}`);
+// });
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server live on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
