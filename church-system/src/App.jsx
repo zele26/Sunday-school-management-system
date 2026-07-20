@@ -59,9 +59,10 @@ import Register from './features/auth/Register';
 import AdminLayout from './features/admin/AdminLayout';
 import AdminOverview from './features/admin/AdminOverview';
 import UsersManagement from './features/admin/UsersManagement';
+import ApprovalsManagement from './features/admin/ApprovalsManagement';
 
 // Temporary placeholders for remaining admin modules
-const ApprovalsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">✅ Approvals Module</div>;
+//const ApprovalsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">✅ Approvals Module</div>;
 const ClassesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">🏫 Classes Module</div>;
 const CoursesManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📚 Courses Module</div>;
 const AnnouncementsManagement = () => <div className="bg-white p-6 rounded-2xl shadow-sm border">📢 Announcements Module</div>;
