@@ -184,9 +184,7 @@ const handleSubmit = async (e) => {
         },
         body: JSON.stringify(cleanedForm),
       });
-
-
-
+      // ... rest unchanged
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <div className="flex justify-between items-center">
