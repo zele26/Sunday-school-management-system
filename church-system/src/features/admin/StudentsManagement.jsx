@@ -79,36 +79,15 @@ const StudentsManagement = () => {
   };
 
   // Download CSV
- const handleDownload = async () => {
+const handleDownload = () => {
   const token = localStorage.getItem('token');
   const params = new URLSearchParams();
   if (search) params.append('search', search);
   if (gradeFilter) params.append('grade', gradeFilter);
+  params.append('token', token);   // pass the token as query parameter
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/admin/students/export?${params}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      alert(data.message || 'Download failed');
-      return;
-    }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'students.csv';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('Download error:', err);
-    alert('Network error during download.');
-  }
+  // Open the download in a new tab (or directly trigger download)
+  window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
 };
 
   // Assign teacher
