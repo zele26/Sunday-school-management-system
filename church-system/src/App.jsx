@@ -4,8 +4,9 @@ import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 
 // Auth Pages
 import Login from './Login';
+
 import Register from './features/auth/Register';
-import ForgotPassword from './ForgotPassword'; // <-- Adjusted path for password reset
+import ForgotPassword from './features/auth/ForgotPassword'; // <-- Adjusted path for password reset
 
 // Admin Modular System
 import AdminLayout from './features/admin/AdminLayout';
