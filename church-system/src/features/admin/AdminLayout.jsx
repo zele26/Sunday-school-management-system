@@ -17,6 +17,7 @@ const navItems = [
   { path: '/admin/certificates', label: 'Certificates', icon: '🎓' },
   { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
   { path: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
+  { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

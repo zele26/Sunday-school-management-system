@@ -6,6 +6,7 @@ const Student = require('../models/Student');
 const { AdminPanelData } = require('../models/PanelData');
 const { protect, authorize } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
+const Course = require('../models/Course'); 
 
 // All routes below require a valid token and admin role
 router.use(protect);
@@ -203,4 +204,158 @@ router.post('/students', async (req, res) => {
   }
 });
 
+
+// List all teachers
+router.get('/teachers', async (req, res) => {
+  try {
+    const teachers = await User.find({ role: 'teacher', status: 'approved' })
+      .select('fullName email');
+    res.json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+//List all courses (for the assign‑course dropdown)
+router.get('/courses', async (req, res) => {
+  try {
+    const courses = await Course.find().sort({ name: 1 });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+//List students with search, filter, and pagination
+
+router.get('/students', async (req, res) => {
+  try {
+    const { search, grade, page = 1, limit = 20 } = req.query;
+    const query = {};
+
+    if (search) {
+      // search by full name (first + middle + last) or email from User
+      // we'll first find matching userIds from User model, then filter students
+      const userQuery = {
+        $or: [
+          { fullName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      };
+      const users = await User.find(userQuery).select('_id');
+      const userIds = users.map(u => u._id);
+      query.userId = { $in: userIds };
+    }
+
+    if (grade) {
+      query.grade = grade;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await Student.countDocuments(query);
+    const students = await Student.find(query)
+      .populate('userId', 'email fullName')          // get login email
+      .populate('teacher', 'fullName email')         // assigned teacher info
+      .populate('courses', 'name grade')             // enrolled courses
+      .sort({ registrationDate: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    res.json({
+      students,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit))
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Assign a teacher to a student
+router.put('/students/:id/assign-teacher', async (req, res) => {
+  try {
+    const { teacherId } = req.body;
+    if (!teacherId) return res.status(400).json({ success: false, message: 'Teacher ID required' });
+
+    // Verify teacher exists and has role teacher
+    const teacher = await User.findOne({ _id: teacherId, role: 'teacher' });
+    if (!teacher) return res.status(400).json({ success: false, message: 'Invalid teacher' });
+
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { teacher: teacherId },
+      { new: true }
+    ).populate('teacher', 'fullName email');
+
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    res.json({ success: true, student });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+//Assign courses to a student (replace entire list)
+router.put('/students/:id/assign-courses', async (req, res) => {
+  try {
+    const { courseIds } = req.body;  // array of course ObjectIds
+    if (!courseIds || !Array.isArray(courseIds)) {
+      return res.status(400).json({ success: false, message: 'courseIds array required' });
+    }
+
+    // Optional: verify all courses exist
+    const validCourses = await Course.find({ _id: { $in: courseIds } });
+    if (validCourses.length !== courseIds.length) {
+      return res.status(400).json({ success: false, message: 'Some course IDs are invalid' });
+    }
+
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      { courses: courseIds },
+      { new: true }
+    ).populate('courses', 'name grade');
+
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    res.json({ success: true, student });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+//Add a single course
+router.put('/students/:id/add-course', async (req, res) => {
+  try {
+    const { courseId } = req.body;
+    if (!courseId) return res.status(400).json({ success: false, message: 'Course ID required' });
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(400).json({ success: false, message: 'Course not found' });
+
+    const student = await Student.findById(req.params.id);
+    if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
+
+    if (!student.courses.includes(courseId)) {
+      student.courses.push(courseId);
+      await student.save();
+    }
+
+    res.json({ success: true, student: await student.populate('courses', 'name grade') });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
+router.post('/courses', async (req, res) => {
+  try {
+    const { name, grade, description } = req.body;
+    const course = await Course.create({ name, grade, description });
+    res.status(201).json(course);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;

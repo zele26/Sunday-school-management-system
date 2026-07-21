@@ -4,7 +4,6 @@ const studentSchema = new mongoose.Schema({
   firstName: String,
   middleName: String,
   lastName: String,
-  studentPhone: String,
   dob: String,
   address: String,
   grade: String,
@@ -13,10 +12,15 @@ const studentSchema = new mongoose.Schema({
   emergencyMiddleName: String,
   emergencyLastName: String,
   relationship: String,
-  contactPhone: String,
+  contactPhone: String,      // emergency phone
   contactAddress: String,
   contactEmail: String,
-  registrationDate: { type: Date, default: Date.now }
+  registrationDate: { type: Date, default: Date.now },
+  // new fields for management
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },  // link to login
+  studentPhone: String,         // student's own phone
+  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // assigned teacher (User with role teacher)
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }]  // enrolled courses
 });
 
 module.exports = mongoose.model('Student', studentSchema);
