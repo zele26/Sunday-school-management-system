@@ -8,6 +8,7 @@ const { AdminPanelData } = require('../models/PanelData');
 const { protect, authorize } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 const { Parser } = require('json2csv');
+const mongoose = require('mongoose');
 
 // All routes below require a valid token and admin role
 router.use(protect);
@@ -404,10 +405,20 @@ router.put('/students/:id/add-course', async (req, res) => {
 // ---------- Course Management ----------
 
 // Create a new course
+// Create a new course
 router.post('/courses', async (req, res) => {
   try {
     const courseData = { ...req.body };
-    // Convert arrays from comma-separated strings if needed (frontend sends JSON)
+
+    // Clean ObjectId fields: if empty string or invalid, remove them
+    if (!courseData.teacher || courseData.teacher === '') {
+      delete courseData.teacher;
+    }
+    if (!courseData.prerequisiteCourse || courseData.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(courseData.prerequisiteCourse)) {
+      courseData.prerequisiteCourse = null;   // or delete courseData.prerequisiteCourse;
+    }
+
+    // Convert array strings if needed (your existing code)
     if (typeof courseData.bibleBooks === 'string') {
       courseData.bibleBooks = courseData.bibleBooks.split(',').map(s => s.trim());
     }
@@ -463,10 +474,20 @@ router.get('/courses/:id', async (req, res) => {
 });
 
 // Update a course
+// Update a course
 router.put('/courses/:id', async (req, res) => {
   try {
     const updates = { ...req.body };
-    // Ensure arrays stay as arrays
+
+    // Clean ObjectId fields
+    if (updates.teacher === '') {
+      delete updates.teacher;   // remove it to unassign teacher, or set to null explicitly
+    }
+    if (updates.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(updates.prerequisiteCourse || '')) {
+      updates.prerequisiteCourse = null;
+    }
+
+    // Convert arrays
     if (typeof updates.bibleBooks === 'string') {
       updates.bibleBooks = updates.bibleBooks.split(',').map(s => s.trim());
     }

@@ -161,6 +161,32 @@ const CoursesManagement = () => {
     }
   };
 
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+
+    // Remove empty string fields that should be null
+    const cleanedForm = { ...form };
+    if (!cleanedForm.teacher) delete cleanedForm.teacher;
+    if (!cleanedForm.prerequisiteCourse) delete cleanedForm.prerequisiteCourse;
+
+    const url = editingCourse
+      ? `${API_BASE_URL}/api/admin/courses/${editingCourse._id}`
+      : `${API_BASE_URL}/api/admin/courses`;
+    const method = editingCourse ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(cleanedForm),
+      });
+
+
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <div className="flex justify-between items-center">
