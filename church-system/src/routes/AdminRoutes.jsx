@@ -1,9 +1,11 @@
+// src/routes/AdminRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import AdminOverview from '../features/admin/AdminOverview';
 import UsersManagement from '../features/admin/UsersManagement';
 import ApprovalsManagement from '../features/admin/ApprovalsManagement';
+import AddStudent from '../features/admin/AddStudent';   // <-- new import
 import ClassesManagement from '../features/admin/ClassesManagement';
 import CoursesManagement from '../features/admin/CoursesManagement';
 import AnnouncementsManagement from '../features/admin/AnnouncementsManagement';
@@ -21,6 +23,7 @@ export default function AdminRoutes() {
       <Route index element={<AdminOverview />} />
       <Route path="users" element={<UsersManagement />} />
       <Route path="approvals" element={<ApprovalsManagement />} />
+      <Route path="add-student" element={<AddStudent />} />   {/* new route */}
       <Route path="classes" element={<ClassesManagement />} />
       <Route path="courses" element={<CoursesManagement />} />
       <Route path="announcements" element={<AnnouncementsManagement />} />
