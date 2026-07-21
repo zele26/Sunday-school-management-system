@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const Student = require('../models/Student');   // Optional: for storing extra student info
+const Student = require('../models/Student');
 const { AdminPanelData } = require('../models/PanelData');
 const { protect, authorize } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
@@ -11,8 +11,7 @@ const bcrypt = require('bcryptjs');
 router.use(protect);
 router.use(authorize('admin'));
 
-// ---------- Existing routes ----------
-// Stats Endpoint
+// ---------- Stats ----------
 router.get('/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -24,7 +23,7 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// Fetch All Users
+// ---------- All Users ----------
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
@@ -34,7 +33,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// Fetch Pending Approvals
+// ---------- Pending Approvals ----------
 router.get('/pending-approvals', async (req, res) => {
   try {
     const pending = await User.find({ status: 'pending' }).select('-password');
@@ -44,7 +43,7 @@ router.get('/pending-approvals', async (req, res) => {
   }
 });
 
-// Approve a user
+// ---------- Approve a User ----------
 router.put('/users/:id/approve', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -57,7 +56,7 @@ router.put('/users/:id/approve', async (req, res) => {
   }
 });
 
-// Reject a user
+// ---------- Reject a User ----------
 router.put('/users/:id/reject', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -70,7 +69,7 @@ router.put('/users/:id/reject', async (req, res) => {
   }
 });
 
-// Admin Panel Data
+// ---------- Admin Panel Data ----------
 router.get('/panel-data', async (req, res) => {
   try {
     let panelData = await AdminPanelData.findOne();
@@ -99,20 +98,42 @@ router.put('/panel-data', async (req, res) => {
   }
 });
 
-// ---------- NEW: Admin creates a student account ----------
+// ---------- Create Student (User + Student document) ----------
 router.post('/students', async (req, res) => {
   try {
-    const { fullName, email, password, grade, parentName, parentPhone, address } = req.body;
+    const {
+      // Student personal info
+      firstName,
+      middleName,
+      lastName,
+      dob,
+      grade,
+      address,
+      contactPhone,   // student's own phone (to be stored in a new field if you add it)
+
+      // Account credentials
+      email,
+      password,
+
+      // Emergency contact
+      emergencyFirstName,
+      emergencyMiddleName,
+      emergencyLastName,
+      relationship,
+      emergencyPhone,
+      emergencyEmail,
+      emergencyAddress,
+    } = req.body;
 
     // Basic validation
-    if (!fullName || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Full name, email, and password are required.',
+        message: 'First name, last name, email, and password are required.',
       });
     }
 
-    // Check if user already exists
+    // Check duplicate email
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
@@ -125,7 +146,8 @@ router.post('/students', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create User with role=student and status=approved
+    // 1. Create User for authentication
+    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     const newUser = await User.create({
       fullName,
       email: email.toLowerCase(),
@@ -134,30 +156,42 @@ router.post('/students', async (req, res) => {
       status: 'approved',
     });
 
-    // Optionally create a Student record for extra info (if Student model exists)
-    // If your Student model is different, adjust the fields accordingly.
-    try {
-      await Student.create({
-        userId: newUser._id,
-        fullName,
-        grade,
-        parentName,
-        parentPhone,
-        address,
-      });
-    } catch (studentErr) {
-      console.warn('Could not create Student record (maybe the model is not used):', studentErr.message);
-      // Not critical – the User record is already created
-    }
+    // 2. Create Student document (matching your existing Student model)
+    const studentData = {
+      firstName,
+      middleName: middleName || '',
+      lastName,
+      dob: dob || '',
+      grade: grade || '',
+      address: address || '',
+      regYear: new Date().getFullYear().toString(),
+
+      // Emergency contact fields (model's existing fields)
+      emergencyFirstName: emergencyFirstName || '',
+      emergencyMiddleName: emergencyMiddleName || '',
+      emergencyLastName: emergencyLastName || '',
+      relationship: relationship || '',
+      contactPhone: emergencyPhone || '',        // store emergency phone here
+      contactAddress: emergencyAddress || '',
+      contactEmail: emergencyEmail || '',
+
+      // Student's own phone – not yet in your Student model.
+      // To store it, add a field `studentPhone: String` to the model.
+      // Until then, Mongoose will ignore this property.
+      studentPhone: contactPhone || '',
+    };
+
+    const newStudent = await Student.create(studentData);
 
     res.status(201).json({
       success: true,
       message: 'Student account created successfully.',
-      user: {
-        id: newUser._id,
-        fullName: newUser.fullName,
+      student: {
+        id: newStudent._id,
+        firstName: newStudent.firstName,
+        lastName: newStudent.lastName,
         email: newUser.email,
-        role: newUser.role,
+        grade: newStudent.grade,
       },
     });
   } catch (error) {
