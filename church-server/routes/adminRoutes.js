@@ -401,12 +401,99 @@ router.put('/students/:id/add-course', async (req, res) => {
   }
 });
 
-// ---------- Create a course (admin only) ----------
+// ---------- Course Management ----------
+
+// Create a new course
 router.post('/courses', async (req, res) => {
   try {
-    const { name, grade, description } = req.body;
-    const course = await Course.create({ name, grade, description });
+    const courseData = { ...req.body };
+    // Convert arrays from comma-separated strings if needed (frontend sends JSON)
+    if (typeof courseData.bibleBooks === 'string') {
+      courseData.bibleBooks = courseData.bibleBooks.split(',').map(s => s.trim());
+    }
+    if (typeof courseData.requiredMaterials === 'string') {
+      courseData.requiredMaterials = courseData.requiredMaterials.split(',').map(s => s.trim());
+    }
+
+    const course = await Course.create(courseData);
     res.status(201).json(course);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get all courses (with optional filters, sorting)
+router.get('/courses', async (req, res) => {
+  try {
+    const { status, ageGroup, search } = req.query;
+    const query = {};
+
+    if (status) query.status = status;
+    if (ageGroup) query.ageGroup = ageGroup;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { department: { $regex: search, $options: 'i' } },
+        { bibleTheme: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const courses = await Course.find(query)
+      .populate('teacher', 'fullName email')
+      .populate('prerequisiteCourse', 'name')
+      .sort({ createdAt: -1 });
+
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get a single course
+router.get('/courses/:id', async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id)
+      .populate('teacher', 'fullName email')
+      .populate('prerequisiteCourse', 'name');
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update a course
+router.put('/courses/:id', async (req, res) => {
+  try {
+    const updates = { ...req.body };
+    // Ensure arrays stay as arrays
+    if (typeof updates.bibleBooks === 'string') {
+      updates.bibleBooks = updates.bibleBooks.split(',').map(s => s.trim());
+    }
+    if (typeof updates.requiredMaterials === 'string') {
+      updates.requiredMaterials = updates.requiredMaterials.split(',').map(s => s.trim());
+    }
+
+    const course = await Course.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true,
+    })
+      .populate('teacher', 'fullName email')
+      .populate('prerequisiteCourse', 'name');
+
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    res.json(course);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a course
+router.delete('/courses/:id', async (req, res) => {
+  try {
+    const course = await Course.findByIdAndDelete(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    res.json({ success: true, message: 'Course deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
