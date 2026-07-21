@@ -3,10 +3,11 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Student = require('../models/Student');
+const Course = require('../models/Course');
 const { AdminPanelData } = require('../models/PanelData');
 const { protect, authorize } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
-const Course = require('../models/Course'); 
+const { Parser } = require('json2csv');
 
 // All routes below require a valid token and admin role
 router.use(protect);
@@ -103,20 +104,17 @@ router.put('/panel-data', async (req, res) => {
 router.post('/students', async (req, res) => {
   try {
     const {
-      // Student personal info
       firstName,
       middleName,
       lastName,
       dob,
       grade,
       address,
-      contactPhone,   // student's own phone (to be stored in a new field if you add it)
+      contactPhone,   // student's own phone (will be stored as studentPhone)
 
-      // Account credentials
       email,
       password,
 
-      // Emergency contact
       emergencyFirstName,
       emergencyMiddleName,
       emergencyLastName,
@@ -157,8 +155,9 @@ router.post('/students', async (req, res) => {
       status: 'approved',
     });
 
-    // 2. Create Student document (matching your existing Student model)
+    // 2. Create Student document
     const studentData = {
+      userId: newUser._id,   // link to User
       firstName,
       middleName: middleName || '',
       lastName,
@@ -167,19 +166,15 @@ router.post('/students', async (req, res) => {
       address: address || '',
       regYear: new Date().getFullYear().toString(),
 
-      // Emergency contact fields (model's existing fields)
       emergencyFirstName: emergencyFirstName || '',
       emergencyMiddleName: emergencyMiddleName || '',
       emergencyLastName: emergencyLastName || '',
       relationship: relationship || '',
-      contactPhone: emergencyPhone || '',        // store emergency phone here
+      contactPhone: emergencyPhone || '',        // emergency phone stored in existing field
       contactAddress: emergencyAddress || '',
       contactEmail: emergencyEmail || '',
 
-      // Student's own phone – not yet in your Student model.
-      // To store it, add a field `studentPhone: String` to the model.
-      // Until then, Mongoose will ignore this property.
-      studentPhone: contactPhone || '',
+      studentPhone: contactPhone || '',          // student's own phone (new field)
     };
 
     const newStudent = await Student.create(studentData);
@@ -204,8 +199,7 @@ router.post('/students', async (req, res) => {
   }
 });
 
-
-// List all teachers
+// ---------- List all teachers (for dropdown) ----------
 router.get('/teachers', async (req, res) => {
   try {
     const teachers = await User.find({ role: 'teacher', status: 'approved' })
@@ -216,7 +210,7 @@ router.get('/teachers', async (req, res) => {
   }
 });
 
-//List all courses (for the assign‑course dropdown)
+// ---------- List all courses (for dropdown) ----------
 router.get('/courses', async (req, res) => {
   try {
     const courses = await Course.find().sort({ name: 1 });
@@ -226,16 +220,13 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-//List students with search, filter, and pagination
-
+// ---------- List students with search, filter, and pagination ----------
 router.get('/students', async (req, res) => {
   try {
     const { search, grade, page = 1, limit = 20 } = req.query;
     const query = {};
 
     if (search) {
-      // search by full name (first + middle + last) or email from User
-      // we'll first find matching userIds from User model, then filter students
       const userQuery = {
         $or: [
           { fullName: { $regex: search, $options: 'i' } },
@@ -254,9 +245,9 @@ router.get('/students', async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await Student.countDocuments(query);
     const students = await Student.find(query)
-      .populate('userId', 'email fullName')          // get login email
-      .populate('teacher', 'fullName email')         // assigned teacher info
-      .populate('courses', 'name grade')             // enrolled courses
+      .populate('userId', 'email fullName')
+      .populate('teacher', 'fullName email')
+      .populate('courses', 'name grade')
       .sort({ registrationDate: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -272,13 +263,77 @@ router.get('/students', async (req, res) => {
   }
 });
 
-// Assign a teacher to a student
+// ---------- Export Students as CSV (respects same filters) ----------
+router.get('/students/export', async (req, res) => {
+  try {
+    const { search, grade } = req.query;
+    const query = {};
+
+    if (search) {
+      const userQuery = {
+        $or: [
+          { fullName: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      };
+      const users = await User.find(userQuery).select('_id');
+      const userIds = users.map(u => u._id);
+      query.userId = { $in: userIds };
+    }
+
+    if (grade) {
+      query.grade = grade;
+    }
+
+    const students = await Student.find(query)
+      .populate('userId', 'email fullName')
+      .populate('teacher', 'fullName email')
+      .populate('courses', 'name grade')
+      .sort({ registrationDate: -1 })
+      .lean();
+
+    const csvData = students.map(s => ({
+      'Student ID': s._id.toString(),
+      'First Name': s.firstName || '',
+      'Middle Name': s.middleName || '',
+      'Last Name': s.lastName || '',
+      'Grade': s.grade || '',
+      'Date of Birth': s.dob || '',
+      'Address': s.address || '',
+      'Student Phone': s.studentPhone || '',
+      'Email (login)': s.userId?.email || '',
+      'Assigned Teacher': s.teacher?.fullName || '',
+      'Teacher Email': s.teacher?.email || '',
+      'Courses': s.courses?.map(c => c.name).join('; ') || '',
+      'Emergency First Name': s.emergencyFirstName || '',
+      'Emergency Middle Name': s.emergencyMiddleName || '',
+      'Emergency Last Name': s.emergencyLastName || '',
+      'Relationship': s.relationship || '',
+      'Emergency Phone': s.contactPhone || '',
+      'Emergency Email': s.contactEmail || '',
+      'Emergency Address': s.contactAddress || '',
+      'Registration Date': s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : '',
+    }));
+
+    const fields = Object.keys(csvData[0] || {});
+    const parser = new Parser({ fields });
+    const csv = parser.parse(csvData);
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
+    res.status(200).send(csv);
+  } catch (err) {
+    console.error('Export error:', err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------- Assign teacher to student ----------
 router.put('/students/:id/assign-teacher', async (req, res) => {
   try {
     const { teacherId } = req.body;
     if (!teacherId) return res.status(400).json({ success: false, message: 'Teacher ID required' });
 
-    // Verify teacher exists and has role teacher
     const teacher = await User.findOne({ _id: teacherId, role: 'teacher' });
     if (!teacher) return res.status(400).json({ success: false, message: 'Invalid teacher' });
 
@@ -296,16 +351,14 @@ router.put('/students/:id/assign-teacher', async (req, res) => {
   }
 });
 
-
-//Assign courses to a student (replace entire list)
+// ---------- Assign courses (replace entire list) ----------
 router.put('/students/:id/assign-courses', async (req, res) => {
   try {
-    const { courseIds } = req.body;  // array of course ObjectIds
+    const { courseIds } = req.body;
     if (!courseIds || !Array.isArray(courseIds)) {
       return res.status(400).json({ success: false, message: 'courseIds array required' });
     }
 
-    // Optional: verify all courses exist
     const validCourses = await Course.find({ _id: { $in: courseIds } });
     if (validCourses.length !== courseIds.length) {
       return res.status(400).json({ success: false, message: 'Some course IDs are invalid' });
@@ -325,7 +378,7 @@ router.put('/students/:id/assign-courses', async (req, res) => {
   }
 });
 
-//Add a single course
+// ---------- Add a single course (optional) ----------
 router.put('/students/:id/add-course', async (req, res) => {
   try {
     const { courseId } = req.body;
@@ -348,7 +401,7 @@ router.put('/students/:id/add-course', async (req, res) => {
   }
 });
 
-
+// ---------- Create a course (admin only) ----------
 router.post('/courses', async (req, res) => {
   try {
     const { name, grade, description } = req.body;
@@ -358,4 +411,5 @@ router.post('/courses', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 module.exports = router;

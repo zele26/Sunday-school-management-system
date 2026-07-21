@@ -11,12 +11,13 @@ const StudentsManagement = () => {
   const [gradeFilter, setGradeFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // modals
+  // Modals state
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
 
-  // dropdowns
+  // Dropdown data
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [assignedTeacherId, setAssignedTeacherId] = useState('');
@@ -77,6 +78,16 @@ const StudentsManagement = () => {
     setPage(1);
   };
 
+  // Download CSV
+  const handleDownload = () => {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (gradeFilter) params.append('grade', gradeFilter);
+    window.open(`${API_BASE_URL}/api/admin/students/export?${params}&token=${token}`, '_blank');
+  };
+
+  // Assign teacher
   const openTeacherModal = (student) => {
     setSelectedStudent(student);
     setAssignedTeacherId(student.teacher?._id || '');
@@ -97,9 +108,9 @@ const StudentsManagement = () => {
     }
   };
 
+  // Assign courses
   const openCourseModal = (student) => {
     setSelectedStudent(student);
-    // pre-select existing courses
     const existingIds = student.courses.map(c => c._id);
     setSelectedCourseIds(existingIds);
     setShowCourseModal(true);
@@ -145,6 +156,12 @@ const StudentsManagement = () => {
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-slate-800">Student Management</h2>
+        <button
+          onClick={handleDownload}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+        >
+          ⬇ Download CSV
+        </button>
       </div>
 
       {/* Search & Filter */}
@@ -197,10 +214,16 @@ const StudentsManagement = () => {
                     <td className="py-2 px-2">
                       {s.courses?.map(c => c.name).join(', ') || 'None'}
                     </td>
-                    <td className="py-2 px-2">
+                    <td className="py-2 px-2 flex gap-1 flex-wrap">
+                      <button
+                        onClick={() => { setSelectedStudent(s); setShowDetailModal(true); }}
+                        className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-lg hover:bg-blue-200"
+                      >
+                        Details
+                      </button>
                       <button
                         onClick={() => openTeacherModal(s)}
-                        className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg mr-1 hover:bg-indigo-200"
+                        className="text-xs bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-200"
                       >
                         Teacher
                       </button>
@@ -224,7 +247,43 @@ const StudentsManagement = () => {
         </>
       )}
 
-      {/* Assign Teacher Modal */}
+      {/* Student Detail Modal */}
+      {showDetailModal && selectedStudent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-xl font-bold">Student Details</h3>
+              <button onClick={() => setShowDetailModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div><span className="font-semibold text-slate-500">Full Name:</span> {selectedStudent.firstName} {selectedStudent.middleName} {selectedStudent.lastName}</div>
+              <div><span className="font-semibold text-slate-500">Grade:</span> {selectedStudent.grade}</div>
+              <div><span className="font-semibold text-slate-500">Date of Birth:</span> {selectedStudent.dob || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Address:</span> {selectedStudent.address || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Phone:</span> {selectedStudent.studentPhone || selectedStudent.contactPhone || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Email (login):</span> {selectedStudent.userId?.email || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Assigned Teacher:</span> {selectedStudent.teacher?.fullName || 'Unassigned'}</div>
+              <div><span className="font-semibold text-slate-500">Courses:</span> {selectedStudent.courses?.map(c => c.name).join(', ') || 'None'}</div>
+              <div className="col-span-2 border-t pt-3 mt-2">
+                <h4 className="font-bold text-slate-600 mb-2">Emergency Contact</h4>
+              </div>
+              <div><span className="font-semibold text-slate-500">Name:</span> {selectedStudent.emergencyFirstName} {selectedStudent.emergencyMiddleName} {selectedStudent.emergencyLastName}</div>
+              <div><span className="font-semibold text-slate-500">Relationship:</span> {selectedStudent.relationship || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Phone:</span> {selectedStudent.contactPhone || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Email:</span> {selectedStudent.contactEmail || '-'}</div>
+              <div><span className="font-semibold text-slate-500">Address:</span> {selectedStudent.contactAddress || '-'}</div>
+              <div className="col-span-2">
+                <span className="font-semibold text-slate-500">Registration Date:</span> {selectedStudent.registrationDate ? new Date(selectedStudent.registrationDate).toLocaleDateString() : '-'}
+              </div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 bg-slate-200 rounded-xl text-sm">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Teacher Modal (unchanged) */}
       {showTeacherModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg">
@@ -247,7 +306,7 @@ const StudentsManagement = () => {
         </div>
       )}
 
-      {/* Assign Courses Modal */}
+      {/* Assign Courses Modal (unchanged) */}
       {showCourseModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg max-h-[80vh] overflow-y-auto">
