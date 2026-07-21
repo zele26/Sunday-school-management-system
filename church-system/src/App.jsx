@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 
 // Auth Pages & Components
-import Login from '.src/Login';
+import Login from './pages/Login';
 import Register from './pages/Register'; // <-- changed from ./features/auth/Register
 import ForgotPassword from './features/auth/ForgotPassword';
 
