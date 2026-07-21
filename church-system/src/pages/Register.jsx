@@ -1,3 +1,4 @@
+// src/pages/Register.jsx
 import React, { useState } from 'react';
 import bgImage from '../assets/Lidetachurch.jpg';
 
@@ -33,17 +34,18 @@ const Register = () => {
     };
 
     try {
-      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/signup', {
+      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        alert('ምዝገባ ተሳክቷል! (Registration Successful!)');
+        alert(data.message || 'Registration successful! Your account is pending admin approval.');
         window.location.href = '/login';
       } else {
-        const data = await res.json().catch(() => ({}));
         setError(data.message || 'Registration failed. Email might already exist.');
       }
     } catch (err) {

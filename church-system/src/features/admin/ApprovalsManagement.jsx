@@ -32,33 +32,46 @@ const ApprovalsManagement = () => {
     fetchPendingApprovals();
   }, []);
 
-  // Handle Approve / Reject
-  const handleApprovalAction = async (userId, status) => {
+  // Updated: action is 'approved' or 'rejected', uses PUT and correct endpoints
+  const handleApprovalAction = async (userId, action) => {
     setActionLoading(userId);
     setMessage({ text: '', type: '' });
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/admin/approve-user/${userId}`, {
-        method: 'PATCH',
+      const endpoint =
+        action === 'approved'
+          ? `${API_BASE_URL}/api/admin/users/${userId}/approve`
+          : `${API_BASE_URL}/api/admin/users/${userId}/reject`;
+
+      const res = await fetch(endpoint, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ status }), // 'approved' or 'rejected'
       });
 
       if (res.ok) {
         setMessage({
-          text: status === 'approved' ? 'ተጠቃሚው በስኬት ጸድቋል! (User approved successfully!)' : 'ተጠቃሚው ውድቅ ተደርጓል። (User rejected.)',
+          text:
+            action === 'approved'
+              ? 'ተጠቃሚው በስኬት ጸድቋል! (User approved successfully!)'
+              : 'ተጠቃሚው ውድቅ ተደርጓል። (User rejected.)',
           type: 'success',
         });
         setPendingUsers((prev) => prev.filter((user) => user._id !== userId));
       } else {
         const errorData = await res.json();
-        setMessage({ text: errorData.message || 'ትእዛዙ አልተሳካም። (Action failed.)', type: 'error' });
+        setMessage({
+          text: errorData.message || 'ትእዛዙ አልተሳካም። (Action failed.)',
+          type: 'error',
+        });
       }
     } catch (err) {
-      setMessage({ text: 'የአውታረ መረብ ስህተት ተከሰቷል። (Network error occurred.)', type: 'error' });
+      setMessage({
+        text: 'የአውታረ መረብ ስህተት ተከስቷል። (Network error occurred.)',
+        type: 'error',
+      });
     } finally {
       setActionLoading(null);
     }

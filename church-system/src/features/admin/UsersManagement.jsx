@@ -1,3 +1,4 @@
+// src/features/admin/UsersManagement.jsx
 import React, { useEffect, useState } from 'react';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
@@ -51,6 +52,7 @@ const UsersManagement = () => {
                 <th className="py-3 px-2">Name</th>
                 <th className="py-3 px-2">Email / Username</th>
                 <th className="py-3 px-2">Role</th>
+                <th className="py-3 px-2">Status</th>
                 <th className="py-3 px-2">Actions</th>
               </tr>
             </thead>
@@ -62,6 +64,19 @@ const UsersManagement = () => {
                   <td className="py-3 px-2">
                     <span className="bg-blue-50 text-blue-600 font-semibold px-2.5 py-1 rounded-lg text-xs">
                       {u.role}
+                    </span>
+                  </td>
+                  <td className="py-3 px-2">
+                    <span
+                      className={`font-semibold px-2.5 py-1 rounded-lg text-xs ${
+                        u.status === 'approved'
+                          ? 'bg-green-50 text-green-600'
+                          : u.status === 'pending'
+                          ? 'bg-yellow-50 text-yellow-600'
+                          : 'bg-red-50 text-red-600'
+                      }`}
+                    >
+                      {u.status}
                     </span>
                   </td>
                   <td className="py-3 px-2">

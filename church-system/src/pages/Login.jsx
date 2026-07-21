@@ -1,7 +1,10 @@
+// src/pages/Login.jsx (or wherever your Login component lives)
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- added
 import bgImage from '../assets/Lidetachurch.jpg';
 
 const Login = ({ onLogin }) => {
+  const navigate = useNavigate(); // <-- added
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -27,20 +30,24 @@ const Login = ({ onLogin }) => {
         body: JSON.stringify(payload)
       });
 
-      let data = await response.json().catch(() => ({ message: 'Invalid server response.' }));
+      const data = await response.json().catch(() => ({ message: 'Invalid server response.' }));
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.user.role);
         localStorage.setItem('userName', data.user.name || data.user.fullName);
+        localStorage.setItem('user', JSON.stringify(data.user)); // optional full object
 
-        if (onLogin) onLogin();
+        if (onLogin) onLogin(); // updates App state
 
-        // Redirect based on role
         const routes = { student: '/dashboard', admin: '/admin', teacher: '/teacher' };
-        window.location.href = routes[data.user.role] || '/dashboard';
+        navigate(routes[data.user.role] || '/dashboard', { replace: true }); // <-- smooth navigation
       } else {
-        setError(data.message || 'Login failed');
+        if (response.status === 403) {
+          setError(data.message || 'Your account is not yet approved or has been rejected.');
+        } else {
+          setError(data.message || 'Login failed');
+        }
       }
     } catch (err) {
       setError('Network error. Please try again.');
