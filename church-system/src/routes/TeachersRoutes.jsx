@@ -10,6 +10,7 @@ import TeacherCommunication from '../features/teacher/TeacherCommunication';
 import TeacherReports from '../features/teacher/TeacherReports';
 import TeacherStudents from '../features/teacher/TeacherStudents';
 import TeacherAttendance from '../features/teacher/TeacherAttendance';
+import TeacherAttendanceSummary from '../features/teacher/TeacherAttendanceSummary';
 
 
 export default function TeacherRoutes() {
@@ -25,6 +26,7 @@ export default function TeacherRoutes() {
       <Route index element={<TeacherOverview />} />
       <Route path="students" element={<TeacherStudents />} />
       <Route path="attendance" element={<TeacherAttendance />} />
+      <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
     </Routes>
   );
 }

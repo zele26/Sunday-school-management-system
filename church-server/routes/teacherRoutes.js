@@ -81,4 +81,66 @@ router.get('/attendance', async (req, res) => {
   }
 });
 
+// routes/teacherRoutes.js (add inside the file, after existing routes)
+
+// ---------- Teacher Attendance Summary ----------
+router.get('/attendance-summary', async (req, res) => {
+  try {
+    const { courseId } = req.query;
+
+    // Build filter for courses taught by this teacher
+    const courseFilter = { teacher: req.user._id };
+    if (courseId) {
+      courseFilter._id = courseId;
+    }
+
+    // Get all courses taught by this teacher (matching filter)
+    const courses = await Course.find(courseFilter).select('name');
+    if (!courses.length) {
+      return res.json([]);
+    }
+
+    // For each course, compute attendance summary
+    const summaries = [];
+
+    for (const course of courses) {
+      // Total distinct dates (class sessions) for this course
+      const distinctDates = await Attendance.distinct('date', { course: course._id });
+      const totalClasses = distinctDates.length;
+
+      // Get all students assigned to this course? Actually students are enrolled in courses via Student.courses array.
+      // We'll find students who have this course in their courses array.
+      const students = await Student.find({ courses: course._id })
+        .select('firstName lastName _id')
+        .lean();
+
+      const studentSummaries = [];
+
+      for (const student of students) {
+        const attendedCount = await Attendance.countDocuments({
+          student: student._id,
+          course: course._id,
+        });
+
+        studentSummaries.push({
+          studentId: student._id,
+          studentName: `${student.firstName} ${student.lastName}`,
+          attended: attendedCount,
+          totalClasses,
+        });
+      }
+
+      summaries.push({
+        courseId: course._id,
+        courseName: course.name,
+        students: studentSummaries,
+      });
+    }
+
+    res.json(summaries);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
