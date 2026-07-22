@@ -8,6 +8,12 @@ import TeacherContent from '../features/teacher/TeacherContent';
 import TeacherGrading from '../features/teacher/TeacherGrading';
 import TeacherCommunication from '../features/teacher/TeacherCommunication';
 import TeacherReports from '../features/teacher/TeacherReports';
+import TeacherStudents from '../features/teacher/TeacherStudents';
+import TeacherCourses from '../features/teacher/TeacherCourses';
+import TeacherAttendance from '../features/teacher/TeacherAttendance';
+import TeacherStudents from '../features/teacher/TeacherStudents';
+import TeacherCourses from '../features/teacher/TeacherCourses';
+import TeacherAttendance from '../features/teacher/TeacherAttendance';
 
 export default function TeacherRoutes() {
   return (
@@ -19,6 +25,13 @@ export default function TeacherRoutes() {
       <Route path="grading" element={<TeacherGrading />} />
       <Route path="communication" element={<TeacherCommunication />} />
       <Route path="reports" element={<TeacherReports />} />
+      <Route index element={<TeacherOverview />} />
+      <Route path="students" element={<TeacherStudents />} />
+      <Route path="courses" element={<TeacherCourses />} />
+      <Route path="attendance" element={<TeacherAttendance />} />
+      <Route path="students" element={<TeacherStudents />} />
+      <Route path="courses" element={<TeacherCourses />} />
+      <Route path="attendance" element={<TeacherAttendance />} />
     </Routes>
   );
 }

@@ -20,7 +20,8 @@ const studentSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },  // link to login
   studentPhone: String,         // student's own phone
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // assigned teacher (User with role teacher)
-  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }]  // enrolled courses
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],  // enrolled courses
+  qrCode: { type: String, unique: true },
 });
 
 module.exports = mongoose.model('Student', studentSchema);

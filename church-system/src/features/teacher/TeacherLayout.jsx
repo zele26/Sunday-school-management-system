@@ -83,15 +83,16 @@ import { NavLink, Outlet } from 'react-router-dom';
 const TeacherLayout = ({ onLogout }) => {
   const teacherName = localStorage.getItem('userName') || 'መምህር';
 
-  const navItems = [
-    { label: 'አጠቃላይ እይታ (Overview)', path: '/teacher', icon: '📊', end: true },
-    { label: 'ክፍሎች (Classes)', path: '/teacher/classes', icon: '🏫' },
-    { label: 'ኮርሶች (Courses)', path: '/teacher/courses', icon: '📖' },
-    { label: 'ይዘት እና ፈተናዎች (Content)', path: '/teacher/content', icon: '📝' },
-    { label: 'ውጤት መስጫ (Grading)', path: '/teacher/grading', icon: '💯' },
-    { label: 'ግንኙነት (Communication)', path: '/teacher/communication', icon: '💬' },
-    { label: 'ሪፖርቶች (Reports)', path: '/teacher/reports', icon: '📈' },
-  ];
+const navItems = [
+  { label: 'አጠቃላይ እይታ (Overview)', path: '/teacher', icon: '📊', end: true },
+  { label: 'የእኔ ተማሪዎች (My Students)', path: '/teacher/students', icon: '👨‍🎓' },
+  { label: 'የእኔ ኮርሶች (My Courses)', path: '/teacher/courses', icon: '📚' },
+  { label: 'ይዘት እና ፈተናዎች (Content & Lessons)', path: '/teacher/content', icon: '📝' },
+  { label: 'ውጤት መስጫ (Grading)', path: '/teacher/grading', icon: '💯' },
+  { label: 'ግንኙነት (Communication)', path: '/teacher/communication', icon: '💬' },
+  { label: 'መገኘት (Attendance)', path: '/teacher/attendance', icon: '📋' },
+  { label: 'ሪፖርቶች (Reports)', path: '/teacher/reports', icon: '📈' },
+];
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-800 flex flex-col">

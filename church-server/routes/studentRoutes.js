@@ -1,37 +1,83 @@
+// routes/studentRoutes.js
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
 const Student = require('../models/Student');
-const { StudentProfileData } = require('../models/PanelData');
+const Attendance = require('../models/Attendance');
+const Lesson = require('../models/Lesson');
 
-// Register New Student Form
-router.post('/register', async (req, res) => {
+// All routes require a valid token (any role, but we further restrict to student)
+router.use(protect);
+
+// Middleware to ensure the user is a student
+const ensureStudent = async (req, res, next) => {
   try {
-    const newStudent = new Student(req.body);
-    await newStudent.save();
-    res.status(201).json({ message: "Student registered successfully!" });
+    // req.user is already attached by 'protect' middleware
+    const student = await Student.findOne({ userId: req.user._id });
+    if (!student) {
+      return res.status(403).json({ message: 'Access denied. Student record not found.' });
+    }
+    req.student = student;   // attach student document to request
+    next();
   } catch (err) {
-    res.status(400).json({ message: "Error: " + err.message });
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Apply student check to all routes below
+router.use(ensureStudent);
+
+// ---------- Profile ----------
+router.get('/profile', async (req, res) => {
+  try {
+    // req.student is populated from ensureStudent middleware
+    const student = await Student.findById(req.student._id)
+      .populate('userId', 'email')
+      .populate('courses', 'name grade')
+      .populate('teacher', 'fullName email');
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Fetch All Students
-router.get('/all', async (req, res) => {
+// ---------- My Attendance ----------
+router.get('/attendance', async (req, res) => {
   try {
-    const students = await Student.find().sort({ registrationDate: -1 });
-    res.json(students);
+    const attendance = await Attendance.find({ student: req.student._id })
+      .populate('course', 'name')
+      .sort({ date: -1 });
+    res.json(attendance);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching students" });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Student Profile Data Portal
-router.get('/profile-data', async (req, res) => {
+// ---------- My Courses (enrolled) ----------
+router.get('/my-courses', async (req, res) => {
   try {
-    let profileData = await StudentProfileData.findOne();
-    if (!profileData) profileData = await StudentProfileData.create({});
-    res.json({ data: profileData.toObject() });
+    // req.student already has populated courses if you used .populate('courses'), but we fetch directly
+    const student = await Student.findById(req.student._id)
+      .populate('courses', 'name grade schedule teacher');
+    res.json(student.courses);
   } catch (err) {
-    res.status(500).json({ message: err.message || 'Server error' });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------- Lessons for my courses ----------
+router.get('/lessons', async (req, res) => {
+  try {
+    // Get all course IDs the student is enrolled in
+    const student = await Student.findById(req.student._id).select('courses');
+    const courseIds = student.courses;
+
+    const lessons = await Lesson.find({ course: { $in: courseIds } })
+      .populate('course', 'name')
+      .sort({ course: 1, order: 1 });
+    res.json(lessons);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

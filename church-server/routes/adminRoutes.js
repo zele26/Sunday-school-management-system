@@ -520,4 +520,101 @@ router.delete('/courses/:id', async (req, res) => {
   }
 });
 
+const qrcode = require('qrcode');
+
+// POST /api/admin/students/generate-qr/:id?  - if :id provided, generate for one student
+router.post('/students/generate-qr', async (req, res) => {
+  try {
+    const { studentId } = req.body;   // optional – if you want to generate for one
+
+    if (studentId) {
+      const student = await Student.findById(studentId);
+      if (!student) return res.status(404).json({ message: 'Student not found' });
+
+      // generate a unique QR string if not already present
+      if (!student.qrCode) {
+        student.qrCode = crypto.randomUUID();
+        await student.save();
+      }
+      // generate QR image as data URL
+      const qrDataUrl = await qrcode.toDataURL(student.qrCode);
+      return res.json({ studentId: student._id, qrCode: student.qrCode, qrImage: qrDataUrl });
+    }
+
+    // Bulk generate for all students missing a QR code
+    const studentsWithoutQR = await Student.find({ qrCode: { $exists: false } });
+    for (const s of studentsWithoutQR) {
+      s.qrCode = crypto.randomUUID();
+      await s.save();
+    }
+    res.json({ message: `Generated QR codes for ${studentsWithoutQR.length} students.` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/admin/attendance/scan – admin scans student QR
+router.post('/attendance/scan', async (req, res) => {
+  try {
+    const { qrCode, courseId } = req.body;
+    if (!qrCode) return res.status(400).json({ message: 'QR code data required' });
+
+    const student = await Student.findOne({ qrCode });
+    if (!student) return res.status(404).json({ message: 'Invalid QR code. Student not found.' });
+
+    // Check if already marked today (optional duplicate check)
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const alreadyMarked = await Attendance.findOne({
+      student: student._id,
+      date: { $gte: today, $lt: tomorrow },
+      ...(courseId ? { course: courseId } : {}),
+    });
+    if (alreadyMarked) {
+      return res.json({ success: true, message: 'Attendance already recorded for today.', student: student });
+    }
+
+    // Record attendance
+    const attendance = await Attendance.create({
+      student: student._id,
+      course: courseId || null,
+      date: new Date(),
+      scannedBy: req.user._id,
+    });
+
+    res.json({ success: true, message: 'Attendance recorded.', student: { id: student._id, name: `${student.firstName} ${student.lastName}` } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// GET /api/admin/attendance/report – aggregate by date, course, etc.
+router.get('/attendance/report', async (req, res) => {
+  try {
+    const { startDate, endDate, courseId } = req.query;
+    const query = {};
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    if (courseId) query.course = courseId;
+
+    const attendances = await Attendance.find(query)
+      .populate('student', 'firstName lastName grade')
+      .populate('course', 'name')
+      .sort({ date: -1 });
+
+    res.json(attendances);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// For teacher, same but restricted to their courses (add teacherId filter)
+
+
+
 module.exports = router;

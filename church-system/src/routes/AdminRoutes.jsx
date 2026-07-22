@@ -17,6 +17,8 @@ import CertificatesManagement from '../features/admin/CertificatesManagement';
 import SettingsManagement from '../features/admin/SettingsManagement';
 import AuditLogsManagement from '../features/admin/AuditLogsManagement';
 import StudentsManagement from '../features/admin/StudentsManagement';
+import QRScanner from '../features/admin/QRScanner';
+import AttendanceReports from '../features/admin/AttendanceReports';
 
 export default function AdminRoutes() {
   return (
@@ -36,6 +38,8 @@ export default function AdminRoutes() {
       <Route path="settings" element={<SettingsManagement />} />
       <Route path="audit-logs" element={<AuditLogsManagement />} />
       <Route path="students" element={<StudentsManagement />} />
+      <Route path="qr-scanner" element={<QRScanner />} />
+      <Route path="attendance-reports" element={<AttendanceReports />} />
     </Routes>
   );
 }

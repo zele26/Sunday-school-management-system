@@ -10,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 
 const app = express();
 
@@ -68,6 +69,10 @@ app.get(/^(?!\/api).*/, (req, res) => {
   }
   res.status(404).send('Frontend build not found. Run the Vite app first.');
 });
+
+app.use('/api/teacher', teacherRoutes);
+const studentRoutes = require('./routes/studentRoutes');
+app.use('/api/student', studentRoutes);
 
 // --- SERVER START ---
 const PORT = process.env.PORT || 5000;
