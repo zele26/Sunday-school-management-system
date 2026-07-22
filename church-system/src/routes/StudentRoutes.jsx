@@ -6,6 +6,7 @@ import StudentCourses from '../features/student/StudentCourses';
 import StudentAttendance from '../features/student/StudentAttendance';
 import StudentAnnouncements from '../features/student/StudentAnnouncements';
 import StudentProfileModule from '../features/student/StudentProfileModule';
+import StudentResources from '../features/student/StudentResources';
 
 export default function StudentRoutes() {
   return (
@@ -15,6 +16,9 @@ export default function StudentRoutes() {
       <Route path="attendance" element={<StudentAttendance />} />
       <Route path="announcements" element={<StudentAnnouncements />} />
       <Route path="profile" element={<StudentProfileModule />} />
+      <Route path="resources" element={<StudentResources />} />
+      <Route path="assignments" element={<StudentAssignments />} />
+      <Route path="exams" element={<StudentExams />} />
     </Routes>
   );
 }

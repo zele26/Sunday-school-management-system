@@ -77,6 +77,9 @@ const StudentLayout = ({ onLogout }) => {
     { label: 'የመገኘት ሁኔታ (Attendance)', path: '/dashboard/attendance', icon: '📅' },
     { label: 'ማስታወቂያዎች (Announcements)', path: '/dashboard/announcements', icon: '🔔' },
     { label: 'የግል መረጃ (Profile)', path: '/dashboard/profile', icon: '👤' },
+    { label: 'Resources', path: '/dashboard/resources', icon: '📖' },
+    { label: 'Assignments', path: '/dashboard/assignments', icon: '📝' },
+    { label: 'Exams', path: '/dashboard/exams', icon: '📊' },
   ];
 
   return (

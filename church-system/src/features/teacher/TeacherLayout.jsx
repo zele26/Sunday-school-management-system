@@ -92,6 +92,9 @@ const navItems = [
   { label: 'ግንኙነት (Communication)', path: '/teacher/communication', icon: '💬' },
   { label: 'መገኘት (Attendance)', path: '/teacher/attendance', icon: '📋' },
   { label: 'ሪፖርቶች (Reports)', path: '/teacher/reports', icon: '📈' },
+  { label: 'Resources', path: '/teacher/resources', icon: '📖' },
+  { label: 'Assignments', path: '/teacher/assignments', icon: '📝' },
+  { label: 'Exams', path: '/teacher/exams', icon: '📊' },
 ];
 
   return (

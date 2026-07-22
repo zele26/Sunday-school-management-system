@@ -1,44 +1,25 @@
-// src/features/student/StudentOverview.jsx
-import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const StudentOverview = () => {
-  const [data, setData] = useState({ coursesCount: 0, attendancePercentage: '0%' });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/student/overview`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const resData = await res.json();
-          setData(resData);
-        }
-      } catch (err) {
-        console.error('Error fetching student overview:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOverview();
-  }, []);
+  const cards = [
+    { title: 'My Courses', icon: '📚', link: '/dashboard/courses' },
+    { title: 'Resources', icon: '📖', link: '/dashboard/resources' },
+    { title: 'Assignments', icon: '📝', link: '/dashboard/assignments' },
+    { title: 'Exams', icon: '📊', link: '/dashboard/exams' },
+    { title: 'Attendance', icon: '📅', link: '/dashboard/attendance' },
+    { title: 'Profile', icon: '👤', link: '/dashboard/profile' },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <p className="text-xs text-slate-500">የተመዘገቡ ኮርሶች</p>
-          <p className="text-3xl font-black text-slate-800 mt-2">{loading ? '...' : data.coursesCount}</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <p className="text-xs text-slate-500">የመገኘት መቶኛ</p>
-          <p className="text-3xl font-black text-emerald-600 mt-2">{loading ? '...' : data.attendancePercentage}</p>
-        </div>
-      </div>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {cards.map(card => (
+        <Link key={card.link} to={card.link}
+          className="bg-white p-4 rounded-xl shadow border border-slate-100 hover:shadow-md transition flex flex-col items-center text-center space-y-2">
+          <span className="text-3xl">{card.icon}</span>
+          <span className="text-sm font-semibold text-slate-700">{card.title}</span>
+        </Link>
+      ))}
     </div>
   );
 };

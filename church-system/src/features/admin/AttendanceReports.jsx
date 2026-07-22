@@ -73,34 +73,42 @@ const AttendanceReports = () => {
   }, []);
 
   const fetchReport = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const token = localStorage.getItem('token');
-      const params = new URLSearchParams();
-      if (filters.startDate) params.append('startDate', filters.startDate);
-      if (filters.endDate) params.append('endDate', filters.endDate);
-      if (filters.courseId) params.append('courseId', filters.courseId);
-      if (filters.grade) params.append('grade', filters.grade);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.teacher) params.append('teacher', filters.teacher);
+  setLoading(true);
+  setError('');
+  try {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams();
 
-      const url = `${API_BASE_URL}/api/admin/attendance/report?${params}&token=${token}`;
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to fetch attendance');
+    // Only append if the value is non-empty
+    const appendIf = (key, value) => {
+      if (value && value.trim() !== '') {
+        params.append(key, value.trim());
       }
-      const data = await res.json();
-      setRecords(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    };
+
+    appendIf('startDate', filters.startDate);
+    appendIf('endDate', filters.endDate);
+    appendIf('courseId', filters.courseId);
+    appendIf('grade', filters.grade);
+    appendIf('status', filters.status);
+    appendIf('teacher', filters.teacher);
+
+    const url = `${API_BASE_URL}/api/admin/attendance/report?${params}&token=${token}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Failed to fetch attendance');
     }
-  };
+    const data = await res.json();
+    setRecords(data);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });

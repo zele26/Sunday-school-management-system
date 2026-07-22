@@ -11,6 +11,7 @@ import TeacherReports from '../features/teacher/TeacherReports';
 import TeacherStudents from '../features/teacher/TeacherStudents';
 import TeacherAttendance from '../features/teacher/TeacherAttendance';
 import TeacherAttendanceSummary from '../features/teacher/TeacherAttendanceSummary';
+import TeacherResources from '../features/teacher/TeacherResources';
 
 
 export default function TeacherRoutes() {
@@ -27,6 +28,9 @@ export default function TeacherRoutes() {
       <Route path="students" element={<TeacherStudents />} />
       <Route path="attendance" element={<TeacherAttendance />} />
       <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
+      <Route path="resources" element={<TeacherResources />} />
+      <Route path="assignments" element={<TeacherAssignments />} />   // similar component to be built
+      <Route path="exams" element={<TeacherExams />} />
     </Routes>
   );
 }
