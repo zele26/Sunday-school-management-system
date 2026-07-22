@@ -78,17 +78,61 @@ const StudentsManagement = () => {
     setPage(1);
   };
 
-  // Download CSV
-const handleDownload = () => {
-  const token = localStorage.getItem('token');
-  const params = new URLSearchParams();
-  if (search) params.append('search', search);
-  if (gradeFilter) params.append('grade', gradeFilter);
-  params.append('token', token);   // pass the token as query parameter
+  // ---------- QR Generation functions ----------
 
-  // Open the download in a new tab (or directly trigger download)
-  window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
-};
+  // Generate QR for a single student
+  const generateQR = async (studentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/admin/students/generate-qr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ studentId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('QR code generated!');
+        fetchStudents();
+      } else {
+        alert(data.message || 'Failed to generate QR');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  // Generate QR for all students without one
+  const generateAllQR = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/admin/students/generate-qr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),   // no studentId → bulk generate
+      });
+      const data = await res.json();
+      alert(data.message || 'QR codes generated!');
+      fetchStudents();
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  // Download CSV (unchanged)
+  const handleDownload = () => {
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (gradeFilter) params.append('grade', gradeFilter);
+    params.append('token', token);
+    window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
+  };
 
   // Assign teacher
   const openTeacherModal = (student) => {
@@ -159,12 +203,20 @@ const handleDownload = () => {
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-slate-800">Student Management</h2>
-        <button
-          onClick={handleDownload}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
-        >
-          ⬇ Download CSV
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleDownload}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+          >
+            ⬇ Download CSV
+          </button>
+          <button
+            onClick={generateAllQR}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+          >
+            🏷️ Generate All QR
+          </button>
+        </div>
       </div>
 
       {/* Search & Filter */}
@@ -201,7 +253,7 @@ const handleDownload = () => {
                   <th className="py-2 px-2">Email</th>
                   <th className="py-2 px-2">Grade</th>
                   <th className="py-2 px-2">Teacher</th>
-                  <th className="py-2 px-2">Courses</th>
+                  <th className="py-2 px-2">QR</th>
                   <th className="py-2 px-2">Actions</th>
                 </tr>
               </thead>
@@ -215,7 +267,16 @@ const handleDownload = () => {
                     <td className="py-2 px-2">{s.grade}</td>
                     <td className="py-2 px-2">{s.teacher?.fullName || 'Unassigned'}</td>
                     <td className="py-2 px-2">
-                      {s.courses?.map(c => c.name).join(', ') || 'None'}
+                      {s.qrCode ? (
+                        <span className="text-green-600 font-bold">✓</span>
+                      ) : (
+                        <button
+                          onClick={() => generateQR(s._id)}
+                          className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-lg hover:bg-purple-200"
+                        >
+                          Generate
+                        </button>
+                      )}
                     </td>
                     <td className="py-2 px-2 flex gap-1 flex-wrap">
                       <button
@@ -250,7 +311,7 @@ const handleDownload = () => {
         </>
       )}
 
-      {/* Student Detail Modal */}
+      {/* Student Detail Modal – unchanged */}
       {showDetailModal && selectedStudent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-lg max-h-[90vh] overflow-y-auto">
@@ -286,7 +347,7 @@ const handleDownload = () => {
         </div>
       )}
 
-      {/* Assign Teacher Modal (unchanged) */}
+      {/* Assign Teacher Modal – unchanged */}
       {showTeacherModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg">
@@ -309,7 +370,7 @@ const handleDownload = () => {
         </div>
       )}
 
-      {/* Assign Courses Modal (unchanged) */}
+      {/* Assign Courses Modal – unchanged */}
       {showCourseModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg max-h-[80vh] overflow-y-auto">
