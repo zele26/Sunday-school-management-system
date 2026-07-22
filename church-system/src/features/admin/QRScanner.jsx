@@ -1,18 +1,39 @@
 // src/features/admin/QRScanner.jsx
-import React, { useState, memo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
+// Simple beep / buzz using AudioContext
+const playBeep = (type = 'success') => {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === 'success') {
+      osc.frequency.value = 880;
+      gain.gain.value = 0.3;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else {
+      osc.frequency.value = 220;
+      gain.gain.value = 0.3;
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }
+  } catch (e) { /* ignore */ }
+};
+
 // ------------------------------------------------------------------
-// Stable scanner component – renders only once while scanning
-// The camera will never disappear because this component doesn't re-render
+// Stable scanner child – mounts once, never re-renders
+// It calls onScan repeatedly without stopping.
 // ------------------------------------------------------------------
-const ScannerView = memo(({ onScanSuccess }) => {
+const ScannerView = memo(({ onScan, onError }) => {
   const scannerRef = useRef(null);
 
   useEffect(() => {
-    // Create scanner and render once
     const scanner = new Html5QrcodeScanner(
       'reader',
       { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -22,69 +43,253 @@ const ScannerView = memo(({ onScanSuccess }) => {
 
     scanner.render(
       (decodedText) => {
-        // Stop scanning immediately after a successful scan
-        scanner.clear().catch(() => {});
-        onScanSuccess(decodedText);
+        // Do NOT stop – we want continuous scanning
+        onScan(decodedText);
       },
       (err) => {
-        // Ignore non‑fatal scan errors (no QR code in frame, etc.)
+        // ignore non‑fatal scan errors
       }
     );
 
-    // Cleanup when unmounted (i.e., when scanning stops)
     return () => {
       scanner.clear().catch(() => {});
     };
-  }, []); // empty dependencies → only runs once
+  }, []);
 
   return <div id="reader" style={{ width: '100%', maxWidth: '400px' }} />;
 });
 
 // ------------------------------------------------------------------
-// Main wrapper – handles buttons, messages, and mounting
+// Main component
 // ------------------------------------------------------------------
 const QRScanner = () => {
   const [scanning, setScanning] = useState(false);
-  const [message, setMessage] = useState('');
+  const [toasts, setToasts] = useState([]);   // array of { text, type }
 
-  const handleScanSuccess = async (decodedText) => {
+  // Course selection
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
+  // Late detection
+  const [useLateDetection, setUseLateDetection] = useState(false);
+  const [classStartTime, setClassStartTime] = useState('');
+  const [graceMinutes, setGraceMinutes] = useState(10);
+
+  // Manual search
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const toastId = useRef(0);
+
+  const addToast = (text, type = 'info') => {
+    const id = ++toastId.current;
+    setToasts(prev => [...prev, { id, text, type }]);
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  };
+
+  // Fetch courses for dropdown
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/api/admin/courses?token=${token}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setCourses(data);
+      } catch (err) {}
+    };
+    fetchCourses();
+  }, []);
+
+  // Manual search
+  useEffect(() => {
+    if (searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/api/admin/students?search=${searchTerm}&limit=10&token=${token}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setSearchResults(data.students || []);
+      } catch (err) {}
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Determine status based on late detection
+  const determineStatus = () => {
+    if (!useLateDetection || !classStartTime) return 'Present';
+    const now = new Date();
+    const [h, m] = classStartTime.split(':').map(Number);
+    const start = new Date();
+    start.setHours(h, m, 0, 0);
+    const graceEnd = new Date(start.getTime() + (graceMinutes * 60000));
+    return now > graceEnd ? 'Late' : 'Present';
+  };
+
+  // Core scan handler
+  const handleScan = useCallback(
+    async (decodedText) => {
+      try {
+        const token = localStorage.getItem('token');
+        const status = determineStatus();
+        const res = await fetch(`${API_BASE_URL}/api/admin/attendance/scan`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            qrCode: decodedText,
+            courseId: selectedCourseId || undefined,
+            status,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          playBeep('success');
+          addToast(`✅ ${data.student.name} – ${data.message}`, 'success');
+        } else {
+          playBeep('error');
+          addToast(`❌ ${data.message}`, 'error');
+        }
+      } catch (err) {
+        playBeep('error');
+        addToast('Network error', 'error');
+      }
+    },
+    [selectedCourseId, useLateDetection, classStartTime, graceMinutes]
+  );
+
+  // Manual mark attendance
+  const handleManualMark = async (student) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/admin/attendance/scan`, {
+      const status = determineStatus();
+      const res = await fetch(`${API_BASE_URL}/api/admin/attendance/manual`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ qrCode: decodedText }),
+        body: JSON.stringify({
+          studentId: student._id,
+          courseId: selectedCourseId || undefined,
+          status,
+        }),
       });
       const data = await res.json();
       if (data.success) {
-        setMessage(`✅ ${data.message} - ${data.student.name}`);
+        playBeep('success');
+        addToast(`✅ ${data.student.name} – ${data.message}`, 'success');
       } else {
-        setMessage(`❌ ${data.message}`);
+        playBeep('error');
+        addToast(`❌ ${data.message}`, 'error');
       }
+      setSearchTerm('');
+      setSearchOpen(false);
     } catch (err) {
-      setMessage('❌ Network error');
-    } finally {
-      setScanning(false); // unmount scanner component
+      playBeep('error');
+      addToast('Network error', 'error');
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow">
-      <h2 className="text-xl font-bold mb-4">Scan Student QR Code</h2>
+    <div className="bg-white p-6 rounded-2xl shadow space-y-6">
+      <h2 className="text-xl font-bold">Attendance Scanner</h2>
 
-      <div className="flex gap-3 mb-4">
+      {/* Course Selection & Late Detection */}
+      <div className="flex flex-wrap gap-4 items-end">
+        <div>
+          <label className="text-xs text-slate-500 block">Select Course</label>
+          <select
+            value={selectedCourseId}
+            onChange={e => setSelectedCourseId(e.target.value)}
+            className="p-2 border rounded-xl text-sm"
+          >
+            <option value="">General (no course)</option>
+            {courses.map(c => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={useLateDetection}
+            onChange={e => setUseLateDetection(e.target.checked)}
+          />
+          Enable Late Detection
+        </label>
+        {useLateDetection && (
+          <>
+            <div>
+              <label className="text-xs text-slate-500 block">Class Start</label>
+              <input
+                type="time"
+                value={classStartTime}
+                onChange={e => setClassStartTime(e.target.value)}
+                className="p-2 border rounded-xl text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 block">Grace (min)</label>
+              <input
+                type="number"
+                min="0"
+                value={graceMinutes}
+                onChange={e => setGraceMinutes(e.target.value)}
+                className="p-2 border rounded-xl text-sm w-20"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Manual Search */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search student by name for manual check‑in..."
+          value={searchTerm}
+          onChange={e => { setSearchTerm(e.target.value); setSearchOpen(true); }}
+          onFocus={() => setSearchOpen(true)}
+          onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+          className="p-2 border rounded-xl text-sm w-full"
+        />
+        {searchOpen && searchResults.length > 0 && (
+          <div className="absolute z-10 bg-white border rounded-xl shadow-lg mt-1 w-full max-h-40 overflow-auto">
+            {searchResults.map(s => (
+              <div
+                key={s._id}
+                className="px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm"
+                onMouseDown={() => handleManualMark(s)}
+              >
+                {s.firstName} {s.lastName} ({s.grade})
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Scan Controls */}
+      <div className="flex gap-3">
         <button
-          onClick={() => {
-            setMessage('');
-            setScanning(true);
-          }}
+          onClick={() => setScanning(true)}
           disabled={scanning}
           className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
         >
-          {scanning ? 'Scanning...' : 'Start Scanner'}
+          {scanning ? 'Scanning…' : 'Start Scanner'}
         </button>
         {scanning && (
           <button
@@ -96,22 +301,24 @@ const QRScanner = () => {
         )}
       </div>
 
-      {/* Only mount the scanner when scanning is true – it unmounts when false */}
-      {scanning && <ScannerView onScanSuccess={handleScanSuccess} />}
-
-      {message && (
-        <div
-          className={`mt-4 p-3 rounded-xl text-sm font-semibold ${
-            message.startsWith('✅')
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : message.startsWith('❌')
-              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-              : 'bg-slate-50 text-slate-700'
-          }`}
-        >
-          {message}
-        </div>
+      {/* Scanner view */}
+      {scanning && (
+        <ScannerView onScan={handleScan} onError={() => {}} />
       )}
+
+      {/* Toast messages */}
+      <div className="space-y-2">
+        {toasts.map(t => (
+          <div
+            key={t.id}
+            className={`text-sm p-2 rounded-xl ${
+              t.type === 'success' ? 'bg-emerald-50 text-emerald-700' : t.type === 'error' ? 'bg-rose-50 text-rose-700' : 'bg-blue-50 text-blue-700'
+            }`}
+          >
+            {t.text}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
