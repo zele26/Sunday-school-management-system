@@ -27,10 +27,6 @@ export default function TeacherRoutes() {
       <Route path="reports" element={<TeacherReports />} />
       <Route index element={<TeacherOverview />} />
       <Route path="students" element={<TeacherStudents />} />
-      <Route path="courses" element={<TeacherCourses />} />
-      <Route path="attendance" element={<TeacherAttendance />} />
-      <Route path="students" element={<TeacherStudents />} />
-      <Route path="courses" element={<TeacherCourses />} />
       <Route path="attendance" element={<TeacherAttendance />} />
     </Routes>
   );
