@@ -4,11 +4,14 @@ const router = express.Router();
 const User = require('../models/User');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
+const Attendance = require('../models/Attendance');  // <-- ADDED
 const { AdminPanelData } = require('../models/PanelData');
 const { protect, authorize } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
 const { Parser } = require('json2csv');
 const mongoose = require('mongoose');
+const qrcode = require('qrcode');
+const crypto = require('crypto');  // <-- ADDED
 
 // All routes below require a valid token and admin role
 router.use(protect);
@@ -111,7 +114,7 @@ router.post('/students', async (req, res) => {
       dob,
       grade,
       address,
-      contactPhone,   // student's own phone (will be stored as studentPhone)
+      contactPhone,
 
       email,
       password,
@@ -125,7 +128,6 @@ router.post('/students', async (req, res) => {
       emergencyAddress,
     } = req.body;
 
-    // Basic validation
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -133,7 +135,6 @@ router.post('/students', async (req, res) => {
       });
     }
 
-    // Check duplicate email
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
@@ -142,11 +143,9 @@ router.post('/students', async (req, res) => {
       });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 1. Create User for authentication
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     const newUser = await User.create({
       fullName,
@@ -156,9 +155,8 @@ router.post('/students', async (req, res) => {
       status: 'approved',
     });
 
-    // 2. Create Student document
     const studentData = {
-      userId: newUser._id,   // link to User
+      userId: newUser._id,
       firstName,
       middleName: middleName || '',
       lastName,
@@ -171,11 +169,11 @@ router.post('/students', async (req, res) => {
       emergencyMiddleName: emergencyMiddleName || '',
       emergencyLastName: emergencyLastName || '',
       relationship: relationship || '',
-      contactPhone: emergencyPhone || '',        // emergency phone stored in existing field
+      contactPhone: emergencyPhone || '',
       contactAddress: emergencyAddress || '',
       contactEmail: emergencyEmail || '',
 
-      studentPhone: contactPhone || '',          // student's own phone (new field)
+      studentPhone: contactPhone || '',
     };
 
     const newStudent = await Student.create(studentData);
@@ -264,7 +262,7 @@ router.get('/students', async (req, res) => {
   }
 });
 
-// ---------- Export Students as CSV (respects same filters) ----------
+// ---------- Export Students as CSV ----------
 router.get('/students/export', async (req, res) => {
   try {
     const { search, grade } = req.query;
@@ -404,21 +402,17 @@ router.put('/students/:id/add-course', async (req, res) => {
 
 // ---------- Course Management ----------
 
-// Create a new course
-// Create a new course
 router.post('/courses', async (req, res) => {
   try {
     const courseData = { ...req.body };
 
-    // Clean ObjectId fields: if empty string or invalid, remove them
     if (!courseData.teacher || courseData.teacher === '') {
       delete courseData.teacher;
     }
     if (!courseData.prerequisiteCourse || courseData.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(courseData.prerequisiteCourse)) {
-      courseData.prerequisiteCourse = null;   // or delete courseData.prerequisiteCourse;
+      courseData.prerequisiteCourse = null;
     }
 
-    // Convert array strings if needed (your existing code)
     if (typeof courseData.bibleBooks === 'string') {
       courseData.bibleBooks = courseData.bibleBooks.split(',').map(s => s.trim());
     }
@@ -433,7 +427,6 @@ router.post('/courses', async (req, res) => {
   }
 });
 
-// Get all courses (with optional filters, sorting)
 router.get('/courses', async (req, res) => {
   try {
     const { status, ageGroup, search } = req.query;
@@ -460,7 +453,6 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-// Get a single course
 router.get('/courses/:id', async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
@@ -473,21 +465,17 @@ router.get('/courses/:id', async (req, res) => {
   }
 });
 
-// Update a course
-// Update a course
 router.put('/courses/:id', async (req, res) => {
   try {
     const updates = { ...req.body };
 
-    // Clean ObjectId fields
     if (updates.teacher === '') {
-      delete updates.teacher;   // remove it to unassign teacher, or set to null explicitly
+      delete updates.teacher;
     }
     if (updates.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(updates.prerequisiteCourse || '')) {
       updates.prerequisiteCourse = null;
     }
 
-    // Convert arrays
     if (typeof updates.bibleBooks === 'string') {
       updates.bibleBooks = updates.bibleBooks.split(',').map(s => s.trim());
     }
@@ -509,7 +497,6 @@ router.put('/courses/:id', async (req, res) => {
   }
 });
 
-// Delete a course
 router.delete('/courses/:id', async (req, res) => {
   try {
     const course = await Course.findByIdAndDelete(req.params.id);
@@ -520,28 +507,23 @@ router.delete('/courses/:id', async (req, res) => {
   }
 });
 
-const qrcode = require('qrcode');
-
-// POST /api/admin/students/generate-qr/:id?  - if :id provided, generate for one student
+// ---------- QR Code Generation ----------
 router.post('/students/generate-qr', async (req, res) => {
   try {
-    const { studentId } = req.body;   // optional – if you want to generate for one
+    const { studentId } = req.body;
 
     if (studentId) {
       const student = await Student.findById(studentId);
       if (!student) return res.status(404).json({ message: 'Student not found' });
 
-      // generate a unique QR string if not already present
       if (!student.qrCode) {
         student.qrCode = crypto.randomUUID();
         await student.save();
       }
-      // generate QR image as data URL
       const qrDataUrl = await qrcode.toDataURL(student.qrCode);
       return res.json({ studentId: student._id, qrCode: student.qrCode, qrImage: qrDataUrl });
     }
 
-    // Bulk generate for all students missing a QR code
     const studentsWithoutQR = await Student.find({ qrCode: { $exists: false } });
     for (const s of studentsWithoutQR) {
       s.qrCode = crypto.randomUUID();
@@ -553,7 +535,7 @@ router.post('/students/generate-qr', async (req, res) => {
   }
 });
 
-// POST /api/admin/attendance/scan – admin scans student QR
+// ---------- Attendance Scanning ----------
 router.post('/attendance/scan', async (req, res) => {
   try {
     const { qrCode, courseId } = req.body;
@@ -562,7 +544,6 @@ router.post('/attendance/scan', async (req, res) => {
     const student = await Student.findOne({ qrCode });
     if (!student) return res.status(404).json({ message: 'Invalid QR code. Student not found.' });
 
-    // Check if already marked today (optional duplicate check)
     const today = new Date();
     today.setHours(0,0,0,0);
     const tomorrow = new Date(today);
@@ -577,7 +558,6 @@ router.post('/attendance/scan', async (req, res) => {
       return res.json({ success: true, message: 'Attendance already recorded for today.', student: student });
     }
 
-    // Record attendance
     const attendance = await Attendance.create({
       student: student._id,
       course: courseId || null,
@@ -591,8 +571,7 @@ router.post('/attendance/scan', async (req, res) => {
   }
 });
 
-
-// GET /api/admin/attendance/report – aggregate by date, course, etc.
+// ---------- Attendance Reports ----------
 router.get('/attendance/report', async (req, res) => {
   try {
     const { startDate, endDate, courseId } = req.query;
@@ -612,9 +591,5 @@ router.get('/attendance/report', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-// For teacher, same but restricted to their courses (add teacherId filter)
-
-
 
 module.exports = router;
