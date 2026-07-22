@@ -554,9 +554,16 @@ router.post('/attendance/scan', async (req, res) => {
       date: { $gte: today, $lt: tomorrow },
       ...(courseId ? { course: courseId } : {}),
     });
-    if (alreadyMarked) {
-      return res.json({ success: true, message: 'Attendance already recorded for today.', student: student });
-    }
+ if (alreadyMarked) {
+  return res.json({
+    success: true,
+    message: 'Attendance already recorded for today.',
+    student: {
+      id: student._id,
+      name: `${student.firstName} ${student.lastName}`,
+    },
+  });
+}
 
     const attendance = await Attendance.create({
       student: student._id,
