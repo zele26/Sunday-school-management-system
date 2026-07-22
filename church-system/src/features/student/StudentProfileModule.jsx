@@ -145,7 +145,7 @@ const StudentProfile = () => {
         )}
       </div>
 
-      {/* Attendance History – ENHANCED TABLE */}
+      {/* Attendance History – fully detailed */}
       <div>
         <h3 className="text-lg font-semibold text-slate-700 mb-3 border-b pb-2">
           Attendance History
@@ -158,34 +158,39 @@ const StudentProfile = () => {
               <thead>
                 <tr className="border-b text-xs uppercase text-slate-400">
                   <th className="py-2 px-2">Date</th>
+                  <th className="py-2 px-2">Check‑in</th>
                   <th className="py-2 px-2">Course</th>
                   <th className="py-2 px-2">Teacher</th>
-                  <th className="py-2 px-2">Time</th>
+                  <th className="py-2 px-2">Grade</th>
                   <th className="py-2 px-2">Status</th>
+                  <th className="py-2 px-2">Acad. Year</th>
+                  <th className="py-2 px-2">Semester</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {attendance.map(record => {
                   const dateObj = new Date(record.date);
-                  const formattedDate = dateObj.toLocaleDateString();
-                  const formattedTime = dateObj.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  });
-
+                  const checkIn = record.checkInTime
+                    ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    : '-';
                   return (
                     <tr key={record._id} className="hover:bg-slate-50">
-                      <td className="py-2 px-2">{formattedDate}</td>
-                      <td className="py-2 px-2">{record.course?.name || 'General'}</td>
+                      <td className="py-2 px-2">{dateObj.toLocaleDateString()}</td>
+                      <td className="py-2 px-2">{checkIn}</td>
+                      <td className="py-2 px-2">{record.courseName || 'General'}</td>
+                      <td className="py-2 px-2">{record.teacherName || 'N/A'}</td>
+                      <td className="py-2 px-2">{record.grade || '-'}</td>
                       <td className="py-2 px-2">
-                        {record.course?.teacher?.fullName || 'N/A'}
-                      </td>
-                      <td className="py-2 px-2">{formattedTime}</td>
-                      <td className="py-2 px-2">
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700">
-                          Present
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          record.status === 'Present' ? 'bg-emerald-100 text-emerald-700' :
+                          record.status === 'Late' ? 'bg-amber-100 text-amber-700' :
+                          'bg-rose-100 text-rose-700'
+                        }`}>
+                          {record.status}
                         </span>
                       </td>
+                      <td className="py-2 px-2">{record.academicYear || '-'}</td>
+                      <td className="py-2 px-2">{record.semester || '-'}</td>
                     </tr>
                   );
                 })}

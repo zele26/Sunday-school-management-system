@@ -3,8 +3,9 @@ const express = require('express');
 const router = express.Router();
 const Attendance = require('../../models/Attendance');
 const Student = require('../../models/Student');
+const Course = require('../../models/Course');
 
-// Scan QR and record attendance
+// ---------- Scan QR and record attendance (full data stored) ----------
 router.post('/scan', async (req, res) => {
   try {
     const { qrCode, courseId } = req.body;
@@ -13,8 +14,24 @@ router.post('/scan', async (req, res) => {
     const student = await Student.findOne({ qrCode });
     if (!student) return res.status(404).json({ message: 'Invalid QR code. Student not found.' });
 
+    // Look up course and teacher if a courseId is provided
+    let courseName = '';
+    let teacher = null;
+    let teacherName = '';
+    if (courseId) {
+      const course = await Course.findById(courseId).populate('teacher', 'fullName');
+      if (course) {
+        courseName = course.name;
+        if (course.teacher) {
+          teacher = course.teacher._id;
+          teacherName = course.teacher.fullName;
+        }
+      }
+    }
+
+    // Duplicate check for today
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -27,24 +44,57 @@ router.post('/scan', async (req, res) => {
       return res.json({
         success: true,
         message: 'Attendance already recorded for today.',
-        student: { id: student._id, name: `${student.firstName} ${student.lastName}` },
+        student: {
+          id: student._id,
+          name: `${student.firstName} ${student.lastName}`,
+        },
       });
     }
 
+    // Determine academic year and semester
+    const now = new Date();
+    const month = now.getMonth(); // 0 = Jan, 11 = Dec
+    const year = now.getFullYear();
+    let academicYear, semester;
+    if (month >= 5 && month <= 11) {   // June - December
+      academicYear = `${year}/${year + 1}`;
+      semester = 'First';
+    } else {                           // January - May
+      academicYear = `${year - 1}/${year}`;
+      semester = 'Second';
+    }
+
+    // Create the fully populated document
     await Attendance.create({
       student: student._id,
+      studentName: `${student.firstName} ${student.lastName}`,
+      grade: student.grade || '',
       course: courseId || null,
-      date: new Date(),
-      scannedBy: req.user._id,
+      courseName,
+      teacher,
+      teacherName,
+      date: today,
+      checkInTime: new Date(),
+      status: 'Present',
+      recordedBy: req.user._id,
+      academicYear,
+      semester,
     });
 
-    res.json({ success: true, message: 'Attendance recorded.', student: { id: student._id, name: `${student.firstName} ${student.lastName}` } });
+    res.json({
+      success: true,
+      message: 'Attendance recorded.',
+      student: {
+        id: student._id,
+        name: `${student.firstName} ${student.lastName}`,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Basic attendance report (admin)
+// ---------- Basic attendance report (admin) ----------
 router.get('/report', async (req, res) => {
   try {
     const { startDate, endDate, courseId } = req.query;

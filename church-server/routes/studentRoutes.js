@@ -40,17 +40,12 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// ---------- My Attendance (enhanced) ----------
+
+// ---------- My Attendance (simplified – no population needed) ----------
 router.get('/attendance', async (req, res) => {
   try {
     const attendance = await Attendance.find({ student: req.student._id })
-      .populate({
-        path: 'course',
-        select: 'name teacher',
-        populate: { path: 'teacher', select: 'fullName' }   // get teacher’s full name
-      })
-      .sort({ date: -1 });   // most recent first
-
+      .sort({ date: -1 });   // newest first
     res.json(attendance);
   } catch (err) {
     res.status(500).json({ message: err.message });
