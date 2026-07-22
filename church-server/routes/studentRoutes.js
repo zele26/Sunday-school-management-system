@@ -30,7 +30,6 @@ router.use(ensureStudent);
 // ---------- Profile ----------
 router.get('/profile', async (req, res) => {
   try {
-    // req.student is populated from ensureStudent middleware
     const student = await Student.findById(req.student._id)
       .populate('userId', 'email')
       .populate('courses', 'name grade')
@@ -41,12 +40,17 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// ---------- My Attendance ----------
+// ---------- My Attendance (enhanced) ----------
 router.get('/attendance', async (req, res) => {
   try {
     const attendance = await Attendance.find({ student: req.student._id })
-      .populate('course', 'name')
-      .sort({ date: -1 });
+      .populate({
+        path: 'course',
+        select: 'name teacher',
+        populate: { path: 'teacher', select: 'fullName' }   // get teacher’s full name
+      })
+      .sort({ date: -1 });   // most recent first
+
     res.json(attendance);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -56,7 +60,6 @@ router.get('/attendance', async (req, res) => {
 // ---------- My Courses (enrolled) ----------
 router.get('/my-courses', async (req, res) => {
   try {
-    // req.student already has populated courses if you used .populate('courses'), but we fetch directly
     const student = await Student.findById(req.student._id)
       .populate('courses', 'name grade schedule teacher');
     res.json(student.courses);
@@ -68,7 +71,6 @@ router.get('/my-courses', async (req, res) => {
 // ---------- Lessons for my courses ----------
 router.get('/lessons', async (req, res) => {
   try {
-    // Get all course IDs the student is enrolled in
     const student = await Student.findById(req.student._id).select('courses');
     const courseIds = student.courses;
 

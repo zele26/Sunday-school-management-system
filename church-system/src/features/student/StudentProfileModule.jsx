@@ -23,9 +23,7 @@ const StudentProfile = () => {
       const res = await fetch(`${API_BASE_URL}/api/student/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        throw new Error('Failed to load profile');
-      }
+      if (!res.ok) throw new Error('Failed to load profile');
       const data = await res.json();
       setProfile(data);
     } catch (err) {
@@ -41,9 +39,7 @@ const StudentProfile = () => {
       const res = await fetch(`${API_BASE_URL}/api/student/attendance`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        throw new Error('Failed to load attendance');
-      }
+      if (!res.ok) throw new Error('Failed to load attendance');
       const data = await res.json();
       setAttendance(data);
     } catch (err) {
@@ -57,9 +53,7 @@ const StudentProfile = () => {
       const res = await fetch(`${API_BASE_URL}/api/student/my-courses`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) {
-        throw new Error('Failed to load courses');
-      }
+      if (!res.ok) throw new Error('Failed to load courses');
       const data = await res.json();
       setCourses(data);
     } catch (err) {
@@ -151,9 +145,11 @@ const StudentProfile = () => {
         )}
       </div>
 
-      {/* Attendance History */}
+      {/* Attendance History – ENHANCED TABLE */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-700 mb-3 border-b pb-2">Attendance History</h3>
+        <h3 className="text-lg font-semibold text-slate-700 mb-3 border-b pb-2">
+          Attendance History
+        </h3>
         {attendance.length === 0 ? (
           <p className="text-sm text-slate-400">No attendance records found.</p>
         ) : (
@@ -163,15 +159,36 @@ const StudentProfile = () => {
                 <tr className="border-b text-xs uppercase text-slate-400">
                   <th className="py-2 px-2">Date</th>
                   <th className="py-2 px-2">Course</th>
+                  <th className="py-2 px-2">Teacher</th>
+                  <th className="py-2 px-2">Time</th>
+                  <th className="py-2 px-2">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {attendance.map(record => (
-                  <tr key={record._id} className="hover:bg-slate-50">
-                    <td className="py-2 px-2">{new Date(record.date).toLocaleDateString()}</td>
-                    <td className="py-2 px-2">{record.course?.name || 'General'}</td>
-                  </tr>
-                ))}
+                {attendance.map(record => {
+                  const dateObj = new Date(record.date);
+                  const formattedDate = dateObj.toLocaleDateString();
+                  const formattedTime = dateObj.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <tr key={record._id} className="hover:bg-slate-50">
+                      <td className="py-2 px-2">{formattedDate}</td>
+                      <td className="py-2 px-2">{record.course?.name || 'General'}</td>
+                      <td className="py-2 px-2">
+                        {record.course?.teacher?.fullName || 'N/A'}
+                      </td>
+                      <td className="py-2 px-2">{formattedTime}</td>
+                      <td className="py-2 px-2">
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700">
+                          Present
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
