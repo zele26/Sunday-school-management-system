@@ -183,15 +183,28 @@ router.post('/manual', async (req, res) => {
   }
 });
 
-// ---------- Basic attendance report (admin) ----------
+// ---------- Enhanced attendance report (admin) ----------
 router.get('/report', async (req, res) => {
   try {
-    const { startDate, endDate, courseId } = req.query;
+    const { startDate, endDate, courseId, grade, status, teacher } = req.query;
     const query = {};
+
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-    if (courseId) query.course = courseId;
+    if (courseId) {
+      query.course = courseId;
+    }
+    if (grade) {
+      query.grade = grade;
+    }
+    if (status) {
+      query.status = status;
+    }
+    if (teacher) {
+      // teacher field in Attendance stores the teacher's ObjectId
+      query.teacher = teacher;
+    }
 
     const attendances = await Attendance.find(query)
       .populate('student', 'firstName lastName grade')

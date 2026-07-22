@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
-// ─── CSV download helper ──────────────────────────────────────────
+// ─── CSV export helper ──────────────────────────────────────────
 const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   if (!rows.length) return;
   const headers = [
@@ -36,35 +36,40 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   URL.revokeObjectURL(url);
 };
 
-// ─── Main component ───────────────────────────────────────────────
+// ─── Main component ─────────────────────────────────────────────
 const AttendanceReports = () => {
   const [records, setRecords] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     courseId: '',
+    grade: '',
+    status: '',
+    teacher: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Load courses for dropdown on mount
+  // Predefined grades (same as in student management)
+  const grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchDropdowns = async () => {
+      const token = localStorage.getItem('token');
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/admin/courses`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setCourses(data);
-        }
+        const [coursesRes, teachersRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/admin/courses?token=${token}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_BASE_URL}/api/admin/teachers?token=${token}`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (coursesRes.ok) setCourses(await coursesRes.json());
+        if (teachersRes.ok) setTeachers(await teachersRes.json());
       } catch (err) {
-        console.error('Failed to load courses', err);
+        console.error('Failed to load dropdowns', err);
       }
     };
-    fetchCourses();
+    fetchDropdowns();
   }, []);
 
   const fetchReport = async () => {
@@ -76,8 +81,10 @@ const AttendanceReports = () => {
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
       if (filters.courseId) params.append('courseId', filters.courseId);
+      if (filters.grade) params.append('grade', filters.grade);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.teacher) params.append('teacher', filters.teacher);
 
-      // Use query param token for simplicity (works with your middleware)
       const url = `${API_BASE_URL}/api/admin/attendance/report?${params}&token=${token}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -113,44 +120,62 @@ const AttendanceReports = () => {
         )}
       </div>
 
-      {/* Filter controls */}
+      {/* Filters – two rows for clarity */}
       <div className="flex flex-wrap gap-3 items-end mb-6">
+        {/* Date range */}
         <div>
           <label className="text-xs text-slate-500 block">Start Date</label>
-          <input
-            type="date"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleChange}
-            className="p-2 border rounded-xl text-sm"
-          />
+          <input type="date" name="startDate" value={filters.startDate} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm" />
         </div>
         <div>
           <label className="text-xs text-slate-500 block">End Date</label>
-          <input
-            type="date"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleChange}
-            className="p-2 border rounded-xl text-sm"
-          />
+          <input type="date" name="endDate" value={filters.endDate} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm" />
         </div>
+
+        {/* Course */}
         <div>
           <label className="text-xs text-slate-500 block">Course</label>
-          <select
-            name="courseId"
-            value={filters.courseId}
-            onChange={handleChange}
-            className="p-2 border rounded-xl text-sm"
-          >
+          <select name="courseId" value={filters.courseId} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm">
             <option value="">All Courses</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
+            {courses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
           </select>
         </div>
+
+        {/* Grade */}
+        <div>
+          <label className="text-xs text-slate-500 block">Grade</label>
+          <select name="grade" value={filters.grade} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm">
+            <option value="">All Grades</option>
+            {grades.map(g => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="text-xs text-slate-500 block">Status</label>
+          <select name="status" value={filters.status} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm">
+            <option value="">All</option>
+            <option value="Present">Present</option>
+            <option value="Late">Late</option>
+            <option value="Absent">Absent</option>
+          </select>
+        </div>
+
+        {/* Teacher */}
+        <div>
+          <label className="text-xs text-slate-500 block">Teacher</label>
+          <select name="teacher" value={filters.teacher} onChange={handleChange}
+            className="p-2 border rounded-xl text-sm">
+            <option value="">All Teachers</option>
+            {teachers.map(t => <option key={t._id} value={t._id}>{t.fullName}</option>)}
+          </select>
+        </div>
+
         <button
           onClick={fetchReport}
           className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold"
@@ -161,11 +186,7 @@ const AttendanceReports = () => {
 
       {/* Loading / error / empty states */}
       {loading && <div className="py-8 text-center text-slate-400">Loading attendance...</div>}
-      {error && (
-        <div className="py-4 text-center text-red-500">
-          ❌ {error}
-        </div>
-      )}
+      {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
       {!loading && !error && records.length === 0 && (
         <div className="py-8 text-center text-slate-400">
           No attendance records found. Try adjusting filters or scanning a QR code first.
@@ -190,7 +211,7 @@ const AttendanceReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {records.map((r) => (
+              {records.map(r => (
                 <tr key={r._id} className="hover:bg-slate-50">
                   <td className="py-2 px-2 font-medium">{r.studentName}</td>
                   <td className="py-2 px-2">{r.grade || '-'}</td>
@@ -203,15 +224,11 @@ const AttendanceReports = () => {
                       : '-'}
                   </td>
                   <td className="py-2 px-2">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        r.status === 'Present'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : r.status === 'Late'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-rose-100 text-rose-700'
-                      }`}
-                    >
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      r.status === 'Present' ? 'bg-emerald-100 text-emerald-700' :
+                      r.status === 'Late' ? 'bg-amber-100 text-amber-700' :
+                      'bg-rose-100 text-rose-700'
+                    }`}>
                       {r.status}
                     </span>
                   </td>
