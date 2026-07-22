@@ -12,7 +12,6 @@ router.use(protect);
 // Middleware to ensure the user is a student
 const ensureStudent = async (req, res, next) => {
   try {
-    // req.user is already attached by 'protect' middleware
     const student = await Student.findOne({ userId: req.user._id });
     if (!student) {
       return res.status(403).json({ message: 'Access denied. Student record not found.' });
@@ -40,12 +39,11 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-
-// ---------- My Attendance (simplified – no population needed) ----------
+// ---------- My Attendance ----------
 router.get('/attendance', async (req, res) => {
   try {
     const attendance = await Attendance.find({ student: req.student._id })
-      .sort({ date: -1 });   // newest first
+      .sort({ date: -1 });
     res.json(attendance);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -68,7 +66,6 @@ router.get('/lessons', async (req, res) => {
   try {
     const student = await Student.findById(req.student._id).select('courses');
     const courseIds = student.courses;
-
     const lessons = await Lesson.find({ course: { $in: courseIds } })
       .populate('course', 'name')
       .sort({ course: 1, order: 1 });
