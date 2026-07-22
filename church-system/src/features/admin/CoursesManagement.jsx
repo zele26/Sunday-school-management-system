@@ -45,12 +45,16 @@ const CoursesManagement = () => {
   };
 
   const fetchTeachers = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE_URL}/api/admin/teachers`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setTeachers(data);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/admin/teachers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setTeachers(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   function initialFormState() {
@@ -121,51 +125,7 @@ const CoursesManagement = () => {
     e.preventDefault();
     const token = localStorage.getItem('token');
 
-    const url = editingCourse
-      ? `${API_BASE_URL}/api/admin/courses/${editingCourse._id}`
-      : `${API_BASE_URL}/api/admin/courses`;
-    const method = editingCourse ? 'PUT' : 'POST';
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) {
-        setShowModal(false);
-        fetchCourses();
-      } else {
-        const data = await res.json();
-        alert(data.message || 'Error saving course');
-      }
-    } catch (err) {
-      alert('Network error');
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this course?')) return;
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE_URL}/api/admin/courses/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      fetchCourses();
-    } else {
-      alert('Could not delete course');
-    }
-  };
-
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-
-    // Remove empty string fields that should be null
+    // Remove empty ObjectId fields to avoid casting errors
     const cleanedForm = { ...form };
     if (!cleanedForm.teacher) delete cleanedForm.teacher;
     if (!cleanedForm.prerequisiteCourse) delete cleanedForm.prerequisiteCourse;
@@ -184,7 +144,36 @@ const handleSubmit = async (e) => {
         },
         body: JSON.stringify(cleanedForm),
       });
-      // ... rest unchanged
+      if (res.ok) {
+        setShowModal(false);
+        fetchCourses();
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Error saving course');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this course?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/api/admin/courses/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchCourses();
+      } else {
+        alert('Could not delete course');
+      }
+    } catch (err) {
+      alert('Network error');
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <div className="flex justify-between items-center">
