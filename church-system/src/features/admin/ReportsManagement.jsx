@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
-// ─── helpers to flatten data into CSV ──────────────────────────────
+// ─── helpers to download CSV ────────────────────────────────────────
 const downloadCSV = (csvString, filename) => {
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -18,49 +18,58 @@ const generateCSV = (data, reportType) => {
   switch (reportType) {
     case 'student': {
       const { student, courseSummaries, attendanceHistory } = data;
-      const header = `Student,Grade,Email\n"${student.fullName}",${student.grade},"${student.email}"`;
-      const courseHeader = 'Course,Attended,Total Sessions,Missed';
-      const courseRows = courseSummaries.map(c => `"${c.courseName}",${c.attended},${c.totalSessions},${c.missed}`).join('\n');
-      const historyHeader = '\n\nAttendance History\nDate,Course';
-      const historyRows = attendanceHistory.map(h => `${new Date(h.date).toLocaleDateString()},"${h.courseName}"`).join('\n');
-      return `${header}\n\n${courseHeader}\n${courseRows}${historyHeader}\n${historyRows}`;
+      let csv = `Student,Grade,Email\n"${student.fullName}",${student.grade || ''},"${student.email || ''}"`;
+      csv += '\n\nCourse,Attended,Total Sessions,Missed';
+      (courseSummaries || []).forEach(c => {
+        csv += `\n"${c.courseName || ''}",${c.attended || 0},${c.totalSessions || 0},${c.missed || 0}`;
+      });
+      csv += '\n\nAttendance History\nDate,Course';
+      (attendanceHistory || []).forEach(h => {
+        csv += `\n${new Date(h.date).toLocaleDateString()},"${h.courseName || ''}"`;
+      });
+      return csv;
     }
     case 'grade': {
       const { grade, students } = data;
       let csv = `Grade: ${grade}\n\nStudent,Overall Attended,Overall Sessions\n`;
-      csv += students.map(s => `"${s.studentName}",${s.overallAttended},${s.overallSessions}`).join('\n');
-      csv += '\n\nDetailed per course:';
-      students.forEach(s => {
-        csv += `\n\n${s.studentName}`;
-        s.courses.forEach(c => {
-          csv += `\n${c.courseName},${c.attended}/${c.totalSessions}`;
+      (students || []).forEach(s => {
+        csv += `"${s.studentName}",${s.overallAttended || 0},${s.overallSessions || 0}\n`;
+        (s.courses || []).forEach(c => {
+          csv += `,${c.courseName || ''},${c.attended || 0}/${c.totalSessions || 0}\n`;
         });
       });
       return csv;
     }
     case 'course': {
       const { course, totalSessions, students } = data;
-      let csv = `Course: "${course.name}" (Teacher: ${course.teacherName || 'N/A'})\nTotal class days: ${totalSessions}\n\nStudent,Attended,Total Sessions\n`;
-      csv += students.map(s => `"${s.studentName}",${s.attended},${s.totalSessions}`).join('\n');
+      let csv = `Course: "${course.name}" (Teacher: ${course.teacherName || 'N/A'})\nTotal class days: ${totalSessions || 0}\n\nStudent,Attended,Total Sessions\n`;
+      (students || []).forEach(s => {
+        csv += `"${s.studentName}",${s.attended || 0},${s.totalSessions || 0}\n`;
+      });
       return csv;
     }
     case 'teacher': {
       const { teacher, courses } = data;
-      let csv = `Teacher: "${teacher.fullName}" (${teacher.email})\n\n`;
-      courses.forEach(c => {
-        csv += `Course: "${c.courseName}" (Total days: ${c.totalSessions})\nStudent,Attended,Total\n`;
-        csv += c.students.map(s => `"${s.studentName}",${s.attended},${s.totalSessions}`).join('\n');
-        csv += '\n\n';
+      let csv = `Teacher: "${teacher.fullName}" (${teacher.email || ''})\n\n`;
+      (courses || []).forEach(c => {
+        csv += `Course: "${c.courseName}" (Total days: ${c.totalSessions || 0})\nStudent,Attended,Total\n`;
+        (c.students || []).forEach(s => {
+          csv += `"${s.studentName}",${s.attended || 0},${s.totalSessions || 0}\n`;
+        });
+        csv += '\n';
       });
       return csv;
     }
     case 'date': {
       const { date, records } = data;
       let csv = `Attendance for ${new Date(date).toLocaleDateString()}\n\nStudent,Grade,Course,Time\n`;
-      csv += records.map(r => `"${r.studentName}",${r.grade},"${r.courseName}",${new Date(r.time).toLocaleTimeString()}`).join('\n');
+      (records || []).forEach(r => {
+        csv += `"${r.studentName || ''}",${r.grade || ''},"${r.courseName || ''}",${new Date(r.time).toLocaleTimeString()}\n`;
+      });
       return csv;
     }
-    default: return '';
+    default:
+      return '';
   }
 };
 
@@ -71,13 +80,11 @@ const ReportsManagement = () => {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
-  // dropdown lists
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const grades = ['Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'];
 
-  // filters
   const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
@@ -143,7 +150,7 @@ const ReportsManagement = () => {
     } catch (err) { setError(err.message); } finally { setLoading(false); }
   };
 
-  // ─── render helpers ────────────────────────────────────────────────────
+  // ─── render helpers ──────────────────────────────────────────────
   const renderStudentReport = () => {
     if (!data) return null;
     const { student, courseSummaries, attendanceHistory } = data;
@@ -151,17 +158,29 @@ const ReportsManagement = () => {
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-semibold">{student.fullName}</h3>
-          <p className="text-sm text-slate-500">Grade: {student.grade} | Email: {student.email}</p>
+          <p className="text-sm text-slate-500">Grade: {student.grade || 'N/A'} | Email: {student.email || ''}</p>
         </div>
         <div>
           <h4 className="font-medium mb-2">Course Summary</h4>
-          <table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-1">Course</th><th>Attended</th><th>Total</th></tr></thead>
-            <tbody>{courseSummaries.map(cs => (<tr key={cs.courseId}><td>{cs.courseName}</td><td>{cs.attended}</td><td>{cs.totalSessions}</td></tr>))}</tbody></table>
+          <table className="w-full text-left text-sm">
+            <thead><tr className="border-b"><th className="py-1">Course</th><th>Attended</th><th>Total</th></tr></thead>
+            <tbody>
+              {(courseSummaries || []).map(cs => (
+                <tr key={cs.courseId}><td>{cs.courseName}</td><td>{cs.attended}</td><td>{cs.totalSessions}</td></tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <div>
           <h4 className="font-medium mb-2">Attendance History</h4>
-          <table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-1">Date</th><th>Course</th></tr></thead>
-            <tbody>{attendanceHistory.map(h => (<tr key={h._id}><td>{new Date(h.date).toLocaleDateString()}</td><td>{h.courseName}</td></tr>))}</tbody></table>
+          <table className="w-full text-left text-sm">
+            <thead><tr className="border-b"><th className="py-1">Date</th><th>Course</th></tr></thead>
+            <tbody>
+              {(attendanceHistory || []).map(h => (
+                <tr key={h._id}><td>{new Date(h.date).toLocaleDateString()}</td><td>{h.courseName}</td></tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     );
@@ -173,11 +192,21 @@ const ReportsManagement = () => {
     return (
       <div>
         <h3 className="text-lg font-semibold mb-3">{grade} Attendance</h3>
-        {students.map(s => (
+        {(students || []).map(s => (
           <div key={s.studentId} className="mb-4">
-            <p className="font-medium">{s.studentName} (Overall: {s.overallAttended}/{s.overallSessions})</p>
-            <table className="w-full text-left text-sm"><thead><tr className="border-b"><th>Course</th><th>Attended</th><th>Total</th></tr></thead>
-              <tbody>{s.courses.map(c => (<tr key={c.courseName}><td>{c.courseName}</td><td>{c.attended}</td><td>{c.totalSessions}</td></tr>))}</tbody></table>
+            <p className="font-medium">{s.studentName} (Overall: {s.overallAttended || 0}/{s.overallSessions || 0})</p>
+            {(s.courses && s.courses.length > 0) ? (
+              <table className="w-full text-left text-sm">
+                <thead><tr className="border-b"><th>Course</th><th>Attended</th><th>Total</th></tr></thead>
+                <tbody>
+                  {s.courses.map(c => (
+                    <tr key={c.courseName}><td>{c.courseName}</td><td>{c.attended}</td><td>{c.totalSessions}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-slate-400">No courses enrolled.</p>
+            )}
           </div>
         ))}
       </div>
@@ -189,10 +218,16 @@ const ReportsManagement = () => {
     const { course, totalSessions, students } = data;
     return (
       <div>
-        <h3 className="text-lg font-semibold">{course.name} ({course.teacherName})</h3>
-        <p className="text-sm text-slate-500">Total class days: {totalSessions}</p>
-        <table className="w-full text-left text-sm mt-3"><thead><tr className="border-b"><th>Student</th><th>Attended</th><th>Total</th></tr></thead>
-          <tbody>{students.map(s => (<tr key={s.studentId}><td>{s.studentName}</td><td>{s.attended}</td><td>{s.totalSessions}</td></tr>))}</tbody></table>
+        <h3 className="text-lg font-semibold">{course.name} ({course.teacherName || 'N/A'})</h3>
+        <p className="text-sm text-slate-500">Total class days: {totalSessions || 0}</p>
+        <table className="w-full text-left text-sm mt-3">
+          <thead><tr className="border-b"><th>Student</th><th>Attended</th><th>Total</th></tr></thead>
+          <tbody>
+            {(students || []).map(s => (
+              <tr key={s.studentId}><td>{s.studentName}</td><td>{s.attended}</td><td>{s.totalSessions}</td></tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   };
@@ -203,11 +238,17 @@ const ReportsManagement = () => {
     return (
       <div>
         <h3 className="text-lg font-semibold">{teacher.fullName}'s Courses</h3>
-        {courses.map(c => (
+        {(courses || []).map(c => (
           <div key={c.courseId} className="mt-4">
-            <h4 className="font-medium">{c.courseName} (Total days: {c.totalSessions})</h4>
-            <table className="w-full text-left text-sm"><thead><tr className="border-b"><th>Student</th><th>Attended</th><th>Total</th></tr></thead>
-              <tbody>{c.students.map(s => (<tr key={s.studentId}><td>{s.studentName}</td><td>{s.attended}</td><td>{s.totalSessions}</td></tr>))}</tbody></table>
+            <h4 className="font-medium">{c.courseName} (Total days: {c.totalSessions || 0})</h4>
+            <table className="w-full text-left text-sm">
+              <thead><tr className="border-b"><th>Student</th><th>Attended</th><th>Total</th></tr></thead>
+              <tbody>
+                {(c.students || []).map(s => (
+                  <tr key={s.studentId}><td>{s.studentName}</td><td>{s.attended}</td><td>{s.totalSessions}</td></tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ))}
       </div>
@@ -220,8 +261,14 @@ const ReportsManagement = () => {
     return (
       <div>
         <h3 className="text-lg font-semibold">Attendance for {new Date(date).toLocaleDateString()}</h3>
-        <table className="w-full text-left text-sm mt-3"><thead><tr className="border-b"><th>Student</th><th>Grade</th><th>Course</th><th>Time</th></tr></thead>
-          <tbody>{records.map(r => (<tr key={r._id}><td>{r.studentName}</td><td>{r.grade}</td><td>{r.courseName}</td><td>{new Date(r.time).toLocaleTimeString()}</td></tr>))}</tbody></table>
+        <table className="w-full text-left text-sm mt-3">
+          <thead><tr className="border-b"><th>Student</th><th>Grade</th><th>Course</th><th>Time</th></tr></thead>
+          <tbody>
+            {(records || []).map(r => (
+              <tr key={r._id}><td>{r.studentName}</td><td>{r.grade}</td><td>{r.courseName}</td><td>{new Date(r.time).toLocaleTimeString()}</td></tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   };
