@@ -9,11 +9,8 @@ import TeacherGrading from '../features/teacher/TeacherGrading';
 import TeacherCommunication from '../features/teacher/TeacherCommunication';
 import TeacherReports from '../features/teacher/TeacherReports';
 import TeacherStudents from '../features/teacher/TeacherStudents';
-import TeacherCourses from '../features/teacher/TeacherCourses';
 import TeacherAttendance from '../features/teacher/TeacherAttendance';
-import TeacherStudents from '../features/teacher/TeacherStudents';
-import TeacherCourses from '../features/teacher/TeacherCourses';
-import TeacherAttendance from '../features/teacher/TeacherAttendance';
+
 
 export default function TeacherRoutes() {
   return (
