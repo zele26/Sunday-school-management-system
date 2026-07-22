@@ -51,8 +51,9 @@ connectToDatabase();
 // --- ROUTE MOUNTING ---
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api', studentRoutes);          // Handles /api/register & /api/students
-app.use('/api/attendance', attendanceRoutes);
+app.use('/api/student', studentRoutes);          // Student routes (profile, attendance, courses)
+app.use('/api/teacher', teacherRoutes);          // Teacher routes (my-courses, my-students, attendance)
+app.use('/api/attendance', attendanceRoutes);    // If you have a separate attendance route
 
 // Health Check Endpoint
 app.get('/api/test', (req, res) => {
@@ -69,10 +70,6 @@ app.get(/^(?!\/api).*/, (req, res) => {
   }
   res.status(404).send('Frontend build not found. Run the Vite app first.');
 });
-
-app.use('/api/teacher', teacherRoutes);
-const studentRoutes = require('./routes/studentRoutes');
-app.use('/api/student', studentRoutes);
 
 // --- SERVER START ---
 const PORT = process.env.PORT || 5000;
