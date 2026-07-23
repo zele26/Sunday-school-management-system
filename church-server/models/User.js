@@ -18,18 +18,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Password is required'],
       minlength: 6,
-      select: false, // Exclude password from query results by default
+      select: false,
     },
     role: {
       type: String,
       enum: ['student', 'teacher', 'admin'],
       default: 'student',
     },
-    refreshToken: { type: String, select: false },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending', // Requires admin approval
+      default: 'pending',
     },
     resetPasswordToken: {
       type: String,
@@ -37,8 +36,10 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpires: {
       type: Date,
     },
+    // If you have any additional fields from earlier, keep them here
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+// ✅ Safe export – never overwrite an already compiled model
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
