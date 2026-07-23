@@ -14,4 +14,4 @@ const examResultSchema = new mongoose.Schema({
   gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // if manually graded
 });
 
-module.exports = mongoose.model('ExamResult', examResultSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);

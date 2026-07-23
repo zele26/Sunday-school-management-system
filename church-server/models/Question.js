@@ -10,4 +10,4 @@ const questionSchema = new mongoose.Schema({
   order: { type: Number, default: 0 },
 });
 
-module.exports = mongoose.model('Question', questionSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);

@@ -50,4 +50,4 @@ attendanceSchema.index(
 );
 
 // Safe export – never overwrite an already compiled model
-module.exports = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);

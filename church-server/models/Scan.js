@@ -8,4 +8,4 @@ const scanSchema = new mongoose.Schema({
   status: { type: String, default: "Present" }
 });
 
-module.exports = mongoose.model('Scan', scanSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);

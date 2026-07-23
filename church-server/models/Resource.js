@@ -17,4 +17,4 @@ const resourceSchema = new mongoose.Schema({
   uploadDate: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Resource', resourceSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);

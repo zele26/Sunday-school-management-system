@@ -12,4 +12,4 @@ const quizSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('Quiz', quizSchema);
+module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
