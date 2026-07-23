@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
-  // References (optional, kept for relational integrity)
   student: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student',
@@ -12,8 +11,6 @@ const attendanceSchema = new mongoose.Schema({
     ref: 'Course',
     default: null,
   },
-
-  // Embedded data – stored at scan time so no further lookups are needed
   studentName: { type: String, required: true },
   grade: { type: String },
   courseName: { type: String },
@@ -23,26 +20,18 @@ const attendanceSchema = new mongoose.Schema({
     default: null,
   },
   teacherName: { type: String },
-
-  // Timestamps
-  date: { type: Date, default: Date.now },          // attendance day
-  checkInTime: { type: Date, default: Date.now },   // exact scan time
-
-  // Status
+  date: { type: Date, default: Date.now },
+  checkInTime: { type: Date, default: Date.now },
   status: {
     type: String,
     enum: ['Present', 'Late', 'Absent'],
     default: 'Present',
   },
-
-  // Recorded by
   recordedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-
-  // Academic period
-  academicYear: { type: String },   // e.g., "2026/2027"
+  academicYear: { type: String },
   semester: {
     type: String,
     enum: ['First', 'Second'],
@@ -50,4 +39,15 @@ const attendanceSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Attendance', attendanceSchema);
+// Unique indexes to prevent duplicates
+attendanceSchema.index(
+  { student: 1, date: 1, course: 1 },
+  { unique: true, partialFilterExpression: { course: { $ne: null } } }
+);
+attendanceSchema.index(
+  { student: 1, date: 1 },
+  { unique: true, partialFilterExpression: { course: null } }
+);
+
+// Safe export – never overwrite an already compiled model
+module.exports = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
