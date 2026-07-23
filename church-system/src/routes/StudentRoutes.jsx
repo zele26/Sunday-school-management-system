@@ -1,3 +1,4 @@
+// src/routes/StudentRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -17,8 +18,10 @@ export default function StudentRoutes() {
       <Route path="announcements" element={<StudentAnnouncements />} />
       <Route path="profile" element={<StudentProfileModule />} />
       <Route path="resources" element={<StudentResources />} />
-      <Route path="assignments" element={<StudentAssignments />} />
-      <Route path="exams" element={<StudentExams />} />
+
+      {/* Placeholders for future components – uncomment when ready */}
+      {/* <Route path="assignments" element={<StudentAssignments />} /> */}
+      {/* <Route path="exams" element={<StudentExams />} /> */}
     </Routes>
   );
 }
