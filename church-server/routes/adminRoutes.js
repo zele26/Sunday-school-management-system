@@ -830,4 +830,31 @@ router.use('/attendance', attendanceRoutes); // /api/admin/attendance/...
 router.use('/reports', reportRoutes);        // /api/admin/reports/...
 router.use('/', userRoutes);                 // /api/admin/stats, /api/admin/users, etc.
 
+// ⏳ Temporary route – remove after execution
+router.post('/cleanup-attendance', async (req, res) => {
+  try {
+    const Attendance = require('../models/Attendance');
+    const duplicates = await Attendance.aggregate([
+      {
+        $group: {
+          _id: { student: '$student', date: '$date', course: '$course' },
+          ids: { $push: '$_id' },
+          count: { $sum: 1 },
+        },
+      },
+      { $match: { count: { $gt: 1 } } },
+    ]);
+
+    let totalRemoved = 0;
+    for (const group of duplicates) {
+      const [keep, ...remove] = group.ids;
+      await Attendance.deleteMany({ _id: { $in: remove } });
+      totalRemoved += remove.length;
+    }
+
+    res.json({ success: true, removed: totalRemoved });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 module.exports = router;
