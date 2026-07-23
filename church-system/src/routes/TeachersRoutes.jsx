@@ -1,3 +1,4 @@
+// src/routes/TeachersRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
@@ -13,7 +14,6 @@ import TeacherAttendance from '../features/teacher/TeacherAttendance';
 import TeacherAttendanceSummary from '../features/teacher/TeacherAttendanceSummary';
 import TeacherResources from '../features/teacher/TeacherResources';
 
-
 export default function TeacherRoutes() {
   return (
     <Routes>
@@ -24,13 +24,14 @@ export default function TeacherRoutes() {
       <Route path="grading" element={<TeacherGrading />} />
       <Route path="communication" element={<TeacherCommunication />} />
       <Route path="reports" element={<TeacherReports />} />
-      <Route index element={<TeacherOverview />} />
       <Route path="students" element={<TeacherStudents />} />
       <Route path="attendance" element={<TeacherAttendance />} />
       <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
       <Route path="resources" element={<TeacherResources />} />
-      <Route path="assignments" element={<TeacherAssignments />} />   // similar component to be built
-      <Route path="exams" element={<TeacherExams />} />
+
+      {/* These components are not yet built – uncomment when ready */}
+      {/* <Route path="assignments" element={<TeacherAssignments />} /> */}
+      {/* <Route path="exams" element={<TeacherExams />} /> */}
     </Routes>
   );
 }
