@@ -1,7 +1,6 @@
 // src/features/admin/CoursesManagement.jsx
 import React, { useEffect, useState } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';   // use the secure client
 
 const CoursesManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -26,15 +25,13 @@ const CoursesManagement = () => {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (statusFilter) params.append('status', statusFilter);
       if (ageFilter) params.append('ageGroup', ageFilter);
 
-      const res = await fetch(`${API_BASE_URL}/api/admin/courses?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch(`/api/admin/courses?${params}`);
+      if (!res.ok) throw new Error('Failed to fetch courses');
       const data = await res.json();
       setCourses(data);
     } catch (err) {
@@ -46,12 +43,11 @@ const CoursesManagement = () => {
 
   const fetchTeachers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/admin/teachers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setTeachers(data);
+      const res = await apiFetch('/api/admin/teachers');
+      if (res.ok) {
+        const data = await res.json();
+        setTeachers(data);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -123,25 +119,19 @@ const CoursesManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
 
-    // Remove empty ObjectId fields to avoid casting errors
     const cleanedForm = { ...form };
     if (!cleanedForm.teacher) delete cleanedForm.teacher;
     if (!cleanedForm.prerequisiteCourse) delete cleanedForm.prerequisiteCourse;
 
     const url = editingCourse
-      ? `${API_BASE_URL}/api/admin/courses/${editingCourse._id}`
-      : `${API_BASE_URL}/api/admin/courses`;
+      ? `/api/admin/courses/${editingCourse._id}`
+      : '/api/admin/courses';
     const method = editingCourse ? 'PUT' : 'POST';
 
     try {
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(cleanedForm),
       });
       if (res.ok) {
@@ -159,11 +149,7 @@ const CoursesManagement = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this course?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/admin/courses/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch(`/api/admin/courses/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchCourses();
       } else {
