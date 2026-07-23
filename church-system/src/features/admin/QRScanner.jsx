@@ -84,6 +84,10 @@ const QRScanner = () => {
 
   const toastId = useRef(0);
 
+  // Cooldown refs to prevent duplicate scans of the same QR code within 3 seconds
+  const lastScannedRef = useRef('');
+  const lastScanTimeRef = useRef(0);
+
   const addToast = (text, type = 'info') => {
     const id = ++toastId.current;
     setToasts(prev => [...prev, { id, text, type }]);
@@ -139,6 +143,14 @@ const QRScanner = () => {
   // Core scan handler
   const handleScan = useCallback(
     async (decodedText) => {
+      // Cooldown: ignore the same QR code if scanned within 3 seconds
+      const now = Date.now();
+      if (decodedText === lastScannedRef.current && now - lastScanTimeRef.current < 3000) {
+        return;
+      }
+      lastScannedRef.current = decodedText;
+      lastScanTimeRef.current = now;
+
       try {
         const status = determineStatus();
         const res = await apiFetch('/api/admin/attendance/scan', {

@@ -1,46 +1,247 @@
+// routes/admin/attendanceRoutes.js
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const Student = require('../models/Student');
-const Scan = require('../models/Scan');
+const Attendance = require('../../models/Attendance');
+const Student = require('../../models/Student');
+const Course = require('../../models/Course');
 
-// Attendance QR / ID Scan Endpoint
+// ---------- Scan QR and record attendance (full data stored) ----------
 router.post('/scan', async (req, res) => {
   try {
-    const { studentId } = req.body;
-    let student = null;
-    
-    if (mongoose.Types.ObjectId.isValid(studentId)) {
-      student = await Student.findById(studentId);
-    }
-    if (!student) {
-      student = await Student.findOne({ firstName: studentId });
-    }
-    if (!student) {
-      return res.status(404).json({ message: "ተማሪው አልተገኘም (Student not found)" });
+    const { qrCode, courseId, status: forcedStatus } = req.body;
+    if (!qrCode) return res.status(400).json({ message: 'QR code data required' });
+
+    const student = await Student.findOne({ qrCode });
+    if (!student) return res.status(404).json({ message: 'Invalid QR code. Student not found.' });
+
+    // Look up course and teacher if a courseId is provided
+    let courseName = '';
+    let teacher = null;
+    let teacherName = '';
+    if (courseId) {
+      const course = await Course.findById(courseId).populate('teacher', 'fullName');
+      if (course) {
+        courseName = course.name;
+        if (course.teacher) {
+          teacher = course.teacher._id;
+          teacherName = course.teacher.fullName;
+        }
+      }
     }
 
-    const newScan = new Scan({
-      studentId: student._id,
-      fullName: `${student.firstName} ${student.lastName}`
+    // Duplicate check for today (quick check – database index is the final guard)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const alreadyMarked = await Attendance.findOne({
+      student: student._id,
+      date: { $gte: today, $lt: tomorrow },
+      ...(courseId ? { course: courseId } : {}),
     });
+    if (alreadyMarked) {
+      return res.json({
+        success: true,
+        message: 'Attendance already recorded for today.',
+        student: {
+          id: student._id,
+          name: `${student.firstName} ${student.lastName}`,
+        },
+      });
+    }
 
-    await newScan.save();
-    res.status(201).json({ message: `ሰላም ${student.firstName}! ተመዝግቧል`, time: newScan.time });
+    // Determine academic year and semester
+    const now = new Date();
+    const month = now.getMonth(); // 0 = Jan, 11 = Dec
+    const year = now.getFullYear();
+    let academicYear, semester;
+    if (month >= 5 && month <= 11) {   // June - December
+      academicYear = `${year}/${year + 1}`;
+      semester = 'First';
+    } else {                           // January - May
+      academicYear = `${year - 1}/${year}`;
+      semester = 'Second';
+    }
+
+    // Create the fully populated document – use forcedStatus if provided, else default to Present
+    try {
+      await Attendance.create({
+        student: student._id,
+        studentName: `${student.firstName} ${student.lastName}`,
+        grade: student.grade || '',
+        course: courseId || null,
+        courseName,
+        teacher,
+        teacherName,
+        date: today,
+        checkInTime: new Date(),
+        status: forcedStatus || 'Present',
+        recordedBy: req.user._id,
+        academicYear,
+        semester,
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        // Duplicate key error – attendance already recorded (race condition guard)
+        return res.json({
+          success: true,
+          message: 'Attendance already recorded for today.',
+          student: {
+            id: student._id,
+            name: `${student.firstName} ${student.lastName}`,
+          },
+        });
+      }
+      throw createErr; // re-throw if it's not a duplicate error
+    }
+
+    res.json({
+      success: true,
+      message: 'Attendance recorded.',
+      student: {
+        id: student._id,
+        name: `${student.firstName} ${student.lastName}`,
+      },
+    });
   } catch (err) {
-    console.error("Scan Error:", err);
-    res.status(500).json({ message: "የቴክኒክ ስህተት (Scan failed)" });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Get Today's Scans
-router.get('/today', async (req, res) => {
+// ---------- Manual attendance (admin marks attendance without QR) ----------
+router.post('/manual', async (req, res) => {
   try {
-    const today = new Date().toLocaleDateString();
-    const list = await Scan.find({ date: today }).sort({ time: -1 });
-    res.json(list || []); 
+    const { studentId, courseId, status: forcedStatus } = req.body;
+    if (!studentId) return res.status(400).json({ message: 'Student ID required' });
+
+    const student = await Student.findById(studentId);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    // Duplicate check for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const alreadyMarked = await Attendance.findOne({
+      student: student._id,
+      date: { $gte: today, $lt: tomorrow },
+      ...(courseId ? { course: courseId } : {}),
+    });
+    if (alreadyMarked) {
+      return res.json({
+        success: true,
+        message: 'Attendance already recorded for today.',
+        student: {
+          id: student._id,
+          name: `${student.firstName} ${student.lastName}`,
+        },
+      });
+    }
+
+    // Look up course and teacher if a courseId is provided
+    let courseName = '';
+    let teacher = null;
+    let teacherName = '';
+    if (courseId) {
+      const course = await Course.findById(courseId).populate('teacher', 'fullName');
+      if (course) {
+        courseName = course.name;
+        if (course.teacher) {
+          teacher = course.teacher._id;
+          teacherName = course.teacher.fullName;
+        }
+      }
+    }
+
+    // Determine academic year and semester (same logic as scan)
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    let academicYear, semester;
+    if (month >= 5 && month <= 11) {
+      academicYear = `${year}/${year + 1}`;
+      semester = 'First';
+    } else {
+      academicYear = `${year - 1}/${year}`;
+      semester = 'Second';
+    }
+
+    // Create the attendance record
+    try {
+      await Attendance.create({
+        student: student._id,
+        studentName: `${student.firstName} ${student.lastName}`,
+        grade: student.grade || '',
+        course: courseId || null,
+        courseName,
+        teacher,
+        teacherName,
+        date: today,
+        checkInTime: new Date(),
+        status: forcedStatus || 'Present',
+        recordedBy: req.user._id,
+        academicYear,
+        semester,
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        return res.json({
+          success: true,
+          message: 'Attendance already recorded for today.',
+          student: {
+            id: student._id,
+            name: `${student.firstName} ${student.lastName}`,
+          },
+        });
+      }
+      throw createErr;
+    }
+
+    res.json({
+      success: true,
+      message: 'Attendance recorded.',
+      student: {
+        id: student._id,
+        name: `${student.firstName} ${student.lastName}`,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: "Error fetching attendance" });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------- Enhanced attendance report (admin) ----------
+router.get('/report', async (req, res) => {
+  try {
+    const { startDate, endDate, courseId, grade, status, teacher } = req.query;
+    const query = {};
+
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    if (courseId) {
+      query.course = courseId;
+    }
+    if (grade) {
+      query.grade = grade;
+    }
+    if (status) {
+      query.status = status;
+    }
+    if (teacher) {
+      query.teacher = teacher;
+    }
+
+    const attendances = await Attendance.find(query)
+      .populate('student', 'firstName lastName grade')
+      .populate('course', 'name')
+      .sort({ date: -1 });
+
+    res.json(attendances);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
