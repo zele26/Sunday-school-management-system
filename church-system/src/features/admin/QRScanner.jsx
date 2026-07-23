@@ -1,6 +1,8 @@
 // src/features/admin/QRScanner.jsx
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import { apiFetch } from '../../api/apiClient';
+import useAuthStore from '../../store/authStore';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
@@ -95,12 +97,11 @@ const QRScanner = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/admin/courses?token=${token}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setCourses(data);
+        const res = await apiFetch('/api/admin/courses');
+        if (res.ok) {
+          const data = await res.json();
+          setCourses(data);
+        }
       } catch (err) {}
     };
     fetchCourses();
@@ -114,12 +115,11 @@ const QRScanner = () => {
     }
     const timer = setTimeout(async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/admin/students?search=${searchTerm}&limit=10&token=${token}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setSearchResults(data.students || []);
+        const res = await apiFetch(`/api/admin/students?search=${searchTerm}&limit=10`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.students || []);
+        }
       } catch (err) {}
     }, 300);
     return () => clearTimeout(timer);
@@ -140,14 +140,9 @@ const QRScanner = () => {
   const handleScan = useCallback(
     async (decodedText) => {
       try {
-        const token = localStorage.getItem('token');
         const status = determineStatus();
-        const res = await fetch(`${API_BASE_URL}/api/admin/attendance/scan`, {
+        const res = await apiFetch('/api/admin/attendance/scan', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify({
             qrCode: decodedText,
             courseId: selectedCourseId || undefined,
@@ -173,14 +168,9 @@ const QRScanner = () => {
   // Manual mark attendance
   const handleManualMark = async (student) => {
     try {
-      const token = localStorage.getItem('token');
       const status = determineStatus();
-      const res = await fetch(`${API_BASE_URL}/api/admin/attendance/manual`, {
+      const res = await apiFetch('/api/admin/attendance/manual', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           studentId: student._id,
           courseId: selectedCourseId || undefined,
