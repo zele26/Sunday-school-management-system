@@ -1,8 +1,8 @@
 // src/features/student/StudentProfileModule.jsx
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
+import useAuthStore from '../../store/authStore';
 
 const StudentProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -19,15 +19,32 @@ const StudentProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/student/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load profile');
-      const data = await res.json();
+      // Ensure we have a fresh token before calling the profile endpoint
+      let token = useAuthStore.getState().accessToken;
+      if (!token) {
+        // Force a refresh attempt
+        const refreshRes = await fetch('https://church-api-3l2c.onrender.com/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          useAuthStore.getState().login(refreshData.accessToken, refreshData.user);
+          token = refreshData.accessToken;
+        } else {
+          throw new Error('Session expired – please log in again');
+        }
+      }
+
+      const res = await apiFetch('/api/student/profile');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || `Request failed with status ${res.status}`);
+      }
       setProfile(data);
     } catch (err) {
-      setError(err.message);
+      console.error('Profile fetch error:', err);
+      setError(err.message || 'Failed to load profile');
     } finally {
       setLoading(false);
     }
@@ -35,29 +52,25 @@ const StudentProfile = () => {
 
   const fetchAttendance = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/student/attendance`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load attendance');
-      const data = await res.json();
-      setAttendance(data);
+      const res = await apiFetch('/api/student/attendance');
+      if (res.ok) {
+        const data = await res.json();
+        setAttendance(data);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Attendance fetch error:', err);
     }
   };
 
   const fetchCourses = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/student/my-courses`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load courses');
-      const data = await res.json();
-      setCourses(data);
+      const res = await apiFetch('/api/student/my-courses');
+      if (res.ok) {
+        const data = await res.json();
+        setCourses(data);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Courses fetch error:', err);
     }
   };
 
@@ -74,8 +87,11 @@ const StudentProfile = () => {
     return (
       <div className="p-8 text-center text-red-500">
         <p>⚠️ {error}</p>
-        <button onClick={() => window.location.reload()} className="text-indigo-600 underline text-sm mt-2">
-          Retry
+        <button onClick={() => {
+          useAuthStore.getState().logout();
+          window.location.href = '/login';
+        }} className="text-indigo-600 underline text-sm mt-2">
+          Go to Login
         </button>
       </div>
     );
