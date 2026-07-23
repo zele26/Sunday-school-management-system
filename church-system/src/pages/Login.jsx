@@ -1,10 +1,11 @@
-// src/pages/Login.jsx (or wherever your Login component lives)
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- added
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
 import bgImage from '../assets/Lidetachurch.jpg';
 
-const Login = ({ onLogin }) => {
-  const navigate = useNavigate(); // <-- added
+const Login = () => {
+  const navigate = useNavigate();
+  const loginStore = useAuthStore((state) => state.login);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -20,28 +21,23 @@ const Login = ({ onLogin }) => {
 
     const payload = {
       email: formData.email.trim().toLowerCase(),
-      password: formData.password
+      password: formData.password,
     };
 
     try {
       const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: 'include',
       });
 
       const data = await response.json().catch(() => ({ message: 'Invalid server response.' }));
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
-        localStorage.setItem('userName', data.user.name || data.user.fullName);
-        localStorage.setItem('user', JSON.stringify(data.user)); // optional full object
-
-        if (onLogin) onLogin(); // updates App state
-
+        loginStore(data.accessToken, data.user);
         const routes = { student: '/dashboard', admin: '/admin', teacher: '/teacher' };
-        navigate(routes[data.user.role] || '/dashboard', { replace: true }); // <-- smooth navigation
+        navigate(routes[data.user.role] || '/dashboard', { replace: true });
       } else {
         if (response.status === 403) {
           setError(data.message || 'Your account is not yet approved or has been rejected.');
