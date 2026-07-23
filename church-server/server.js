@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');          // <-- NEW
+const cookieParser = require('cookie-parser');
 const connectToDatabase = require('./config/db');
 
 // --- ROUTE IMPORTS ---
@@ -11,26 +11,26 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
-// ❌ Removed: const attendanceRoutes = require('./routes/attendanceRoutes');
+const resourceRoutes = require('./routes/resourceRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 const app = express();
 
 // --- MIDDLEWARE ---
 app.use(express.json());
-app.use(cookieParser());                                // <-- NEW
+app.use(cookieParser());
 
 // Enable CORS with credentials support
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests from Vercel previews, local dev, and production
     if (!origin || origin.includes('vercel.app') || origin.includes('localhost')) {
-      callback(null, origin);   // ✅ return the exact origin, required for credentials
+      callback(null, origin);   // return exact origin, required for credentials
     } else {
-      // In production you may want to restrict to your exact domain
       callback(null, origin);
     }
   },
-  credentials: true,               // <-- NEW: allows cookies to be sent cross‑origin
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -54,10 +54,13 @@ app.get('/', (req, res) => {
 connectToDatabase();
 
 // --- ROUTE MOUNTING ---
-app.use('/api/auth', authRoutes);             // includes login, register, refresh, logout
-app.use('/api/admin', adminRoutes);           // admin hub
-app.use('/api/student', studentRoutes);       // student hub
-app.use('/api/teacher', teacherRoutes);       // teacher hub
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 // Health Check Endpoint
 app.get('/api/test', (req, res) => {
