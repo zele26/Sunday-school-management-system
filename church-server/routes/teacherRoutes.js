@@ -143,4 +143,15 @@ router.get('/attendance-summary', async (req, res) => {
   }
 });
 
+// routes/teacherRoutes.js
+router.get('/dashboard-stats', async (req, res) => {
+  try {
+    const studentsCount = await Student.countDocuments({ teacher: req.user._id });
+    const coursesCount = await Course.countDocuments({ teacher: req.user._id });
+    res.json({ studentsCount, coursesCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
