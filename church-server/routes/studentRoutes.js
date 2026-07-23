@@ -9,13 +9,27 @@ const Lesson = require('../models/Lesson');
 // All routes require a valid token (any role, but we further restrict to student)
 router.use(protect);
 
-// Middleware to ensure the user is a student
+// Middleware to ensure the user is a student (auto-creates Student doc if missing)
 const ensureStudent = async (req, res, next) => {
   try {
-    const student = await Student.findOne({ userId: req.user._id });
-    if (!student) {
-      return res.status(403).json({ message: 'Access denied. Student record not found.' });
+    // Only users with role 'student' can access these endpoints
+    if (req.user.role !== 'student') {
+      return res.status(403).json({ message: 'Access denied. Only students can access this resource.' });
     }
+
+    let student = await Student.findOne({ userId: req.user._id });
+    if (!student) {
+      // Auto-create a minimal Student document using the User's name
+      student = await Student.create({
+        userId: req.user._id,
+        firstName: req.user.fullName || 'Student',
+        lastName: '',
+        grade: '',
+        // other fields will remain empty
+      });
+      console.log(`✅ Created missing Student document for user ${req.user.email}`);
+    }
+
     req.student = student;   // attach student document to request
     next();
   } catch (err) {
