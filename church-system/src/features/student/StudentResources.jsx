@@ -1,16 +1,21 @@
-// features/student/StudentResources.jsx
+// src/features/student/StudentResources.jsx
 import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
 
 const StudentResources = () => {
   const [resources, setResources] = useState([]);
 
   useEffect(() => {
     const fetchResources = async () => {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/resources/my?token=${token}`, { headers: { Authorization: `Bearer ${token}` } });
-      setResources(await res.json());
+      try {
+        const res = await apiFetch('/api/resources/my');
+        if (res.ok) {
+          const data = await res.json();
+          setResources(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     };
     fetchResources();
   }, []);
