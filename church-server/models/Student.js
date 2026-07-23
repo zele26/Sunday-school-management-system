@@ -24,4 +24,4 @@ const studentSchema = new mongoose.Schema({
   qrCode: { type: String, unique: true },
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);

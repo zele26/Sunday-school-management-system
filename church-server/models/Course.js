@@ -1,7 +1,7 @@
 // models/Course.js
 const mongoose = require('mongoose');
 
-const courseSchema = new mongoose.Schema({
+const mongoose = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   ageGroup: { type: String, enum: ['Children', 'Teens', 'Youth', 'Adults'], default: 'Youth' },
   department: { type: String, trim: true },
@@ -25,4 +25,4 @@ const courseSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.Course || mongoose.model('Course', courseSchema);

@@ -12,4 +12,4 @@ const submissionSchema = new mongoose.Schema({
   gradedAt: { type: Date },
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.Submission || mongoose.model('Submission', submissionSchema);

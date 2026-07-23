@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose  = require('mongoose');
 
 const examResultSchema = new mongoose.Schema({
   quiz: { type: mongoose.Schema.Types.ObjectId, ref: 'Quiz', required: true },
@@ -14,4 +14,4 @@ const examResultSchema = new mongoose.Schema({
   gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // if manually graded
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.ExamResult || mongoose.model('ExamResult', examResultSchema);

@@ -9,4 +9,4 @@ const lessonSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.Lesson || mongoose.model('Lesson', lessonSchema);

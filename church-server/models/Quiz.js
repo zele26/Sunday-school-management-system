@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose  = require('mongoose');
 
 const quizSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -12,4 +12,4 @@ const quizSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.models.ModelName || mongoose.model('ModelName', schema);
+module.exports = mongoose.models.Quiz || mongoose.model('Quiz', quizSchema);
