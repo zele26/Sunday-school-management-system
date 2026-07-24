@@ -21,22 +21,17 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// Enable CORS with credentials support
+// Enable CORS – works for same‑origin and cross‑origin (useful for development)
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || origin.includes('vercel.app') || origin.includes('localhost')) {
-      callback(null, origin);   // return exact origin, required for credentials
-    } else {
-      callback(null, origin);
-    }
-  },
-  credentials: true,
+  origin: true,               // reflect the request origin
+  credentials: true,          // allow cookies
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // --- SERVE FRONTEND SPA ---
-const frontendDistPath = path.join(__dirname, '..', 'church-system', 'dist');
+// 👇 CHANGED: points to the dist folder inside church-server
+const frontendDistPath = path.join(__dirname, 'dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
 if (require('fs').existsSync(frontendDistPath)) {
