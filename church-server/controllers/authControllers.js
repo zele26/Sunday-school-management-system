@@ -22,6 +22,7 @@ const generateRefreshToken = (id) => {
 
 // ---------- Register ----------
 exports.register = async (req, res) => {
+  // … unchanged …
   try {
     const { fullName, email, password, role } = req.body;
 
@@ -56,7 +57,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ---------- Login (sets HttpOnly cookie) ----------
+// ---------- Login (sets HttpOnly cookie – expires in 30 minutes) ----------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,18 +87,18 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Set refresh token in HttpOnly cookie (cross‑origin friendly)
+    // 🔥 Cookie now expires after 30 minutes of inactivity
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true,                // always secure on Render (HTTPS)
-      sameSite: 'none',            // allow cross‑origin requests from Vercel
-      maxAge: 7 * 24 * 60 * 60 * 1000,   // 7 days
+      secure: true,                // HTTPS only
+      sameSite: 'lax',             // safe for same‑origin (we are on Render now)
+      maxAge: 30 * 60 * 1000,      // 30 minutes
     });
 
     // Send access token and user data in the response body
     res.status(200).json({
       success: true,
-      accessToken,      // 🔑 note: property name is "accessToken"
+      accessToken,
       user: {
         id: user._id,
         fullName: user.fullName,
@@ -149,15 +150,16 @@ exports.refreshToken = async (req, res) => {
 exports.logout = async (req, res) => {
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    secure: true,                // required for sameSite: 'none'
-    sameSite: 'none',
-    maxAge: 1,                   // immediately expire
+    secure: true,
+    sameSite: 'lax',
+    maxAge: 1,   // immediately expire
   });
   res.json({ success: true, message: 'Logged out successfully' });
 };
 
 // ---------- Forgot Password (unchanged) ----------
 exports.forgotPassword = async (req, res) => {
+  // … unchanged …
   try {
     const { email } = req.body;
     if (!email) {
