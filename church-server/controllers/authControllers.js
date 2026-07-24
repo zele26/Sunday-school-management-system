@@ -86,11 +86,11 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user._id, user.role);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Set refresh token in HttpOnly cookie
+    // Set refresh token in HttpOnly cookie (cross‑origin friendly)
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',   // true on Render
-      sameSite: 'strict',
+      secure: true,                // always secure on Render (HTTPS)
+      sameSite: 'none',            // allow cross‑origin requests from Vercel
       maxAge: 7 * 24 * 60 * 60 * 1000,   // 7 days
     });
 
@@ -149,9 +149,9 @@ exports.refreshToken = async (req, res) => {
 exports.logout = async (req, res) => {
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 1,   // immediately expire
+    secure: true,                // required for sameSite: 'none'
+    sameSite: 'none',
+    maxAge: 1,                   // immediately expire
   });
   res.json({ success: true, message: 'Logged out successfully' });
 };
