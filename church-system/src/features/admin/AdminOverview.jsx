@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../api/apiClient';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
-
 const quickAccessLinks = [
   { path: '/admin/users', label: 'Users', icon: '👤' },
   { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
@@ -44,25 +42,6 @@ const AdminOverview = () => {
     };
     fetchStats();
   }, []);
-
-  // Temporary cleanup function – remove after use
-  const runCleanup = async () => {
-    if (!window.confirm('Delete all duplicate attendance records? This cannot be undone.')) return;
-    try {
-      const res = await apiFetch('/api/admin/cleanup-attendance', {
-        method: 'POST',
-        body: JSON.stringify({}),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(`✅ Duplicates removed: ${data.removed}`);
-      } else {
-        alert('❌ Error: ' + (data.message || 'Unknown'));
-      }
-    } catch (err) {
-      alert('Network error');
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -115,16 +94,6 @@ const AdminOverview = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ⏳ Temporary Cleanup Button – remove after use */}
-      <div className="flex justify-end">
-        <button
-          onClick={runCleanup}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
-        >
-          🧹 Cleanup Attendance Duplicates
-        </button>
       </div>
     </div>
   );
