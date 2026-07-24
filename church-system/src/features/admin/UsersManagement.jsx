@@ -1,7 +1,6 @@
 // src/features/admin/UsersManagement.jsx
 import React, { useEffect, useState } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
@@ -10,10 +9,7 @@ const UsersManagement = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch('/api/admin/users');
         if (res.ok) {
           const data = await res.json();
           setUsers(Array.isArray(data) ? data : []);
