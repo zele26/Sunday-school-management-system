@@ -1,42 +1,45 @@
 // src/features/teacher/TeacherAttendance.jsx
 import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
 
 const TeacherAttendance = () => {
   const [records, setRecords] = useState([]);
   const [courses, setCourses] = useState([]);
   const [filters, setFilters] = useState({ startDate: '', endDate: '', courseId: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchMyCourses();
   }, []);
 
   const fetchMyCourses = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${API_BASE_URL}/api/teacher/my-courses`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setCourses(data);
+    try {
+      const res = await apiFetch('/api/teacher/my-courses');
+      if (res.ok) {
+        const data = await res.json();
+        setCourses(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchAttendance = async () => {
     setLoading(true);
+    setError('');
     try {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
       if (filters.courseId) params.append('courseId', filters.courseId);
 
-      const res = await fetch(`${API_BASE_URL}/api/teacher/attendance?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRecords(await res.json());
+      const res = await apiFetch(`/api/teacher/attendance?${params}`);
+      if (!res.ok) throw new Error('Failed to fetch attendance');
+      const data = await res.json();
+      setRecords(data);
     } catch (err) {
-      console.error(err);
+      setError(err.message || 'Network error');
     } finally {
       setLoading(false);
     }
@@ -74,11 +77,12 @@ const TeacherAttendance = () => {
         </button>
       </div>
 
-      {loading ? (
-        <div className="py-8 text-center text-slate-400">Loading attendance...</div>
-      ) : records.length === 0 ? (
+      {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
+      {loading && <div className="py-8 text-center text-slate-400">Loading attendance...</div>}
+      {!loading && !error && records.length === 0 && (
         <p className="text-slate-500">No attendance records found.</p>
-      ) : (
+      )}
+      {!loading && !error && records.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
