@@ -1,6 +1,6 @@
 import useAuthStore from '../store/authStore';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+const API_BASE_URL = '';
 
 async function refreshAccessToken() {
   try {

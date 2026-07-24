@@ -1,7 +1,9 @@
 // src/features/admin/AttendanceReports.jsx
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../api/apiClient';
+import useAuthStore from '../../store/authStore';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+const API_BASE_URL = '';   // same origin – use relative paths
 
 // ─── CSV export helper ──────────────────────────────────────────
 const downloadCSV = (rows, filename = 'attendance-report.csv') => {
@@ -57,11 +59,10 @@ const AttendanceReports = () => {
 
   useEffect(() => {
     const fetchDropdowns = async () => {
-      const token = localStorage.getItem('token');
       try {
         const [coursesRes, teachersRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/admin/courses?token=${token}`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${API_BASE_URL}/api/admin/teachers?token=${token}`, { headers: { Authorization: `Bearer ${token}` } }),
+          apiFetch('/api/admin/courses'),
+          apiFetch('/api/admin/teachers'),
         ]);
         if (coursesRes.ok) setCourses(await coursesRes.json());
         if (teachersRes.ok) setTeachers(await teachersRes.json());
@@ -73,42 +74,38 @@ const AttendanceReports = () => {
   }, []);
 
   const fetchReport = async () => {
-  setLoading(true);
-  setError('');
-  try {
-    const token = localStorage.getItem('token');
-    const params = new URLSearchParams();
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams();
 
-    // Only append if the value is non-empty
-    const appendIf = (key, value) => {
-      if (value && value.trim() !== '') {
-        params.append(key, value.trim());
+      const appendIf = (key, value) => {
+        if (value && value.trim() !== '') {
+          params.append(key, value.trim());
+        }
+      };
+
+      appendIf('startDate', filters.startDate);
+      appendIf('endDate', filters.endDate);
+      appendIf('courseId', filters.courseId);
+      appendIf('grade', filters.grade);
+      appendIf('status', filters.status);
+      appendIf('teacher', filters.teacher);
+
+      // Use the new apiFetch – token is automatically added
+      const res = await apiFetch(`/api/admin/attendance/report?${params}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to fetch attendance');
       }
-    };
-
-    appendIf('startDate', filters.startDate);
-    appendIf('endDate', filters.endDate);
-    appendIf('courseId', filters.courseId);
-    appendIf('grade', filters.grade);
-    appendIf('status', filters.status);
-    appendIf('teacher', filters.teacher);
-
-    const url = `${API_BASE_URL}/api/admin/attendance/report?${params}&token=${token}`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || 'Failed to fetch attendance');
+      const data = await res.json();
+      setRecords(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    const data = await res.json();
-    setRecords(data);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -128,9 +125,8 @@ const AttendanceReports = () => {
         )}
       </div>
 
-      {/* Filters – two rows for clarity */}
+      {/* Filters */}
       <div className="flex flex-wrap gap-3 items-end mb-6">
-        {/* Date range */}
         <div>
           <label className="text-xs text-slate-500 block">Start Date</label>
           <input type="date" name="startDate" value={filters.startDate} onChange={handleChange}
@@ -142,7 +138,6 @@ const AttendanceReports = () => {
             className="p-2 border rounded-xl text-sm" />
         </div>
 
-        {/* Course */}
         <div>
           <label className="text-xs text-slate-500 block">Course</label>
           <select name="courseId" value={filters.courseId} onChange={handleChange}
@@ -152,7 +147,6 @@ const AttendanceReports = () => {
           </select>
         </div>
 
-        {/* Grade */}
         <div>
           <label className="text-xs text-slate-500 block">Grade</label>
           <select name="grade" value={filters.grade} onChange={handleChange}
@@ -162,7 +156,6 @@ const AttendanceReports = () => {
           </select>
         </div>
 
-        {/* Status */}
         <div>
           <label className="text-xs text-slate-500 block">Status</label>
           <select name="status" value={filters.status} onChange={handleChange}
@@ -174,7 +167,6 @@ const AttendanceReports = () => {
           </select>
         </div>
 
-        {/* Teacher */}
         <div>
           <label className="text-xs text-slate-500 block">Teacher</label>
           <select name="teacher" value={filters.teacher} onChange={handleChange}
@@ -192,7 +184,6 @@ const AttendanceReports = () => {
         </button>
       </div>
 
-      {/* Loading / error / empty states */}
       {loading && <div className="py-8 text-center text-slate-400">Loading attendance...</div>}
       {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
       {!loading && !error && records.length === 0 && (
@@ -201,7 +192,6 @@ const AttendanceReports = () => {
         </div>
       )}
 
-      {/* Detailed table */}
       {!loading && !error && records.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
