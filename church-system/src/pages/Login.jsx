@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
@@ -25,17 +26,19 @@ const Login = () => {
     };
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // ✅ Use the full Render API URL – no credentials needed
+      const response = await fetch('https://church-api-3l2c.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        credentials: 'include',
       });
 
       const data = await response.json().catch(() => ({ message: 'Invalid server response.' }));
 
       if (response.ok) {
+        // Store the access token in Zustand (persisted to localStorage)
         loginStore(data.accessToken, data.user);
+
         const routes = { student: '/dashboard', admin: '/admin', teacher: '/teacher' };
         navigate(routes[data.user.role] || '/dashboard', { replace: true });
       } else {
@@ -55,9 +58,9 @@ const Login = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center fixed inset-0 font-sans" style={{ backgroundImage: `url(${bgImage})` }}>
       <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
-      
+
       <div className="max-w-4xl w-full bg-slate-900/85 text-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative z-10 border border-slate-700/50 backdrop-blur-md">
-        
+
         {/* Left Branding */}
         <div className="md:w-5/12 bg-gradient-to-br from-indigo-900/90 via-blue-900/80 to-slate-900 p-8 text-white flex flex-col justify-between items-center text-center border-b md:border-b-0 md:border-r border-slate-700/50">
           <div className="space-y-4 my-auto">

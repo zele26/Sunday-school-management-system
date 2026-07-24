@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
-import { apiFetch } from './api/apiClient';
 
 // Public pages
 import Login from './pages/Login';
@@ -24,27 +23,12 @@ import { ProtectedRoute, RoleRoute } from './components/ProtectedRoute';
 function App() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const user = useAuthStore((state) => state.user);
-  const login = useAuthStore((state) => state.login);
   const logout = useAuthStore((state) => state.logout);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const res = await apiFetch('/api/auth/refresh', { method: 'POST' });
-        if (res.ok) {
-          const data = await res.json();
-          login(data.accessToken, data.user);
-        } else {
-          logout();
-        }
-      } catch {
-        logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-    initAuth();
+    // No API call needed – the Zustand store already reads from localStorage
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -100,4 +84,4 @@ function App() {
   );
 }
 
-export default App;"// force deploy" 
+export default App;

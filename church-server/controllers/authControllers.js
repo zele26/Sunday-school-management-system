@@ -6,23 +6,15 @@ const crypto = require('crypto');
 
 // ---------- Helpers ----------
 
-// Short‑lived access token (15 minutes)
+// Long‑lived access token (7 days) – stored in localStorage
 const generateAccessToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || 'fallback_secret_key', {
-    expiresIn: '15m',
-  });
-};
-
-// Long‑lived refresh token (7 days) – stored in HttpOnly cookie
-const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET || 'refresh_fallback_key', {
     expiresIn: '7d',
   });
 };
 
 // ---------- Register ----------
 exports.register = async (req, res) => {
-  // … unchanged …
   try {
     const { fullName, email, password, role } = req.body;
 
@@ -57,7 +49,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// ---------- Login (sets HttpOnly cookie – expires in 30 minutes) ----------
+// ---------- Login (returns long‑lived token – no cookie) ----------
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -83,19 +75,10 @@ exports.login = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Your account registration request was declined.' });
     }
 
-    // Generate tokens
+    // Generate a single long‑lived token
     const accessToken = generateAccessToken(user._id, user.role);
-    const refreshToken = generateRefreshToken(user._id);
 
-    // 🔥 Cookie now expires after 30 minutes of inactivity
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,                // HTTPS only
-      sameSite: 'lax',             // safe for same‑origin (we are on Render now)
-      maxAge: 30 * 60 * 1000,      // 30 minutes
-    });
-
-    // Send access token and user data in the response body
+    // Return the token directly – frontend will store it in localStorage
     res.status(200).json({
       success: true,
       accessToken,
@@ -112,54 +95,18 @@ exports.login = async (req, res) => {
   }
 };
 
-// ---------- Refresh Token (generates new access token) ----------
+// ---------- Refresh Token – removed (not needed) ----------
 exports.refreshToken = async (req, res) => {
-  try {
-    const token = req.cookies.refreshToken;
-    if (!token) {
-      return res.status(401).json({ success: false, message: 'No refresh token provided' });
-    }
-
-    // Verify the refresh token JWT
-    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || 'refresh_fallback_key');
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' });
-    }
-
-    // Generate a new access token
-    const accessToken = generateAccessToken(user._id, user.role);
-
-    res.json({
-      success: true,
-      accessToken,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    console.error('Refresh Token Error:', error);
-    res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
-  }
+  res.status(410).json({ success: false, message: 'Refresh not used. Please log in again.' });
 };
 
-// ---------- Logout (clears cookie) ----------
+// ---------- Logout (nothing to clear) ----------
 exports.logout = async (req, res) => {
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    maxAge: 1,   // immediately expire
-  });
   res.json({ success: true, message: 'Logged out successfully' });
 };
 
 // ---------- Forgot Password (unchanged) ----------
 exports.forgotPassword = async (req, res) => {
-  // … unchanged …
   try {
     const { email } = req.body;
     if (!email) {
