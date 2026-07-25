@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
@@ -8,8 +8,21 @@ const ContinueRegistration = () => {
   const [transactionRef, setTransactionRef] = useState('');
   const [receiptUrl, setReceiptUrl] = useState('');
   const [message, setMessage] = useState('');
+  const [paymentInfo, setPaymentInfo] = useState(null);
+
+  // Fetch payment info once when component mounts (or you could fetch after lookup)
+  useEffect(() => {
+    const fetchPaymentInfo = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/registrations/payment-info`);
+        if (res.ok) setPaymentInfo(await res.json());
+      } catch (err) {}
+    };
+    fetchPaymentInfo();
+  }, []);
 
   const handleLookup = async () => {
+    setMessage('');
     const res = await fetch(`${API_BASE_URL}/api/registrations/lookup?registrationNumber=${search}`);
     const data = await res.json();
     if (res.ok) {
@@ -59,9 +72,16 @@ const ContinueRegistration = () => {
 
           {registration.status === 'Pending Payment' && (
             <div className="mt-4">
-              <h3 className="font-semibold">Payment Instructions</h3>
-              <p>Contribution: 100 Birr | Resource Fee: 50 Birr | Total: 150 Birr</p>
-              <p>Pay via Telebirr / CBE Birr / Bank</p>
+              {paymentInfo ? (
+                <div className="bg-slate-50 p-3 rounded-xl mb-3">
+                  <p><strong>Contribution:</strong> {paymentInfo.contributionAmount} Birr</p>
+                  <p><strong>Resource Fee:</strong> {paymentInfo.resourceFee} Birr</p>
+                  <p className="font-semibold">Total: {paymentInfo.totalAmount} Birr</p>
+                  <p className="text-sm mt-1">{paymentInfo.instructions}</p>
+                </div>
+              ) : (
+                <p>Loading payment instructions...</p>
+              )}
               <input
                 type="text"
                 placeholder="Transaction Reference"
@@ -71,13 +91,22 @@ const ContinueRegistration = () => {
               />
               <input
                 type="text"
-                placeholder="Receipt URL"
+                placeholder="Receipt URL (upload screenshot or PDF link)"
                 value={receiptUrl}
                 onChange={(e) => setReceiptUrl(e.target.value)}
                 className="w-full p-2 border rounded-xl mt-2"
               />
-              <button onClick={handleUploadReceipt} className="w-full bg-green-600 text-white p-2 rounded-xl mt-2">Submit Receipt</button>
+              <button onClick={handleUploadReceipt} className="w-full bg-green-600 text-white p-2 rounded-xl mt-2">
+                Submit Receipt
+              </button>
             </div>
+          )}
+
+          {registration.status === 'Pending Verification' && (
+            <p className="text-emerald-600 mt-4">Your receipt has been received. Awaiting verification.</p>
+          )}
+          {registration.status === 'Approved' && (
+            <p className="text-emerald-600 mt-4">Your registration has been approved! You can now log in.</p>
           )}
         </div>
       )}
