@@ -7,7 +7,6 @@ const RegistrationsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [message, setMessage] = useState({ text: '', type: '' });
-  const [selectedRegistration, setSelectedRegistration] = useState(null);
 
   const fetchRegistrations = async () => {
     setLoading(true);
@@ -80,7 +79,9 @@ const RegistrationsManagement = () => {
 
       {message.text && (
         <div className={`p-3 rounded-xl text-sm ${
-          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+          message.type === 'success'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-rose-50 text-rose-700 border border-rose-200'
         }`}>
           {message.text}
         </div>

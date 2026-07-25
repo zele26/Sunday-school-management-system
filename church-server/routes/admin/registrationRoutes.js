@@ -5,7 +5,7 @@ const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const Student = require('../../models/Student');
 
-// ---------- List all pending registrations ----------
+// List all pending registrations
 router.get('/', async (req, res) => {
   try {
     const registrations = await Registration.find({ status: 'Pending Verification' })
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ---------- Approve a registration ----------
+// Approve a registration
 router.put('/:id/approve', async (req, res) => {
   try {
     const registration = await Registration.findById(req.params.id);
@@ -26,11 +26,11 @@ router.put('/:id/approve', async (req, res) => {
       return res.status(400).json({ message: 'Registration is not pending verification' });
     }
 
-    // Create the User (account)
+    // Create the User account (the password is already hashed)
     const user = await User.create({
       fullName: registration.fullName,
       email: registration.email,
-      password: registration.password,   // already hashed during registration
+      password: registration.password,
       role: 'student',
       status: 'approved',
     });
@@ -50,7 +50,6 @@ router.put('/:id/approve', async (req, res) => {
       contactAddress: registration.address || '',
     });
 
-    // Update registration status
     registration.status = 'Approved';
     registration.reviewedBy = req.user._id;
     registration.reviewedAt = new Date();
@@ -62,7 +61,7 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// ---------- Reject a registration ----------
+// Reject a registration
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;
