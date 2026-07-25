@@ -17,6 +17,9 @@ const quizRoutes = require('./routes/quizRoutes');
 
 const app = express();
 
+const registrationRoutes = require('./routes/registrationRoutes');
+app.use('/api/registrations', registrationRoutes);
+
 // --- MIDDLEWARE ---
 app.use(express.json());
 app.use(cookieParser());
