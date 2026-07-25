@@ -20,6 +20,7 @@ const navItems = [
   { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
   { path: '/admin/qr-scanner', label: 'QR Scanner', icon: '📷' },
   { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
+  { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

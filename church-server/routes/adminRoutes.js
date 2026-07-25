@@ -823,6 +823,9 @@ const userRoutes = require('./admin/userRoutes');
 router.use(protect);
 router.use(authorize('admin'));
 
+const registrationRoutes = require('./admin/registrationRoutes');
+router.use('/registrations', registrationRoutes);
+
 // Mount sub‑routers – paths are relative to /api/admin
 router.use('/students', studentRoutes);      // /api/admin/students/...
 router.use('/courses', courseRoutes);        // /api/admin/courses/...
