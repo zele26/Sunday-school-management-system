@@ -1,5 +1,3 @@
-
-
 // src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -28,6 +26,7 @@ import AdminRoutes from './routes/AdminRoutes';
 import TeacherRoutes from './routes/TeachersRoutes';
 import StudentRoutes from './routes/StudentRoutes';
 
+// Registration flow pages
 import StudentRegister from './pages/StudentRegister';
 import ContinueRegistration from './pages/ContinueRegistration';
 
@@ -71,6 +70,10 @@ function App() {
         <Route path="/classes" element={<Classes />} />
         <Route path="/announcements" element={<PublicAnnouncements />} />
         <Route path="/contact" element={<Contact />} />
+
+        {/* ✅ ADDED: Registration flow pages */}
+        <Route path="/student-register" element={<StudentRegister />} />
+        <Route path="/continue-registration" element={<ContinueRegistration />} />
       </Route>
 
       {/* Auth pages – still accessible when not logged in */}
