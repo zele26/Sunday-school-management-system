@@ -14,26 +14,23 @@ const teacherRoutes = require('./routes/teacherRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const quizRoutes = require('./routes/quizRoutes');
+const registrationRoutes = require('./routes/registrationRoutes');   // public registration
 
 const app = express();
-
-const registrationRoutes = require('./routes/registrationRoutes');
-app.use('/api/registrations', registrationRoutes);
 
 // --- MIDDLEWARE ---
 app.use(express.json());
 app.use(cookieParser());
 
-// Enable CORS – works for same‑origin and cross‑origin (useful for development)
+// Enable CORS – works for same‑origin and cross‑origin
 app.use(cors({
-  origin: true,               // reflect the request origin
-  credentials: true,          // allow cookies
+  origin: true,
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // --- SERVE FRONTEND SPA ---
-// 👇 CHANGED: points to the dist folder inside church-server
 const frontendDistPath = path.join(__dirname, 'dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
@@ -53,12 +50,13 @@ connectToDatabase();
 
 // --- ROUTE MOUNTING ---
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminRoutes);               // includes /api/admin/registrations
 app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/registrations', registrationRoutes);  // public registration (placed AFTER middleware)
 
 // Health Check Endpoint
 app.get('/api/test', (req, res) => {

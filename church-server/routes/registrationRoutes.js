@@ -1,11 +1,10 @@
+// routes/registrationRoutes.js
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const Registration = require('../models/Registration');
 const Payment = require('../models/Payment');
-const Student = require('../models/Student');
 const User = require('../models/User');
-const { protect, authorize } = require('../middleware/auth');
 
 // Helper: generate registration number
 const generateRegNumber = async () => {
@@ -126,79 +125,6 @@ router.put('/upload-receipt', async (req, res) => {
     res.json({ success: true, message: 'Receipt uploaded. Awaiting verification.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
-  }
-});
-
-// ---------- Admin: list pending registrations ----------
-router.get('/pending', protect, authorize('admin'), async (req, res) => {
-  try {
-    const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
-    res.json(registrations);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ---------- Admin: approve registration ----------
-router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
-  try {
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) return res.status(404).json({ message: 'Registration not found' });
-
-    if (registration.status !== 'Pending Verification') {
-      return res.status(400).json({ message: 'Registration is not pending verification' });
-    }
-
-    // Create the User (account)
-    const user = await User.create({
-      fullName: registration.fullName,
-      email: registration.email,
-      password: registration.password,   // already hashed
-      role: 'student',
-      status: 'approved',
-    });
-
-    // Create the Student document
-    const student = await Student.create({
-      userId: user._id,
-      firstName: registration.fullName,
-      grade: registration.grade,
-      dob: registration.dateOfBirth || '',
-      address: registration.address || '',
-      parentName: registration.parentName || '',
-      parentPhone: registration.parentPhone || '',
-      parentEmail: registration.parentEmail || '',
-      // other fields stay empty
-    });
-
-    // Update registration status
-    registration.status = 'Approved';
-    registration.reviewedBy = req.user._id;
-    registration.reviewedAt = new Date();
-    await registration.save();
-
-    res.json({ success: true, message: 'Registration approved. Student account created.' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ---------- Admin: reject registration ----------
-router.put('/:id/reject', protect, authorize('admin'), async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) return res.status(404).json({ message: 'Registration not found' });
-
-    registration.status = 'Rejected';
-    registration.rejectionReason = reason || '';
-    registration.reviewedBy = req.user._id;
-    registration.reviewedAt = new Date();
-    await registration.save();
-
-    res.json({ success: true, message: 'Registration rejected.' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
   }
 });
 

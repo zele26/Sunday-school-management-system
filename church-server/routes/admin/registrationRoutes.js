@@ -5,18 +5,19 @@ const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const Student = require('../../models/Student');
 
-// List all pending registrations
+// All routes are already protected by the admin hub (protect + authorize('admin'))
+
+// ---------- List all pending registrations ----------
 router.get('/', async (req, res) => {
   try {
-    const registrations = await Registration.find({ status: 'Pending Verification' })
-      .sort({ createdAt: -1 });
+    const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
     res.json(registrations);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Approve a registration
+// ---------- Approve a registration ----------
 router.put('/:id/approve', async (req, res) => {
   try {
     const registration = await Registration.findById(req.params.id);
@@ -26,7 +27,7 @@ router.put('/:id/approve', async (req, res) => {
       return res.status(400).json({ message: 'Registration is not pending verification' });
     }
 
-    // Create the User account (the password is already hashed)
+    // Create the User account (password already hashed)
     const user = await User.create({
       fullName: registration.fullName,
       email: registration.email,
@@ -42,12 +43,9 @@ router.put('/:id/approve', async (req, res) => {
       grade: registration.grade,
       dob: registration.dateOfBirth || '',
       address: registration.address || '',
-      studentPhone: registration.parentPhone || '',
-      emergencyFirstName: registration.parentName || '',
-      relationship: 'Parent',
-      contactPhone: registration.parentPhone || '',
-      contactEmail: registration.parentEmail || '',
-      contactAddress: registration.address || '',
+      parentName: registration.parentName || '',
+      parentPhone: registration.parentPhone || '',
+      parentEmail: registration.parentEmail || '',
     });
 
     registration.status = 'Approved';
@@ -61,7 +59,7 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// Reject a registration
+// ---------- Reject a registration ----------
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;
