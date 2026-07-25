@@ -4,13 +4,15 @@ const router = express.Router();
 const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const Student = require('../../models/Student');
+const crypto = require('crypto');        // <-- for generating QR code UUID
 
 // All routes are already protected by the admin hub (protect + authorize('admin'))
 
 // ---------- List all pending registrations ----------
 router.get('/', async (req, res) => {
   try {
-    const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
+    const registrations = await Registration.find({ status: 'Pending Verification' })
+      .sort({ createdAt: -1 });
     res.json(registrations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -36,7 +38,10 @@ router.put('/:id/approve', async (req, res) => {
       status: 'approved',
     });
 
-    // Create the Student document
+    // Generate a unique QR code string
+    const qrCodeValue = crypto.randomUUID();
+
+    // Create the Student document – include QR code from the start
     const student = await Student.create({
       userId: user._id,
       firstName: registration.fullName,
@@ -46,14 +51,19 @@ router.put('/:id/approve', async (req, res) => {
       parentName: registration.parentName || '',
       parentPhone: registration.parentPhone || '',
       parentEmail: registration.parentEmail || '',
+      qrCode: qrCodeValue,                    // <-- QR code generated immediately
     });
 
+    // Update registration status
     registration.status = 'Approved';
     registration.reviewedBy = req.user._id;
     registration.reviewedAt = new Date();
     await registration.save();
 
-    res.json({ success: true, message: 'Registration approved. Student account created.' });
+    res.json({
+      success: true,
+      message: 'Registration approved. Student account created with QR code.',
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
