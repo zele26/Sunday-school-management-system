@@ -101,7 +101,7 @@ const RegistrationsManagement = () => {
                 <th className="py-2 px-2">Reg Number</th>
                 <th className="py-2 px-2">Name</th>
                 <th className="py-2 px-2">Grade</th>
-                <th className="py-2 px-2">Parent</th>
+                <th className="py-2 px-2">Transaction Ref</th>
                 <th className="py-2 px-2">Receipt</th>
                 <th className="py-2 px-2">Actions</th>
               </tr>
@@ -112,7 +112,7 @@ const RegistrationsManagement = () => {
                   <td className="py-2 px-2 font-mono text-xs">{r.registrationNumber}</td>
                   <td className="py-2 px-2 font-medium">{r.fullName}</td>
                   <td className="py-2 px-2">{r.grade}</td>
-                  <td className="py-2 px-2">{r.parentName || '-'}</td>
+                  <td className="py-2 px-2 text-xs text-slate-500">{r.transactionRef || '-'}</td>
                   <td className="py-2 px-2">
                     {r.receiptUrl ? (
                       <a href={r.receiptUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline text-xs">

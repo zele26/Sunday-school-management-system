@@ -1,3 +1,4 @@
+// src/pages/ContinueRegistration.jsx
 import React, { useState, useEffect } from 'react';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
@@ -6,11 +7,13 @@ const ContinueRegistration = () => {
   const [search, setSearch] = useState('');
   const [registration, setRegistration] = useState(null);
   const [transactionRef, setTransactionRef] = useState('');
-  const [receiptUrl, setReceiptUrl] = useState('');
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptUrl, setReceiptUrl] = useState('');   // filled after file upload
   const [message, setMessage] = useState('');
   const [paymentInfo, setPaymentInfo] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
-  // Fetch payment info once when component mounts (or you could fetch after lookup)
+  // Fetch payment info on mount
   useEffect(() => {
     const fetchPaymentInfo = async () => {
       try {
@@ -21,6 +24,7 @@ const ContinueRegistration = () => {
     fetchPaymentInfo();
   }, []);
 
+  // Look up registration by number
   const handleLookup = async () => {
     setMessage('');
     const res = await fetch(`${API_BASE_URL}/api/registrations/lookup?registrationNumber=${search}`);
@@ -32,7 +36,46 @@ const ContinueRegistration = () => {
     }
   };
 
+  // Handle file selection
+  const handleFileChange = (e) => {
+    setReceiptFile(e.target.files[0]);
+    setMessage('');
+  };
+
+  // Upload the selected file to Cloudinary via our backend
+  const handleFileUpload = async () => {
+    if (!receiptFile) {
+      return setMessage('Please select a file to upload.');
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', receiptFile);
+
+      const res = await fetch(`${API_BASE_URL}/api/upload/receipt`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setReceiptUrl(data.url);
+        setMessage('Receipt uploaded successfully!');
+      } else {
+        setMessage(data.message || 'File upload failed.');
+      }
+    } catch (err) {
+      setMessage('Network error during upload.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Submit the receipt and transaction reference to complete registration
   const handleUploadReceipt = async () => {
+    if (!receiptUrl) {
+      return setMessage('Please upload the receipt file first.');
+    }
+
     const res = await fetch(`${API_BASE_URL}/api/registrations/upload-receipt`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -43,7 +86,7 @@ const ContinueRegistration = () => {
       }),
     });
     const data = await res.json();
-    setMessage(data.message || 'Receipt uploaded');
+    setMessage(data.message || 'Receipt submitted');
     if (data.success) {
       setRegistration({ ...registration, status: 'Pending Verification' });
     }
@@ -62,7 +105,9 @@ const ContinueRegistration = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full p-2 border rounded-xl mb-2"
           />
-          <button onClick={handleLookup} className="w-full bg-blue-600 text-white p-2 rounded-xl">Find Registration</button>
+          <button onClick={handleLookup} className="w-full bg-blue-600 text-white p-2 rounded-xl">
+            Find Registration
+          </button>
         </div>
       ) : (
         <div>
@@ -82,6 +127,8 @@ const ContinueRegistration = () => {
               ) : (
                 <p>Loading payment instructions...</p>
               )}
+
+              {/* Transaction Reference */}
               <input
                 type="text"
                 placeholder="Transaction Reference"
@@ -89,14 +136,35 @@ const ContinueRegistration = () => {
                 onChange={(e) => setTransactionRef(e.target.value)}
                 className="w-full p-2 border rounded-xl mt-2"
               />
-              <input
-                type="text"
-                placeholder="Receipt URL (upload screenshot or PDF link)"
-                value={receiptUrl}
-                onChange={(e) => setReceiptUrl(e.target.value)}
-                className="w-full p-2 border rounded-xl mt-2"
-              />
-              <button onClick={handleUploadReceipt} className="w-full bg-green-600 text-white p-2 rounded-xl mt-2">
+
+              {/* File Upload Section */}
+              <div className="mt-3">
+                <label className="text-sm font-medium">Upload Receipt (Image or PDF)</label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full p-2 border rounded-xl mt-1"
+                />
+                <button
+                  onClick={handleFileUpload}
+                  disabled={uploading || !receiptFile}
+                  className="w-full bg-blue-600 text-white p-2 rounded-xl mt-2 disabled:opacity-50"
+                >
+                  {uploading ? 'Uploading...' : 'Upload File'}
+                </button>
+                {receiptUrl && (
+                  <p className="text-xs text-emerald-600 mt-1">
+                    ✅ File uploaded. <a href={receiptUrl} target="_blank" rel="noreferrer" className="underline">Preview</a>
+                  </p>
+                )}
+              </div>
+
+              {/* Submit Receipt */}
+              <button
+                onClick={handleUploadReceipt}
+                className="w-full bg-green-600 text-white p-2 rounded-xl mt-3"
+              >
                 Submit Receipt
               </button>
             </div>

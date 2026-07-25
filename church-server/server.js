@@ -15,6 +15,7 @@ const resourceRoutes = require('./routes/resourceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');   // public registration
+const uploadRoutes = require('./routes/uploadRoutes');               // <-- NEW: file upload
 
 const app = express();
 
@@ -56,7 +57,8 @@ app.use('/api/teacher', teacherRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/quizzes', quizRoutes);
-app.use('/api/registrations', registrationRoutes);  // public registration (placed AFTER middleware)
+app.use('/api/registrations', registrationRoutes);  // public registration
+app.use('/api/upload', uploadRoutes);                // <-- NEW: receipt file upload
 
 // Health Check Endpoint
 app.get('/api/test', (req, res) => {
