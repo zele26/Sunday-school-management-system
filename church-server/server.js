@@ -76,6 +76,29 @@ app.get(/^(?!\/api).*/, (req, res) => {
   res.status(404).send('Frontend build not found. Run the Vite app first.');
 });
 
+// ⏳ Temporary public fix endpoint – remove after execution
+app.post('/api/fix-sparse-indexes', async (req, res) => {
+  try {
+    const { secret } = req.body;
+    if (secret !== process.env.FIX_SECRET) {
+      return res.status(403).json({ success: false, message: 'Invalid secret' });
+    }
+
+    const User = require('./models/User');
+
+    // Drop old non‑sparse indexes (ignore errors if they don't exist)
+    try { await User.collection.dropIndex('email_1'); } catch (e) {}
+    try { await User.collection.dropIndex('phone_1'); } catch (e) {}
+
+    // Re‑create indexes with current schema (sparse: true)
+    await User.createIndexes();
+
+    res.json({ success: true, message: 'Sparse indexes re‑created successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // --- SERVER START ---
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
