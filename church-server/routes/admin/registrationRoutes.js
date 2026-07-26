@@ -7,75 +7,71 @@ const crypto = require('crypto');
 
 // List pending
 router.get('/', async (req, res) => {
-  try {
-    const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
-    res.json(registrations);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+  const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
+  res.json(registrations);
 });
 
-// Approve
+// Approve – creates user with phone, generates Student ID
 router.put('/:id/approve', async (req, res) => {
   try {
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
-
-    if (registration.status !== 'Pending Verification') {
+    const reg = await Registration.findById(req.params.id);
+    if (!reg || reg.status !== 'Pending Verification')
       return res.status(400).json({ message: 'ምዝገባው ለማጽደቅ ዝግጁ አይደለም' });
-    }
 
+    // Create User with phone (email optional)
     const user = await User.create({
-      fullName: registration.fullName,
-      email: registration.email,
-      password: registration.password,
+      fullName: reg.fullName,
+      phone: reg.phone,
+      email: reg.email || undefined,
+      password: reg.password,
       role: 'student',
       status: 'approved',
     });
 
+    // Generate permanent Student ID
+    const studentId = `STU-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
     const qrCodeValue = crypto.randomUUID();
 
     const student = await Student.create({
       userId: user._id,
-      firstName: registration.fullName,
-      grade: registration.grade,
-      dob: registration.dateOfBirth || '',
-      address: registration.address || '',
-      parentName: registration.parentName || '',
-      parentPhone: registration.parentPhone || '',
-      parentEmail: registration.parentEmail || '',
+      studentId,
+      firstName: reg.fullName,
+      grade: reg.grade,
+      dob: reg.dateOfBirth || '',
+      address: reg.address || '',
+      parentName: reg.parentName || '',
+      parentPhone: reg.parentPhone || '',
+      parentEmail: reg.parentEmail || '',
       qrCode: qrCodeValue,
-      studentType: registration.studentType,   // carry over
+      studentType: reg.studentType,
     });
 
-    registration.status = 'Approved';
-    registration.reviewedBy = req.user._id;
-    registration.reviewedAt = new Date();
-    await registration.save();
+    // Store Student ID in registration as well
+    reg.status = 'Approved';
+    reg.studentId = studentId;
+    reg.reviewedBy = req.user._id;
+    reg.reviewedAt = new Date();
+    await reg.save();
 
-    res.json({ success: true, message: 'ምዝገባው ጸድቋል። የተማሪ መለያ ተፈጥሯል' });
+    res.json({ success: true, message: 'ምዝገባው ጸድቋል። የተማሪ መለያ ተሰጥቷል።', studentId });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Reject
+// Reject – unchanged
 router.put('/:id/reject', async (req, res) => {
-  try {
-    const { reason } = req.body;
-    const registration = await Registration.findById(req.params.id);
-    if (!registration) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+  const { reason } = req.body;
+  const reg = await Registration.findById(req.params.id);
+  if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
 
-    registration.status = 'Rejected';
-    registration.rejectionReason = reason || '';
-    registration.reviewedBy = req.user._id;
-    registration.reviewedAt = new Date();
-    await registration.save();
+  reg.status = 'Rejected';
+  reg.rejectionReason = reason || '';
+  reg.reviewedBy = req.user._id;
+  reg.reviewedAt = new Date();
+  await reg.save();
 
-    res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+  res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
 });
 
 module.exports = router;

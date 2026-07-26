@@ -7,16 +7,14 @@ const User = require('../models/User');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const cloudinary = require('cloudinary').v2;
-const crypto = require('crypto');
 
-// Helper: generate registration number
 const generateRegNumber = async () => {
   const last = await Registration.findOne().sort({ createdAt: -1 });
   const count = last ? parseInt(last.registrationNumber.split('-')[2]) + 1 : 1;
   return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
 };
 
-// ---------- Public: submit registration (with file upload) ----------
+// POST /api/registrations – submit registration (phone required, email optional)
 router.post('/', upload.single('receipt'), async (req, res) => {
   try {
     const {
@@ -25,29 +23,24 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       email, password, studentType,
     } = req.body;
 
-    if (!fullName || !grade || !email || !password || !studentType) {
+    // Phone is now mandatory
+    if (!fullName || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
-        message: 'ሙሉ ስም፣ ክፍል፣ ኢሜይል፣ ፓስዎርድ እና የተማሪ አይነት ያስፈልጋሉ።',
+        message: 'ሙሉ ስም፣ ክፍል፣ ስልክ ቁጥር፣ ፓስዎርድ እና የተማሪ አይነት ያስፈልጋሉ።',
       });
     }
 
-    // Check if email already used
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
-    }
-
-    const existingReg = await Registration.findOne({ email: email.toLowerCase(), status: { $ne: 'Rejected' } });
-    if (existingReg) {
-      return res.status(400).json({ success: false, message: 'ይህ ኢሜይል በመጠበቅ ላይ ያለ ምዝገባ አለው' });
-    }
+    // Check duplicate phone
+    const existingReg = await Registration.findOne({ phone, status: { $ne: 'Rejected' } });
+    if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Handle receipt upload if a file was attached
     let receiptUrl = '';
     if (req.file) {
       const b64 = Buffer.from(req.file.buffer).toString('base64');
@@ -63,53 +56,38 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       fullName,
       gender: gender || 'Male',
       dateOfBirth: dateOfBirth || '',
-      phone: phone || '',
+      phone,
       grade,
       address: address || '',
       parentName: parentName || '',
       parentPhone: parentPhone || '',
       parentEmail: parentEmail || '',
-      email: email.toLowerCase(),
+      email: email?.toLowerCase() || '',
       password: hashedPassword,
       studentType,
       receiptUrl,
-      status: receiptUrl ? 'Pending Verification' : 'Pending Payment',
+      status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
     });
 
     res.status(201).json({
       success: true,
-      message: receiptUrl
-        ? 'ምዝገባዎ ተቀባይነት አግኝቷል። እባክዎ ማረጋገጫውን ይጠብቁ።'
-        : 'ምዝገባዎ ተቀባይነት አግኝቷል። እባክዎ የክፍያ ደረሰኝ ይላኩ።',
-      registration: {
-        registrationNumber: registration.registrationNumber,
-        status: registration.status,
-      },
+      message: studentType === 'distance'
+        ? 'ምዝገባዎ ተቀባይነት አግኝቷል። እባክዎ ክፍያ ከፍለው ደረሰኝ ይላኩ።'
+        : 'ምዝገባዎ ተቀባይነት አግኝቷል። ማረጋገጫውን ይጠብቁ።',
+      registration: { registrationNumber: registration.registrationNumber, status: registration.status },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// ---------- Public: get payment instructions ----------
-router.get('/payment-info', async (req, res) => {
-  try {
-    const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
-    if (!payment) return res.status(404).json({ message: 'የክፍያ መረጃ አልተገኘም' });
-    res.json(payment);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ---------- Public: applicant login / status check ----------
+// POST /api/registrations/login – status check using phone + password
 router.post('/login', async (req, res) => {
   try {
-    const { registrationNumber, password } = req.body;
-    if (!registrationNumber || !password) {
-      return res.status(400).json({ message: 'የምዝገባ ቁጥር እና ፓስዎርድ ያስፈልጋል' });
-    }
-    const reg = await Registration.findOne({ registrationNumber });
+    const { phone, password } = req.body;
+    if (!phone || !password) return res.status(400).json({ message: 'ስልክ ቁጥር እና ፓስዎርድ ያስፈልጋል' });
+
+    const reg = await Registration.findOne({ phone });
     if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
 
     const isMatch = await bcrypt.compare(password, reg.password);
@@ -121,54 +99,40 @@ router.post('/login', async (req, res) => {
       status: reg.status,
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
+      studentId: reg.studentId,   // only after approval
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ---------- Public: look up registration by number or email (kept for admin or quick view) ----------
-router.get('/lookup', async (req, res) => {
+// GET /api/registrations/payment-info – unchanged
+router.get('/payment-info', async (req, res) => {
   try {
-    const { registrationNumber, email } = req.query;
-    let registration;
-    if (registrationNumber) {
-      registration = await Registration.findOne({ registrationNumber });
-    } else if (email) {
-      registration = await Registration.findOne({ email: email.toLowerCase() }).sort({ createdAt: -1 });
-    } else {
-      return res.status(400).json({ message: 'የምዝገባ ቁጥር ወይም ኢሜይል ያቅርቡ' });
-    }
-    if (!registration) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
-    res.json({
-      registrationNumber: registration.registrationNumber,
-      fullName: registration.fullName,
-      status: registration.status,
-    });
+    const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
+    if (!payment) return res.status(404).json({ message: 'የክፍያ መረጃ አልተገኘም' });
+    res.json(payment);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// ---------- Public: upload payment receipt (for returning applicants) ----------
+// PUT /api/registrations/upload-receipt – unchanged
 router.put('/upload-receipt', async (req, res) => {
   try {
     const { registrationNumber, transactionRef, receiptUrl } = req.body;
     if (!registrationNumber) return res.status(400).json({ message: 'የምዝገባ ቁጥር ያስፈልጋል' });
 
-    const registration = await Registration.findOne({ registrationNumber });
-    if (!registration) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+    const reg = await Registration.findOne({ registrationNumber });
+    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+    if (reg.status !== 'Pending Payment') return res.status(400).json({ message: 'ምዝገባው ክፍያ ለመቀበል ዝግጁ አይደለም' });
 
-    if (registration.status !== 'Pending Payment') {
-      return res.status(400).json({ message: 'ምዝገባው ክፍያ ለመቀበል ዝግጁ አይደለም' });
-    }
+    reg.transactionRef = transactionRef || '';
+    reg.receiptUrl = receiptUrl || '';
+    reg.status = 'Pending Verification';
+    await reg.save();
 
-    registration.transactionRef = transactionRef || '';
-    registration.receiptUrl = receiptUrl || '';
-    registration.status = 'Pending Verification';
-    await registration.save();
-
-    res.json({ success: true, message: 'ደረሰኝ ተቀባይነት አግኝቷል። በመጠባበቅ ላይ' });
+    res.json({ success: true, message: 'ደረሰኝ ተቀባይነት አግኝቷል። በመጠበቅ ላይ' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

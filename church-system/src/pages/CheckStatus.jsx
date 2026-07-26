@@ -1,5 +1,5 @@
-// src/pages/CheckStatus.jsx
 import React, { useState } from 'react';
+import { Link, MemoryRouter, useInRouterContext } from 'react-router-dom';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
@@ -8,8 +8,6 @@ const getStatusMessage = (status, studentType) => {
   if (studentType === 'regular') {
     switch (status) {
       case 'Pending Payment':
-        // Regular students never pay – so this shouldn't happen, but just in case
-        return 'ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ በትምህርት ቤቱ ኃላፊ ሲጸድቅ መግባት ይችላሉ።';
       case 'Pending Verification':
         return 'ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ በትምህርት ቤቱ ኃላፊ ሲጸድቅ መግባት ይችላሉ።';
       case 'Approved':
@@ -36,97 +34,226 @@ const getStatusMessage = (status, studentType) => {
   }
 };
 
-const CheckStatus = () => {
-  const [regNumber, setRegNumber] = useState('');
+const CheckStatusContent = () => {
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [result, setResult] = useState(null);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleCheck = async () => {
-    setMessage('');
-    const res = await fetch(`${API_BASE_URL}/api/registrations/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ registrationNumber: regNumber, password }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setResult(data);
-    } else {
-      setMessage(data.message || 'ስህተት');
+  const handleCheck = async (e) => {
+    e?.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/registrations/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password }),
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        setResult(data);
+      } else {
+        setError(data.message || 'ስህተት (Error occurred)');
+      }
+    } catch (err) {
+      setError('የአውታረ መረብ ስህተት እባክዎ እንደገና ይሞክሩ (Network Error)');
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-2xl shadow">
-      <h2 className="text-xl font-bold mb-4">የምዝገባ ሁኔታ ማረጋገጫ</h2>
-      {!result ? (
-        <div>
-          <input
-            type="text"
-            placeholder="የምዝገባ ቁጥር"
-            value={regNumber}
-            onChange={(e) => setRegNumber(e.target.value)}
-            className="w-full p-2 border rounded-xl mb-2"
-          />
-          <input
-            type="password"
-            placeholder="ፓስዎርድ"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded-xl mb-4"
-          />
-          <button
-            onClick={handleCheck}
-            className="w-full bg-blue-600 text-white p-2 rounded-xl"
-          >
-            አረጋግጥ
-          </button>
-        </div>
-      ) : (
-        <div>
-          <p>
-            <strong>ስም:</strong> {result.fullName}
-          </p>
-          <p>
-            <strong>የምዝገባ ቁጥር:</strong> {result.registrationNumber}
-          </p>
+  const resetForm = () => {
+    setResult(null);
+    setPhone('');
+    setPassword('');
+    setError('');
+  };
 
-          {/* Translatable status message */}
-          <p className="mt-3 text-sm">
-            {getStatusMessage(result.status, result.studentType)}
-          </p>
+  const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 text-sm placeholder:text-slate-400";
+  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
 
-          {/* Show Student ID only if approved */}
-          {result.status === 'Approved' && result.studentId && (
-            <div className="mt-4 p-3 bg-emerald-50 rounded-xl">
-              <p className="font-bold">የተማሪ መለያ ቁጥር (Student ID):</p>
-              <p className="text-2xl font-mono">{result.studentId}</p>
-              <p className="text-sm mt-2">
-                አሁን በዚህ መለያ ቁጥር እና በፓስዎርድዎ ይግቡ።
+  // Result View
+  if (result) {
+    const isApproved = result.status === 'Approved';
+    const isRejected = result.status === 'Rejected';
+    const isPending = !isApproved && !isRejected;
+
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4 bg-slate-50/50 font-sans">
+        <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center animate-in zoom-in-95 duration-500">
+          
+          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner ${
+            isApproved ? 'bg-emerald-100 text-emerald-600' : 
+            isRejected ? 'bg-rose-100 text-rose-600' : 
+            'bg-amber-100 text-amber-600'
+          }`}>
+            {isApproved ? (
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+            ) : isRejected ? (
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+            ) : (
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            )}
+          </div>
+          
+          <h2 className="text-2xl font-extrabold text-slate-800 mb-6">የምዝገባ ሁኔታ</h2>
+          
+          {/* User Details */}
+          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6 text-left space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">ስም</p>
+              <p className="text-lg font-bold text-slate-800">{result.fullName}</p>
+            </div>
+            <div className="h-px w-full bg-slate-200"></div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">የምዝገባ ቁጥር</p>
+              <p className="text-xl font-black text-blue-600 tracking-widest">{result.registrationNumber}</p>
+            </div>
+          </div>
+
+          {/* Status Message Block */}
+          <div className={`p-4 rounded-xl border mb-8 text-left ${
+            isApproved ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' : 
+            isRejected ? 'bg-rose-50/50 border-rose-100 text-rose-800' : 
+            'bg-amber-50/50 border-amber-100 text-amber-800'
+          }`}>
+            <div className="flex items-start gap-3">
+              <span className="text-xl mt-0.5">{isApproved ? '🎉' : isRejected ? '⚠️' : '⏳'}</span>
+              <p className="text-sm font-medium leading-relaxed">
+                {getStatusMessage(result.status, result.studentType)}
               </p>
-              <a
-                href="/login"
-                className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm"
+            </div>
+          </div>
+
+          {/* Conditional: Approved (Show Student ID & Login) */}
+          {isApproved && result.studentId && (
+            <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
+              <p className="text-sm font-bold text-blue-900 mb-2">የተማሪ መለያ ቁጥር (Student ID)</p>
+              <div className="bg-white py-3 rounded-xl border border-blue-100 shadow-sm mb-4">
+                <p className="text-3xl font-black font-mono text-blue-600 tracking-wider">{result.studentId}</p>
+              </div>
+              <p className="text-xs text-blue-800/80 mb-4 font-medium">
+                አሁን በዚህ መለያ ቁጥር እና በፓስዎርድዎ ወደ ሲስተሙ ይግቡ።
+              </p>
+              <Link
+                to="/login"
+                className="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"
               >
-                ይግቡ
-              </a>
+                ወደ ሲስተሙ ይግቡ (Login)
+              </Link>
             </div>
           )}
 
-          {/* Show a link to Continue Registration only for distance students who still need to pay */}
+          {/* Conditional: Distance Student Pending Payment */}
           {result.studentType === 'distance' && result.status === 'Pending Payment' && (
-            <div className="mt-4">
-              <a href="/continue-registration" className="text-blue-600 underline">
-                ምዝገባዎን ይቀጥሉ
-              </a>
+            <div className="mb-8 space-y-3">
+              <Link
+                to="/continue-registration"
+                className="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"
+              >
+                ምዝገባዎን ይቀጥሉ (Continue Registration)
+              </Link>
             </div>
           )}
+
+          {/* Reset Button */}
+          <button
+            onClick={resetForm}
+            className="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            ← ሌላ ለማረጋገጥ ይመለሱ (Check Another)
+          </button>
+
         </div>
-      )}
-      {message && <p className="mt-2 text-sm text-slate-600">{message}</p>}
+      </div>
+    );
+  }
+
+  // Form View
+  return (
+    <div className="min-h-screen bg-slate-50/50 flex flex-col items-center pt-20 px-4 font-sans">
+      <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-sm">
+            🔍
+          </div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            የምዝገባ ሁኔታ ማረጋገጫ
+          </h1>
+          <p className="text-slate-500">የምዝገባዎን ደረጃ ለመከታተል መረጃዎን ያስገቡ</p>
+        </div>
+
+        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-100">
+          {error && (
+            <div className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-sm font-medium rounded-r-xl flex items-center gap-3 animate-in slide-in-from-top-2">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>{error}</span>
+            </div>
+          )}
+          
+          <form onSubmit={handleCheck} className="space-y-5">
+            <div>
+              <label className={labelClass}>ስልክ ቁጥር</label>
+              <input
+                type="tel"
+                placeholder="09..."
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputClass}
+                required
+              />
+            </div>
+            
+            <div>
+              <label className={labelClass}>ፓስዎርድ</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputClass}
+                required
+              />
+            </div>
+            
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading || !phone || !password}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-slate-800/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    በማረጋገጥ ላይ...
+                  </>
+                ) : 'አረጋግጥ (Check Status)'}
+              </button>
+            </div>
+          </form>
+        </div>
+        
+      </div>
     </div>
   );
+};
+
+// Wrapper to prevent routing context errors during isolated previews
+const CheckStatus = () => {
+  const inRouterContext = useInRouterContext();
+  if (!inRouterContext) {
+    return (
+      <MemoryRouter>
+        <CheckStatusContent />
+      </MemoryRouter>
+    );
+  }
+  return <CheckStatusContent />;
 };
 
 export default CheckStatus;

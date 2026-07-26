@@ -9,9 +9,15 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
       unique: true,
+      sparse: true,                // allows multiple nulls
       lowercase: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      unique: true,
+      sparse: true,                // students will use this
       trim: true,
     },
     password: {
@@ -30,16 +36,10 @@ const userSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
-    resetPasswordToken: {
-      type: String,
-    },
-    resetPasswordExpires: {
-      type: Date,
-    },
-    // If you have any additional fields from earlier, keep them here
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );
 
-// ✅ Safe export – never overwrite an already compiled model
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);
