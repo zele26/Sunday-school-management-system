@@ -79,19 +79,28 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// Reject – unchanged
+// Reject – with detailed error response
 router.put('/:id/reject', async (req, res) => {
-  const { reason } = req.body;
-  const reg = await Registration.findById(req.params.id);
-  if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+  try {
+    const { reason } = req.body;
+    const reg = await Registration.findById(req.params.id);
+    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
 
-  reg.status = 'Rejected';
-  reg.rejectionReason = reason || '';
-  reg.reviewedBy = req.user._id;
-  reg.reviewedAt = new Date();
-  await reg.save();
+    reg.status = 'Rejected';
+    reg.rejectionReason = reason || '';
+    reg.reviewedBy = req.user._id;
+    reg.reviewedAt = new Date();
+    await reg.save();
 
-  res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
+    res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
+  } catch (err) {
+    // Send the exact error to the client for debugging
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Internal server error',
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    });
+  }
 });
 
 module.exports = router;
