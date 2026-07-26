@@ -32,7 +32,7 @@ const RegistrationsManagement = () => {
     setActionLoading(id);
     try {
       const res = await apiFetch(`/api/admin/registrations/${id}/approve`, { method: 'PUT' });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setMessage({ text: 'Registration approved and student account created.', type: 'success' });
         setRegistrations((prev) => prev.filter((r) => r._id !== id));
@@ -40,7 +40,8 @@ const RegistrationsManagement = () => {
         setMessage({ text: data.message || 'Failed to approve', type: 'error' });
       }
     } catch (err) {
-      setMessage({ text: 'Network error', type: 'error' });
+      if (err.message && err.message.includes('Session expired')) return;
+      setMessage({ text: `Error: ${err.message || 'Network error'}`, type: 'error' });
     } finally {
       setActionLoading(null);
     }
@@ -54,15 +55,20 @@ const RegistrationsManagement = () => {
         method: 'PUT',
         body: JSON.stringify({ reason }),
       });
+
+      // Always try to parse JSON – server returns meaningful errors
+      const data = await res.json().catch(() => ({ message: `Server error (status ${res.status})` }));
+
       if (res.ok) {
         setMessage({ text: 'Registration rejected.', type: 'success' });
         setRegistrations((prev) => prev.filter((r) => r._id !== id));
       } else {
-        const data = await res.json();
         setMessage({ text: data.message || 'Failed to reject', type: 'error' });
       }
     } catch (err) {
-      setMessage({ text: 'Network error', type: 'error' });
+      // apiFetch will redirect on session expiry – stop showing the generic error
+      if (err.message && err.message.includes('Session expired')) return;
+      setMessage({ text: `Network error: ${err.message || 'Please try again'}`, type: 'error' });
     } finally {
       setActionLoading(null);
     }
