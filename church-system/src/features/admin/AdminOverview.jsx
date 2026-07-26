@@ -208,4 +208,28 @@ const AdminOverview = () => {
   return <AdminOverviewContent />;
 };
 
+
+import { apiFetch } from '../../api/apiClient';
+
+// Temporary function – remove after use
+const fixSparseIndexes = async () => {
+  try {
+    const res = await apiFetch('/api/admin/fix-sparse-indexes', { method: 'POST' });
+    const data = await res.json();
+    alert(data.message || 'Indexes fixed');
+  } catch (err) {
+    alert('Network error');
+  }
+};
+
+// JSX button
+<div className="flex justify-end mt-4">
+  <button
+    onClick={fixSparseIndexes}
+    className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+  >
+    🔧 Fix Sparse Indexes
+  </button>
+</div>
+
 export default AdminOverview;

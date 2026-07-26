@@ -23,4 +23,23 @@ router.use('/reports',       reportRoutes);        // /api/admin/reports/...
 router.use('/registrations', registrationRoutes);  // /api/admin/registrations/...   <-- NEW
 router.use('/',              userRoutes);          // /api/admin/stats, /api/admin/users, etc.
 
+
+// ⏳ Temporary – remove after execution
+router.post('/fix-sparse-indexes', async (req, res) => {
+  try {
+    const User = require('../models/User');
+
+    // Drop old non‑sparse indexes (ignore errors if they don't exist)
+    try { await User.collection.dropIndex('email_1'); } catch (e) {}
+    try { await User.collection.dropIndex('phone_1'); } catch (e) {}
+
+    // Re‑create indexes with current schema (sparse: true)
+    await User.createIndexes();
+
+    res.json({ success: true, message: 'Sparse indexes fixed successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
