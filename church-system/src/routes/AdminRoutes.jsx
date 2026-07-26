@@ -5,7 +5,7 @@ import { Routes, Route } from 'react-router-dom';
 import AdminOverview from '../features/admin/AdminOverview';
 import UsersManagement from '../features/admin/UsersManagement';
 import ApprovalsManagement from '../features/admin/ApprovalsManagement';
-import AddStudent from '../features/admin/AddStudent';   // <-- new import
+import AddStudent from '../features/admin/AddStudent';
 import ClassesManagement from '../features/admin/ClassesManagement';
 import CoursesManagement from '../features/admin/CoursesManagement';
 import AnnouncementsManagement from '../features/admin/AnnouncementsManagement';
@@ -20,6 +20,7 @@ import StudentsManagement from '../features/admin/StudentsManagement';
 import QRScanner from '../features/admin/QRScanner';
 import AttendanceReports from '../features/admin/AttendanceReports';
 import RegistrationsManagement from '../features/admin/RegistrationsManagement';
+import AddTeacher from '../features/admin/AddTeacher';   // <-- ADD THIS LINE
 
 export default function AdminRoutes() {
   return (
@@ -27,7 +28,7 @@ export default function AdminRoutes() {
       <Route index element={<AdminOverview />} />
       <Route path="users" element={<UsersManagement />} />
       <Route path="approvals" element={<ApprovalsManagement />} />
-      <Route path="add-student" element={<AddStudent />} />   {/* new route */}
+      <Route path="add-student" element={<AddStudent />} />
       <Route path="classes" element={<ClassesManagement />} />
       <Route path="courses" element={<CoursesManagement />} />
       <Route path="announcements" element={<AnnouncementsManagement />} />
