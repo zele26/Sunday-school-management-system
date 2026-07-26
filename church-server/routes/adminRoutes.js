@@ -23,6 +23,25 @@ router.use('/reports',       reportRoutes);        // /api/admin/reports/...
 router.use('/registrations', registrationRoutes);  // /api/admin/registrations/...   <-- NEW
 router.use('/',              userRoutes);          // /api/admin/stats, /api/admin/users, etc.
 
-// ⏳ The temporary cleanup route has been removed – no longer needed.
+// ⏳ Temporary route – remove after execution
+router.post('/fix-sparse-indexes', async (req, res) => {
+  try {
+    const User = require('../models/User');
+
+    // Drop old indexes if they exist
+    try { await User.collection.dropIndex('email_1'); }
+    catch (e) { /* index may not exist */ }
+
+    try { await User.collection.dropIndex('phone_1'); }
+    catch (e) { /* index may not exist */ }
+
+    // Re‑create indexes – this forces Mongoose to rebuild them with the current schema (sparse: true)
+    await User.createIndexes();
+
+    res.json({ success: true, message: 'Sparse indexes re-created successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 module.exports = router;
