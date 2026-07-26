@@ -18,6 +18,26 @@ router.put('/:id/approve', async (req, res) => {
     if (!reg || reg.status !== 'Pending Verification')
       return res.status(400).json({ message: 'ምዝገባው ለማጽደቅ ዝግጁ አይደለም' });
 
+    // 🔍 Check for duplicate email if one was provided
+    if (reg.email && reg.email.trim() !== '') {
+      const existingUser = await User.findOne({ email: reg.email.toLowerCase() });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: `ኢሜይል "${reg.email}" ቀድሞውኑ ሌላ ተጠቃሚ ይጠቀምበታል። እባክዎ ይህን ምዝገባ ውድቅ ያድርጉ እና ተማሪው ሌላ ኢሜይል እንዲጠቀም ያሳውቁ።`
+        });
+      }
+    }
+
+    // 🔍 Optionally check for duplicate phone (redundant but safe)
+    const existingPhoneUser = await User.findOne({ phone: reg.phone });
+    if (existingPhoneUser) {
+      return res.status(400).json({
+        success: false,
+        message: `ስልክ ቁጥር "${reg.phone}" ቀድሞውኑ ሌላ ተጠቃሚ ይጠቀምበታል።`
+      });
+    }
+
     // Create User with phone (email optional)
     const user = await User.create({
       fullName: reg.fullName,
