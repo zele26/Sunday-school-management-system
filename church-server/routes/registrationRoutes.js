@@ -23,7 +23,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       email, password, studentType,
     } = req.body;
 
-    // Phone is now mandatory
+    // Phone is now mandatory, email is optional
     if (!fullName || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
@@ -36,6 +36,14 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
     const existingUser = await User.findOne({ phone });
     if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
+
+    // Only check email if it's actually provided (optional)
+    if (email && email.trim() !== '') {
+      const existingEmailReg = await Registration.findOne({ email: email.toLowerCase(), status: { $ne: 'Rejected' } });
+      if (existingEmailReg) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ምዝገባ አለው' });
+      const existingEmailUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingEmailUser) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
+    }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -99,7 +107,7 @@ router.post('/login', async (req, res) => {
       status: reg.status,
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
-      studentId: reg.studentId,   // only after approval
+      studentId: reg.studentId,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
