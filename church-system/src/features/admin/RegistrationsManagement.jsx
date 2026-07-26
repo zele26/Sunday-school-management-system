@@ -5,7 +5,7 @@ const User = require('../../models/User');
 const Student = require('../../models/Student');
 const crypto = require('crypto');
 
-// List pending
+// ---------- List pending ----------
 router.get('/', async (req, res) => {
   try {
     const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Approve – creates user with phone, generates Student ID
+// ---------- Approve ----------
 router.put('/:id/approve', async (req, res) => {
   try {
     const reg = await Registration.findById(req.params.id);
@@ -71,11 +71,12 @@ router.put('/:id/approve', async (req, res) => {
       studentType: reg.studentType,
     });
 
+    // Update registration status – skip validation (old records may miss required fields)
     reg.status = 'Approved';
     reg.studentId = studentId;
     reg.reviewedBy = req.user._id;
     reg.reviewedAt = new Date();
-    await reg.save();
+    await reg.save({ validateBeforeSave: false });   // ✅ FIXED
 
     res.json({ success: true, message: 'ምዝገባው ጸድቋል። የተማሪ መለያ ተሰጥቷል።', studentId });
   } catch (err) {
@@ -84,7 +85,7 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// Reject – with try/catch and logging
+// ---------- Reject ----------
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;
@@ -95,7 +96,7 @@ router.put('/:id/reject', async (req, res) => {
     reg.rejectionReason = reason || '';
     reg.reviewedBy = req.user._id;
     reg.reviewedAt = new Date();
-    await reg.save();
+    await reg.save({ validateBeforeSave: false });   // ✅ FIXED
 
     res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
   } catch (err) {
