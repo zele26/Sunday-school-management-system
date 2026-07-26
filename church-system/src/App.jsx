@@ -30,6 +30,10 @@ import StudentRoutes from './routes/StudentRoutes';
 import StudentRegister from './pages/StudentRegister';
 import ContinueRegistration from './pages/ContinueRegistration';
 
+import RegisterRegular from './pages/RegisterRegular';
+import RegisterDistance from './pages/RegisterDistance';
+import CheckStatus from './pages/CheckStatus';
+
 // Route guards
 import { ProtectedRoute, RoleRoute } from './components/ProtectedRoute';
 
@@ -106,6 +110,10 @@ function App() {
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/register-regular" element={<RegisterRegular />} />
+      <Route path="/register-distance" element={<RegisterDistance />} />
+      <Route path="/continue-registration" element={<ContinueRegistration />} />
+      <Route path="/check-status" element={<CheckStatus />} />
     </Routes>
   );
 }

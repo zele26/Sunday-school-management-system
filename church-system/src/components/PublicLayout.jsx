@@ -13,9 +13,11 @@ const PublicLayout = () => {
           <Link to="/announcements" className="hover:underline">ማስታወቂያዎች</Link>
           <Link to="/contact" className="hover:underline">ያግኙን</Link>
           <Link to="/student-register" className="hover:underline">የተማሪ ምዝገባ</Link>
-<Link to="/continue-registration" className="hover:underline">ቀጥል ምዝገባ</Link>
+          <Link to="/continue-registration" className="hover:underline">ምዝገባዎን ይቀጥሉ</Link>
           <Link to="/student-register" className="hover:underline">Student Register</Link>
-<Link to="/continue-registration" className="hover:underline">Complete Registration</Link>
+          <Link to="/register-regular" className="hover:underline">መደበኛ ምዝገባ</Link>
+          <Link to="/register-distance" className="hover:underline">ርቀት ምዝገባ</Link>
+          <Link to="/check-status" className="hover:underline">ሁኔታ አረጋግጥ</Link>
           <Link to="/login" className="bg-blue-600 px-3 py-1 rounded-lg">ይግቡ</Link>
         </nav>
       </header>
