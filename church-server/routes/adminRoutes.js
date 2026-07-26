@@ -44,4 +44,31 @@ router.post('/fix-sparse-indexes', async (req, res) => {
   }
 });
 
+
+// ⏳ Temporary route – remove after execution
+router.post('/fix-sparse-indexes', async (req, res) => {
+  try {
+    const { secret } = req.body;
+    if (secret !== process.env.FIX_SECRET) {
+      return res.status(403).json({ success: false, message: 'Invalid secret' });
+    }
+
+    const User = require('../models/User');
+
+    // Drop old non‑sparse indexes if they exist
+    try { await User.collection.dropIndex('email_1'); }
+    catch (e) { /* may not exist */ }
+
+    try { await User.collection.dropIndex('phone_1'); }
+    catch (e) { /* may not exist */ }
+
+    // Re‑create indexes with the current schema (now sparse: true)
+    await User.createIndexes();
+
+    res.json({ success: true, message: 'Sparse indexes re‑created successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
