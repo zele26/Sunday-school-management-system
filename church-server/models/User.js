@@ -10,14 +10,14 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       unique: true,
-      sparse: true,                // allows multiple nulls
+      sparse: true,          // ✅ allows multiple null / missing values
       lowercase: true,
       trim: true,
     },
     phone: {
       type: String,
       unique: true,
-      sparse: true,                // students will use this
+      sparse: true,          // ✅ allows multiple null / missing values
       trim: true,
     },
     password: {
@@ -42,4 +42,5 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ✅ Safe export – never overwrite an already compiled model
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);
