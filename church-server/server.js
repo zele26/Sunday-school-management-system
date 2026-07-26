@@ -79,14 +79,9 @@ app.get(/^(?!\/api).*/, (req, res) => {
 // ⏳ Temporary public fix endpoint – remove after execution
 app.post('/api/fix-sparse-indexes', async (req, res) => {
   try {
-    const { secret } = req.body;
-    if (secret !== process.env.FIX_SECRET) {
-      return res.status(403).json({ success: false, message: 'Invalid secret' });
-    }
-
     const User = require('./models/User');
 
-    // Drop old non‑sparse indexes (ignore errors if they don't exist)
+    // Drop old non‑sparse indexes if they exist
     try { await User.collection.dropIndex('email_1'); } catch (e) {}
     try { await User.collection.dropIndex('phone_1'); } catch (e) {}
 
