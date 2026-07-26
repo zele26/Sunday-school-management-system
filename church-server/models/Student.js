@@ -12,16 +12,16 @@ const studentSchema = new mongoose.Schema({
   emergencyMiddleName: String,
   emergencyLastName: String,
   relationship: String,
-  contactPhone: String,      // emergency phone
+  contactPhone: String,
   contactAddress: String,
   contactEmail: String,
   registrationDate: { type: Date, default: Date.now },
-  // new fields for management
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },  // link to login
-  studentPhone: String,         // student's own phone
-  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },  // assigned teacher (User with role teacher)
-  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],  // enrolled courses
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
+  studentPhone: String,
+  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   qrCode: { type: String, unique: true, sparse: true },
+  studentType: { type: String, enum: ['regular', 'distance'], default: 'regular' }, // NEW
 });
 
 module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);

@@ -12,6 +12,8 @@ const PublicLayout = () => {
           <Link to="/classes" className="hover:underline">ክፍሎች</Link>
           <Link to="/announcements" className="hover:underline">ማስታወቂያዎች</Link>
           <Link to="/contact" className="hover:underline">ያግኙን</Link>
+          <Link to="/student-register" className="hover:underline">የተማሪ ምዝገባ</Link>
+<Link to="/continue-registration" className="hover:underline">ቀጥል ምዝገባ</Link>
           <Link to="/student-register" className="hover:underline">Student Register</Link>
 <Link to="/continue-registration" className="hover:underline">Complete Registration</Link>
           <Link to="/login" className="bg-blue-600 px-3 py-1 rounded-lg">ይግቡ</Link>

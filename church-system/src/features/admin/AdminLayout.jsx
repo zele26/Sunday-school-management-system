@@ -21,6 +21,7 @@ const navItems = [
   { path: '/admin/qr-scanner', label: 'QR Scanner', icon: '📷' },
   { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
   { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
+  { path: '/admin/add-teacher', label: 'Add Teacher', icon: '👨‍🏫' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

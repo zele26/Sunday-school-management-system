@@ -42,6 +42,7 @@ export default function AdminRoutes() {
       <Route path="qr-scanner" element={<QRScanner />} />
       <Route path="attendance-reports" element={<AttendanceReports />} />
       <Route path="registrations" element={<RegistrationsManagement />} />
+      <Route path="add-teacher" element={<AddTeacher />} />
     </Routes>
   );
 }

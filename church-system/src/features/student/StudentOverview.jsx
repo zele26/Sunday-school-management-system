@@ -1,15 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { apiFetch } from '../../api/apiClient';
 
 const StudentOverview = () => {
-  const cards = [
-    { title: 'My Courses', icon: '📚', link: '/dashboard/courses' },
-    { title: 'Resources', icon: '📖', link: '/dashboard/resources' },
-    { title: 'Assignments', icon: '📝', link: '/dashboard/assignments' },
-    { title: 'Exams', icon: '📊', link: '/dashboard/exams' },
-    { title: 'Attendance', icon: '📅', link: '/dashboard/attendance' },
-    { title: 'Profile', icon: '👤', link: '/dashboard/profile' },
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    apiFetch('/api/student/profile')
+      .then(res => res.json())
+      .then(setProfile)
+      .catch(() => {});
+  }, []);
+
+  const regularCards = [
+    { title: 'የእኔ ኮርሶች', icon: '📚', link: '/dashboard/courses' },
+    { title: 'መገኘት', icon: '📅', link: '/dashboard/attendance' },
+    { title: 'ማስታወቂያዎች', icon: '📢', link: '/dashboard/announcements' },
+    { title: 'ውጤቶች', icon: '📊', link: '/dashboard/results' },
+    { title: 'የግል መረጃ', icon: '👤', link: '/dashboard/profile' },
   ];
+  const distanceCards = [
+    { title: 'የመማሪያ መረጃዎች', icon: '📖', link: '/dashboard/resources' },
+    { title: 'መርሃ ግብር', icon: '📅', link: '/dashboard/schedule' },
+    { title: 'ማስታወቂያዎች', icon: '📢', link: '/dashboard/announcements' },
+    { title: 'ውጤቶች', icon: '📊', link: '/dashboard/results' },
+    { title: 'የግል መረጃ', icon: '👤', link: '/dashboard/profile' },
+  ];
+
+  const cards = profile?.studentType === 'distance' ? distanceCards : regularCards;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

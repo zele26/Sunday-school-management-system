@@ -1,11 +1,12 @@
 // routes/admin/userRoutes.js
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');                        // <-- added
 const User = require('../../models/User');
 const Student = require('../../models/Student');
 const { AdminPanelData } = require('../../models/PanelData');
 
-// Stats
+// ---------- Stats ----------
 router.get('/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -17,7 +18,7 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// All Users
+// ---------- All Users ----------
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
@@ -27,7 +28,7 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// Pending Approvals
+// ---------- Pending Approvals ----------
 router.get('/pending-approvals', async (req, res) => {
   try {
     const pending = await User.find({ status: 'pending' }).select('-password');
@@ -37,7 +38,7 @@ router.get('/pending-approvals', async (req, res) => {
   }
 });
 
-// Approve
+// ---------- Approve a User ----------
 router.put('/users/:id/approve', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -50,7 +51,7 @@ router.put('/users/:id/approve', async (req, res) => {
   }
 });
 
-// Reject
+// ---------- Reject a User ----------
 router.put('/users/:id/reject', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -63,14 +64,14 @@ router.put('/users/:id/reject', async (req, res) => {
   }
 });
 
-// Panel data
+// ---------- Admin Panel Data ----------
 router.get('/panel-data', async (req, res) => {
   try {
     let panelData = await AdminPanelData.findOne();
     if (!panelData) panelData = await AdminPanelData.create({});
     res.json({ data: panelData.toObject() });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 });
 
@@ -83,17 +84,60 @@ router.put('/panel-data', async (req, res) => {
     await panelData.save();
     res.json({ data: panelData.toObject() });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 });
 
-// List teachers (for dropdown)
+// ---------- List all teachers (for dropdown) ----------
 router.get('/teachers', async (req, res) => {
   try {
     const teachers = await User.find({ role: 'teacher', status: 'approved' }).select('fullName email');
     res.json(teachers);
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------- Create a new teacher (admin only) ----------
+router.post('/teachers', async (req, res) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Full name, email, and password are required.' });
+    }
+
+    // Check if email already exists
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'A user with this email already exists.' });
+    }
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create the teacher account
+    const newTeacher = await User.create({
+      fullName,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role: 'teacher',
+      status: 'approved',
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Teacher account created successfully.',
+      user: {
+        id: newTeacher._id,
+        fullName: newTeacher.fullName,
+        email: newTeacher.email,
+        role: newTeacher.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
