@@ -1,43 +1,132 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import bgImage from '../../assets/Lidetachurch.jpg';
+import { apiFetch } from '../../api/apiClient';
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState({ type: '', text: '' });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Password reset link requested for: ${email}`);
+    setMsg({ type: '', text: '' });
+
+    const val = identifier.trim();
+    if (!val) {
+      return setMsg({ type: 'error', text: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ።' });
+    }
+
+    setLoading(true);
+    try {
+      const payload = {
+        identifier: val,
+        email: val.includes('@') ? val.toLowerCase() : val,
+        phone: val,
+      };
+
+      const res = await apiFetch('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setMsg({
+          type: 'success',
+          text: data.message || 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
+        });
+        setIdentifier('');
+      } else {
+        setMsg({ type: 'error', text: data.message || 'ጥያቄውን መላክ አልተቻለም' });
+      }
+    } catch {
+      setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል (Network error)' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100 px-4">
-      <div className="max-w-md w-full bg-slate-800 p-8 rounded-xl shadow-lg border border-slate-700">
-        <h2 className="text-2xl font-bold mb-2 text-center text-indigo-400">የይለፍ ቃል መልሶ ማግኛ (Forgot Password)</h2>
-        <p className="text-slate-400 text-sm mb-6 text-center">
-          Enter your email address to receive a password reset link.
-        </p>
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center fixed inset-0 font-sans selection:bg-indigo-500 selection:text-white"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+      {/* Top Floating Back Button */}
+      <Link
+        to="/login"
+        className="fixed top-5 left-5 z-30 inline-flex items-center gap-2 bg-slate-900/70 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-lg transition-all"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>ወደ መግቢያ ተመለስ (Back to Login)</span>
+      </Link>
+
+      {/* Background Overlay */}
+      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-md"></div>
+
+      {/* Card Container */}
+      <div className="max-w-md w-full bg-white/95 text-slate-800 rounded-3xl shadow-2xl overflow-hidden p-8 relative z-10 border border-white/60 backdrop-blur-xl space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold border border-indigo-100 shadow-sm">
+            🔑
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            የይለፍ ቃል ለመቀየር (Forgot Password)
+          </h2>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+            ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ። የአስተዳዳሪው ክፍል መረጃዎን አረጋግጦ ጊዜያዊ ፓስዎርድ ያዘጋጅልዎታል።
+          </p>
+        </div>
+
+        {msg.text && (
+          <div
+            className={`p-4 rounded-2xl text-xs font-medium flex items-start gap-2.5 leading-relaxed ${
+              msg.type === 'success'
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                : 'bg-rose-50 border border-rose-200 text-rose-700'
+            }`}
+          >
+            <span className="text-base shrink-0">{msg.type === 'success' ? '✅' : '⚠️'}</span>
+            <span>{msg.text}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold mb-1 text-slate-300">ኢሜይል (Email Address)</label>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-slate-700 block">
+              ኢሜይል / ስልክ ቁጥር / የተማሪ መለያ *
+            </label>
             <input
-              type="email"
+              type="text"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-              placeholder="user@example.com"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="example@gmail.com / 0911... / STU-..."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
             />
           </div>
+
           <button
             type="submit"
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium text-sm transition"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-semibold text-sm shadow-md hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            ላክ (Send Reset Link)
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span>ጥያቄ ላክ (Send Request to Admin)</span>
+                <span>➔</span>
+              </>
+            )}
           </button>
         </form>
-        <div className="mt-6 text-center">
-          <Link to="/login" className="text-xs text-indigo-400 hover:underline">
-            ← ወደ መግቢያ ተመለስ (Back to Login)
+
+        <div className="pt-4 border-t border-slate-100 text-center">
+          <Link to="/login" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold hover:underline">
+            ← ወደ መግቢያ ገጽ ተመለስ (Back to Login)
           </Link>
         </div>
       </div>

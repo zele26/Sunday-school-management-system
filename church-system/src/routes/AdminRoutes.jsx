@@ -20,7 +20,8 @@ import StudentsManagement from '../features/admin/StudentsManagement';
 import QRScanner from '../features/admin/QRScanner';
 import AttendanceReports from '../features/admin/AttendanceReports';
 import RegistrationsManagement from '../features/admin/RegistrationsManagement';
-import AddTeacher from '../features/admin/AddTeacher';   // <-- ADD THIS LINE
+import AddTeacher from '../features/admin/AddTeacher';
+import PasswordResets from '../features/admin/PasswordResets';
 
 export default function AdminRoutes() {
   return (
@@ -44,6 +45,7 @@ export default function AdminRoutes() {
       <Route path="attendance-reports" element={<AttendanceReports />} />
       <Route path="registrations" element={<RegistrationsManagement />} />
       <Route path="add-teacher" element={<AddTeacher />} />
+      <Route path="password-resets" element={<PasswordResets />} />
     </Routes>
   );
 }

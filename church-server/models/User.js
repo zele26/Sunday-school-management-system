@@ -36,6 +36,22 @@ const userSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+    mustChangePassword: {
+      type: Boolean,
+      default: false,
+    },
+    // Teacher & Profile additional details
+    experience: { type: String, trim: true },
+    subject: { type: String, trim: true },
+    coursesTaught: [{ type: String, trim: true }],
+    qualification: { type: String, trim: true },
+    city: { type: String, trim: true },
+    wereda: { type: String, trim: true },
+    kebele: { type: String, trim: true },
+    emergencyPersonName: { type: String, trim: true },
+    emergencyPhone: { type: String, trim: true },
+    bio: { type: String, trim: true },
+
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },

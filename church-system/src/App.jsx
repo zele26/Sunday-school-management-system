@@ -34,8 +34,8 @@ import RegisterRegular from './pages/RegisterRegular';
 import RegisterDistance from './pages/RegisterDistance';
 import CheckStatus from './pages/CheckStatus';
 
-// Route guards
 import { ProtectedRoute, RoleRoute } from './components/ProtectedRoute';
+import ChangePasswordModal from './components/ChangePasswordModal';
 
 function App() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -66,7 +66,9 @@ function App() {
   };
 
   return (
-    <Routes>
+    <>
+      {isLoggedIn && user?.mustChangePassword && <ChangePasswordModal isOpen={true} />}
+      <Routes>
       {/* Public section – accessible without login */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
@@ -115,6 +117,7 @@ function App() {
       <Route path="/continue-registration" element={<ContinueRegistration />} />
       <Route path="/check-status" element={<CheckStatus />} />
     </Routes>
+    </>
   );
 }
 

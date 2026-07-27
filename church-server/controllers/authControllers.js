@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
+const PasswordResetRequest = require('../models/PasswordResetRequest');
+
 // ---------- Helpers ----------
 
 const generateAccessToken = (id, role) => {
@@ -101,7 +103,12 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: { id: user._id, fullName: user.fullName, role: user.role },
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        role: user.role,
+        mustChangePassword: user.mustChangePassword || false,
+      },
     });
   } catch (error) {
     console.error('Login Error:', error);
@@ -109,33 +116,49 @@ exports.login = async (req, res) => {
   }
 };
 
-// ---------- Forgot Password ----------
+// ---------- Forgot Password Request (Sends to Admin) ----------
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Please provide an email address.' });
-    }
+    const { identifier } = req.body;
+    const input = (identifier || req.body.email || req.body.phone || '').trim();
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(200).json({
-        success: true,
-        message: 'If an account exists with that email, a password reset token has been generated.',
+    if (!input) {
+      return res.status(400).json({
+        success: false,
+        message: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ።',
       });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
-    await user.save();
+    let user;
+    if (input.includes('@')) {
+      user = await User.findOne({ email: input.toLowerCase() });
+    } else if (input.toUpperCase().startsWith('STU-')) {
+      const student = await Student.findOne({ studentId: input });
+      if (student) user = await User.findById(student.userId);
+    } else {
+      user = await User.findOne({ phone: input });
+    }
 
-    console.log(`🔑 [DEV ONLY] Reset Token for ${user.email}: ${resetToken}`);
+    if (user) {
+      // Check if pending request exists
+      const pendingReq = await PasswordResetRequest.findOne({ user: user._id, status: 'pending' });
+      if (!pendingReq) {
+        await PasswordResetRequest.create({
+          user: user._id,
+          fullName: user.fullName,
+          email: user.email || '',
+          phone: user.phone || '',
+          role: user.role,
+          identifier: input,
+          status: 'pending',
+        });
+      }
+    }
 
+    // Always respond with confirmation to prevent user enumeration
     res.status(200).json({
       success: true,
-      message: 'If an account exists with that email, a password reset token has been generated.',
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined,
+      message: 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
     });
   } catch (error) {
     console.error('Forgot Password Error:', error);
@@ -143,5 +166,34 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// ---------- Refresh token & Logout are NOT used (removed) ----------
-// The routes for these have also been removed from authRoutes.js
+// ---------- Change Password (Set new private password) ----------
+exports.changePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'አዲሱ ፓስዎርድ ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።',
+      });
+    }
+
+    const userId = req.user.id || req.user._id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'ተጠቃሚው አልተገኘም' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.mustChangePassword = false;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'ፓስዎርድዎ በተሳካ ሁኔታ ተቀይሯል! አሁን በ አዲሱ ፓስዎርድዎ መጠቀም ይችላሉ።',
+    });
+  } catch (error) {
+    console.error('Change Password Error:', error);
+    res.status(500).json({ success: false, message: 'Server error during password change.' });
+  }
+};

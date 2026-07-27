@@ -21,6 +21,7 @@ const navItems = [
 { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
 { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
 { path: '/admin/add-teacher', label: 'Add Teacher', icon: '👨‍🏫' },
+{ path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
 ];
 
 const AdminLayout = ({ onLogout }) => {
