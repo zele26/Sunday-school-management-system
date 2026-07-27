@@ -5,13 +5,39 @@ import useAuthStore from '../../store/authStore';
 
 const API_BASE_URL = '';   // same origin – use relative paths
 
+// Grade options helper
+const GRADE_OPTIONS = [
+  { value: 'Grade 7', label: '7ኛ ክፍል (Grade 7)' },
+  { value: 'Grade 8', label: '8ኛ ክፍል (Grade 8)' },
+  { value: 'Grade 9', label: '9ኛ ክፍል (Grade 9)' },
+  { value: 'Grade 10', label: '10ኛ ክፍል (Grade 10)' },
+  { value: 'Grade 11', label: '11ኛ ክፍል (Grade 11)' },
+  { value: 'Grade 12', label: '12ኛ ክፍል (Grade 12)' },
+];
+
+// Helper to format status text for customer view
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'Present': return 'ተገኝቷል (Present)';
+    case 'Late': return 'ዘግይቷል (Late)';
+    case 'Absent': return 'አልተገኘም (Absent)';
+    default: return status || '-';
+  }
+};
+
 // ─── CSV export helper ──────────────────────────────────────────
 const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   if (!rows.length) return;
   const headers = [
-    'Student', 'Grade', 'Course', 'Teacher',
-    'Date', 'Check‑in Time', 'Status',
-    'Academic Year', 'Semester',
+    'ተማሪ (Student)', 
+    'ክፍል (Grade)', 
+    'ኮርስ (Course)', 
+    'መምህር (Teacher)',
+    'ቀን (Date)', 
+    'የመግቢያ ሰዓት (Check‑in Time)', 
+    'ሁኔታ (Status)',
+    'የትምህርት ዘመን (Academic Year)', 
+    'ሴሚስተር (Semester)',
   ];
   const csvRows = [headers.join(',')];
   rows.forEach(r => {
@@ -54,9 +80,6 @@ const AttendanceReports = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Predefined grades (same as in student management)
-  const grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
-
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -92,11 +115,10 @@ const AttendanceReports = () => {
       appendIf('status', filters.status);
       appendIf('teacher', filters.teacher);
 
-      // Use the new apiFetch – token is automatically added
       const res = await apiFetch(`/api/admin/attendance/report?${params}`);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to fetch attendance');
+        throw new Error(errData.message || 'የመገኘት መረጃን ማምጣት አልተቻለም (Failed to fetch attendance)');
       }
       const data = await res.json();
       setRecords(data);
@@ -114,13 +136,13 @@ const AttendanceReports = () => {
   return (
     <div className="bg-white p-6 rounded-2xl shadow">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Attendance Reports</h2>
+        <h2 className="text-xl font-bold">የመገኘት ሪፖርቶች (Attendance Reports)</h2>
         {records.length > 0 && (
           <button
             onClick={() => downloadCSV(records)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer"
           >
-            ⬇ Download CSV
+            ⬇ CSV አውርድ (Download CSV)
           </button>
         )}
       </div>
@@ -128,67 +150,106 @@ const AttendanceReports = () => {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-end mb-6">
         <div>
-          <label className="text-xs text-slate-500 block">Start Date</label>
-          <input type="date" name="startDate" value={filters.startDate} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500 block">End Date</label>
-          <input type="date" name="endDate" value={filters.endDate} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm" />
+          <label className="text-xs text-slate-500 block mb-1 font-medium">የመጀመሪያ ቀን (Start Date)</label>
+          <input 
+            type="date" 
+            name="startDate" 
+            value={filters.startDate} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm" 
+          />
         </div>
 
         <div>
-          <label className="text-xs text-slate-500 block">Course</label>
-          <select name="courseId" value={filters.courseId} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm">
-            <option value="">All Courses</option>
+          <label className="text-xs text-slate-500 block mb-1 font-medium">የማጠቃለያ ቀን (End Date)</label>
+          <input 
+            type="date" 
+            name="endDate" 
+            value={filters.endDate} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm" 
+          />
+        </div>
+
+        <div>
+          <label className="text-xs text-slate-500 block mb-1 font-medium">ኮርስ (Course)</label>
+          <select 
+            name="courseId" 
+            value={filters.courseId} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm"
+          >
+            <option value="">ሁሉም ኮርሶች (All Courses)</option>
             {courses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="text-xs text-slate-500 block">Grade</label>
-          <select name="grade" value={filters.grade} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm">
-            <option value="">All Grades</option>
-            {grades.map(g => <option key={g} value={g}>{g}</option>)}
+          <label className="text-xs text-slate-500 block mb-1 font-medium">ክፍል (Grade)</label>
+          <select 
+            name="grade" 
+            value={filters.grade} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm"
+          >
+            <option value="">ሁሉም ክፍሎች (All Grades)</option>
+            {GRADE_OPTIONS.map(g => (
+              <option key={g.value} value={g.value}>{g.label}</option>
+            ))}
           </select>
         </div>
 
         <div>
-          <label className="text-xs text-slate-500 block">Status</label>
-          <select name="status" value={filters.status} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm">
-            <option value="">All</option>
-            <option value="Present">Present</option>
-            <option value="Late">Late</option>
-            <option value="Absent">Absent</option>
+          <label className="text-xs text-slate-500 block mb-1 font-medium">ሁኔታ (Status)</label>
+          <select 
+            name="status" 
+            value={filters.status} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm"
+          >
+            <option value="">ሁሉም (All)</option>
+            <option value="Present">ተገኝቷል (Present)</option>
+            <option value="Late">ዘግይቷል (Late)</option>
+            <option value="Absent">አልተገኘም (Absent)</option>
           </select>
         </div>
 
         <div>
-          <label className="text-xs text-slate-500 block">Teacher</label>
-          <select name="teacher" value={filters.teacher} onChange={handleChange}
-            className="p-2 border rounded-xl text-sm">
-            <option value="">All Teachers</option>
+          <label className="text-xs text-slate-500 block mb-1 font-medium">መምህር (Teacher)</label>
+          <select 
+            name="teacher" 
+            value={filters.teacher} 
+            onChange={handleChange}
+            className="p-2 border rounded-xl text-sm"
+          >
+            <option value="">ሁሉም መምህራን (All Teachers)</option>
             {teachers.map(t => <option key={t._id} value={t._id}>{t.fullName}</option>)}
           </select>
         </div>
 
         <button
           onClick={fetchReport}
-          className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold cursor-pointer"
         >
-          Filter
+          አጣራ (Filter)
         </button>
       </div>
 
-      {loading && <div className="py-8 text-center text-slate-400">Loading attendance...</div>}
-      {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
+      {loading && (
+        <div className="py-8 text-center text-slate-400">
+          የመገኘት መረጃ በመጫን ላይ ነው... (Loading attendance...)
+        </div>
+      )}
+
+      {error && (
+        <div className="py-4 text-center text-red-500">
+          ❌ {error}
+        </div>
+      )}
+
       {!loading && !error && records.length === 0 && (
         <div className="py-8 text-center text-slate-400">
-          No attendance records found. Try adjusting filters or scanning a QR code first.
+          ምንም የመገኘት መረጃ አልተገኘም። እባክዎ ማጣሪያዎቹን አስተካክለው ይሞክሩ ወይም አስቀድመው የQR ኮድ ያንብቡ። (No attendance records found. Try adjusting filters or scanning a QR code first.)
         </div>
       )}
 
@@ -196,16 +257,16 @@ const AttendanceReports = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b text-xs uppercase text-slate-400">
-                <th className="py-2 px-2">Student</th>
-                <th className="py-2 px-2">Grade</th>
-                <th className="py-2 px-2">Course</th>
-                <th className="py-2 px-2">Teacher</th>
-                <th className="py-2 px-2">Date</th>
-                <th className="py-2 px-2">Check‑in</th>
-                <th className="py-2 px-2">Status</th>
-                <th className="py-2 px-2">Acad. Year</th>
-                <th className="py-2 px-2">Semester</th>
+              <tr className="border-b text-xs uppercase text-slate-400 font-bold">
+                <th className="py-2 px-2">ተማሪ (Student)</th>
+                <th className="py-2 px-2">ክፍል (Grade)</th>
+                <th className="py-2 px-2">ኮርስ (Course)</th>
+                <th className="py-2 px-2">መምህር (Teacher)</th>
+                <th className="py-2 px-2">ቀን (Date)</th>
+                <th className="py-2 px-2">የመግቢያ ሰዓት (Check‑in)</th>
+                <th className="py-2 px-2">ሁኔታ (Status)</th>
+                <th className="py-2 px-2">የትምህርት ዘመን (Acad. Year)</th>
+                <th className="py-2 px-2">ሴሚስተር (Semester)</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -213,7 +274,7 @@ const AttendanceReports = () => {
                 <tr key={r._id} className="hover:bg-slate-50">
                   <td className="py-2 px-2 font-medium">{r.studentName}</td>
                   <td className="py-2 px-2">{r.grade || '-'}</td>
-                  <td className="py-2 px-2">{r.courseName || 'General'}</td>
+                  <td className="py-2 px-2">{r.courseName || 'አጠቃላይ (General)'}</td>
                   <td className="py-2 px-2">{r.teacherName || '-'}</td>
                   <td className="py-2 px-2">{new Date(r.date).toLocaleDateString()}</td>
                   <td className="py-2 px-2">
@@ -227,7 +288,7 @@ const AttendanceReports = () => {
                       r.status === 'Late' ? 'bg-amber-100 text-amber-700' :
                       'bg-rose-100 text-rose-700'
                     }`}>
-                      {r.status}
+                      {getStatusLabel(r.status)}
                     </span>
                   </td>
                   <td className="py-2 px-2">{r.academicYear || '-'}</td>
