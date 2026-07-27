@@ -1,49 +1,11 @@
-// import React from 'react';
-// import { Link } from 'react-router-dom';
-// import bgImage from '../../assets/Lidetachurch.jpg';
-
-// const Home = () => {
-//   return (
-//     <div className="min-h-screen bg-slate-50">
-//       {/* Hero */}
-//       <section className="relative bg-cover bg-center py-32" style={{ backgroundImage: `url(${bgImage})` }}>
-//         <div className="absolute inset-0 bg-slate-900/70"></div>
-//         <div className="relative z-10 max-w-4xl mx-auto text-center text-white px-4">
-//           <h1 className="text-4xl md:text-6xl font-black">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</h1>
-//           <p className="mt-4 text-lg text-slate-200">የሕፃናትና ወጣቶች መንፈሳዊ ትምህርት ማዕከል</p>
-//           <div className="mt-8 flex justify-center gap-4">
-//             <Link to="/register" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold">ይመዝገቡ</Link>
-//             <Link to="/login" className="bg-white text-slate-900 px-6 py-3 rounded-xl font-semibold">ይግቡ</Link>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Vision / Mission / Values */}
-//       <section className="py-16 max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
-//         <div className="bg-white p-6 rounded-2xl shadow text-center">
-//           <h3 className="text-xl font-bold text-slate-800">ራዕያችን</h3>
-//           <p className="text-slate-600 mt-2">ማኅበረሰቡን በእግዚአብሔር ቃል ማነጽ።</p>
-//         </div>
-//         <div className="bg-white p-6 rounded-2xl shadow text-center">
-//           <h3 className="text-xl font-bold text-slate-800">ተልዕኳችን</h3>
-//           <p className="text-slate-600 mt-2">ለሁሉም የዕድሜ ክልል ጥራት ያለው የሰንበት ትምህርት መስጠት።</p>
-//         </div>
-//         <div className="bg-white p-6 rounded-2xl shadow text-center">
-//           <h3 className="text-xl font-bold text-slate-800">እሴቶቻችን</h3>
-//           <p className="text-slate-600 mt-2">እምነት፣ ፍቅር፣ አንድነት</p>
-//         </div>
-//       </section>
-//     </div>
-//   );
-// };
-
-// export default Home;
-
-import React from 'react';
+// src/pages/public/Home.jsx
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import bgImage from '../../assets/Lidetachurch.jpg';
 
 const Home = () => {
+  const [showRegOptions, setShowRegOptions] = useState(false);
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-800">
       {/* Hero Section */}
@@ -68,12 +30,14 @@ const Home = () => {
           </p>
 
           <div className="pt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
-            <Link 
-              to="/register" 
+            {/* Register button – opens modal */}
+            <button
+              onClick={() => setShowRegOptions(true)}
               className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-emerald-600/30 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
             >
               ይመዝገቡ
-            </Link>
+            </button>
+
             <Link 
               to="/login" 
               className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md text-white px-8 py-3.5 rounded-xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
@@ -87,7 +51,6 @@ const Home = () => {
       {/* Vision / Mission / Values Section */}
       <section className="py-20 max-w-6xl mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-8">
-          
           {/* Vision */}
           <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-center group">
             <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
@@ -127,7 +90,6 @@ const Home = () => {
               እምነት፣ ፍቅር፣ አንድነት፣ ትህትና እና ታማኝነት።
             </p>
           </div>
-
         </div>
       </section>
 
@@ -166,6 +128,45 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Registration Choice Modal */}
+      {showRegOptions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full text-center">
+            <h2 className="text-xl font-bold text-slate-800 mb-2">
+              ምዝገባ አይነት ይምረጡ
+            </h2>
+            <p className="text-sm text-slate-500 mb-6">
+              Regular (መደበኛ) ወይም Distance (ርቀት) ተማሪ ምዝገባ ይምረጡ
+            </p>
+
+            <div className="space-y-3">
+              <Link
+                to="/register-regular"
+                onClick={() => setShowRegOptions(false)}
+                className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold transition"
+              >
+                መደበኛ (Regular)
+              </Link>
+
+              <Link
+                to="/register-distance"
+                onClick={() => setShowRegOptions(false)}
+                className="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
+              >
+                ርቀት (Distance)
+              </Link>
+            </div>
+
+            <button
+              onClick={() => setShowRegOptions(false)}
+              className="mt-4 text-sm text-slate-500 underline hover:text-slate-800"
+            >
+              ሰርዝ
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
