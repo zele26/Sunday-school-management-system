@@ -29,13 +29,16 @@ import StudentRoutes from './routes/StudentRoutes';
 // Registration flow pages
 import StudentRegister from './pages/StudentRegister';
 import ContinueRegistration from './pages/ContinueRegistration';
-
 import RegisterRegular from './pages/RegisterRegular';
 import RegisterDistance from './pages/RegisterDistance';
 import CheckStatus from './pages/CheckStatus';
 
-import { ProtectedRoute, RoleRoute } from './components/ProtectedRoute';
+// Change password
 import ChangePasswordModal from './components/ChangePasswordModal';
+import ChangePassword from './pages/ChangePassword';
+
+// Route guards
+import { ProtectedRoute, RoleRoute } from './components/ProtectedRoute';
 
 function App() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -67,56 +70,54 @@ function App() {
 
   return (
     <>
-      {isLoggedIn && user?.mustChangePassword && <ChangePasswordModal isOpen={true} />}
+      {isLoggedIn && user?.mustChangePassword && <ChangePasswordModal />}
+
       <Routes>
-      {/* Public section – accessible without login */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/classes" element={<Classes />} />
-        <Route path="/announcements" element={<PublicAnnouncements />} />
-        <Route path="/contact" element={<Contact />} />
+        {/* Public section */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/classes" element={<Classes />} />
+          <Route path="/announcements" element={<PublicAnnouncements />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/student-register" element={<StudentRegister />} />
+          <Route path="/register-regular" element={<RegisterRegular />} />
+          <Route path="/register-distance" element={<RegisterDistance />} />
+          <Route path="/continue-registration" element={<ContinueRegistration />} />
+          <Route path="/check-status" element={<CheckStatus />} />
+        </Route>
 
-        {/* ✅ ADDED: Registration flow pages */}
-        <Route path="/student-register" element={<StudentRegister />} />
-        <Route path="/continue-registration" element={<ContinueRegistration />} />
-      </Route>
+        {/* Auth pages */}
+        <Route path="/login" element={!isLoggedIn ? <Login /> : <Navigate to={getRedirectPath()} replace />} />
+        <Route path="/register" element={!isLoggedIn ? <Register /> : <Navigate to={getRedirectPath()} replace />} />
+        <Route path="/forgot-password" element={!isLoggedIn ? <ForgotPassword /> : <Navigate to={getRedirectPath()} replace />} />
 
-      {/* Auth pages – still accessible when not logged in */}
-      <Route path="/login" element={!isLoggedIn ? <Login /> : <Navigate to={getRedirectPath()} replace />} />
-      <Route path="/register" element={!isLoggedIn ? <Register /> : <Navigate to={getRedirectPath()} replace />} />
-      <Route path="/forgot-password" element={!isLoggedIn ? <ForgotPassword /> : <Navigate to={getRedirectPath()} replace />} />
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          {/* Change password page (all roles) */}
+          <Route path="/change-password" element={<ChangePassword />} />
 
-      {/* Protected routes */}
-      <Route element={<ProtectedRoute />}>
-        {/* Student */}
-        <Route element={<RoleRoute allowedRoles={['student', 'admin']} />}>
-          <Route path="/dashboard/*" element={<StudentLayout onLogout={logout} />}>
-            <Route path="*" element={<StudentRoutes />} />
+          <Route element={<RoleRoute allowedRoles={['student', 'admin']} />}>
+            <Route path="/dashboard/*" element={<StudentLayout onLogout={logout} />}>
+              <Route path="*" element={<StudentRoutes />} />
+            </Route>
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['teacher', 'admin']} />}>
+            <Route path="/teacher/*" element={<TeacherLayout onLogout={logout} />}>
+              <Route path="*" element={<TeacherRoutes />} />
+            </Route>
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['admin']} />}>
+            <Route path="/admin/*" element={<AdminLayout onLogout={logout} />}>
+              <Route path="*" element={<AdminRoutes />} />
+            </Route>
           </Route>
         </Route>
 
-        {/* Teacher */}
-        <Route element={<RoleRoute allowedRoles={['teacher', 'admin']} />}>
-          <Route path="/teacher/*" element={<TeacherLayout onLogout={logout} />}>
-            <Route path="*" element={<TeacherRoutes />} />
-          </Route>
-        </Route>
-
-        {/* Admin */}
-        <Route element={<RoleRoute allowedRoles={['admin']} />}>
-          <Route path="/admin/*" element={<AdminLayout onLogout={logout} />}>
-            <Route path="*" element={<AdminRoutes />} />
-          </Route>
-        </Route>
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-      <Route path="/register-regular" element={<RegisterRegular />} />
-      <Route path="/register-distance" element={<RegisterDistance />} />
-      <Route path="/continue-registration" element={<ContinueRegistration />} />
-      <Route path="/check-status" element={<CheckStatus />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
   );
 }

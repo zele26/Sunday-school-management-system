@@ -4,11 +4,9 @@ const Student = require('../models/Student');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-
 const PasswordResetRequest = require('../models/PasswordResetRequest');
 
 // ---------- Helpers ----------
-
 const generateAccessToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET || 'fallback_secret_key', {
     expiresIn: '7d',
@@ -107,7 +105,7 @@ exports.login = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         role: user.role,
-        mustChangePassword: user.mustChangePassword || false,
+        mustChangePassword: user.mustChangePassword || false,   // ← ADDED
       },
     });
   } catch (error) {
@@ -140,7 +138,6 @@ exports.forgotPassword = async (req, res) => {
     }
 
     if (user) {
-      // Check if pending request exists
       const pendingReq = await PasswordResetRequest.findOne({ user: user._id, status: 'pending' });
       if (!pendingReq) {
         await PasswordResetRequest.create({
@@ -155,7 +152,6 @@ exports.forgotPassword = async (req, res) => {
       }
     }
 
-    // Always respond with confirmation to prevent user enumeration
     res.status(200).json({
       success: true,
       message: 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
@@ -166,32 +162,39 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// ---------- Change Password (Set new private password) ----------
+// ---------- Change Password (requires current password) ----------
 exports.changePassword = async (req, res) => {
   try {
-    const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6) {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'አሁኑኑ ያለው ፓስዎርድ እና አዲሱ ፓስዎርድ ያስፈልጋሉ።',
+      });
+    }
+    if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
         message: 'አዲሱ ፓስዎርድ ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።',
       });
     }
 
-    const userId = req.user.id || req.user._id;
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'ተጠቃሚው አልተገኘም' });
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'ተጠቃሚው አልተገኘም' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'አሁኑኑ ያስገቡት ፓስዎርድ ትክክል አይደለም።' });
     }
 
     const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
     user.mustChangePassword = false;
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'ፓስዎርድዎ በተሳካ ሁኔታ ተቀይሯል! አሁን በ አዲሱ ፓስዎርድዎ መጠቀም ይችላሉ።',
-    });
+    res.status(200).json({ success: true, message: 'ፓስዎርድዎ በተሳካ ሁኔታ ተቀይሯል!' });
   } catch (error) {
     console.error('Change Password Error:', error);
     res.status(500).json({ success: false, message: 'Server error during password change.' });

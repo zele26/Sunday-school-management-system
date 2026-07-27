@@ -1,125 +1,65 @@
+// src/components/ChangePasswordModal.jsx
 import React, { useState } from 'react';
 import { apiFetch } from '../api/apiClient';
 import useAuthStore from '../store/authStore';
 
-const ChangePasswordModal = ({ isOpen = true, onClose }) => {
+const ChangePasswordModal = () => {
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState({ type: '', text: '' });
-  const updateUser = useAuthStore((state) => state.updateUser || state.login);
-  const user = useAuthStore((state) => state.user);
-
-  if (!isOpen) return null;
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMsg({ type: '', text: '' });
+    setError('');
+    setSuccess('');
 
-    if (newPassword.length < 6) {
-      return setMsg({ type: 'error', text: 'ፓስዎርድ ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።' });
-    }
     if (newPassword !== confirmPassword) {
-      return setMsg({ type: 'error', text: 'የገቡት ፓስዎርዶች አይመሳሰሉም!' });
+      return setError('አዲሶቹ ፓስዎርዶች አይዛመዱም።');
+    }
+    if (newPassword.length < 6) {
+      return setError('አዲሱ ፓስዎርድ ቢያንስ 6 ፊደላት ሊሆን ይገባል።');
     }
 
     setLoading(true);
     try {
       const res = await apiFetch('/api/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ newPassword }),
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
-
       const data = await res.json();
       if (res.ok) {
-        setMsg({ type: 'success', text: 'ፓስዎርድዎ በተሳካ ሁኔታ ተቀይሯል!' });
-        // Update user state to clear mustChangePassword flag
-        if (user) {
-          const updatedUser = { ...user, mustChangePassword: false };
-          useAuthStore.setState({ user: updatedUser });
-        }
-        setTimeout(() => {
-          if (onClose) onClose();
-        }, 1200);
+        setSuccess('ፓስዎርድ ተቀይሯል!');
+        setTimeout(() => window.location.reload(), 1500);
       } else {
-        setMsg({ type: 'error', text: data.message || 'ፓስዎርድ መቀየር አልተቻለም' });
+        setError(data.message || 'ለውጡ አልተሳካም');
       }
-    } catch {
-      setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል' });
+    } catch (err) {
+      setError('የአውታረ መረብ ስህተት');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/60 space-y-6 relative animate-in fade-in zoom-in duration-200">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold border border-indigo-100 shadow-sm">
-            🔐
-          </div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            አዲስ ፓስዎርድ ያዘጋጁ (Set Your New Password)
-          </h2>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            ለደህንነትዎ ሲባል የተሰጠዎትን ጊዜያዊ ፓስዎርድ ወደ ሚስጥራዊ አዲስ ፓስዎርድዎ ይቀይሩ።
-          </p>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+        <h2 className="text-xl font-bold text-slate-800 mb-2">የመጀመሪያ ፓስዎርድ ለውጥ</h2>
+        <p className="text-xs text-slate-500 mb-4">
+          እባክዎ አሁን ያለውን ፓስዎርድ እና አዲስ ፓስዎርድ ያስገቡ
+        </p>
 
-        {msg.text && (
-          <div
-            className={`p-3.5 rounded-2xl text-xs font-medium flex items-center gap-2 ${
-              msg.type === 'success'
-                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-                : 'bg-rose-50 border border-rose-200 text-rose-700'
-            }`}
-          >
-            <span>{msg.type === 'success' ? '✅' : '⚠️'}</span>
-            <span>{msg.text}</span>
-          </div>
-        )}
+        {error && <div className="mb-3 p-2 bg-rose-50 text-rose-700 rounded-xl text-xs">{error}</div>}
+        {success && <div className="mb-3 p-2 bg-emerald-50 text-emerald-700 rounded-xl text-xs">{success}</div>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              አዲስ ፓስዎርድ (New Password) *
-            </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              አዲስ ፓስዎርድ ያረጋግጡ (Confirm New Password) *
-            </label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-semibold text-sm shadow-md hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              'ፓስዎርዱን ቀይር (Save New Password)'
-            )}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input type="password" placeholder="አሁን ያለው ፓስዎርድ" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="w-full p-2 border rounded-xl text-sm" />
+          <input type="password" placeholder="አዲስ ፓስዎርድ (ቢያንስ 6)" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="w-full p-2 border rounded-xl text-sm" />
+          <input type="password" placeholder="አዲሱን ያረጋግጡ" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="w-full p-2 border rounded-xl text-sm" />
+          <button type="submit" disabled={loading} className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-emerald-700">
+            {loading ? 'በመቀየር ላይ…' : 'ፓስዎርድ ቀይር'}
           </button>
         </form>
       </div>

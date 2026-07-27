@@ -95,6 +95,7 @@ const navItems = [
   { label: 'Resources', path: '/teacher/resources', icon: '📖' },
   { label: 'Assignments', path: '/teacher/assignments', icon: '📝' },
   { label: 'Exams', path: '/teacher/exams', icon: '📊' },
+  { label: 'Change Password', path: '/change-password', icon: '🔑' },
 ];
 
   return (
