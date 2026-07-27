@@ -1,7 +1,6 @@
 // src/features/teacher/TeacherStudents.jsx
 import React, { useEffect, useState } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
 
 const TeacherStudents = () => {
   const [students, setStudents] = useState([]);
@@ -14,12 +13,10 @@ const TeacherStudents = () => {
   const fetchMyStudents = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/teacher/my-students`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/teacher/my-students');
+      if (!res.ok) throw new Error('Failed to fetch students');
       const data = await res.json();
-      setStudents(data);
+      setStudents(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
