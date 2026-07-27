@@ -24,9 +24,10 @@ const attendanceSchema = new mongoose.Schema({
   checkInTime: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ['Present', 'Late', 'Absent'],
+    enum: ['Present', 'Late', 'Absent', 'Excused'],
     default: 'Present',
   },
+  session: { type: String, trim: true },
   recordedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

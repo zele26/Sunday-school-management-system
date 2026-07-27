@@ -7,17 +7,23 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Full name is required'],
       trim: true,
     },
+    teacherId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
     email: {
       type: String,
       unique: true,
-      sparse: true,          // ✅ allows multiple null / missing values
+      sparse: true,
       lowercase: true,
       trim: true,
     },
     phone: {
       type: String,
       unique: true,
-      sparse: true,          // ✅ allows multiple null / missing values
+      sparse: true,
       trim: true,
     },
     password: {
@@ -33,13 +39,26 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'created', 'active'],
       default: 'pending',
     },
     mustChangePassword: {
       type: Boolean,
       default: false,
     },
+    profileComplete: {
+      type: Boolean,
+      default: true,
+    },
+    profilePicture: { type: String, trim: true },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', ''],
+      default: '',
+    },
+    branch: { type: String, trim: true },
+    teacherRole: { type: String, trim: true },
+    grades: [{ type: String, trim: true }],
     // Teacher & Profile additional details
     experience: { type: String, trim: true },
     subject: { type: String, trim: true },
@@ -58,5 +77,4 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Safe export – never overwrite an already compiled model
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);

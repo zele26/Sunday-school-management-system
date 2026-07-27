@@ -9,6 +9,7 @@ router.post('/', async (req, res) => {
   try {
     const courseData = { ...req.body };
 
+    // Clean empty teacher / prerequisiteCourse
     if (!courseData.teacher || courseData.teacher === '') {
       delete courseData.teacher;
     }
@@ -16,11 +17,17 @@ router.post('/', async (req, res) => {
       courseData.prerequisiteCourse = null;
     }
 
+    // Convert comma‑separated strings to arrays
     if (typeof courseData.bibleBooks === 'string') {
       courseData.bibleBooks = courseData.bibleBooks.split(',').map(s => s.trim());
     }
     if (typeof courseData.requiredMaterials === 'string') {
       courseData.requiredMaterials = courseData.requiredMaterials.split(',').map(s => s.trim());
+    }
+
+    // If studentType is distance, remove the grade field entirely (so it doesn't try to validate)
+    if (courseData.studentType === 'distance') {
+      delete courseData.grade;
     }
 
     const course = await Course.create(courseData);
@@ -30,14 +37,16 @@ router.post('/', async (req, res) => {
   }
 });
 
-// List (with filters)
+// List (with additional filters for studentType and grade)
 router.get('/', async (req, res) => {
   try {
-    const { status, ageGroup, search } = req.query;
+    const { status, ageGroup, search, studentType, grade } = req.query;
     const query = {};
 
     if (status) query.status = status;
     if (ageGroup) query.ageGroup = ageGroup;
+    if (studentType) query.studentType = studentType;
+    if (grade) query.grade = grade;
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -87,6 +96,11 @@ router.put('/:id', async (req, res) => {
       updates.requiredMaterials = updates.requiredMaterials.split(',').map(s => s.trim());
     }
 
+    // If studentType changes to distance, clear the grade
+    if (updates.studentType === 'distance') {
+      updates.grade = undefined;
+    }
+
     const course = await Course.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true })
       .populate('teacher', 'fullName email')
       .populate('prerequisiteCourse', 'name');
@@ -98,7 +112,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete
+// Delete (unchanged)
 router.delete('/:id', async (req, res) => {
   try {
     const course = await Course.findByIdAndDelete(req.params.id);

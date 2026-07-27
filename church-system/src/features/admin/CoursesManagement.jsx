@@ -1,6 +1,6 @@
 // src/features/admin/CoursesManagement.jsx
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../api/apiClient';   // use the secure client
+import { apiFetch } from '../../api/apiClient';
 
 const CoursesManagement = () => {
   const [courses, setCourses] = useState([]);
@@ -8,6 +8,8 @@ const CoursesManagement = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [ageFilter, setAgeFilter] = useState('');
+  const [studentTypeFilter, setStudentTypeFilter] = useState('');   // NEW
+  const [gradeFilter, setGradeFilter] = useState('');               // NEW
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -20,7 +22,7 @@ const CoursesManagement = () => {
   useEffect(() => {
     fetchCourses();
     fetchTeachers();
-  }, [search, statusFilter, ageFilter]);
+  }, [search, statusFilter, ageFilter, studentTypeFilter, gradeFilter]);
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -29,6 +31,8 @@ const CoursesManagement = () => {
       if (search) params.append('search', search);
       if (statusFilter) params.append('status', statusFilter);
       if (ageFilter) params.append('ageGroup', ageFilter);
+      if (studentTypeFilter) params.append('studentType', studentTypeFilter);   // NEW
+      if (gradeFilter) params.append('grade', gradeFilter);                     // NEW
 
       const res = await apiFetch(`/api/admin/courses?${params}`);
       if (!res.ok) throw new Error('Failed to fetch courses');
@@ -74,6 +78,8 @@ const CoursesManagement = () => {
       status: 'Active',
       certificateAvailable: false,
       prerequisiteCourse: '',
+      studentType: 'regular',     // NEW
+      grade: '',                  // NEW
     };
   }
 
@@ -105,6 +111,8 @@ const CoursesManagement = () => {
       status: course.status || 'Active',
       certificateAvailable: course.certificateAvailable || false,
       prerequisiteCourse: course.prerequisiteCourse?._id || '',
+      studentType: course.studentType || 'regular',   // NEW
+      grade: course.grade || '',                       // NEW
     });
     setShowModal(true);
   };
@@ -123,6 +131,11 @@ const CoursesManagement = () => {
     const cleanedForm = { ...form };
     if (!cleanedForm.teacher) delete cleanedForm.teacher;
     if (!cleanedForm.prerequisiteCourse) delete cleanedForm.prerequisiteCourse;
+
+    // If distance, remove grade so it doesn't send an empty string
+    if (cleanedForm.studentType === 'distance') {
+      delete cleanedForm.grade;
+    }
 
     const url = editingCourse
       ? `/api/admin/courses/${editingCourse._id}`
@@ -192,6 +205,22 @@ const CoursesManagement = () => {
           <option value="Youth">Youth</option>
           <option value="Adults">Adults</option>
         </select>
+        {/* NEW FILTERS */}
+        <select value={studentTypeFilter} onChange={(e) => setStudentTypeFilter(e.target.value)}
+          className="p-2 border rounded-xl text-sm">
+          <option value="">All Types</option>
+          <option value="regular">Regular</option>
+          <option value="distance">Distance</option>
+        </select>
+        <select value={gradeFilter} onChange={(e) => setGradeFilter(e.target.value)}
+          className="p-2 border rounded-xl text-sm"
+          disabled={studentTypeFilter === 'distance'}   // grade filter irrelevant for distance
+        >
+          <option value="">All Grades</option>
+          {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'].map(g => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
@@ -203,6 +232,8 @@ const CoursesManagement = () => {
             <thead>
               <tr className="border-b text-xs uppercase text-slate-400">
                 <th className="py-2 px-2">Name</th>
+                <th className="py-2 px-2">Type</th>
+                <th className="py-2 px-2">Grade</th>
                 <th className="py-2 px-2">Age Group</th>
                 <th className="py-2 px-2">Teacher</th>
                 <th className="py-2 px-2">Schedule</th>
@@ -214,6 +245,14 @@ const CoursesManagement = () => {
               {courses.map(course => (
                 <tr key={course._id} className="hover:bg-slate-50">
                   <td className="py-2 px-2 font-medium">{course.name}</td>
+                  <td className="py-2 px-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      course.studentType === 'distance' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {course.studentType === 'distance' ? 'Distance' : 'Regular'}
+                    </span>
+                  </td>
+                  <td className="py-2 px-2">{course.grade || 'All'}</td>
                   <td className="py-2 px-2">{course.ageGroup}</td>
                   <td className="py-2 px-2">{course.teacher?.fullName || 'Unassigned'}</td>
                   <td className="py-2 px-2">{course.schedule || '-'}</td>
@@ -241,6 +280,29 @@ const CoursesManagement = () => {
           <div className="bg-white rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-xl">
             <h3 className="text-lg font-bold mb-4">{editingCourse ? 'Edit Course' : 'Add New Course'}</h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* Student Type – before name */}
+              <select name="studentType" value={form.studentType} onChange={handleChange}
+                className="p-2 border rounded-xl text-sm">
+                <option value="regular">Regular</option>
+                <option value="distance">Distance</option>
+              </select>
+
+              {/* Grade – only enabled for regular */}
+              <select
+                name="grade"
+                value={form.grade}
+                onChange={handleChange}
+                required={form.studentType === 'regular'}
+                disabled={form.studentType === 'distance'}
+                className="p-2 border rounded-xl text-sm"
+              >
+                <option value="">Select Grade</option>
+                {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'].map(g => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+
               <input name="name" placeholder="Course Name *" value={form.name} onChange={handleChange} required
                 className="p-2 border rounded-xl text-sm" />
               <select name="ageGroup" value={form.ageGroup} onChange={handleChange}
