@@ -1,7 +1,6 @@
 // src/features/teacher/TeacherCourses.jsx
 import React, { useEffect, useState } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch } from '../../api/apiClient';
 
 const TeacherCourses = () => {
   const [courses, setCourses] = useState([]);
@@ -14,12 +13,10 @@ const TeacherCourses = () => {
   const fetchMyCourses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/teacher/my-courses`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await apiFetch('/api/teacher/my-courses');
+      if (!res.ok) throw new Error('Failed to fetch courses');
       const data = await res.json();
-      setCourses(data);
+      setCourses(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     } finally {
