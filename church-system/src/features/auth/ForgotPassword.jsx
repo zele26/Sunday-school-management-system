@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import bgImage from '../../assets/Lidetachurch.jpg';
+import { apiFetch } from '../../api/apiClient';
 
 export default function ForgotPassword() {
   const [identifier, setIdentifier] = useState('');
@@ -11,16 +12,16 @@ export default function ForgotPassword() {
     e.preventDefault();
     setMsg({ type: '', text: '' });
 
-    if (!identifier.trim()) {
+    const val = identifier.trim();
+    if (!val) {
       return setMsg({ type: 'error', text: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ።' });
     }
 
     setLoading(true);
     try {
-      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/forgot-password', {
+      const res = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: identifier.trim() }),
+        body: JSON.stringify({ identifier: val }),
       });
 
       const data = await res.json().catch(() => ({}));
