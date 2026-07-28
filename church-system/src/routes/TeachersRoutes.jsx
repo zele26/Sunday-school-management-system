@@ -13,6 +13,8 @@ import TeacherStudents from '../features/teacher/TeacherStudents';
 import TeacherAttendance from '../features/teacher/TeacherAttendance';
 import TeacherAttendanceSummary from '../features/teacher/TeacherAttendanceSummary';
 import TeacherResources from '../features/teacher/TeacherResources';
+import TeacherExams from '../features/teacher/TeacherExams';
+import TeacherResults from '../features/teacher/TeacherResults';
 
 export default function TeacherRoutes() {
   return (
@@ -28,7 +30,8 @@ export default function TeacherRoutes() {
       <Route path="attendance" element={<TeacherAttendance />} />
       <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
       <Route path="resources" element={<TeacherResources />} />
-
+      <Route path="exams" element={<TeacherExams />} />
+      <Route path="results" element={<TeacherResults />} />
       {/* These components are not yet built – uncomment when ready */}
       {/* <Route path="assignments" element={<TeacherAssignments />} /> */}
       {/* <Route path="exams" element={<TeacherExams />} /> */}

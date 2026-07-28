@@ -8,6 +8,9 @@ import StudentAttendance from '../features/student/StudentAttendance';
 import StudentAnnouncements from '../features/student/StudentAnnouncements';
 import StudentProfileModule from '../features/student/StudentProfileModule';
 import StudentResources from '../features/student/StudentResources';
+import StudentExams from '../features/student/StudentExams';
+import StudentTakeExam from '../features/student/StudentTakeExam';
+import StudentResults from '../features/student/StudentResults';
 
 export default function StudentRoutes() {
   return (
@@ -18,6 +21,9 @@ export default function StudentRoutes() {
       <Route path="announcements" element={<StudentAnnouncements />} />
       <Route path="profile" element={<StudentProfileModule />} />
       <Route path="resources" element={<StudentResources />} />
+      <Route path="exams" element={<StudentExams />} />
+      <Route path="exams/:quizId" element={<StudentTakeExam />} />
+      <Route path="results" element={<StudentResults />} />
 
       {/* Placeholders for future components – uncomment when ready */}
       {/* <Route path="assignments" element={<StudentAssignments />} /> */}

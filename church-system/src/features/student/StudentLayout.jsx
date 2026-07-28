@@ -18,6 +18,7 @@ const StudentLayout = ({ onLogout }) => {
     { label: 'Resources', path: '/dashboard/resources', icon: '📖' },
     { label: 'Assignments', path: '/dashboard/assignments', icon: '📝' },
     { label: 'Exams', path: '/dashboard/exams', icon: '📊' },
+    { label: 'Results', path: '/dashboard/results', icon: '📈' },  
   ];
 
   return (
