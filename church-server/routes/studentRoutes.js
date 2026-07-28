@@ -89,4 +89,17 @@ router.get('/lessons', async (req, res) => {
   }
 });
 
+// GET /api/student/exam-results
+router.get('/exam-results', async (req, res) => {
+  try {
+    const ExamResult = require('../models/ExamResult');
+    const results = await ExamResult.find({ student: req.student._id })
+      .populate('quiz', 'title')
+      .sort({ submittedAt: -1 });
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
