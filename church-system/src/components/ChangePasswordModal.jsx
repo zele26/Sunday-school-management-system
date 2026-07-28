@@ -10,6 +10,9 @@ const ChangePasswordModal = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [modalClosed, setModalClosed] = useState(false);   // NEW
+
+  const updateUser = useAuthStore((state) => state.updateUser);   // NEW – we'll add this to the store
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +35,14 @@ const ChangePasswordModal = () => {
       const data = await res.json();
       if (res.ok) {
         setSuccess('ፓስዎርድ ተቀይሯል!');
-        setTimeout(() => window.location.reload(), 1500);
+
+        // Update the user object in Zustand to clear the flag
+        updateUser({ mustChangePassword: false });
+
+        // Wait 1 second then close the modal
+        setTimeout(() => {
+          setModalClosed(true);
+        }, 1000);
       } else {
         setError(data.message || 'ለውጡ አልተሳካም');
       }
@@ -42,6 +52,9 @@ const ChangePasswordModal = () => {
       setLoading(false);
     }
   };
+
+  // Don't render the modal if it's already closed
+  if (modalClosed) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
