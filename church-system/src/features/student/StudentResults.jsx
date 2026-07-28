@@ -1,17 +1,13 @@
 // src/features/student/StudentResults.jsx
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import { Link } from 'react-router-dom';
 
 const StudentResults = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // We'll use the student's exam results. There's no dedicated student results endpoint yet,
-    // but we can fetch all quizzes they've taken via /api/quizzes and check.
-    // Simpler: create a backend endpoint GET /api/student/exam-results
-    // For now, we'll call a placeholder. We need to add this endpoint.
-    // I'll provide the backend route below.
     const fetchResults = async () => {
       try {
         const res = await apiFetch('/api/student/exam-results');
@@ -28,16 +24,17 @@ const StudentResults = () => {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">My Exam Results</h2>
       {results.length === 0 ? <p>No results yet.</p> : (
-        <table className="w-full text-left border-collapse text-sm">
-          <thead><tr className="border-b"><th>Exam</th><th>Score</th><th>Date</th></tr></thead>
-          <tbody>{results.map(r => (
-            <tr key={r._id} className="border-b">
-              <td className="py-2">{r.quiz?.title || 'N/A'}</td>
-              <td className="py-2">{r.totalScore}</td>
-              <td className="py-2">{new Date(r.submittedAt).toLocaleDateString()}</td>
-            </tr>
-          ))}</tbody>
-        </table>
+        <div className="grid gap-3">
+          {results.map(r => (
+            <Link key={r._id} to={`/dashboard/results/${r._id}`} className="bg-white p-4 rounded-xl shadow border hover:shadow-md transition flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{r.quiz?.title || 'N/A'}</p>
+                <p className="text-xs text-slate-500">{new Date(r.submittedAt).toLocaleDateString()}</p>
+              </div>
+              <span className="text-lg font-bold text-indigo-600">{r.totalScore}</span>
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

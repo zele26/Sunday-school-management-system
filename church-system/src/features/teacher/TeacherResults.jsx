@@ -5,7 +5,7 @@ import { apiFetch } from '../../api/apiClient';
 const TeacherResults = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState('');
-  const [results, setResults] = useState([]);
+  const [resultsData, setResultsData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchQuizzes(); }, []);
@@ -19,7 +19,7 @@ const TeacherResults = () => {
     if (!selectedQuiz) return;
     setLoading(true);
     const res = await apiFetch(`/api/quizzes/${selectedQuiz}/results`);
-    if (res.ok) setResults(await res.json());
+    if (res.ok) setResultsData(await res.json());
     setLoading(false);
   };
 
@@ -33,17 +33,46 @@ const TeacherResults = () => {
         </select>
         <button onClick={fetchResults} className="bg-blue-600 text-white px-4 py-2 rounded-xl">View Results</button>
       </div>
-      {loading ? <div className="py-8 text-center text-slate-400">Loading...</div> : results.length === 0 ? <p>No results yet.</p> : (
-        <table className="w-full text-left border-collapse text-sm">
-          <thead><tr className="border-b"><th>Student</th><th>Score</th><th>Submitted</th></tr></thead>
-          <tbody>{results.map(r => (
-            <tr key={r._id} className="border-b">
-              <td className="py-2">{r.student?.firstName} {r.student?.lastName}</td>
-              <td className="py-2">{r.totalScore}</td>
-              <td className="py-2">{new Date(r.submittedAt).toLocaleDateString()}</td>
-            </tr>
-          ))}</tbody>
-        </table>
+
+      {loading ? <div className="py-8 text-center text-slate-400">Loading...</div> :
+      resultsData && resultsData.results.length === 0 ? <p>No results yet.</p> :
+      resultsData && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="border-b text-xs uppercase text-slate-400">
+                <th className="py-2 px-2">Student</th>
+                <th className="py-2 px-2">Score</th>
+                <th className="py-2 px-2">Submitted</th>
+                <th className="py-2 px-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {resultsData.results.map(r => (
+                <tr key={r._id} className="hover:bg-slate-50">
+                  <td className="py-2 px-2">{r.student?.firstName} {r.student?.lastName}</td>
+                  <td className="py-2 px-2">{r.totalScore}</td>
+                  <td className="py-2 px-2">{new Date(r.submittedAt).toLocaleDateString()}</td>
+                  <td className="py-2 px-2">
+                    <button
+                      onClick={() => {
+                        // We'll show a modal with answers – simplified version
+                        const detail = r.answers.map(a => {
+                          const question = resultsData.questions.find(q => q._id === a.question);
+                          return { question: question?.text, selected: a.selectedAnswer, correct: question?.correctAnswer, points: a.pointsEarned };
+                        });
+                        alert(JSON.stringify(detail, null, 2));
+                      }}
+                      className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded"
+                    >
+                      View Answers
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

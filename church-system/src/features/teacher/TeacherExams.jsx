@@ -1,20 +1,13 @@
 // src/features/teacher/TeacherExams.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import { Link } from 'react-router-dom';
 
 const TeacherExams = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [courses, setCourses] = useState([]);
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [quizForm, setQuizForm] = useState({ title: '', description: '', courseId: '', quizType: 'Weekly Quiz' });
-  const [questionForm, setQuestionForm] = useState({
-    type: 'Multiple Choice',
-    text: '',
-    options: ['', '', '', ''],
-    correctAnswer: '',
-    points: 1,
-  });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -49,27 +42,6 @@ const TeacherExams = () => {
       fetchQuizzes();
     } else {
       const data = await res.json();
-      setMessage(data.message || 'Error creating quiz');
-    }
-  };
-
-  const handleAddQuestion = async () => {
-    if (!selectedQuiz) return;
-    const res = await apiFetch(`/api/quizzes/${selectedQuiz._id}/questions`, {
-      method: 'POST',
-      body: JSON.stringify({
-        type: questionForm.type,
-        text: questionForm.text,
-        options: questionForm.type === 'Multiple Choice' ? questionForm.options.filter(o => o.trim()) : [],
-        correctAnswer: questionForm.correctAnswer,
-        points: questionForm.points,
-      }),
-    });
-    if (res.ok) {
-      setQuestionForm({ type: 'Multiple Choice', text: '', options: ['', '', '', ''], correctAnswer: '', points: 1 });
-      setMessage('Question added!');
-    } else {
-      const data = await res.json();
       setMessage(data.message || 'Error');
     }
   };
@@ -77,14 +49,12 @@ const TeacherExams = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">Exam Management</h2>
+        <h2 className="text-xl font-bold">Exam Management</h2>
         <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm">
           {showForm ? 'Cancel' : '+ New Exam'}
         </button>
       </div>
-
       {message && <div className="p-2 bg-slate-100 rounded-xl text-sm">{message}</div>}
-
       {showForm && (
         <form onSubmit={handleCreateQuiz} className="bg-white p-4 rounded-xl shadow space-y-3">
           <input type="text" placeholder="Exam Title" required value={quizForm.title} onChange={e => setQuizForm({...quizForm, title: e.target.value})} className="w-full p-2 border rounded-xl" />
@@ -104,39 +74,16 @@ const TeacherExams = () => {
 
       <div className="grid md:grid-cols-2 gap-4">
         {quizzes.map(q => (
-          <div key={q._id} className={`p-4 bg-white rounded-xl shadow cursor-pointer border ${selectedQuiz?._id === q._id ? 'border-indigo-500' : ''}`} onClick={() => setSelectedQuiz(q)}>
+          <div key={q._id} className="p-4 bg-white rounded-xl shadow border hover:shadow-md transition">
             <h3 className="font-semibold">{q.title}</h3>
             <p className="text-xs text-slate-500">{q.quizType} – {q.course?.name}</p>
+            <div className="mt-2 flex gap-2">
+              <Link to={`/teacher/exams/${q._id}`} className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg">Manage Questions</Link>
+              <Link to={`/teacher/results?quizId=${q._id}`} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">View Results</Link>
+            </div>
           </div>
         ))}
       </div>
-
-      {selectedQuiz && (
-        <div className="bg-white p-4 rounded-xl shadow space-y-3">
-          <h3 className="font-semibold">Add Question to: {selectedQuiz.title}</h3>
-          <select value={questionForm.type} onChange={e => setQuestionForm({...questionForm, type: e.target.value})} className="w-full p-2 border rounded-xl">
-            <option value="Multiple Choice">Multiple Choice</option>
-            <option value="True/False">True/False</option>
-            <option value="Short Answer">Short Answer</option>
-            <option value="Essay">Essay</option>
-          </select>
-          <textarea placeholder="Question text" value={questionForm.text} onChange={e => setQuestionForm({...questionForm, text: e.target.value})} className="w-full p-2 border rounded-xl" required />
-          {questionForm.type === 'Multiple Choice' && (
-            <div className="space-y-1">
-              {questionForm.options.map((opt, i) => (
-                <input key={i} type="text" placeholder={`Option ${i+1}`} value={opt} onChange={e => {
-                  const newOpts = [...questionForm.options];
-                  newOpts[i] = e.target.value;
-                  setQuestionForm({...questionForm, options: newOpts});
-                }} className="w-full p-2 border rounded-xl" />
-              ))}
-            </div>
-          )}
-          <input type="text" placeholder="Correct Answer (for auto-grading)" value={questionForm.correctAnswer} onChange={e => setQuestionForm({...questionForm, correctAnswer: e.target.value})} className="w-full p-2 border rounded-xl" />
-          <input type="number" placeholder="Points" value={questionForm.points} onChange={e => setQuestionForm({...questionForm, points: e.target.value})} className="w-full p-2 border rounded-xl" />
-          <button onClick={handleAddQuestion} className="w-full bg-indigo-600 text-white p-2 rounded-xl">Add Question</button>
-        </div>
-      )}
     </div>
   );
 };

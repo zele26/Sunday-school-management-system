@@ -11,6 +11,7 @@ import StudentResources from '../features/student/StudentResources';
 import StudentExams from '../features/student/StudentExams';
 import StudentTakeExam from '../features/student/StudentTakeExam';
 import StudentResults from '../features/student/StudentResults';
+import StudentResultDetail from '../features/student/StudentResultDetail';
 
 export default function StudentRoutes() {
   return (
@@ -24,7 +25,8 @@ export default function StudentRoutes() {
       <Route path="exams" element={<StudentExams />} />
       <Route path="exams/:quizId" element={<StudentTakeExam />} />
       <Route path="results" element={<StudentResults />} />
-
+      <Route path="results" element={<StudentResults />} />
+      <Route path="results/:resultId" element={<StudentResultDetail />} />
       {/* Placeholders for future components – uncomment when ready */}
       {/* <Route path="assignments" element={<StudentAssignments />} /> */}
       {/* <Route path="exams" element={<StudentExams />} /> */}
