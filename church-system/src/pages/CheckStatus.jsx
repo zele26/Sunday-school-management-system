@@ -1,3 +1,4 @@
+// src/pages/CheckStatus.jsx
 import React, { useState } from 'react';
 import { Link, MemoryRouter, useInRouterContext } from 'react-router-dom';
 
@@ -9,27 +10,27 @@ const getStatusMessage = (status, studentType) => {
     switch (status) {
       case 'Pending Payment':
       case 'Pending Verification':
-        return 'ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ በትምህርት ቤቱ ኃላፊ ሲጸድቅ መግባት ይችላሉ።';
+        return 'ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ ሲጸድቅ በዚህ መለያ ቁጥር እና በፓስዎርድዎ ይግቡ።';
       case 'Approved':
-        return 'ምዝገባዎ ጸድቋል! አሁን መግባት ይችላሉ።';
+        return 'ምዝገባዎ ጸድቋል! አሁን በዚህ መለያ ቁጥር እና በፓስዎርድዎ መግባት ይችላሉ።';
       case 'Rejected':
-        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለበለጠ መረጃ ትምህርት ቤቱን ያግኙ።';
+        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ትምህርት ቤቱን ያግኙ።';
       default:
-        return 'ሁኔታዎ እየተዘመነ ነው። እባክዎ ይጠብቁ።';
+        return 'ሁኔታዎ እየተዘመነ ነው።';
     }
   } else {
     // distance student
     switch (status) {
       case 'Pending Payment':
-        return 'ክፍያ በመጠበቅ ላይ ነው። እባክዎ ክፍያ ከፍለው "ምዝገባዎን ይቀጥሉ" የሚለውን በመጫን ደረሰኝዎን ያስገቡ።';
+        return 'ክፍያ በመጠበቅ ላይ ነው። ክፍያ ከፍለው "ምዝገባዎን ይቀጥሉ" በሚለው በኩል ደረሰኝ ያስገቡ።';
       case 'Pending Verification':
         return 'ደረሰኝዎ ተቀባይነት አግኝቷል። ማረጋገጫ በመጠበቅ ላይ ነው።';
       case 'Approved':
-        return 'ምዝገባዎ ጸድቋል! አሁን መግባት ይችላሉ።';
+        return 'ምዝገባዎ ጸድቋል! አሁን በዚህ መለያ ቁጥር እና በፓስዎርድዎ መግባት ይችላሉ።';
       case 'Rejected':
-        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለበለጠ መረጃ ትምህርት ቤቱን ያግኙ።';
+        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ትምህርት ቤቱን ያግኙ።';
       default:
-        return 'ሁኔታዎ እየተዘመነ ነው። እባክዎ ይጠብቁ።';
+        return 'ሁኔታዎ እየተዘመነ ነው።';
     }
   }
 };
@@ -115,6 +116,19 @@ const CheckStatusContent = () => {
             </div>
           </div>
 
+          {/* SCHOOL ID – always shown */}
+          {result.studentId && (
+            <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
+              <p className="text-sm font-bold text-blue-900 mb-2">🏫 የትምህርት ቤት መለያ (School ID)</p>
+              <div className="bg-white py-3 rounded-xl border border-blue-100 shadow-sm mb-4">
+                <p className="text-3xl font-black font-mono text-blue-600 tracking-wider">{result.studentId}</p>
+              </div>
+              <p className="text-xs text-blue-800/80 font-medium">
+                📌 ምዝገባዎ ሲጸድቅ በዚህ መለያ ቁጥር እና በፓስዎርድዎ ይግቡ።
+              </p>
+            </div>
+          )}
+
           {/* Status Message Block */}
           <div className={`p-4 rounded-xl border mb-8 text-left ${
             isApproved ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' : 
@@ -129,19 +143,12 @@ const CheckStatusContent = () => {
             </div>
           </div>
 
-          {/* Conditional: Approved (Show Student ID & Login) */}
-          {isApproved && result.studentId && (
-            <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
-              <p className="text-sm font-bold text-blue-900 mb-2">የተማሪ መለያ ቁጥር (Student ID)</p>
-              <div className="bg-white py-3 rounded-xl border border-blue-100 shadow-sm mb-4">
-                <p className="text-3xl font-black font-mono text-blue-600 tracking-wider">{result.studentId}</p>
-              </div>
-              <p className="text-xs text-blue-800/80 mb-4 font-medium">
-                አሁን በዚህ መለያ ቁጥር እና በፓስዎርድዎ ወደ ሲስተሙ ይግቡ።
-              </p>
+          {/* Conditional: Approved (Show Login Link) */}
+          {isApproved && (
+            <div className="mb-8">
               <Link
                 to="/login"
-                className="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"
+                className="block w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-600/20 transition-all transform hover:-translate-y-0.5"
               >
                 ወደ ሲስተሙ ይግቡ (Login)
               </Link>

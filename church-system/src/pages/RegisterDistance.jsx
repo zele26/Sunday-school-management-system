@@ -63,83 +63,90 @@ const RegisterDistanceContent = () => {
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
 
   if (step === 'success') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4 bg-slate-50/50 font-sans">
-        <div className="max-w-lg w-full bg-white p-8 rounded-3xl shadow-xl border border-blue-100 text-center animate-in zoom-in-95 duration-500">
-          
-          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-            <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">ምዝገባ ተቀባይነት አግኝቷል</h2>
-          <p className="text-slate-500 mb-6 leading-relaxed">
-            የምዝገባ ጥያቄዎ በተሳካ ሁኔታ ተልኳል። ለማጠናቀቅ ክፍያ መፈጸም ያስፈልጋል።
-          </p>
-          
-          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-left">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">የምዝገባ ቁጥርዎ</p>
-              <p className="text-2xl font-black text-blue-600 tracking-widest">{result?.registrationNumber || 'N/A'}</p>
-            </div>
-            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              <p className="text-xs font-bold text-amber-700 uppercase">ክፍያ በመጠበቅ ላይ</p>
-            </div>
-          </div>
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-slate-50/50 font-sans">
+      <div className="max-w-lg w-full bg-white p-8 rounded-3xl shadow-xl border border-blue-100 text-center animate-in zoom-in-95 duration-500">
 
-          {/* Payment Information Card */}
-          {paymentInfo && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-left shadow-sm mb-8 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-              <h3 className="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
-                <span className="text-xl">💰</span> የክፍያ መመሪያ
-              </h3>
-              
-              <div className="space-y-3 text-sm text-slate-600 mb-5">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <span>የክፍያ መጠን (Contribution):</span>
-                  <span className="font-semibold text-slate-800">{paymentInfo.contributionAmount} ብር</span>
-                </div>
-                <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                  <span>የትምህርት ቁሳቁስ (Resource Fee):</span>
-                  <span className="font-semibold text-slate-800">{paymentInfo.resourceFee} ብር</span>
-                </div>
-                <div className="flex justify-between items-center pt-2">
-                  <span className="font-bold text-slate-800 text-base">ጠቅላላ (Total):</span>
-                  <span className="font-black text-blue-600 text-xl">{paymentInfo.totalAmount} ብር</span>
-                </div>
-              </div>
-              
-              <div className="bg-blue-50/50 p-4 rounded-xl text-sm text-slate-600 leading-relaxed border border-blue-100/50">
-                <p className="font-semibold text-blue-800 mb-1">መመሪያ፡</p>
-                {paymentInfo.instructions}
-              </div>
-            </div>
-          )}
-
-          <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 mb-6 text-left">
-            <p className="text-sm text-amber-800 font-medium flex items-start gap-2">
-              <span className="text-amber-500 mt-0.5">ℹ️</span>
-              <span>
-                ክፍያውን ከፈጸሙ በኋላ የክፍያ ማረጋገጫ (ደረሰኝ) ለማስገባት ከታች 
-                <strong className="font-bold mx-1 text-amber-900">"ቀጥል ምዝገባ"</strong> 
-                የሚለውን ይጫኑ።
-              </span>
-            </p>
-          </div>
-
-          <Link
-            to="/continue-registration"
-            className="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"
-          >
-            ቀጥል ምዝገባ (Continue Registration)
-          </Link>
+        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+          <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+          </svg>
         </div>
+
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">ምዝገባ ተቀባይነት አግኝቷል</h2>
+        <p className="text-slate-500 mb-6 leading-relaxed">
+          የምዝገባ ጥያቄዎ በተሳካ ሁኔታ ተልኳል። ለማጠናቀቅ ክፍያ መፈጸም ያስፈልጋል።
+        </p>
+
+        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-left">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">የምዝገባ ቁጥርዎ</p>
+            <p className="text-2xl font-black text-blue-600 tracking-widest">{result?.registrationNumber || 'N/A'}</p>
+          </div>
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <p className="text-xs font-bold text-amber-700 uppercase">ክፍያ በመጠበቅ ላይ</p>
+          </div>
+        </div>
+
+        {/* SCHOOL ID */}
+        <div className="bg-blue-50 rounded-2xl p-5 border border-blue-200 mb-8">
+          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">የትምህርት ቤት መለያ (School ID)</p>
+          <p className="text-3xl font-black text-blue-700 tracking-widest">{result?.studentId}</p>
+          <p className="text-sm text-blue-600 mt-3">
+            📌 ምዝገባዎ ሲጸድቅ በዚህ መለያ ቁጥር እና በፓስዎርድዎ ይግቡ።
+          </p>
+        </div>
+
+        {/* Payment Information Card (unchanged) */}
+        {paymentInfo && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 text-left shadow-sm mb-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <h3 className="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+              <span className="text-xl">💰</span> የክፍያ መመሪያ
+            </h3>
+            <div className="space-y-3 text-sm text-slate-600 mb-5">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                <span>የክፍያ መጠን (Contribution):</span>
+                <span className="font-semibold text-slate-800">{paymentInfo.contributionAmount} ብር</span>
+              </div>
+              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+                <span>የትምህርት ቁሳቁስ (Resource Fee):</span>
+                <span className="font-semibold text-slate-800">{paymentInfo.resourceFee} ብር</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="font-bold text-slate-800 text-base">ጠቅላላ (Total):</span>
+                <span className="font-black text-blue-600 text-xl">{paymentInfo.totalAmount} ብር</span>
+              </div>
+            </div>
+            <div className="bg-blue-50/50 p-4 rounded-xl text-sm text-slate-600 leading-relaxed border border-blue-100/50">
+              <p className="font-semibold text-blue-800 mb-1">መመሪያ፡</p>
+              {paymentInfo.instructions}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 mb-6 text-left">
+          <p className="text-sm text-amber-800 font-medium flex items-start gap-2">
+            <span className="text-amber-500 mt-0.5">ℹ️</span>
+            <span>
+              ክፍያውን ከፈጸሙ በኋላ የክፍያ ማረጋገጫ (ደረሰኝ) ለማስገባት ከታች 
+              <strong className="font-bold mx-1 text-amber-900">"ቀጥል ምዝገባ"</strong> 
+              የሚለውን ይጫኑ።
+            </span>
+          </p>
+        </div>
+
+        <Link
+          to="/continue-registration"
+          className="block w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5"
+        >
+          ቀጥል ምዝገባ (Continue Registration)
+        </Link>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans">

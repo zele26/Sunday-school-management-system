@@ -8,11 +8,47 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const cloudinary = require('cloudinary').v2;
 
+// ---------- HELPERS ----------
+
 const generateRegNumber = async () => {
   const last = await Registration.findOne().sort({ createdAt: -1 });
   const count = last ? parseInt(last.registrationNumber.split('-')[2]) + 1 : 1;
   return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
 };
+
+// Ethiopian year suffix (e.g. "18" for 2018)
+const getEthiopianYearSuffix = () => {
+  const now = new Date();
+  const gregorianYear = now.getFullYear();
+  const ethiopianYear =
+    now >= new Date(gregorianYear, 8, 11)   // Meskerem 1
+      ? gregorianYear - 7
+      : gregorianYear - 8;
+  return String(ethiopianYear % 100).padStart(2, '0');
+};
+
+// Generate permanent School ID (e.g., TKR‑0001/18 or TKD‑0001/18)
+const generateStudentId = async (studentType) => {
+  const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
+  const yearSuffix = getEthiopianYearSuffix();
+
+  const lastStudent = await Registration.findOne({
+    studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
+  })
+    .sort({ studentId: -1 })
+    .limit(1);
+
+  let lastNumber = 0;
+  if (lastStudent && lastStudent.studentId) {
+    const parts = lastStudent.studentId.split('/')[0].split('-');
+    lastNumber = parseInt(parts[1]) || 0;
+  }
+
+  const newNumber = String(lastNumber + 1).padStart(4, '0');
+  return `${prefix}-${newNumber}/${yearSuffix}`;
+};
+
+// ---------- PUBLIC ROUTES ----------
 
 // POST /api/registrations – submit registration (phone required, email optional)
 router.post('/', upload.single('receipt'), async (req, res) => {
@@ -23,7 +59,6 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       email, password, studentType,
     } = req.body;
 
-    // Phone is now mandatory, email is optional
     if (!fullName || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
@@ -37,7 +72,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const existingUser = await User.findOne({ phone });
     if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
 
-    // Only check email if it's actually provided (optional)
+    // Check email if provided
     if (email && email.trim() !== '') {
       const existingEmailReg = await Registration.findOne({ email: email.toLowerCase(), status: { $ne: 'Rejected' } });
       if (existingEmailReg) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ምዝገባ አለው' });
@@ -45,7 +80,6 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       if (existingEmailUser) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -58,6 +92,8 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     }
 
     const registrationNumber = await generateRegNumber();
+    // Generate the School ID
+    const studentId = await generateStudentId(studentType);
 
     const registration = await Registration.create({
       registrationNumber,
@@ -74,6 +110,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       password: hashedPassword,
       studentType,
       receiptUrl,
+      studentId,                                 // ← NEW
       status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
     });
 
@@ -82,14 +119,18 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       message: studentType === 'distance'
         ? 'ምዝገባዎ ተቀባይነት አግኝቷል። እባክዎ ክፍያ ከፍለው ደረሰኝ ይላኩ።'
         : 'ምዝገባዎ ተቀባይነት አግኝቷል። ማረጋገጫውን ይጠብቁ።',
-      registration: { registrationNumber: registration.registrationNumber, status: registration.status },
+      registration: {
+        registrationNumber: registration.registrationNumber,
+        studentId: registration.studentId,       // ← NEW
+        status: registration.status,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// POST /api/registrations/login – status check using phone + password
+// POST /api/registrations/login – status check (phone + password)
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -107,14 +148,14 @@ router.post('/login', async (req, res) => {
       status: reg.status,
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
-      studentId: reg.studentId,
+      studentId: reg.studentId,                // ← already present
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET /api/registrations/payment-info – unchanged
+// GET /api/registrations/payment-info (unchanged)
 router.get('/payment-info', async (req, res) => {
   try {
     const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
@@ -125,7 +166,7 @@ router.get('/payment-info', async (req, res) => {
   }
 });
 
-// PUT /api/registrations/upload-receipt – unchanged
+// PUT /api/registrations/upload-receipt (unchanged)
 router.put('/upload-receipt', async (req, res) => {
   try {
     const { registrationNumber, transactionRef, receiptUrl } = req.body;
