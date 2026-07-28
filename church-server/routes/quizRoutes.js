@@ -137,5 +137,74 @@ router.get('/:quizId/results', authorize('teacher', 'admin'), async (req, res) =
     res.status(500).json({ message: err.message });
   }
 });
+// GET /api/quizzes/:quizId – teacher gets full quiz with correct answers
+router.get('/:quizId', authorize('teacher', 'admin'), async (req, res) => {
+  try {
+    const quiz = await Quiz.findById(req.params.quizId)
+      .populate('course', 'name')
+      .populate('createdBy', 'fullName');
+    if (!quiz) return res.status(404).json({ message: 'Quiz not found' });
 
+    const questions = await Question.find({ quiz: req.params.quizId }).sort({ order: 1 });
+    // Teachers see correct answers
+    res.json({ quiz, questions });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/quizzes/:quizId/questions/:questionId
+router.put('/:quizId/questions/:questionId', authorize('teacher', 'admin'), async (req, res) => {
+  try {
+    const question = await Question.findByIdAndUpdate(req.params.questionId, req.body, { new: true });
+    if (!question) return res.status(404).json({ message: 'Question not found' });
+    res.json(question);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/quizzes/:quizId/questions/:questionId
+router.delete('/:quizId/questions/:questionId', authorize('teacher', 'admin'), async (req, res) => {
+  try {
+    await Question.findByIdAndDelete(req.params.questionId);
+    res.json({ success: true, message: 'Question deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/quizzes/:quizId/results (teacher)
+router.get('/:quizId/results', authorize('teacher', 'admin'), async (req, res) => {
+  try {
+    const results = await ExamResult.find({ quiz: req.params.quizId })
+      .populate('student', 'firstName lastName')
+      .populate('quiz', 'title')
+      .sort({ submittedAt: -1 });
+    // Also attach the questions for reference (without correctAnswer? teacher should see correct)
+    const questions = await Question.find({ quiz: req.params.quizId }).sort({ order: 1 });
+    // Include questions with correctAnswer so teacher can see
+    res.json({ results, questions });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/student/exam-results/:resultId
+router.get('/exam-results/:resultId', async (req, res) => {
+  try {
+    const ExamResult = require('../models/ExamResult');
+    const result = await ExamResult.findById(req.params.resultId)
+      .populate('quiz', 'title')
+      .populate('answers.question', 'text type options correctAnswer points');
+    if (!result) return res.status(404).json({ message: 'Result not found' });
+    // Ensure the student owns this result
+    if (result.student.toString() !== req.student._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;
