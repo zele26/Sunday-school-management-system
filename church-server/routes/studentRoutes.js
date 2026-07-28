@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth');
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
 const Lesson = require('../models/Lesson');
+const ExamResult = require('../models/ExamResult');   // ← NEW
 
 // All routes require a valid token (any role, but we further restrict to student)
 router.use(protect);
@@ -12,25 +13,22 @@ router.use(protect);
 // Middleware to ensure the user is a student (auto-creates Student doc if missing)
 const ensureStudent = async (req, res, next) => {
   try {
-    // Only users with role 'student' can access these endpoints
     if (req.user.role !== 'student') {
       return res.status(403).json({ message: 'Access denied. Only students can access this resource.' });
     }
 
     let student = await Student.findOne({ userId: req.user._id });
     if (!student) {
-      // Auto-create a minimal Student document using the User's name
       student = await Student.create({
         userId: req.user._id,
         firstName: req.user.fullName || 'Student',
         lastName: '',
         grade: '',
-        // other fields will remain empty
       });
       console.log(`✅ Created missing Student document for user ${req.user.email}`);
     }
 
-    req.student = student;   // attach student document to request
+    req.student = student;
     next();
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -89,14 +87,32 @@ router.get('/lessons', async (req, res) => {
   }
 });
 
-// GET /api/student/exam-results
+// ---------- My Exam Results (list) ----------
 router.get('/exam-results', async (req, res) => {
   try {
-    const ExamResult = require('../models/ExamResult');
     const results = await ExamResult.find({ student: req.student._id })
       .populate('quiz', 'title')
       .sort({ submittedAt: -1 });
     res.json(results);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ---------- Detailed Exam Result ----------
+router.get('/exam-results/:resultId', async (req, res) => {
+  try {
+    const result = await ExamResult.findById(req.params.resultId)
+      .populate('quiz', 'title')
+      .populate('answers.question', 'text type options correctAnswer points');
+    if (!result) return res.status(404).json({ message: 'Result not found' });
+
+    // Ensure the student owns this result
+    if (result.student.toString() !== req.student._id.toString()) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
