@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './store/authStore';
+import { apiFetch } from './api/apiClient';
 
 // Public layout & pages
 import PublicLayout from './components/PublicLayout';
@@ -47,7 +48,36 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
+    const verifyUser = async () => {
+      try {
+        const token = useAuthStore.getState().accessToken;
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await apiFetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          // Update the store with the real user from the server
+          useAuthStore.getState().updateUser({
+            id: data.user.id,
+            fullName: data.user.fullName,
+            role: data.user.role,
+            mustChangePassword: data.user.mustChangePassword,
+          });
+        } else {
+          // Token invalid – clear everything
+          useAuthStore.getState().logout();
+        }
+      } catch (err) {
+        console.warn('Could not verify token:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyUser();
   }, []);
 
   if (loading) {
