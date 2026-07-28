@@ -12,12 +12,10 @@ const TeacherResults = () => {
   const [resultsData, setResultsData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');   // ← NEW
 
-  useEffect(() => {
-    fetchQuizzes();
-  }, []);
+  useEffect(() => { fetchQuizzes(); }, []);
 
-  // Auto‑fetch results when a quizId is already present in the URL
   useEffect(() => {
     if (initialQuizId) {
       fetchResults(initialQuizId);
@@ -29,11 +27,10 @@ const TeacherResults = () => {
       const res = await apiFetch('/api/quizzes');
       if (res.ok) {
         const data = await res.json();
-        // Make sure data is an array
         setQuizzes(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      console.error('Error fetching quizzes:', err);
+      console.error(err);
     }
   };
 
@@ -43,14 +40,26 @@ const TeacherResults = () => {
 
     setLoading(true);
     setError('');
+    setDebugInfo('');   // clear previous debug
     try {
-      const res = await apiFetch(`/api/quizzes/${quizIdToUse}/results`);
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to fetch results');
+      const url = `/api/quizzes/${quizIdToUse}/results`;
+      const res = await apiFetch(url);
+      const rawText = await res.text();   // get raw text first for debugging
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (e) {
+        setDebugInfo(`⚠️ Server returned non‑JSON:\n${rawText.substring(0, 500)}`);
+        setLoading(false);
+        return;
       }
-      const data = await res.json();
-      // Ensure the expected shape exists
+
+      setDebugInfo(`✅ API response (Quiz ID: ${quizIdToUse}):\n${JSON.stringify(data, null, 2)}`);
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to fetch results');
+      }
+
       setResultsData({
         results: Array.isArray(data.results) ? data.results : [],
         questions: Array.isArray(data.questions) ? data.questions : [],
@@ -102,22 +111,18 @@ const TeacherResults = () => {
         </button>
       </div>
 
-      {loading && (
-        <div className="py-8 text-center text-slate-400">
-          Loading results...
-        </div>
+      {/* DEBUG INFO */}
+      {debugInfo && (
+        <pre className="bg-slate-100 p-3 rounded-xl text-xs whitespace-pre-wrap max-h-48 overflow-auto">
+          {debugInfo}
+        </pre>
       )}
 
-      {error && (
-        <div className="py-4 text-center text-red-500">
-          ❌ {error}
-        </div>
-      )}
+      {loading && <div className="py-8 text-center text-slate-400">Loading results...</div>}
+      {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
 
       {!loading && !error && resultsData && resultsData.results.length === 0 && (
-        <p className="text-slate-500">
-          No students have taken this exam yet.
-        </p>
+        <p className="text-slate-500">No students have taken this exam yet.</p>
       )}
 
       {!loading && !error && resultsData && resultsData.results.length > 0 && (
