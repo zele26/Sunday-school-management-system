@@ -158,6 +158,7 @@ router.post('/teachers', async (req, res) => {
       password: hashedPassword,
       role: 'teacher',
       status: 'approved',
+      mustChangePassword: true,
       experience: experience ? experience.trim() : '',
       subject: subject ? subject.trim() : '',
       coursesTaught: formattedCourses,
