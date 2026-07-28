@@ -9,12 +9,14 @@ const TeacherResults = () => {
 
   const [quizzes, setQuizzes] = useState([]);
   const [selectedQuiz, setSelectedQuiz] = useState(initialQuizId);
-  const [resultsData, setResultsData] = useState(null);
+  const [results, setResults] = useState([]);         // array of result objects
+  const [questions, setQuestions] = useState([]);     // quiz questions (for answer details)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [debugInfo, setDebugInfo] = useState('');   // ← NEW
 
-  useEffect(() => { fetchQuizzes(); }, []);
+  useEffect(() => {
+    fetchQuizzes();
+  }, []);
 
   useEffect(() => {
     if (initialQuizId) {
@@ -40,42 +42,43 @@ const TeacherResults = () => {
 
     setLoading(true);
     setError('');
-    setDebugInfo('');   // clear previous debug
     try {
-      const url = `/api/quizzes/${quizIdToUse}/results`;
-      const res = await apiFetch(url);
-      const rawText = await res.text();   // get raw text first for debugging
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (e) {
-        setDebugInfo(`⚠️ Server returned non‑JSON:\n${rawText.substring(0, 500)}`);
-        setLoading(false);
-        return;
-      }
-
-      setDebugInfo(`✅ API response (Quiz ID: ${quizIdToUse}):\n${JSON.stringify(data, null, 2)}`);
-
+      const res = await apiFetch(`/api/quizzes/${quizIdToUse}/results`);
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to fetch results');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to fetch results');
       }
+      const data = await res.json();
 
-      setResultsData({
-        results: Array.isArray(data.results) ? data.results : [],
-        questions: Array.isArray(data.questions) ? data.questions : [],
-      });
+      // The API returns an array of results (not an object)
+      const resultsArray = Array.isArray(data) ? data : [];
+      setResults(resultsArray);
+
+      // Fetch quiz questions (with correct answers) so we can show details
+      if (resultsArray.length > 0) {
+        const quizRes = await apiFetch(`/api/quizzes/${quizIdToUse}`);
+        if (quizRes.ok) {
+          const quizData = await quizRes.json();
+          setQuestions(quizData.questions || []);
+        }
+      } else {
+        setQuestions([]);
+      }
     } catch (err) {
       setError(err.message || 'Could not load results');
-      setResultsData(null);
+      setResults([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleViewAnswers = (r) => {
-    if (!resultsData || !resultsData.questions) return;
+    if (questions.length === 0) {
+      alert('No question details available.');
+      return;
+    }
     const detail = r.answers.map((a) => {
-      const question = resultsData.questions.find((q) => q._id === a.question);
+      const question = questions.find((q) => q._id === a.question);
       return {
         question: question?.text || 'Unknown',
         selected: a.selectedAnswer,
@@ -111,21 +114,14 @@ const TeacherResults = () => {
         </button>
       </div>
 
-      {/* DEBUG INFO */}
-      {debugInfo && (
-        <pre className="bg-slate-100 p-3 rounded-xl text-xs whitespace-pre-wrap max-h-48 overflow-auto">
-          {debugInfo}
-        </pre>
-      )}
-
       {loading && <div className="py-8 text-center text-slate-400">Loading results...</div>}
       {error && <div className="py-4 text-center text-red-500">❌ {error}</div>}
 
-      {!loading && !error && resultsData && resultsData.results.length === 0 && (
+      {!loading && !error && results.length === 0 && (
         <p className="text-slate-500">No students have taken this exam yet.</p>
       )}
 
-      {!loading && !error && resultsData && resultsData.results.length > 0 && (
+      {!loading && !error && results.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -137,7 +133,7 @@ const TeacherResults = () => {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {resultsData.results.map((r) => (
+              {results.map((r) => (
                 <tr key={r._id} className="hover:bg-slate-50">
                   <td className="py-2 px-2">
                     {r.student?.firstName} {r.student?.lastName}
