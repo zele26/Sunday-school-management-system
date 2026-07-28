@@ -188,13 +188,18 @@ exports.changePassword = async (req, res) => {
       return res.status(401).json({ success: false, message: 'አሁኑኑ ያስገቡት ፓስዎርድ ትክክል አይደለም።' });
     }
 
-    // Hash new password
+    // 🔍 Prevent reusing the current password
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'አዲሱ ፓስዎርድ አሁን ካለው ጋር አንድ አይነት መሆን የለበትም።',
+      });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedPassword;
     user.mustChangePassword = false;
-
-    // ✅ Skip validation to avoid “status” enum error
     await user.save({ validateBeforeSave: false });
 
     res.status(200).json({ success: true, message: 'ፓስዎርድዎ በተሳካ ሁኔታ ተቀይሯል!' });
