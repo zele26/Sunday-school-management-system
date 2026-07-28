@@ -1,6 +1,7 @@
 // src/pages/ChangePassword.jsx
 import React, { useState } from 'react';
 import { apiFetch } from '../api/apiClient';
+import { Link } from 'react-router-dom';
 
 const ChangePassword = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -44,20 +45,72 @@ const ChangePassword = () => {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow">
-      <h2 className="text-xl font-bold mb-4">ፓስዎርድ ቀይር</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold">ፓስዎርድ ቀይር</h2>
+        <Link
+          to="/teacher"
+          className="text-sm text-slate-500 hover:text-slate-800 underline"
+        >
+          ← ወደ ዳሽቦርድ ተመለስ
+        </Link>
+      </div>
+
       {message.text && (
-        <div className={`mb-4 p-3 rounded-xl text-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+        <div
+          className={`mb-4 p-3 rounded-xl text-sm ${
+            message.type === 'success'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'bg-rose-50 text-rose-700 border border-rose-200'
+          }`}
+        >
           {message.text}
         </div>
       )}
+
       <form onSubmit={handleSubmit} className="space-y-3">
-        <input type="password" placeholder="አሁን ያለው ፓስዎርድ" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required className="w-full p-2 border rounded-xl" />
-        <input type="password" placeholder="አዲስ ፓስዎርድ" value={newPassword} onChange={e => setNewPassword(e.target.value)} required className="w-full p-2 border rounded-xl" />
-        <input type="password" placeholder="አዲሱን ያረጋግጡ" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="w-full p-2 border rounded-xl" />
-        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700">
+        <input
+          type="password"
+          placeholder="አሁን ያለው ፓስዎርድ"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          required
+          className="w-full p-2 border rounded-xl"
+        />
+        <input
+          type="password"
+          placeholder="አዲስ ፓስዎርድ"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+          className="w-full p-2 border rounded-xl"
+        />
+        <input
+          type="password"
+          placeholder="አዲሱን ያረጋግጡ"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          className="w-full p-2 border rounded-xl"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded-xl font-semibold hover:bg-blue-700"
+        >
           {loading ? 'በመቀየር ላይ…' : 'ፓስዎርድ ቀይር'}
         </button>
       </form>
+
+      {message.type === 'success' && (
+        <div className="mt-4 text-center">
+          <Link
+            to="/teacher"
+            className="inline-block bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium"
+          >
+            ወደ ዳሽቦርድ ሂድ
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
