@@ -1,92 +1,188 @@
-// routes/admin/registrationRoutes.js
 const express = require('express');
 const router = express.Router();
-const Registration = require('../../models/Registration');
-const User = require('../../models/User');
-const Student = require('../../models/Student');
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
+const Registration = require('../models/Registration');   // ✅  one level up
+const Payment = require('../models/Payment');
+const User = require('../models/User');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+const cloudinary = require('cloudinary').v2;
 
-// List pending
-router.get('/', async (req, res) => {
+// ---------- HELPERS ----------
+
+const generateRegNumber = async () => {
+  const last = await Registration.findOne().sort({ createdAt: -1 });
+  const count = last ? parseInt(last.registrationNumber.split('-')[2]) + 1 : 1;
+  return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
+};
+
+// Ethiopian year suffix (e.g. "18" for 2018)
+const getEthiopianYearSuffix = () => {
+  const now = new Date();
+  const gregorianYear = now.getFullYear();
+  const ethiopianYear =
+    now >= new Date(gregorianYear, 8, 11)   // Meskerem 1
+      ? gregorianYear - 7
+      : gregorianYear - 8;
+  return String(ethiopianYear % 100).padStart(2, '0');
+};
+
+// Generate permanent School ID (e.g., TKR‑0001/18 or TKD‑0001/18)
+const generateStudentId = async (studentType) => {
+  const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
+  const yearSuffix = getEthiopianYearSuffix();
+
+  const lastStudent = await Registration.findOne({
+    studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
+  })
+    .sort({ studentId: -1 })
+    .limit(1);
+
+  let lastNumber = 0;
+  if (lastStudent && lastStudent.studentId) {
+    const parts = lastStudent.studentId.split('/')[0].split('-');
+    lastNumber = parseInt(parts[1]) || 0;
+  }
+
+  const newNumber = String(lastNumber + 1).padStart(4, '0');
+  return `${prefix}-${newNumber}/${yearSuffix}`;
+};
+
+// ---------- PUBLIC ROUTES ----------
+
+// POST /api/registrations – submit registration (phone required, email optional)
+router.post('/', upload.single('receipt'), async (req, res) => {
   try {
-    const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
-    res.json(registrations);
+    const {
+      fullName, gender, dateOfBirth, phone, grade, address,
+      parentName, parentPhone, parentEmail,
+      email, password, studentType,
+    } = req.body;
+
+    if (!fullName || !grade || !phone || !password || !studentType) {
+      return res.status(400).json({
+        success: false,
+        message: 'ሙሉ ስም፣ ክፍል፣ ስልክ ቁጥር፣ ፓስዎርድ እና የተማሪ አይነት ያስፈልጋሉ።',
+      });
+    }
+
+    // Check duplicate phone
+    const existingReg = await Registration.findOne({ phone, status: { $ne: 'Rejected' } });
+    if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
+
+    // Check email if provided
+    if (email && email.trim() !== '') {
+      const existingEmailReg = await Registration.findOne({ email: email.toLowerCase(), status: { $ne: 'Rejected' } });
+      if (existingEmailReg) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ምዝገባ አለው' });
+      const existingEmailUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingEmailUser) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    let receiptUrl = '';
+    if (req.file) {
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
+      receiptUrl = result.secure_url;
+    }
+
+    const registrationNumber = await generateRegNumber();
+    const studentId = await generateStudentId(studentType);
+
+    const registration = await Registration.create({
+      registrationNumber,
+      fullName,
+      gender: gender || 'Male',
+      dateOfBirth: dateOfBirth || '',
+      phone,
+      grade,
+      address: address || '',
+      parentName: parentName || '',
+      parentPhone: parentPhone || '',
+      parentEmail: parentEmail || '',
+      email: email?.toLowerCase() || '',
+      password: hashedPassword,
+      studentType,
+      receiptUrl,
+      studentId,
+      status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
+    });
+
+    res.status(201).json({
+      success: true,
+      message: studentType === 'distance'
+        ? 'ምዝገባዎ ተቀባይነት አግኝቷል። እባክዎ ክፍያ ከፍለው ደረሰኝ ይላኩ።'
+        : 'ምዝገባዎ ተቀባይነት አግኝቷል። ማረጋገጫውን ይጠብቁ።',
+      registration: {
+        registrationNumber: registration.registrationNumber,
+        studentId: registration.studentId,
+        status: registration.status,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/registrations/login – status check (phone + password)
+router.post('/login', async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !password) return res.status(400).json({ message: 'ስልክ ቁጥር እና ፓስዎርድ ያስፈልጋል' });
+
+    const reg = await Registration.findOne({ phone });
+    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+
+    const isMatch = await bcrypt.compare(password, reg.password);
+    if (!isMatch) return res.status(401).json({ message: 'የይለፍ ቃል ትክክል አይደለም' });
+
+    res.json({
+      registrationNumber: reg.registrationNumber,
+      fullName: reg.fullName,
+      status: reg.status,
+      studentType: reg.studentType,
+      receiptUrl: reg.receiptUrl,
+      studentId: reg.studentId,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Approve – uses the School ID generated at registration
-router.put('/:id/approve', async (req, res) => {
+// GET /api/registrations/payment-info (unchanged)
+router.get('/payment-info', async (req, res) => {
   try {
-    const reg = await Registration.findById(req.params.id);
-    if (!reg || reg.status !== 'Pending Verification')
-      return res.status(400).json({ message: 'ምዝገባው ለማጽደቅ ዝግጁ አይደለም' });
-
-    // Duplicate checks (optional)
-    if (reg.email && reg.email.trim() !== '') {
-      const existingUser = await User.findOne({ email: reg.email.toLowerCase() });
-      if (existingUser) return res.status(400).json({ success: false, message: `ኢሜይል "${reg.email}" ቀድሞውኑ ሌላ ተጠቃሚ ይጠቀምበታል።` });
-    }
-    const existingPhoneUser = await User.findOne({ phone: reg.phone });
-    if (existingPhoneUser) return res.status(400).json({ success: false, message: `ስልክ ቁጥር "${reg.phone}" ቀድሞውኑ ተመዝግቧል።` });
-
-    // Create the user account
-    const user = await User.create({
-      fullName: reg.fullName,
-      phone: reg.phone,
-      email: reg.email || undefined,
-      password: reg.password,
-      role: 'student',
-      status: 'approved',
-    });
-
-    // Generate QR code
-    const qrCodeValue = crypto.randomUUID();
-
-    // Create the student document – REUSE the already‑generated School ID
-    const student = await Student.create({
-      userId: user._id,
-      studentId: reg.studentId,               // ✅ CARRY OVER the School ID
-      firstName: reg.fullName,
-      grade: reg.grade,
-      dob: reg.dateOfBirth || '',
-      address: reg.address || '',
-      parentName: reg.parentName || '',
-      parentPhone: reg.parentPhone || '',
-      parentEmail: reg.parentEmail || '',
-      qrCode: qrCodeValue,
-      studentType: reg.studentType,
-    });
-
-    // Update registration status
-    reg.status = 'Approved';
-    reg.reviewedBy = req.user._id;
-    reg.reviewedAt = new Date();
-    await reg.save({ validateBeforeSave: false });
-
-    res.json({ success: true, message: 'ምዝገባው ጸድቋል። የተማሪ መለያ ተሰጥቷል።', studentId: reg.studentId });
+    const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
+    if (!payment) return res.status(404).json({ message: 'የክፍያ መረጃ አልተገኘም' });
+    res.json(payment);
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
-// Reject
-router.put('/:id/reject', async (req, res) => {
+// PUT /api/registrations/upload-receipt (unchanged)
+router.put('/upload-receipt', async (req, res) => {
   try {
-    const { reason } = req.body;
-    const reg = await Registration.findById(req.params.id);
+    const { registrationNumber, transactionRef, receiptUrl } = req.body;
+    if (!registrationNumber) return res.status(400).json({ message: 'የምዝገባ ቁጥር ያስፈልጋል' });
+
+    const reg = await Registration.findOne({ registrationNumber });
     if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+    if (reg.status !== 'Pending Payment') return res.status(400).json({ message: 'ምዝገባው ክፍያ ለመቀበል ዝግጁ አይደለም' });
 
-    reg.status = 'Rejected';
-    reg.rejectionReason = reason || '';
-    reg.reviewedBy = req.user._id;
-    reg.reviewedAt = new Date();
-    await reg.save({ validateBeforeSave: false });
+    reg.transactionRef = transactionRef || '';
+    reg.receiptUrl = receiptUrl || '';
+    reg.status = 'Pending Verification';
+    await reg.save();
 
-    res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
+    res.json({ success: true, message: 'ደረሰኝ ተቀባይነት አግኝቷል። በመጠበቅ ላይ' });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 });
 
