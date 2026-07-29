@@ -104,6 +104,7 @@ router.get('/', async (req, res) => {
       .populate('userId', 'email fullName')
       .populate('teacher', 'fullName email')
       .populate('courses', 'name grade')
+      .select('+studentId')                 // ← ENSURE studentId is included
       .sort({ registrationDate: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -138,6 +139,7 @@ router.get('/export', async (req, res) => {
       .populate('userId', 'email fullName')
       .populate('teacher', 'fullName email')
       .populate('courses', 'name grade')
+      .select('+studentId')                 // ← ENSURE studentId is included
       .sort({ registrationDate: -1 })
       .lean();
 
@@ -154,6 +156,7 @@ router.get('/export', async (req, res) => {
       'Assigned Teacher': s.teacher?.fullName || '',
       'Teacher Email': s.teacher?.email || '',
       'Courses': s.courses?.map(c => c.name).join('; ') || '',
+      'School ID': s.studentId || '',       // ← ADDED to CSV
       'Emergency First Name': s.emergencyFirstName || '',
       'Emergency Middle Name': s.emergencyMiddleName || '',
       'Emergency Last Name': s.emergencyLastName || '',
