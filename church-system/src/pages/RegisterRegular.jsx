@@ -52,49 +52,7 @@ const RegisterRegularContent = () => {
   const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-700 text-sm placeholder:text-slate-400";
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
 
- if (success) {
-  return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-slate-50/50">
-      <div className="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-emerald-100 text-center animate-in zoom-in-95 duration-500">
-        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-          <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h2 className="text-3xl font-extrabold text-slate-800 mb-2">ምዝገባ ተሳክቷል!</h2>
-        <p className="text-slate-500 mb-8 leading-relaxed">
-          የምዝገባ ጥያቄዎ በተሳካ ሁኔታ ተልኳል።
-        </p>
-
-        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">የምዝገባ ቁጥርዎ</p>
-          <p className="text-2xl font-black text-emerald-600 tracking-widest">{success.registrationNumber}</p>
-        </div>
-
-        {/* SCHOOL ID */}
-        <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-200 mb-8">
-          <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">የትምህርት ቤት መለያ (School ID)</p>
-          <p className="text-3xl font-black text-emerald-700 tracking-widest">{success.studentId}</p>
-          <p className="text-sm text-emerald-600 mt-3">
-            📌 ምዝገባዎ ሲጸድቅ በዚህ መለያ ቁጥር እና በፓስዎርድዎ ይግቡ።
-          </p>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <p className="text-sm font-medium text-amber-700">ሁኔታ: ማረጋገጫ በመጠበቅ ላይ</p>
-        </div>
-
-        <Link
-          to="/check-status"
-          className="block w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-emerald-600/20 transition-all transform hover:-translate-y-0.5"
-        >
-          ሁኔታ አረጋግጥ
-        </Link>
-      </div>
-    </div>
-  );
-}
+ 
   return (
     <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-3xl mx-auto">

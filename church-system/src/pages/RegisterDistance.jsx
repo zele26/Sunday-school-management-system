@@ -78,18 +78,7 @@ const RegisterDistanceContent = () => {
           የምዝገባ ጥያቄዎ በተሳካ ሁኔታ ተልኳል። ለማጠናቀቅ ክፍያ መፈጸም ያስፈልጋል።
         </p>
 
-        <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-left">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">የምዝገባ ቁጥርዎ</p>
-            <p className="text-2xl font-black text-blue-600 tracking-widest">{result?.registrationNumber || 'N/A'}</p>
-          </div>
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-            <p className="text-xs font-bold text-amber-700 uppercase">ክፍያ በመጠበቅ ላይ</p>
-          </div>
-        </div>
-
-        {/* SCHOOL ID */}
+        {/* SCHOOL ID only – NO registration number */}
         <div className="bg-blue-50 rounded-2xl p-5 border border-blue-200 mb-8">
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">የትምህርት ቤት መለያ (School ID)</p>
           <p className="text-3xl font-black text-blue-700 tracking-widest">{result?.studentId}</p>
