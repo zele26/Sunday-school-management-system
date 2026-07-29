@@ -4,10 +4,9 @@ import { NavLink, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 
 const StudentLayout = ({ onLogout }) => {
-  // Get user object from Zustand store
   const user = useAuthStore((state) => state.user);
-  // Fallback to stored userName if needed, but ideally use user.fullName
   const studentName = user?.fullName || 'ተማሪ';
+  const studentId = user?.studentId || '';   // from login response
 
   const navItems = [
     { label: 'መነሻ ገጽ (Dashboard)', path: '/dashboard', icon: '🏠', end: true },
@@ -18,7 +17,7 @@ const StudentLayout = ({ onLogout }) => {
     { label: 'Resources', path: '/dashboard/resources', icon: '📖' },
     { label: 'Assignments', path: '/dashboard/assignments', icon: '📝' },
     { label: 'Exams', path: '/dashboard/exams', icon: '📊' },
-    { label: 'Results', path: '/dashboard/results', icon: '📈' },  
+    { label: 'Results', path: '/dashboard/results', icon: '📈' },
   ];
 
   return (
@@ -57,6 +56,12 @@ const StudentLayout = ({ onLogout }) => {
             <h2 className="text-3xl font-black tracking-tight">
               ሰላም፣ {studentName}! 👋
             </h2>
+            {studentId && (
+              <div className="flex items-center gap-2 text-xs font-mono text-indigo-200 mt-1">
+                <span className="opacity-70">ID:</span>
+                <span className="font-bold tracking-widest bg-white/10 px-2 py-0.5 rounded">{studentId}</span>
+              </div>
+            )}
             <p className="text-indigo-100 text-xs md:text-sm max-w-lg leading-relaxed">
               የሰንበት ትምህርት ቤት ትምህርቶችዎን፣ የመገኘት መዝገብዎን እና የቅርብ ጊዜ ማስታወቂያዎችን እዚህ ይከታተሉ።
             </p>

@@ -135,6 +135,7 @@ const StudentProfile = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div><span className="font-medium text-slate-500">Email:</span> {profile.userId?.email || '-'}</div>
           <div><span className="font-medium text-slate-500">Phone:</span> {profile.studentPhone || profile.contactPhone || '-'}</div>
+          <div><span className="font-medium text-slate-500">School ID:</span> <span className="font-mono font-bold text-slate-700">{profile.studentId || 'N/A'}</span></div>
           <div><span className="font-medium text-slate-500">Date of Birth:</span> {profile.dob || '-'}</div>
           <div><span className="font-medium text-slate-500">Address:</span> {profile.address || '-'}</div>
           <div className="sm:col-span-2">
