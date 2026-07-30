@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    image: zelalemzola/sunday-backend:latest
     build:
       context: ./church-server
     container_name: church-backend
@@ -19,6 +20,7 @@ services:
       - CLOUDINARY_API_SECRET=9pWv9HnHrEtQIVJofd2f_zVgp0s
 
   frontend:
+    image: zelalemzola/sunday-frontend:latest
     build:
       context: ./church-system
     container_name: church-frontend
