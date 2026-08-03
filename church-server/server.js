@@ -118,7 +118,7 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const attendanceRoutes = require('./routes/admin/attendanceRoutes'); // ✅ Fixed path
+const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 
 const app = express();
 
@@ -143,7 +143,7 @@ if (require('fs').existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
 }
 
-// Root route
+// Root route - serves frontend if available, otherwise API message
 app.get('/', (req, res) => {
   if (require('fs').existsSync(frontendIndexPath)) {
     return res.sendFile(frontendIndexPath);
@@ -173,15 +173,18 @@ app.get('/api/test', (req, res) => {
 });
 
 // --- 404 Handler for API routes ---
-app.get('/api/*', (req, res) => {
+// FIXED: Changed from '/api/*' to '/api/:path(*)' 
+app.get('/api/:path(*)', (req, res) => {
   res.status(404).json({ 
     success: false,
     message: 'API route not found' 
   });
 });
 
-// --- FALLBACK SPA ROUTE ---
-app.get('*', (req, res) => {
+// --- FALLBACK SPA ROUTE (for all non-API routes) ---
+// FIXED: Changed from '*' to '/:path(*)'
+app.get('/:path(*)', (req, res) => {
+  // If it's an API route that wasn't caught, return 404 JSON
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ 
       success: false,
@@ -189,6 +192,7 @@ app.get('*', (req, res) => {
     });
   }
   
+  // Serve the frontend SPA for all other routes
   if (require('fs').existsSync(frontendIndexPath)) {
     return res.sendFile(frontendIndexPath);
   }
@@ -200,6 +204,7 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('❌ Global error handler:', err);
   
+  // Handle multer/file upload errors
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ 
       success: false,
@@ -214,6 +219,7 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // Handle validation errors
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map(e => e.message);
     return res.status(400).json({ 
@@ -223,6 +229,7 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // Handle duplicate key errors
   if (err.code === 11000) {
     const field = Object.keys(err.keyPattern)[0];
     return res.status(400).json({ 
@@ -231,6 +238,15 @@ app.use((err, req, res, next) => {
     });
   }
   
+  // Handle path-to-regexp errors
+  if (err.originalPath) {
+    return res.status(500).json({ 
+      success: false,
+      message: 'Invalid route pattern. Please check your route definitions.' 
+    });
+  }
+  
+  // Default error response
   res.status(500).json({ 
     success: false,
     message: process.env.NODE_ENV === 'production' 
@@ -244,19 +260,22 @@ const PORT = process.env.PORT || 5000;
 
 async function start() {
   try {
+    // Connect to MongoDB
     await connectToDatabase();
     console.log('✅ Database connected');
 
+    // Auto-fix sparse indexes for User model
     try {
       const User = require('./models/User');
-      try { await User.collection.dropIndex('email_1'); } catch (e) { /* ignore */ }
-      try { await User.collection.dropIndex('phone_1'); } catch (e) { /* ignore */ }
+      try { await User.collection.dropIndex('email_1'); } catch (e) { /* index might not exist */ }
+      try { await User.collection.dropIndex('phone_1'); } catch (e) { /* index might not exist */ }
       await User.createIndexes();
       console.log('✅ Sparse indexes ensured for User model');
     } catch (indexErr) {
       console.warn('⚠️ Index creation warning:', indexErr.message);
     }
 
+    // Start the server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
@@ -268,10 +287,12 @@ async function start() {
   }
 }
 
+// Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Rejection:', err);
 });
 
+// Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
   process.exit(1);
