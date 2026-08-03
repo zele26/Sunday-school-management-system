@@ -98,8 +98,6 @@
 
 // start();
 
-
-// church-server/server.js
 require('dotenv').config();
 
 const express = require('express');
@@ -123,11 +121,10 @@ const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 const app = express();
 
 // --- MIDDLEWARE ---
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // Increased for file uploads
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// CORS configuration
 app.use(cors({
   origin: true,
   credentials: true,
@@ -135,7 +132,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
-// --- SERVE FRONTEND SPA (if built) ---
+// --- SERVE FRONTEND SPA ---
 const frontendDistPath = path.join(__dirname, 'dist');
 const frontendIndexPath = path.join(frontendDistPath, 'index.html');
 
@@ -143,7 +140,6 @@ if (require('fs').existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
 }
 
-// Root route - serves frontend if available, otherwise API message
 app.get('/', (req, res) => {
   if (require('fs').existsSync(frontendIndexPath)) {
     return res.sendFile(frontendIndexPath);
@@ -163,7 +159,7 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-// --- HEALTH CHECK ---
+// Health Check
 app.get('/api/test', (req, res) => {
   res.json({ 
     status: "Online", 
@@ -172,31 +168,14 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// --- 404 Handler for API routes ---
-// FIXED: Changed from '/api/*' to '/api/:path(*)' 
-app.get('/api/:path(*)', (req, res) => {
-  res.status(404).json({ 
-    success: false,
-    message: 'API route not found' 
-  });
-});
-
-// --- FALLBACK SPA ROUTE (for all non-API routes) ---
-// FIXED: Changed from '*' to '/:path(*)'
-app.get('/:path(*)', (req, res) => {
-  // If it's an API route that wasn't caught, return 404 JSON
+// Fallback SPA - Using regex that worked before
+app.get(/^(?!\/api).*/, (req, res) => {
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ 
-      success: false,
-      message: 'API route not found' 
-    });
+    return res.status(404).json({ message: 'API route not found' });
   }
-  
-  // Serve the frontend SPA for all other routes
   if (require('fs').existsSync(frontendIndexPath)) {
     return res.sendFile(frontendIndexPath);
   }
-  
   res.status(404).send('Frontend build not found. Run the Vite app first.');
 });
 
@@ -238,14 +217,6 @@ app.use((err, req, res, next) => {
     });
   }
   
-  // Handle path-to-regexp errors
-  if (err.originalPath) {
-    return res.status(500).json({ 
-      success: false,
-      message: 'Invalid route pattern. Please check your route definitions.' 
-    });
-  }
-  
   // Default error response
   res.status(500).json({ 
     success: false,
@@ -255,7 +226,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// --- START SERVER ---
+// --- START SERVER AFTER DB CONNECTION AND INDEX FIX ---
 const PORT = process.env.PORT || 5000;
 
 async function start() {
@@ -264,18 +235,14 @@ async function start() {
     await connectToDatabase();
     console.log('✅ Database connected');
 
-    // Auto-fix sparse indexes for User model
-    try {
-      const User = require('./models/User');
-      try { await User.collection.dropIndex('email_1'); } catch (e) { /* index might not exist */ }
-      try { await User.collection.dropIndex('phone_1'); } catch (e) { /* index might not exist */ }
-      await User.createIndexes();
-      console.log('✅ Sparse indexes ensured for User model');
-    } catch (indexErr) {
-      console.warn('⚠️ Index creation warning:', indexErr.message);
-    }
+    // ---------- Auto‑fix sparse indexes ----------
+    const User = require('./models/User');
+    try { await User.collection.dropIndex('email_1'); } catch (e) { /* not exist */ }
+    try { await User.collection.dropIndex('phone_1'); } catch (e) { /* not exist */ }
+    await User.createIndexes();   // recreate with current schema (sparse: true)
+    console.log('✅ Sparse indexes ensured for User model');
+    // ----------------------------------------------
 
-    // Start the server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
