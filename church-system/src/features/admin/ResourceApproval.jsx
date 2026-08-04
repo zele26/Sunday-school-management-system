@@ -10,6 +10,11 @@ const ResourceApproval = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [msg, setMsg] = useState({ type: '', text: '' });
 
+  // Rejection modal state
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectId, setRejectId] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
   useEffect(() => {
     fetchResources();
     updateStats();
@@ -53,8 +58,8 @@ const ResourceApproval = () => {
   };
 
   const handleApprove = async (id) => {
-    if (!confirm('Approve this resource?')) return;
     setActionLoading(id);
+    setMsg({ type: '', text: '' });
     try {
       const res = await apiFetch(`/api/resources/admin/approve/${id}`, {
         method: 'PUT',
@@ -76,18 +81,25 @@ const ResourceApproval = () => {
     }
   };
 
-  const handleReject = async (id) => {
-    const reason = prompt('Please provide a reason for rejection:');
-    if (reason === null) return;
-    if (!reason.trim()) {
-      alert('Rejection reason is required.');
+  // Open reject modal
+  const openRejectModal = (id) => {
+    setRejectId(id);
+    setRejectReason('');
+    setShowRejectModal(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectReason.trim()) {
+      setMsg({ type: 'error', text: 'Rejection reason is required.' });
       return;
     }
-    setActionLoading(id);
+    setShowRejectModal(false);
+    setActionLoading(rejectId);
+    setMsg({ type: '', text: '' });
     try {
-      const res = await apiFetch(`/api/resources/admin/approve/${id}`, {
+      const res = await apiFetch(`/api/resources/admin/approve/${rejectId}`, {
         method: 'PUT',
-        body: JSON.stringify({ action: 'reject', rejectionReason: reason.trim() }),
+        body: JSON.stringify({ action: 'reject', rejectionReason: rejectReason.trim() }),
       });
       if (res.ok) {
         setMsg({ type: 'success', text: '❌ Resource rejected.' });
@@ -239,7 +251,7 @@ const ResourceApproval = () => {
                           {actionLoading === r._id ? '...' : '✅ Approve'}
                         </button>
                         <button
-                          onClick={() => handleReject(r._id)}
+                          onClick={() => openRejectModal(r._id)}
                           disabled={actionLoading === r._id}
                           className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1 disabled:opacity-50"
                         >
@@ -255,6 +267,37 @@ const ResourceApproval = () => {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Reject Reason Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-4">
+            <h3 className="text-xl font-bold text-slate-800">Reject Resource</h3>
+            <p className="text-sm text-slate-500">Please provide a reason for rejection:</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition resize-none"
+              rows={3}
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowRejectModal(false)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-sm font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRejectConfirm}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold transition"
+              >
+                Confirm Reject
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
