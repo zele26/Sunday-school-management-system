@@ -1,3 +1,4 @@
+// routes/admin/teacherRoutes.js
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../../middleware/auth');
@@ -5,7 +6,7 @@ const User = require('../../models/User');
 const Teacher = require('../../models/Teacher');
 const bcrypt = require('bcryptjs');
 
-// ---------- Helper: Generate teacherId ----------
+// Helper: generate teacherId
 const generateTeacherId = async () => {
   const count = await Teacher.countDocuments();
   const year = new Date().getFullYear();
@@ -17,7 +18,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const { search, page = 1, limit = 20 } = req.query;
     const query = {};
-    
+
     if (search && search.trim()) {
       const userQuery = {
         $or: [
@@ -34,17 +35,16 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const total = await Teacher.countDocuments(query);
     const teachers = await Teacher.find(query)
       .populate('userId', 'fullName email role status')
-      .populate('coursesTaught', 'name')
       .sort({ registrationDate: -1 })
       .skip(skip)
       .limit(parseInt(limit));
 
-    res.json({ 
-      success: true, 
-      teachers, 
-      total, 
-      page: parseInt(page), 
-      totalPages: Math.ceil(total / parseInt(limit)) 
+    res.json({
+      success: true,
+      teachers,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit))
     });
   } catch (err) {
     console.error('List teachers error:', err);
@@ -56,8 +56,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 router.get('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id)
-      .populate('userId', 'fullName email role status')
-      .populate('coursesTaught', 'name');
+      .populate('userId', 'fullName email role status');
     if (!teacher) {
       return res.status(404).json({ success: false, message: 'Teacher not found' });
     }
@@ -71,40 +70,61 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 // ---------- Create Teacher ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const { firstName, middleName, lastName, email, password, phone, subject, qualification, experience, bio, address, city, gender, dateOfBirth } = req.body;
+    const {
+      fullName,
+      email,
+      phone,
+      password,
+      subject,
+      qualification,
+      experience,
+      bio,
+      address,
+      city,
+      gender,
+      dateOfBirth,
+      coursesTaught,
+    } = req.body;
 
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ success: false, message: 'First name, last name, email, and password are required.' });
+    if (!fullName || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Full name, email, and password are required.'
+      });
     }
 
-    // Check if user exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'A user with this email already exists.' });
+      return res.status(400).json({
+        success: false,
+        message: 'A user with this email already exists.'
+      });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create User
     const newUser = await User.create({
-      fullName: `${firstName} ${lastName}`,
+      fullName,
       email: email.toLowerCase(),
       password: hashedPassword,
       role: 'teacher',
       status: 'approved',
+      phone: phone || '',
+      gender: gender || '',
+      city: city || '',
+      address: address || '',
     });
 
-    // Generate teacherId
     const teacherId = await generateTeacherId();
 
     // Create Teacher profile
     const teacher = await Teacher.create({
       teacherId,
-      firstName,
-      middleName: middleName || '',
-      lastName,
+      fullName,
+      firstName: fullName.split(' ')[0] || '',
+      lastName: fullName.split(' ').slice(1).join(' ') || '',
       email: email.toLowerCase(),
       phone: phone || '',
       subject: subject || '',
@@ -116,6 +136,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       gender: gender || '',
       dateOfBirth: dateOfBirth || '',
       userId: newUser._id,
+      coursesTaught: coursesTaught || [],
     });
 
     res.status(201).json({
@@ -132,7 +153,22 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
 // ---------- Update Teacher ----------
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const { firstName, middleName, lastName, phone, subject, qualification, experience, bio, address, city, gender, dateOfBirth } = req.body;
+    const {
+      fullName,
+      firstName,
+      middleName,
+      lastName,
+      phone,
+      subject,
+      qualification,
+      experience,
+      bio,
+      address,
+      city,
+      gender,
+      dateOfBirth,
+      coursesTaught,
+    } = req.body;
 
     const teacher = await Teacher.findById(req.params.id);
     if (!teacher) {
@@ -140,9 +176,14 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     }
 
     // Update teacher profile
-    if (firstName) teacher.firstName = firstName;
+    if (fullName) {
+      teacher.fullName = fullName;
+      // Also update User's fullName
+      await User.findByIdAndUpdate(teacher.userId, { fullName });
+    }
+    if (firstName !== undefined) teacher.firstName = firstName;
     if (middleName !== undefined) teacher.middleName = middleName;
-    if (lastName) teacher.lastName = lastName;
+    if (lastName !== undefined) teacher.lastName = lastName;
     if (phone) teacher.phone = phone;
     if (subject !== undefined) teacher.subject = subject;
     if (qualification !== undefined) teacher.qualification = qualification;
@@ -152,14 +193,9 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (city !== undefined) teacher.city = city;
     if (gender !== undefined) teacher.gender = gender;
     if (dateOfBirth !== undefined) teacher.dateOfBirth = dateOfBirth;
+    if (coursesTaught !== undefined) teacher.coursesTaught = coursesTaught;
 
     await teacher.save();
-
-    // Update User fullName if name changed
-    if (firstName || lastName) {
-      const fullName = `${teacher.firstName} ${teacher.lastName}`;
-      await User.findByIdAndUpdate(teacher.userId, { fullName });
-    }
 
     const updatedTeacher = await Teacher.findById(teacher._id)
       .populate('userId', 'fullName email role status');

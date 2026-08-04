@@ -1,27 +1,24 @@
 const mongoose = require('mongoose');
 
 const teacherSchema = new mongoose.Schema({
-  teacherId: { 
-    type: String, 
-    unique: true, 
-    sparse: true 
-  },
-  firstName: { type: String, required: true },
+  teacherId: { type: String, unique: true, sparse: true },
+  fullName: { type: String, required: true },      // Added fullName directly
+  firstName: String,
   middleName: String,
-  lastName: { type: String, required: true },
+  lastName: String,
   email: { type: String, required: true, unique: true, lowercase: true },
   phone: { type: String, unique: true, sparse: true },
-  subject: { type: String },
-  qualification: { type: String },
-  experience: { type: String },
-  bio: { type: String },
+  subject: String,
+  qualification: String,
+  experience: String,
+  bio: String,
   address: String,
   city: String,
   gender: { type: String, enum: ['Male', 'Female', ''], default: '' },
   dateOfBirth: String,
   profilePicture: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
-  coursesTaught: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  coursesTaught: [{ type: String }],   // ✅ Changed to strings (course names)
   isActive: { type: Boolean, default: true },
   registrationDate: { type: Date, default: Date.now },
 }, { collection: 'teachers' });
