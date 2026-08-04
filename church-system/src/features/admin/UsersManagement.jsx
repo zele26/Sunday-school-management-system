@@ -1,10 +1,8 @@
 // src/features/admin/UsersManagement.jsx
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../api/apiClient';
 
 const UsersManagement = () => {
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -16,10 +14,20 @@ const UsersManagement = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [stats, setStats] = useState({ total: 0, admin: 0, teacher: 0, student: 0, pending: 0, approved: 0 });
 
-  // Modals
+  // Edit Modal
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [editForm, setEditForm] = useState({ role: '', status: '' });
+  const [editForm, setEditForm] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    role: '',
+    status: '',
+    gender: '',
+    city: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState({ type: '', text: '' });
 
   useEffect(() => {
     fetchUsers();
@@ -40,7 +48,6 @@ const UsersManagement = () => {
       setUsers(list);
       setTotalPages(data.totalPages || 1);
 
-      // Calculate stats
       setStats({
         total: data.total || list.length,
         admin: list.filter(u => u.role === 'admin').length,
@@ -170,7 +177,16 @@ const UsersManagement = () => {
   // ---------- Edit Modal ----------
   const openEditModal = (user) => {
     setEditingUser(user);
-    setEditForm({ role: user.role, status: user.status });
+    setEditForm({
+      fullName: user.fullName || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: user.role || '',
+      status: user.status || '',
+      gender: user.gender || '',
+      city: user.city || '',
+    });
+    setMsg({ type: '', text: '' });
     setShowEditModal(true);
   };
 
@@ -180,18 +196,38 @@ const UsersManagement = () => {
 
   const saveEdit = async () => {
     if (!editingUser) return;
+    setSubmitting(true);
+    setMsg({ type: '', text: '' });
+
     try {
+      const payload = {
+        fullName: editForm.fullName.trim(),
+        phone: editForm.phone.trim(),
+        role: editForm.role,
+        status: editForm.status,
+        gender: editForm.gender,
+        city: editForm.city.trim(),
+      };
+
       const res = await apiFetch(`/api/admin/users/${editingUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(payload),
       });
+      const data = await res.json();
       if (res.ok) {
-        setShowEditModal(false);
-        fetchUsers();
+        setMsg({ type: 'success', text: '✅ User updated successfully!' });
+        setTimeout(() => {
+          setShowEditModal(false);
+          fetchUsers();
+        }, 1200);
+      } else {
+        setMsg({ type: 'error', text: data.message || 'Failed to update user.' });
       }
     } catch (err) {
-      console.error(err);
+      setMsg({ type: 'error', text: 'Network error.' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -313,7 +349,7 @@ const UsersManagement = () => {
           <option value="active">Active</option>
         </select>
         {selectedUsers.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={approveSelected}
               className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
@@ -438,7 +474,6 @@ const UsersManagement = () => {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-slate-100">
               {pageButtons()}
@@ -447,65 +482,152 @@ const UsersManagement = () => {
         </>
       )}
 
-      {/* Edit User Modal */}
+      {/* ========== BEAUTIFUL EDIT USER MODAL ========== */}
       {showEditModal && editingUser && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-slate-100 space-y-5">
-            <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-              <h3 className="text-xl font-extrabold text-slate-800">Edit User</h3>
-              <button 
-                onClick={() => setShowEditModal(false)} 
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold transition-all"
-              >
-                &times;
-              </button>
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 rounded-t-3xl text-white relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-lg border border-white/20 shadow-inner">
+                    ✏️
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold tracking-tight">Edit User</h3>
+                    <p className="text-xs text-blue-200">Update account details and permissions</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold transition-all"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-slate-400 font-semibold uppercase mb-1">User</p>
-                <p className="font-medium text-slate-800">{editingUser.fullName}</p>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {msg.text && (
+                <div
+                  className={`p-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
+                    msg.type === 'success'
+                      ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
+                      : 'bg-rose-50 border border-rose-200 text-rose-700'
+                  }`}
+                >
+                  <span className="text-lg">{msg.type === 'success' ? '✅' : '⚠️'}</span>
+                  <span>{msg.text}</span>
+                </div>
+              )}
+
+              {/* User Info Display */}
+              <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-100 space-y-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">User</p>
+                <p className="font-semibold text-slate-800">{editingUser.fullName}</p>
                 <p className="text-sm text-slate-500">{editingUser.email}</p>
+                {editingUser.phone && <p className="text-sm text-slate-500">{editingUser.phone}</p>}
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Role</label>
-                <select
-                  name="role"
-                  value={editForm.role}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
-                <select
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="active">Active</option>
-                </select>
+
+              {/* Form */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={editForm.fullName}
+                    onChange={handleEditChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={editForm.phone}
+                    onChange={handleEditChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={editForm.city}
+                    onChange={handleEditChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Role</label>
+                    <select
+                      name="role"
+                      value={editForm.role}
+                      onChange={handleEditChange}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
+                    >
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
+                    <select
+                      name="status"
+                      value={editForm.status}
+                      onChange={handleEditChange}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="active">Active</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gender</label>
+                  <select
+                    name="gender"
+                    value={editForm.gender}
+                    onChange={handleEditChange}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button 
-                onClick={() => setShowEditModal(false)} 
-                className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-3xl">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
               >
                 Cancel
               </button>
-              <button 
-                onClick={saveEdit} 
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/20 transition-all"
+              <button
+                onClick={saveEdit}
+                disabled={submitting}
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
               >
-                Save Changes
+                {submitting ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span>Save Changes</span>
+                    <span>➔</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
