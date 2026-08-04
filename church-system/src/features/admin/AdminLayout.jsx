@@ -2,26 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const navItems = [
-{ path: '/admin', label: 'Overview', icon: '🏠', end: true },
-{ path: '/admin/users', label: 'Users', icon: '👤' },
-{ path: '/admin/approvals', label: 'Approvals', icon: '✅' },
-{ path: '/admin/add-student', label: 'Add Student', icon: '🧑‍🎓' },   // <-- NEW
-{ path: '/admin/classes', label: 'Classes', icon: '🏫' },
-{ path: '/admin/courses', label: 'Courses', icon: '📚' },
-{ path: '/admin/announcements', label: 'Announcements', icon: '📢' },
-{ path: '/admin/resources', label: 'Resources', icon: '📄' },
-//{ path: '/admin/attendance', label: 'Attendance', icon: '📝' },
-{ path: '/admin/reports', label: 'Reports', icon: '📊' },
-{ path: '/admin/complaints', label: 'Complaints', icon: '⚠️' },
-{ path: '/admin/certificates', label: 'Certificates', icon: '🎓' },
-{ path: '/admin/settings', label: 'Settings', icon: '⚙️' },
-{ path: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
-{ path: '/admin/students', label: 'Students', icon: '👨‍🎓' },
-{ path: '/admin/qr-scanner', label: 'QR Scanner', icon: '📷' },
-{ path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
-{ path: '/admin/registrations', label: 'Registrations', icon: '📋' },
-{ path: '/admin/add-teacher', label: 'Add Teacher', icon: '👨‍🏫' },
-{ path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
+  { path: '/admin', label: 'Overview', icon: '🏠', end: true },
+  { path: '/admin/users', label: 'Users', icon: '👤' },
+  { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
+  { path: '/admin/add-student', label: 'Add Student', icon: '🧑‍🎓' },
+  { path: '/admin/students', label: 'Students', icon: '👨‍🎓' },   // moved up
+  { path: '/admin/teachers', label: 'Teachers', icon: '👨‍🏫' },   // ✅ NEW
+  { path: '/admin/add-teacher', label: 'Add Teacher', icon: '👨‍🏫' },
+  { path: '/admin/classes', label: 'Classes', icon: '🏫' },
+  { path: '/admin/courses', label: 'Courses', icon: '📚' },
+  { path: '/admin/announcements', label: 'Announcements', icon: '📢' },
+  { path: '/admin/resources', label: 'Resources', icon: '📄' },
+  // { path: '/admin/attendance', label: 'Attendance', icon: '📝' },
+  { path: '/admin/reports', label: 'Reports', icon: '📊' },
+  { path: '/admin/complaints', label: 'Complaints', icon: '⚠️' },
+  { path: '/admin/certificates', label: 'Certificates', icon: '🎓' },
+  { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
+  { path: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
+  { path: '/admin/qr-scanner', label: 'QR Scanner', icon: '📷' },
+  { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
+  { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
+  { path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

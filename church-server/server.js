@@ -288,6 +288,7 @@ const quizRoutes = require('./routes/quizRoutes');
 const registrationRoutes = require('./routes/registrationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const attendanceRoutes = require('./routes/admin/attendanceRoutes');
+const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
 
 const app = express();
 
@@ -329,6 +330,7 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/admin/teachers', teacherAdminRoutes);
 
 // Health Check
 app.get('/api/test', (req, res) => {

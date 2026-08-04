@@ -22,6 +22,7 @@ import AttendanceReports from '../features/admin/AttendanceReports';
 import RegistrationsManagement from '../features/admin/RegistrationsManagement';
 import AddTeacher from '../features/admin/AddTeacher';
 import PasswordResets from '../features/admin/PasswordResets';
+import TeachersManagement from '../features/admin/TeachersManagement';
 
 export default function AdminRoutes() {
   return (
@@ -45,6 +46,7 @@ export default function AdminRoutes() {
       <Route path="attendance-reports" element={<AttendanceReports />} />
       <Route path="registrations" element={<RegistrationsManagement />} />
       <Route path="add-teacher" element={<AddTeacher />} />
+      <Route path="teachers" element={<TeachersManagement />} />
       <Route path="password-resets" element={<PasswordResets />} />
     </Routes>
   );

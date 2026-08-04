@@ -7,12 +7,6 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Full name is required'],
       trim: true,
     },
-    teacherId: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-    },
     email: {
       type: String,
       unique: true,
@@ -56,28 +50,17 @@ const userSchema = new mongoose.Schema(
       enum: ['Male', 'Female', ''],
       default: '',
     },
-    branch: { type: String, trim: true },
-    teacherRole: { type: String, trim: true },
-    grades: [{ type: String, trim: true }],
-    // Teacher & Profile additional details
-    experience: { type: String, trim: true },
-    subject: { type: String, trim: true },
-    coursesTaught: [{ type: String, trim: true }],
-    qualification: { type: String, trim: true },
+    // Address fields (common to all roles)
     city: { type: String, trim: true },
     wereda: { type: String, trim: true },
     kebele: { type: String, trim: true },
+    address: { type: String, trim: true },
+    // Emergency contact (common to all roles)
     emergencyPersonName: { type: String, trim: true },
     emergencyPhone: { type: String, trim: true },
-    bio: { type: String, trim: true },
-
+    // Password reset
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    //status: {
-    //type: String,
-   // enum: ['pending', 'approved', 'rejected', 'Active'],
-    //default: 'pending',
-//},
   },
   { timestamps: true }
 );
