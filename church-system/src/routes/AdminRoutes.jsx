@@ -24,6 +24,7 @@ import AddTeacher from '../features/admin/AddTeacher';
 import PasswordResets from '../features/admin/PasswordResets';
 import TeachersManagement from '../features/admin/TeachersManagement';
 import EditTeacher from '../features/admin/EditTeacher';
+import EditStudent from '../features/admin/EditStudent';
 
 export default function AdminRoutes() {
   return (
@@ -43,6 +44,7 @@ export default function AdminRoutes() {
       <Route path="settings" element={<SettingsManagement />} />
       <Route path="audit-logs" element={<AuditLogsManagement />} />
       <Route path="students" element={<StudentsManagement />} />
+      <Route path="edit-student/:id" element={<EditStudent />} />
       <Route path="qr-scanner" element={<QRScanner />} />
       <Route path="attendance-reports" element={<AttendanceReports />} />
       <Route path="registrations" element={<RegistrationsManagement />} />

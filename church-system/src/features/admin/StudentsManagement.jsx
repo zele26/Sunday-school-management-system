@@ -1,25 +1,30 @@
 // src/features/admin/StudentsManagement.jsx
 import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
 
 const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
 const StudentsManagement = () => {
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [gradeFilter, setGradeFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [stats, setStats] = useState({ total: 0, regular: 0, distance: 0, withQR: 0 });
 
-  // Modals state
+  // Modals
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
 
-  // Dropdown data
   const [teachers, setTeachers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [assignedTeacherId, setAssignedTeacherId] = useState('');
@@ -29,7 +34,7 @@ const StudentsManagement = () => {
     fetchStudents();
     fetchTeachers();
     fetchCourses();
-  }, [page, search, gradeFilter]);
+  }, [page, search, gradeFilter, typeFilter]);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -37,12 +42,24 @@ const StudentsManagement = () => {
       const params = new URLSearchParams({ page, limit: 10 });
       if (search) params.append('search', search);
       if (gradeFilter) params.append('grade', gradeFilter);
+      if (typeFilter) params.append('studentType', typeFilter);
 
       const res = await apiFetch(`/api/admin/students?${params}`);
       if (!res.ok) throw new Error('Failed to fetch students');
       const data = await res.json();
-      setStudents(data.students);
-      setTotalPages(data.totalPages);
+      const list = data.students || [];
+      setStudents(list);
+      setTotalPages(data.totalPages || 1);
+
+      // Stats
+      setStats({
+        total: data.total || 0,
+        regular: list.filter(s => s.studentType === 'regular').length,
+        distance: list.filter(s => s.studentType === 'distance').length,
+        withQR: list.filter(s => s.qrCode).length,
+      });
+      setSelectedStudents([]);
+      setSelectAll(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -55,7 +72,7 @@ const StudentsManagement = () => {
       const res = await apiFetch('/api/admin/teachers');
       if (res.ok) {
         const data = await res.json();
-        setTeachers(data);
+        setTeachers(data.teachers || data || []);
       }
     } catch (err) {
       console.error(err);
@@ -67,7 +84,7 @@ const StudentsManagement = () => {
       const res = await apiFetch('/api/admin/courses');
       if (res.ok) {
         const data = await res.json();
-        setCourses(data);
+        setCourses(data.courses || data || []);
       }
     } catch (err) {
       console.error(err);
@@ -84,8 +101,12 @@ const StudentsManagement = () => {
     setPage(1);
   };
 
-  // ---------- QR Generation functions ----------
+  const handleTypeFilter = (e) => {
+    setTypeFilter(e.target.value);
+    setPage(1);
+  };
 
+  // ---------- QR Generation ----------
   const generateQR = async (studentId) => {
     try {
       const res = await apiFetch('/api/admin/students/generate-qr', {
@@ -108,7 +129,7 @@ const StudentsManagement = () => {
     try {
       const res = await apiFetch('/api/admin/students/generate-qr', {
         method: 'POST',
-        body: JSON.stringify({}),   // no studentId → bulk generate
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       alert(data.message || 'QR codes generated!');
@@ -118,17 +139,51 @@ const StudentsManagement = () => {
     }
   };
 
-  // Download CSV – token passed via query param (still works with middleware)
+  // ---------- Bulk Actions ----------
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(students.map(s => s._id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const toggleSelectStudent = (id) => {
+    if (selectedStudents.includes(id)) {
+      setSelectedStudents(selectedStudents.filter(s => s !== id));
+    } else {
+      setSelectedStudents([...selectedStudents, id]);
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selectedStudents.length === 0) return;
+    if (!confirm(`Delete ${selectedStudents.length} student(s)?`)) return;
+    try {
+      for (const id of selectedStudents) {
+        await apiFetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+      }
+      fetchStudents();
+      setSelectedStudents([]);
+      setSelectAll(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ---------- Export CSV ----------
   const handleDownload = () => {
     const token = useAuthStore.getState().accessToken;
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (gradeFilter) params.append('grade', gradeFilter);
+    if (typeFilter) params.append('studentType', typeFilter);
     if (token) params.append('token', token);
     window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
   };
 
-  // Assign teacher
+  // ---------- Assign Teacher ----------
   const openTeacherModal = (student) => {
     setSelectedStudent(student);
     setAssignedTeacherId(student.teacher?._id || '');
@@ -151,10 +206,10 @@ const StudentsManagement = () => {
     }
   };
 
-  // Assign courses
+  // ---------- Assign Courses ----------
   const openCourseModal = (student) => {
     setSelectedStudent(student);
-    const existingIds = student.courses.map(c => c._id);
+    const existingIds = student.courses?.map(c => c._id) || [];
     setSelectedCourseIds(existingIds);
     setShowCourseModal(true);
   };
@@ -188,7 +243,11 @@ const StudentsManagement = () => {
         <button
           key={i}
           onClick={() => setPage(i)}
-          className={`px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all ${i === page ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/20' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'}`}
+          className={`px-3.5 py-2 rounded-xl text-xs font-semibold shadow-sm transition-all ${
+            i === page
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-blue-500/20'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/60'
+          }`}
         >
           {i}
         </button>
@@ -199,6 +258,7 @@ const StudentsManagement = () => {
 
   return (
     <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 transition-all">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
         <div className="space-y-1">
           <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
@@ -219,7 +279,7 @@ const StudentsManagement = () => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Download CSV
+            Export CSV
           </button>
           <button
             onClick={generateAllQR}
@@ -230,6 +290,35 @@ const StudentsManagement = () => {
             </svg>
             Generate All QR
           </button>
+          <Link
+            to="/admin/add-student"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Student
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100">
+          <p className="text-xs text-blue-600 font-semibold uppercase">Total Students</p>
+          <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
+        </div>
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100">
+          <p className="text-xs text-emerald-600 font-semibold uppercase">Regular</p>
+          <p className="text-2xl font-bold text-emerald-800">{stats.regular}</p>
+        </div>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-100">
+          <p className="text-xs text-amber-600 font-semibold uppercase">Distance</p>
+          <p className="text-2xl font-bold text-amber-800">{stats.distance}</p>
+        </div>
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
+          <p className="text-xs text-purple-600 font-semibold uppercase">With QR</p>
+          <p className="text-2xl font-bold text-purple-800">{stats.withQR}</p>
         </div>
       </div>
 
@@ -259,6 +348,23 @@ const StudentsManagement = () => {
             <option key={g} value={`Grade ${g}`}>Grade {g}</option>
           ))}
         </select>
+        <select
+          value={typeFilter}
+          onChange={handleTypeFilter}
+          className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer min-w-[160px]"
+        >
+          <option value="">All Types</option>
+          <option value="regular">Regular</option>
+          <option value="distance">Distance</option>
+        </select>
+        {selectedStudents.length > 0 && (
+          <button
+            onClick={deleteSelected}
+            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
+          >
+            Delete Selected ({selectedStudents.length})
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -273,10 +379,19 @@ const StudentsManagement = () => {
             <table className="w-full text-left border-collapse bg-white">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200/60 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  <th className="py-3.5 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                  </th>
                   <th className="py-3.5 px-4">Name</th>
-                  <th className="py-3.5 px-4">School ID</th>
+                  <th className="py-3.5 px-4">Student ID</th>
                   <th className="py-3.5 px-4">Email</th>
                   <th className="py-3.5 px-4">Grade</th>
+                  <th className="py-3.5 px-4">Type</th>
                   <th className="py-3.5 px-4">Teacher</th>
                   <th className="py-3.5 px-4">QR</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
@@ -285,6 +400,14 @@ const StudentsManagement = () => {
               <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
                 {students.map(s => (
                   <tr key={s._id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedStudents.includes(s._id)}
+                        onChange={() => toggleSelectStudent(s._id)}
+                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </td>
                     <td className="py-3.5 px-4 font-semibold text-slate-800">
                       {s.firstName} {s.middleName} {s.lastName}
                     </td>
@@ -295,7 +418,18 @@ const StudentsManagement = () => {
                         {s.grade}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 font-medium">{s.teacher?.fullName || <span className="text-slate-400 italic">Unassigned</span>}</td>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
+                        s.studentType === 'distance'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {s.studentType || 'regular'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600 font-medium">
+                      {s.teacher?.fullName || <span className="text-slate-400 italic">Unassigned</span>}
+                    </td>
                     <td className="py-3.5 px-4">
                       {s.qrCode ? (
                         <span className="inline-flex items-center justify-center w-7 h-7 bg-emerald-50 text-emerald-600 rounded-full font-bold border border-emerald-200 shadow-sm">✓</span>
@@ -314,11 +448,17 @@ const StudentsManagement = () => {
                           onClick={() => { setSelectedStudent(s); setShowDetailModal(true); }}
                           className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all shadow-sm"
                         >
-                          Details
+                          View
                         </button>
+                        <Link
+                          to={`/admin/edit-student/${s._id}`}
+                          className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded-xl border border-indigo-200 hover:bg-indigo-100 transition-all shadow-sm"
+                        >
+                          Edit
+                        </Link>
                         <button
                           onClick={() => openTeacherModal(s)}
-                          className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded-xl border border-indigo-200 hover:bg-indigo-100 transition-all shadow-sm"
+                          className="text-xs bg-amber-50 text-amber-700 font-semibold px-3 py-1.5 rounded-xl border border-amber-200 hover:bg-amber-100 transition-all shadow-sm"
                         >
                           Teacher
                         </button>
@@ -343,7 +483,8 @@ const StudentsManagement = () => {
         </>
       )}
 
-      {/* Student Detail Modal */}
+      {/* ----- Modals ----- */}
+      {/* Detail Modal (same as before, just keep it) */}
       {showDetailModal && selectedStudent && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-6">
@@ -366,7 +507,6 @@ const StudentsManagement = () => {
               <div><span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Email (login)</span> <span className="text-slate-800 font-medium">{selectedStudent.userId?.email || '-'}</span></div>
               <div><span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Assigned Teacher</span> <span className="text-slate-800 font-medium">{selectedStudent.teacher?.fullName || 'Unassigned'}</span></div>
               <div className="col-span-2"><span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Courses</span> <span className="text-slate-800 font-medium">{selectedStudent.courses?.map(c => c.name).join(', ') || 'None'}</span></div>
-              
               <div className="col-span-2 border-t border-slate-200 pt-4 mt-2">
                 <h4 className="font-bold text-slate-700 uppercase text-xs tracking-wider mb-3">Emergency Contact</h4>
               </div>
