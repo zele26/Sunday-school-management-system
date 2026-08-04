@@ -68,10 +68,14 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- Create Teacher ----------
-// ---------- Create Teacher ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
+  // 🔥 DEBUG: Log everything about the request
+  console.log('📥 [POST /api/admin/teachers] Received request');
+  console.log('📥 Headers:', req.headers);
+  console.log('📥 Body:', req.body);
+  console.log('📥 Content-Type:', req.headers['content-type']);
+
   try {
-    // Destructure all fields from req.body
     const {
       firstName,
       middleName,
@@ -90,14 +94,17 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       coursesTaught,
     } = req.body;
 
-    // Build fullName from individual name parts
+    // Build fullName
     const fullName = [firstName, middleName, lastName]
       .filter(Boolean)
       .map(s => s.trim())
       .join(' ');
 
-    // Validate required fields
+    console.log('📥 Parsed: fullName=', fullName, 'email=', email, 'password=', password ? '***' : 'missing');
+
+    // Validate
     if (!fullName || !email || !password) {
+      console.log('❌ Validation failed – missing fields');
       return res.status(400).json({
         success: false,
         message: 'Full name, email, and password are required.'
@@ -151,7 +158,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       gender: gender || '',
       dateOfBirth: dateOfBirth || '',
       userId: newUser._id,
-      coursesTaught: coursesTaught || [],
+      coursesTaught: Array.isArray(coursesTaught) ? coursesTaught : [],
     });
 
     res.status(201).json({
@@ -160,7 +167,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       teacher,
     });
   } catch (err) {
-    console.error('Create teacher error:', err);
+    console.error('❌ Create teacher error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -193,7 +200,6 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     // Update teacher profile
     if (fullName) {
       teacher.fullName = fullName;
-      // Also update User's fullName
       await User.findByIdAndUpdate(teacher.userId, { fullName });
     }
     if (firstName !== undefined) teacher.firstName = firstName;
@@ -230,7 +236,6 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Teacher not found' });
     }
 
-    // Delete user and teacher
     await User.findByIdAndDelete(teacher.userId);
     await Teacher.findByIdAndDelete(req.params.id);
 
