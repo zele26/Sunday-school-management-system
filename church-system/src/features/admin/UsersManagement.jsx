@@ -252,7 +252,7 @@ const UsersManagement = () => {
     return buttons;
   };
 
-  // Helper: role badge color
+  // Helper: role badge color (same as teacher/student)
   const getRoleBadge = (role) => {
     const colors = {
       admin: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -262,7 +262,7 @@ const UsersManagement = () => {
     return colors[role] || 'bg-slate-50 text-slate-700 border-slate-200';
   };
 
-  // Helper: status badge color
+  // Helper: status badge color (same as teacher/student)
   const getStatusBadge = (status) => {
     const colors = {
       approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -276,7 +276,7 @@ const UsersManagement = () => {
 
   return (
     <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 transition-all">
-      {/* Header */}
+      {/* Header – Matches Students & Teachers */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
         <div className="space-y-1">
           <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
@@ -291,7 +291,7 @@ const UsersManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards – Same as Students & Teachers */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100">
           <p className="text-xs text-blue-600 font-semibold uppercase">Total Users</p>
@@ -311,7 +311,7 @@ const UsersManagement = () => {
         </div>
       </div>
 
-      {/* Search & Filter */}
+      {/* Search & Filter – Same style */}
       <div className="flex flex-col md:flex-row gap-3.5 bg-slate-50/70 p-4 rounded-2xl border border-slate-100">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -482,32 +482,32 @@ const UsersManagement = () => {
         </>
       )}
 
-      {/* ========== BEAUTIFUL EDIT USER MODAL ========== */}
+      {/* ========== Edit User Modal – Light, Clean, Consistent ========== */}
       {showEditModal && editingUser && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 rounded-t-3xl text-white relative">
+        <div className="fixed inset-0 bg-slate-200/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            {/* Header – Light Gradient (matches student/teacher modals) */}
+            <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-t-3xl text-slate-800 border-b border-slate-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-lg border border-white/20 shadow-inner">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-lg shadow-sm">
                     ✏️
                   </div>
                   <div>
                     <h3 className="text-lg font-bold tracking-tight">Edit User</h3>
-                    <p className="text-xs text-blue-200">Update account details and permissions</p>
+                    <p className="text-xs text-slate-500">Update account details and permissions</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white font-bold transition-all"
+                  className="w-8 h-8 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-all shadow-sm"
                 >
                   &times;
                 </button>
               </div>
             </div>
 
-            {/* Modal Body */}
+            {/* Body */}
             <div className="p-6 space-y-6">
               {msg.text && (
                 <div
@@ -522,7 +522,7 @@ const UsersManagement = () => {
                 </div>
               )}
 
-              {/* User Info Display */}
+              {/* User Info Card – Clean */}
               <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-100 space-y-1">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">User</p>
                 <p className="font-semibold text-slate-800">{editingUser.fullName}</p>
@@ -530,7 +530,7 @@ const UsersManagement = () => {
                 {editingUser.phone && <p className="text-sm text-slate-500">{editingUser.phone}</p>}
               </div>
 
-              {/* Form */}
+              {/* Form Fields – Same style as student/teacher edit forms */}
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">Full Name</label>
@@ -607,7 +607,7 @@ const UsersManagement = () => {
               </div>
             </div>
 
-            {/* Modal Footer */}
+            {/* Footer – Clean buttons */}
             <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-3xl">
               <button
                 onClick={() => setShowEditModal(false)}
