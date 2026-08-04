@@ -4,7 +4,7 @@ import { apiFetch } from '../../api/apiClient';
 import { Link } from 'react-router-dom';
 
 const TeachersManagement = () => {
-  const [teachers, setTeachers] = useState([]);
+  const [teachers, setTeachers] = useState([]); // ✅ Always start as empty array
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
@@ -22,11 +22,18 @@ const TeachersManagement = () => {
       const res = await apiFetch(`/api/admin/teachers?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setTeachers(data.teachers);
-        setTotalPages(data.totalPages);
+        // ✅ Ensure teachers is always an array
+        setTeachers(data.teachers || []);
+        setTotalPages(data.totalPages || 1);
+      } else {
+        // On error, set empty array to avoid crash
+        setTeachers([]);
+        setTotalPages(1);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching teachers:', err);
+      setTeachers([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -43,6 +50,11 @@ const TeachersManagement = () => {
       console.error(err);
     }
   };
+
+  // ✅ Safe render – if teachers is empty or still loading, show appropriate UI
+  if (loading) {
+    return <div className="py-10 text-center">Loading teachers...</div>;
+  }
 
   return (
     <div className="bg-white p-8 rounded-3xl shadow-xl space-y-6">
@@ -67,23 +79,27 @@ const TeachersManagement = () => {
         />
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="py-10 text-center">Loading...</div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50">
+      {/* Table – safe even if teachers is [] */}
+      <div className="overflow-x-auto rounded-xl border">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Subject</th>
+              <th className="p-3">Qualification</th>
+              <th className="p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {teachers.length === 0 ? (
               <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Subject</th>
-                <th className="p-3">Qualification</th>
-                <th className="p-3">Actions</th>
+                <td colSpan="5" className="p-4 text-center text-slate-400">
+                  No teachers found.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y">
-              {teachers.map(t => (
+            ) : (
+              teachers.map((t) => (
                 <tr key={t._id}>
                   <td className="p-3 font-medium">
                     {t.firstName} {t.lastName}
@@ -100,18 +116,24 @@ const TeachersManagement = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              ))
+            )}
+          </tbody>
+        </table>
+        {totalPages > 1 && (
           <div className="flex justify-center gap-2 p-4">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded-xl text-xs ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`px-3 py-1 rounded-xl text-xs ${p === page ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
+              >
                 {p}
               </button>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
