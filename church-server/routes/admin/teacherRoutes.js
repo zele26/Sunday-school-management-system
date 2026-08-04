@@ -1,4 +1,3 @@
-// routes/admin/teacherRoutes.js
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../../middleware/auth');
@@ -69,11 +68,12 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 
 // ---------- Create Teacher ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
-  // 🔥 DEBUG: Log everything about the request
-  console.log('📥 [POST /api/admin/teachers] Received request');
-  console.log('📥 Headers:', req.headers);
-  console.log('📥 Body:', req.body);
-  console.log('📥 Content-Type:', req.headers['content-type']);
+  // 🔥 DEBUG – Log everything
+  console.log('=========================================');
+  console.log('🔴 [POST /api/admin/teachers] Received request');
+  console.log('🔴 Content-Type:', req.headers['content-type']);
+  console.log('🔴 req.body:', JSON.stringify(req.body, null, 2));
+  console.log('=========================================');
 
   try {
     const {
@@ -94,17 +94,29 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       coursesTaught,
     } = req.body;
 
+    console.log('🔴 Destructured fields:');
+    console.log('  firstName:', firstName);
+    console.log('  middleName:', middleName);
+    console.log('  lastName:', lastName);
+    console.log('  email:', email);
+    console.log('  password:', password ? '***' : 'missing');
+    console.log('  subject:', subject);
+
     // Build fullName
     const fullName = [firstName, middleName, lastName]
       .filter(Boolean)
       .map(s => s.trim())
       .join(' ');
 
-    console.log('📥 Parsed: fullName=', fullName, 'email=', email, 'password=', password ? '***' : 'missing');
+    console.log('🔴 Constructed fullName:', fullName);
 
     // Validate
     if (!fullName || !email || !password) {
       console.log('❌ Validation failed – missing fields');
+      console.log('  fullName:', fullName);
+      console.log('  email:', email);
+      console.log('  password:', password ? 'present' : 'missing');
+      
       return res.status(400).json({
         success: false,
         message: 'Full name, email, and password are required.'
@@ -160,6 +172,8 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       userId: newUser._id,
       coursesTaught: Array.isArray(coursesTaught) ? coursesTaught : [],
     });
+
+    console.log('✅ Teacher created successfully:', teacher.teacherId);
 
     res.status(201).json({
       success: true,
