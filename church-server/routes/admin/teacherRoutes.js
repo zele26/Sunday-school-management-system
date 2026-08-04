@@ -68,10 +68,14 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- Create Teacher ----------
+// ---------- Create Teacher ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
+    // Destructure all fields from req.body
     const {
-      fullName,
+      firstName,
+      middleName,
+      lastName,
       email,
       phone,
       password,
@@ -86,6 +90,13 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       coursesTaught,
     } = req.body;
 
+    // Build fullName from individual name parts
+    const fullName = [firstName, middleName, lastName]
+      .filter(Boolean)
+      .map(s => s.trim())
+      .join(' ');
+
+    // Validate required fields
     if (!fullName || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -93,6 +104,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Check existing user
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
@@ -101,6 +113,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -117,14 +130,16 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       address: address || '',
     });
 
+    // Generate teacherId
     const teacherId = await generateTeacherId();
 
     // Create Teacher profile
     const teacher = await Teacher.create({
       teacherId,
       fullName,
-      firstName: fullName.split(' ')[0] || '',
-      lastName: fullName.split(' ').slice(1).join(' ') || '',
+      firstName: firstName?.trim() || '',
+      middleName: middleName?.trim() || '',
+      lastName: lastName?.trim() || '',
       email: email.toLowerCase(),
       phone: phone || '',
       subject: subject || '',
