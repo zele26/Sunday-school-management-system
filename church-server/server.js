@@ -21,6 +21,15 @@ const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
 
 const app = express();
 
+// TEST ROUTE – echo the body back
+app.post('/api/test-body', (req, res) => {
+  console.log('🔵 [TEST] req.body:', req.body);
+  res.json({
+    received: req.body,
+    headers: req.headers['content-type']
+  });
+});
+
 // --- MIDDLEWARE ---
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
