@@ -108,9 +108,9 @@ const TeachersManagement = () => {
                   <td className="p-3">{t.subject || '-'}</td>
                   <td className="p-3">{t.qualification || '-'}</td>
                   <td className="p-3 flex gap-2">
-                    <Link to={`/admin/edit-teacher/${t._id}`} className="text-blue-600 text-xs">
-                      Edit
-                    </Link>
+                   <Link to={`/admin/edit-teacher/${t._id}`} className="text-blue-600 text-xs hover:underline">
+                     Edit
+                   </Link>
                     <button onClick={() => handleDelete(t._id)} className="text-red-600 text-xs">
                       Delete
                     </button>
