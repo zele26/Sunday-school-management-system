@@ -655,4 +655,26 @@ router.delete('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+
+// Temporary debug route – remove after testing
+router.get('/debug/raw', protect, authorize('admin'), async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    
+    // Count using native driver
+    const count = await db.collection('students').countDocuments({});
+    const sample = await db.collection('students').find({}).limit(2).toArray();
+    
+    res.json({ 
+      collectionName: 'students', 
+      count, 
+      sample,
+      dbName: db.databaseName 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
