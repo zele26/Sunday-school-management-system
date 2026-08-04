@@ -13,6 +13,7 @@ const navItems = [
   { path: '/admin/courses', label: 'Courses', icon: '📚' },
   { path: '/admin/announcements', label: 'Announcements', icon: '📢' },
   { path: '/admin/resources', label: 'Resources', icon: '📄' },
+  { path: '/admin/resource-approval', label: 'Resource Approval', icon: '✅' },
   // { path: '/admin/attendance', label: 'Attendance', icon: '📝' },
   { path: '/admin/reports', label: 'Reports', icon: '📊' },
   { path: '/admin/complaints', label: 'Complaints', icon: '⚠️' },

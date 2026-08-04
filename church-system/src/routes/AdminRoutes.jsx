@@ -25,6 +25,7 @@ import PasswordResets from '../features/admin/PasswordResets';
 import TeachersManagement from '../features/admin/TeachersManagement';
 import EditTeacher from '../features/admin/EditTeacher';
 import EditStudent from '../features/admin/EditStudent';
+import ResourceApproval from '../features/admin/ResourceApproval';
 
 export default function AdminRoutes() {
   return (
@@ -52,6 +53,7 @@ export default function AdminRoutes() {
       <Route path="add-teacher" element={<AddTeacher />} />
       <Route path="edit-teacher/:id" element={<EditTeacher />} />
       <Route path="password-resets" element={<PasswordResets />} />
+      <Route path="resource-approval" element={<ResourceApproval />} />
     </Routes>
   );
 }
