@@ -73,11 +73,11 @@ const userSchema = new mongoose.Schema(
 
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
-    status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected', 'Active'],
-    default: 'pending',
-},
+    //status: {
+    //type: String,
+   // enum: ['pending', 'approved', 'rejected', 'Active'],
+    //default: 'pending',
+//},
   },
   { timestamps: true }
 );
