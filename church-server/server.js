@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser'); // ✅ Added body-parser
 const connectToDatabase = require('./config/db');
 
 // --- ROUTE IMPORTS ---
@@ -21,18 +22,9 @@ const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
 
 const app = express();
 
-// TEST ROUTE – echo the body back
-app.post('/api/test-body', (req, res) => {
-  console.log('🔵 [TEST] req.body:', req.body);
-  res.json({
-    received: req.body,
-    headers: req.headers['content-type']
-  });
-});
-
 // --- MIDDLEWARE ---
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' })); // ✅ body-parser
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 app.use(cors({
@@ -57,8 +49,18 @@ app.get('/', (req, res) => {
   res.send('Church Management System API is running.');
 });
 
+// --- TEST ENDPOINT (to verify body parsing) ---
+app.post('/api/test-body', (req, res) => {
+  console.log('🔵 [TEST] req.body:', req.body);
+  res.json({
+    received: req.body,
+    contentType: req.headers['content-type']
+  });
+});
+
 // --- ROUTE MOUNTING ---
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/teachers', teacherAdminRoutes); // ✅ Mounted before adminRoutes
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/students', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
@@ -68,9 +70,6 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/attendance', attendanceRoutes);
-
-// ✅ Explicit JSON parser for this route
-app.use('/api/admin/teachers', express.json({ limit: '50mb' }), teacherAdminRoutes);
 
 // Health Check
 app.get('/api/test', (req, res) => {
