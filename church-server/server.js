@@ -10,7 +10,8 @@ const connectToDatabase = require('./config/db');
 // --- ROUTE IMPORTS ---
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const studentRoutes = require('./routes/admin/studentRoutes');
+const adminStudentRoutes = require('./routes/admin/studentRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
@@ -62,7 +63,8 @@ app.post('/api/test-body', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/teachers', teacherAdminRoutes); // ✅ Mounted before adminRoutes
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin/students', studentRoutes);
+app.use('/api/admin/students', adminStudentRoutes);
+app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/assignments', assignmentRoutes);
