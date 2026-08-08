@@ -63,36 +63,37 @@ const ContinueRegistrationContent = () => {
   };
 
   const handleFileUpload = async () => {
-    if (!receiptFile) {
-      setError('እባክዎ ደረሰኝ ይምረጡ (Please select a receipt)');
-      return;
+  if (!receiptFile) {
+    setError('እባክዎ ደረሰኝ ይምረጡ (Please select a receipt)');
+    return;
+  }
+  setError('');
+  setMessage('');
+  setUploading(true);
+
+  const fd = new FormData();
+  fd.append('file', receiptFile);
+  fd.append('registrationNumber', registration.registrationNumber);   // ← ADD THIS LINE
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/upload/receipt`, {
+      method: 'POST',
+      body: fd,
+    });
+    const data = await res.json();
+
+    if (data.url) {
+      setReceiptUrl(data.url);
+      setMessage(data.message || 'ደረሰኝ በተሳካ ሁኔታ ተልኳል (Receipt uploaded successfully)');
+    } else {
+      setError(data.message || 'ደረሰኝ መላክ አልተሳካም (Upload failed)');
     }
-    setError('');
-    setMessage('');
-    setUploading(true);
-    
-    const fd = new FormData();
-    fd.append('file', receiptFile);
-    
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/upload/receipt`, {
-        method: 'POST',
-        body: fd,
-      });
-      const data = await res.json();
-      
-      if (data.url) {
-        setReceiptUrl(data.url);
-        setMessage('ደረሰኝ በተሳካ ሁኔታ ተልኳል (Receipt uploaded successfully)');
-      } else {
-        setError('ደረሰኝ መላክ አልተሳካም (Upload failed)');
-      }
-    } catch (err) {
-      setError('የአውታረ መረብ ስህተት (Network error during upload)');
-    } finally {
-      setUploading(false);
-    }
-  };
+  } catch (err) {
+    setError('የአውታረ መረብ ስህተት (Network error during upload)');
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleSubmitReceipt = async () => {
     if (!receiptUrl) {
