@@ -4,7 +4,6 @@ const router = express.Router();
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
-const Registration = require('../models/Registration');   // 👈 added back for validation
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -68,29 +67,14 @@ router.delete('/cloudinary/:publicId', protect, async (req, res) => {
   }
 });
 
-// ---------- Receipt Upload (PUBLIC with validation) ----------
+// ---------- Receipt Upload (PUBLIC – no validation, just upload) ----------
 router.post('/receipt', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const { registrationNumber } = req.body;
-    if (!registrationNumber) {
-      return res.status(400).json({ message: 'Registration number is required' });
-    }
-
-    // Validate that the registration exists and is in the correct state
-    const registration = await Registration.findOne({ registrationNumber });
-    if (!registration) {
-      return res.status(404).json({ message: 'Registration not found' });
-    }
-
-    if (registration.status !== 'Pending Payment') {
-      return res.status(400).json({ message: 'Receipt already uploaded or registration is in an invalid state' });
-    }
-
-    // Upload file to Cloudinary – no status change, just the URL
+    // Upload file to Cloudinary – no registration lookup, no status change
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
@@ -99,7 +83,7 @@ router.post('/receipt', upload.single('file'), async (req, res) => {
       resource_type: 'auto',
     });
 
-    // Return only the URL; the finalize step will update the registration
+    // Return only the secure URL; finalize step will use it
     res.json({ url: result.secure_url });
   } catch (err) {
     res.status(500).json({ message: err.message });
