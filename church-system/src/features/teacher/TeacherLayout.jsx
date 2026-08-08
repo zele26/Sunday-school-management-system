@@ -32,7 +32,7 @@ const navItems = [
           </div>
           <div>
             <h1 className="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-emerald-100 to-teal-200">
-              ተክለሃይማኖት ሰንበት ትምህርት ቤት
+              ተክለሳዊሮስ ሰንበት ትምህርት ቤት
             </h1>
             <p className="text-[10px] text-emerald-300 font-medium">የመምህራን መድረክ (Teacher Portal)</p>
           </div>
