@@ -290,6 +290,7 @@
 
 // routes/admin/studentRoutes.js
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const User = require('../../models/User');
 const Student = require('../../models/Student');
@@ -510,13 +511,34 @@ router.post('/generate-qr', protect, authorize('admin'), async (req, res) => {
 router.put('/:id/assign-teacher', protect, authorize('admin'), async (req, res) => {
   try {
     const { teacherId } = req.body;
-    if (!teacherId) return res.status(400).json({ success: false, message: 'Teacher ID required' });
+    const studentId = req.params.id;
+
+    console.log('🔵 assign-teacher request', {
+      userId: req.user?._id,
+      userRole: req.user?.role,
+      studentId,
+      teacherId,
+    });
+
+    if (!teacherId) {
+      return res.status(400).json({ success: false, message: 'Teacher ID required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ success: false, message: 'Invalid teacher ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid student ID format' });
+    }
 
     const teacher = await User.findOne({ _id: teacherId, role: 'teacher' });
-    if (!teacher) return res.status(400).json({ success: false, message: 'Invalid teacher' });
+    if (!teacher) {
+      return res.status(400).json({ success: false, message: 'Invalid teacher' });
+    }
 
     const student = await Student.findByIdAndUpdate(
-      req.params.id,
+      studentId,
       { teacher: teacherId },
       { new: true }
     ).populate('teacher', 'fullName email');
@@ -525,6 +547,7 @@ router.put('/:id/assign-teacher', protect, authorize('admin'), async (req, res) 
 
     res.json({ success: true, student });
   } catch (err) {
+    console.error('assign-teacher error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
