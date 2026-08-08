@@ -1158,7 +1158,12 @@ const StudentsManagement = () => {
             >
               <option value="">Select teacher</option>
               {teachers.map(t => (
-                <option key={t._id} value={t.userId}>{t.fullName} ({t.email})</option>
+                <option
+                  key={t._id}
+                  value={typeof t.userId === 'object' ? t.userId._id : t.userId}
+                >
+                  {t.userId?.fullName || t.fullName} ({t.userId?.email || t.email})
+                </option>
               ))}
             </select>
             <div className="flex justify-end gap-3 pt-2">
