@@ -4,7 +4,7 @@ const router = express.Router();
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
-const Registration = require('../models/Registration');
+const Registration = require('../models/Registration');   // 👈 added back for validation
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -68,7 +68,7 @@ router.delete('/cloudinary/:publicId', protect, async (req, res) => {
   }
 });
 
-// ---------- Receipt Upload (for distance payments – PUBLIC) ----------
+// ---------- Receipt Upload (PUBLIC with validation) ----------
 router.post('/receipt', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -80,18 +80,17 @@ router.post('/receipt', upload.single('file'), async (req, res) => {
       return res.status(400).json({ message: 'Registration number is required' });
     }
 
-    // Find the registration
+    // Validate that the registration exists and is in the correct state
     const registration = await Registration.findOne({ registrationNumber });
     if (!registration) {
       return res.status(404).json({ message: 'Registration not found' });
     }
 
-    // Only allow receipt upload if the status is "Pending Payment"
     if (registration.status !== 'Pending Payment') {
       return res.status(400).json({ message: 'Receipt already uploaded or registration is in an invalid state' });
     }
 
-    // Upload file to Cloudinary
+    // Upload file to Cloudinary – no status change, just the URL
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
@@ -100,15 +99,8 @@ router.post('/receipt', upload.single('file'), async (req, res) => {
       resource_type: 'auto',
     });
 
-    // Update the registration record
-    registration.receiptUrl = result.secure_url;
-    registration.status = 'Pending Verification';
-    await registration.save();
-
-    res.json({
-      url: result.secure_url,
-      message: 'Receipt uploaded successfully. Your registration is now pending verification.',
-    });
+    // Return only the URL; the finalize step will update the registration
+    res.json({ url: result.secure_url });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
