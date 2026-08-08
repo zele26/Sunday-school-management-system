@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
 const Attendance = require('../models/Attendance');
+const Teacher = require('../models/Teacher');
 
 // All routes require a valid token and teacher (or admin) role
 router.use(protect);
@@ -16,7 +17,11 @@ router.get('/profile', async (req, res) => {
     // req.user already has the full user object (excluding password)
     const user = req.user;
     // Optionally return courses count, students count, etc.
-    const coursesCount = await Course.countDocuments({ teacher: user._id });
+    const teacherDoc = await Teacher.findOne({ userId: user._id }).select('_id');
+    const teacherIds = [user._id];
+    if (teacherDoc) teacherIds.push(teacherDoc._id);
+
+    const coursesCount = await Course.countDocuments({ teacher: { $in: teacherIds } });
     const studentsCount = await Student.countDocuments({ teacher: user._id });
 
     res.json({
@@ -35,9 +40,16 @@ router.get('/profile', async (req, res) => {
 // ---------- My Courses (courses taught by the logged-in teacher) ----------
 router.get('/my-courses', async (req, res) => {
   try {
-    const courses = await Course.find({ teacher: req.user._id })
+    const teacherDoc = await Teacher.findOne({ userId: req.user._id }).select('_id');
+    const teacherIds = [req.user._id];
+    if (teacherDoc) {
+      teacherIds.push(teacherDoc._id);
+    }
+
+    const courses = await Course.find({ teacher: { $in: teacherIds } })
       .populate('teacher', 'fullName email')
       .sort({ createdAt: -1 });
+
     res.json(courses);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -148,8 +160,12 @@ router.get('/dashboard-stats', async (req, res) => {
   try {
     const Student = require('../models/Student');
     const Course = require('../models/Course');
+    const teacherDoc = await Teacher.findOne({ userId: req.user._id }).select('_id');
+    const teacherIds = [req.user._id];
+    if (teacherDoc) teacherIds.push(teacherDoc._id);
+
     const studentsCount = await Student.countDocuments({ teacher: req.user._id });
-    const coursesCount = await Course.countDocuments({ teacher: req.user._id });
+    const coursesCount = await Course.countDocuments({ teacher: { $in: teacherIds } });
     res.json({ studentsCount, coursesCount });
   } catch (err) {
     res.status(500).json({ message: err.message });
