@@ -66,7 +66,7 @@ const CoursesManagement = () => {
       const res = await apiFetch('/api/admin/teachers');
       if (res.ok) {
         const data = await res.json();
-        setTeachers(data);
+        setTeachers(data.teachers || []);
       }
     } catch (err) {
       console.error(err);
@@ -464,9 +464,15 @@ const CoursesManagement = () => {
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     >
                       <option value="">መምህር ይምረጡ (Select Teacher)</option>
-                      {teachers.map(t => (
-                        <option key={t._id} value={t._id}>{t.fullName}</option>
-                      ))}
+                      {teachers.map(t => {
+                        const teacherUserId = typeof t.userId === 'object' ? t.userId._id : t.userId;
+                        const teacherLabel = t.userId?.fullName || t.fullName || 'Unknown Teacher';
+                        return (
+                          <option key={teacherUserId || t._id} value={teacherUserId || t._id}>
+                            {teacherLabel}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 

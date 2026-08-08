@@ -806,18 +806,34 @@ const StudentsManagement = () => {
   };
 
   const assignTeacher = async () => {
-    if (!selectedStudent || !assignedTeacherId) return;
+    if (!selectedStudent || !assignedTeacherId) {
+      console.warn('assignTeacher skipped: missing selectedStudent or assignedTeacherId', { selectedStudent, assignedTeacherId });
+      return;
+    }
+
     try {
+      console.log('assignTeacher request', {
+        studentId: selectedStudent._id,
+        teacherId: assignedTeacherId,
+      });
+
       const res = await apiFetch(`/api/admin/students/${selectedStudent._id}/assign-teacher`, {
         method: 'PUT',
         body: JSON.stringify({ teacherId: assignedTeacherId }),
       });
-      if (res.ok) {
-        setShowTeacherModal(false);
-        fetchStudents();
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        console.error('assignTeacher failed', res.status, data);
+        alert(data?.message || `Failed to assign teacher (${res.status})`);
+        return;
       }
+
+      setShowTeacherModal(false);
+      fetchStudents();
     } catch (err) {
-      console.error(err);
+      console.error('assignTeacher error', err);
+      alert('Unable to assign teacher. Check console for details.');
     }
   };
 
@@ -1157,14 +1173,14 @@ const StudentsManagement = () => {
               className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
             >
               <option value="">Select teacher</option>
-              {teachers.map(t => (
-                <option
-                  key={t._id}
-                  value={typeof t.userId === 'object' ? t.userId._id : t.userId}
-                >
-                  {t.userId?.fullName || t.fullName} ({t.userId?.email || t.email})
-                </option>
-              ))}
+              {teachers.map(t => {
+                const teacherUserId = t.userId?._id || t.userId || t._id;
+                return (
+                  <option key={teacherUserId} value={teacherUserId}>
+                    {t.userId?.fullName || t.fullName} ({t.userId?.email || t.email})
+                  </option>
+                );
+              })}
             </select>
             <div className="flex justify-end gap-3 pt-2">
               <button 
