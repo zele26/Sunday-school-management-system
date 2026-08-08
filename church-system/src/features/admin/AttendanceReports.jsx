@@ -87,8 +87,14 @@ const AttendanceReports = () => {
           apiFetch('/api/admin/courses'),
           apiFetch('/api/admin/teachers'),
         ]);
-        if (coursesRes.ok) setCourses(await coursesRes.json());
-        if (teachersRes.ok) setTeachers(await teachersRes.json());
+        if (coursesRes.ok) {
+          const coursesData = await coursesRes.json().catch(() => []);
+          setCourses(Array.isArray(coursesData) ? coursesData : (coursesData.courses || coursesData.data || []));
+        }
+        if (teachersRes.ok) {
+          const teachersData = await teachersRes.json().catch(() => []);
+          setTeachers(Array.isArray(teachersData) ? teachersData : (teachersData.teachers || teachersData.data || []));
+        }
       } catch (err) {
         console.error('Failed to load dropdowns', err);
       }
@@ -120,8 +126,9 @@ const AttendanceReports = () => {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || 'የመገኘት መረጃን ማምጣት አልተቻለም (Failed to fetch attendance)');
       }
-      const data = await res.json();
-      setRecords(data);
+      const data = await res.json().catch(() => []);
+      const normalized = Array.isArray(data) ? data : (data.records || data.attendance || data.data || []);
+      setRecords(normalized);
     } catch (err) {
       setError(err.message);
     } finally {

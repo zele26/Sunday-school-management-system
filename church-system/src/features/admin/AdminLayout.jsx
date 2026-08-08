@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import ErrorBoundary from '../../components/ErrorBoundary';
 
 const navItems = [
   { path: '/admin', label: 'Overview', icon: '🏠', end: true },
@@ -155,7 +156,9 @@ return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto overflow-x-hidden">
       {/* A subtle fade-in animation for page transitions */}
       <div className="animate-in fade-in duration-300">
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </div>
     </main>
 
