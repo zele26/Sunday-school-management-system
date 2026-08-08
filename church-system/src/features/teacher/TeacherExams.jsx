@@ -21,8 +21,25 @@ const TeacherExams = () => {
   };
 
   const fetchCourses = async () => {
-    const res = await apiFetch('/api/teacher/my-courses');
-    if (res.ok) setCourses(await res.json());
+    try {
+      const res = await apiFetch('/api/teacher/my-courses');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Failed to fetch teacher courses:', err);
+        setCourses([]);
+        return;
+      }
+
+      const data = await res.json().catch(() => []);
+      const normalized = Array.isArray(data) ? data : (data.courses || data.data || []);
+      setCourses(normalized);
+      if (!Array.isArray(normalized) || normalized.length === 0) {
+        setMessage('No courses found for your account. Make sure you are assigned to at least one course.');
+      }
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      setCourses([]);
+    }
   };
 
   const handleCreateQuiz = async (e) => {
