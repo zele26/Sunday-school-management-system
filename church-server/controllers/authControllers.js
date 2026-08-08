@@ -234,6 +234,12 @@ const generateAccessToken = (id, role) => {
   });
 };
 
+const generateRefreshToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.REFRESH_TOKEN_SECRET || (process.env.JWT_SECRET || 'fallback_secret_key'), {
+    expiresIn: '30d',
+  });
+};
+
 // ---------- Register (phone required, email optional) ----------
 exports.register = async (req, res) => {
   try {
@@ -348,6 +354,19 @@ exports.login = async (req, res) => {
     }
 
     const accessToken = generateAccessToken(user._id, user.role);
+
+    // Create refresh token and set as httpOnly cookie
+    try {
+      const refreshToken = generateRefreshToken(user._id, user.role);
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+    } catch (cookieErr) {
+      console.error('Failed to set refresh cookie:', cookieErr.message || cookieErr);
+    }
 
     // Fetch studentId if user is a student
     let studentIdValue = null;
