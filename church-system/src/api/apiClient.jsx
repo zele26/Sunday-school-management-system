@@ -57,11 +57,44 @@ export async function apiFetch(url, options = {}) {
   });
 
   // If the response is 401 Unauthorized and we had a token, it's expired
-  if (res.status === 401 && token) {
-    // Clear auth state and redirect to login
-    useAuthStore.getState().logout();
-    window.location.href = '/login';
-    throw new Error('Session expired – please log in again');
+  if (res.status === 401) {
+    // If we had a token, try a refresh flow before forcing logout
+    if (token) {
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json().catch(() => ({}));
+          const newToken = refreshData.accessToken;
+          if (newToken) {
+            // Update the in-memory store and retry the original request
+            const { setAccessToken } = useAuthStore.getState();
+            if (typeof setAccessToken === 'function') setAccessToken(newToken);
+
+            // Rebuild headers with the new token
+            const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` };
+            const retryRes = await fetch(`${API_BASE_URL}${url}`, {
+              ...options,
+              headers: retryHeaders,
+            });
+            return retryRes;
+          }
+        }
+      } catch (err) {
+        console.error('Refresh token request failed', err);
+      }
+
+      // If refresh did not succeed, clear auth and redirect
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+      throw new Error('Session expired – please log in again');
+    }
+
+    // No token to refresh — just return the 401 response so callers can handle it
+    return res;
   }
 
   return res;
