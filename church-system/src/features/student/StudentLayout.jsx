@@ -30,7 +30,7 @@ const StudentLayout = ({ onLogout }) => {
           </div>
           <div>
             <h1 className="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-indigo-300">
-              ተክለሃይማኖት ሰንበት ትምህርት ቤት
+              ተክለሳዊሮስ ሰንበት ትምህርት ቤት
             </h1>
             <p className="text-[10px] text-indigo-300 font-medium">የተማሪዎች ፖርታል (Student Portal)</p>
           </div>
