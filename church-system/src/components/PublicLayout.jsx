@@ -298,6 +298,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import ChurchLogo from '../assets/ChurchLogo.png';
 
 // Inspirational Bible verses & Church Announcements for the sliding ticker
 const tickerItems = [
@@ -421,7 +422,7 @@ const PublicLayout = () => {
               className="flex items-center space-x-3 space-x-reverse group focus:outline-none hover:scale-105 transition-transform duration-300"
             >
               <img 
-                src="/src/assets/ChurchLogo.png" 
+                src={ChurchLogo} 
                 alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
                 className="h-16 w-auto drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
               />
@@ -676,7 +677,7 @@ const PublicLayout = () => {
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center space-x-4 space-x-reverse">
                 <img 
-                  src="/src/assets/ChurchLogo.png" 
+                  src={ChurchLogo} 
                   alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
                   className="h-14 w-auto drop-shadow-lg"
                 />
