@@ -418,21 +418,18 @@ const PublicLayout = () => {
             {/* Logo & Brand Name */}
             <Link 
               to="/" 
-              className="flex items-center space-x-3.5 space-x-reverse group focus:outline-none"
+              className="flex items-center space-x-3 space-x-reverse group focus:outline-none hover:scale-105 transition-transform duration-300"
             >
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-amber-500 rounded-2xl blur opacity-30 group-hover:opacity-75 transition duration-500 group-hover:scale-105" />
-                <div className="relative w-11 h-11 rounded-xl bg-gradient-to-tr from-[var(--brand-blue)] via-blue-600 to-[var(--brand-yellow)] flex items-center justify-center text-white shadow-lg shadow-blue-950/50 group-hover:scale-105 transition-transform duration-300 border border-white/20">
-                  <span className="text-xl font-extrabold drop-shadow">ተ</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-blue-50 to-[var(--brand-yellow)] bg-clip-text text-transparent group-hover:to-yellow-300 transition-colors duration-300">
+              <img 
+                src="/src/assets/ChurchLogo.png" 
+                alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                className="h-16 w-auto drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
+              />
+              <div className="hidden sm:flex flex-col">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[11px] text-[var(--brand-yellow)] font-semibold -mt-1 tracking-wider uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse" />
+                <span className="text-[10px] text-[var(--brand-yellow)] font-bold tracking-wider uppercase">
                   ሰንበት ትምህርት ቤት
                 </span>
               </div>
@@ -677,13 +674,15 @@ const PublicLayout = () => {
             
             {/* Column 1: Brand Info */}
             <div className="md:col-span-2 space-y-4">
-              <div className="flex items-center space-x-3 space-x-reverse">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-emerald-900/50 border border-emerald-400/20">
-                  ተ
-                </div>
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <img 
+                  src="/src/assets/ChurchLogo.png" 
+                  alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                  className="h-14 w-auto drop-shadow-lg"
+                />
                 <div>
-                  <span className="font-extrabold text-xl text-white block leading-none">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
-                  <span className="text-xs text-amber-400 font-medium mt-1 inline-block">የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን</span>
+                  <span className="font-extrabold text-lg text-white block leading-none">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
+                  <span className="text-xs text-[var(--brand-yellow)] font-medium mt-1 inline-block">የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን</span>
                 </div>
               </div>
               <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
