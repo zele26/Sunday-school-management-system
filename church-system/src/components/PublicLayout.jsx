@@ -414,23 +414,34 @@ const PublicLayout = () => {
       {/* 🌟 2. HEADER / NAVIGATION BAR */}
       <header className="sticky top-0 z-40 bg-[var(--brand-blue)]/95 backdrop-blur-xl border-b border-white/10 text-white shadow-2xl shadow-blue-950/40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-24 sm:h-28">
             
             {/* Logo & Brand Name */}
             <Link 
               to="/" 
-              className="flex items-center space-x-3 space-x-reverse group focus:outline-none hover:scale-105 transition-transform duration-300"
+              className="flex items-center space-x-4 space-x-reverse group focus:outline-none transition-all duration-300"
             >
-              <img 
-                src={ChurchLogo} 
-                alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
-                className="h-16 w-auto drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
-              />
-              <div className="hidden sm:flex flex-col">
-                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white">
+              {/* Logo Container with Enhanced Styling */}
+              <div className="relative flex items-center justify-center">
+                {/* Outer glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/40 via-blue-400/20 to-[var(--brand-yellow)]/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 scale-105"></div>
+                
+                {/* Logo frame with border */}
+                <div className="relative p-2 rounded-2xl bg-white/5 border-2 border-white/20 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/60 group-hover:bg-white/10 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/20">
+                  <img 
+                    src={ChurchLogo} 
+                    alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                    className="h-16 sm:h-20 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
+                  />
+                </div>
+              </div>
+
+              {/* Church Name and Subtitle */}
+              <div className="hidden sm:flex flex-col justify-center">
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-white leading-tight group-hover:text-[var(--brand-yellow)] transition-colors duration-300">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[10px] text-[var(--brand-yellow)] font-bold tracking-wider uppercase">
+                <span className="text-[10px] sm:text-xs text-[var(--brand-yellow)] font-bold tracking-wider uppercase mt-0.5 group-hover:text-white transition-colors duration-300">
                   ሰንበት ትምህርት ቤት
                 </span>
               </div>
@@ -674,16 +685,27 @@ const PublicLayout = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
             
             {/* Column 1: Brand Info */}
-            <div className="md:col-span-2 space-y-4">
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <img 
-                  src={ChurchLogo} 
-                  alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
-                  className="h-14 w-auto drop-shadow-lg"
-                />
+            <div className="md:col-span-2 space-y-5">
+              <div className="flex items-center space-x-5 space-x-reverse group">
+                {/* Logo Container with Enhanced Styling */}
+                <div className="relative flex-shrink-0">
+                  {/* Outer glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/50 via-blue-400/30 to-[var(--brand-yellow)]/40 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-all duration-500"></div>
+                  
+                  {/* Logo frame with border */}
+                  <div className="relative p-3 rounded-2xl bg-white/5 border-2 border-white/30 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/80 group-hover:bg-white/15 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/30">
+                    <img 
+                      src={ChurchLogo} 
+                      alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                      className="h-20 sm:h-24 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Text Information */}
                 <div>
-                  <span className="font-extrabold text-lg text-white block leading-none">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
-                  <span className="text-xs text-[var(--brand-yellow)] font-medium mt-1 inline-block">የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን</span>
+                  <span className="font-extrabold text-xl sm:text-2xl text-white block leading-tight group-hover:text-[var(--brand-yellow)] transition-colors duration-300">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
+                  <span className="text-xs sm:text-sm text-[var(--brand-yellow)] font-bold mt-1.5 inline-block group-hover:text-white transition-colors duration-300">የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተ ክርስቲያን</span>
                 </div>
               </div>
               <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
