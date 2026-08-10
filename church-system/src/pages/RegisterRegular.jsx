@@ -5,7 +5,11 @@ const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
 const RegisterRegularContent = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    educationLevel: '',
+    profession: '',
     gender: 'Male',
     dateOfBirth: '',
     phone: '',
@@ -28,12 +32,34 @@ const RegisterRegularContent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const firstName = formData.firstName.trim();
+    const middleName = formData.middleName.trim();
+    const lastName = formData.lastName.trim();
+    const educationLevel = formData.educationLevel.trim();
+    const profession = formData.profession.trim();
+
+    if (!firstName || !middleName || !lastName || !educationLevel || !profession || !formData.phone || !formData.password || !formData.grade) {
+      setError('First name, middle name, last name, education level, profession, phone, grade, and password are required.');
+      return;
+    }
+
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        firstName,
+        middleName,
+        lastName,
+        educationLevel,
+        profession,
+        fullName: [firstName, middleName, lastName].filter(Boolean).join(' '),
+      };
+
       const res = await fetch(`${API_BASE_URL}/api/registrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
@@ -89,13 +115,44 @@ const RegisterRegularContent = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>ሙሉ ስም <span className="text-rose-500">*</span></label>
-                <input type="text" name="fullName" placeholder="የተማሪው ሙሉ ስም" required onChange={handleChange} className={inputClass} />
+                <label className={labelClass}>የመጀመሪያ ስም <span className="text-rose-500">*</span></label>
+                <input type="text" name="firstName" placeholder="የመጀመሪያ ስም" required value={formData.firstName} onChange={handleChange} className={inputClass} />
+              </div>
+
+              <div>
+                <label className={labelClass}>የመካከለኛ ስም <span className="text-rose-500">*</span></label>
+                <input type="text" name="middleName" placeholder="የመካከለኛ ስም" required value={formData.middleName} onChange={handleChange} className={inputClass} />
+              </div>
+
+              <div>
+                <label className={labelClass}>የአባት/የእናት ስም <span className="text-rose-500">*</span></label>
+                <input type="text" name="lastName" placeholder="የአባት/የእናት ስም" required value={formData.lastName} onChange={handleChange} className={inputClass} />
+              </div>
+
+              <div>
+                <label className={labelClass}>የትምህርት ደረጃ <span className="text-rose-500">*</span></label>
+                <select name="educationLevel" required value={formData.educationLevel} onChange={handleChange} className={inputClass}>
+                  <option value="">ይምረጡ</option>
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                  <option value="Diploma">Diploma</option>
+                  <option value="Degree">Degree</option>
+                  <option value="Masters">Masters</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>ሙያ <span className="text-rose-500">*</span></label>
+                <input type="text" name="profession" placeholder="ሙያ" required value={formData.profession} onChange={handleChange} className={inputClass} />
               </div>
               
               <div>
                 <label className={labelClass}>ጾታ <span className="text-rose-500">*</span></label>
-                <select name="gender" onChange={handleChange} className={inputClass}>
+                <select name="gender" value={formData.gender} onChange={handleChange} className={inputClass}>
                   <option value="Male">ወንድ</option>
                   <option value="Female">ሴት</option>
                 </select>
@@ -103,17 +160,17 @@ const RegisterRegularContent = () => {
               
               <div>
                 <label className={labelClass}>የትውልድ ዘመን</label>
-                <input type="date" name="dateOfBirth" onChange={handleChange} className={inputClass} />
+                <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className={inputClass} />
               </div>
               
               <div>
                 <label className={labelClass}>ስልክ ቁጥር <span className="text-rose-500">*</span></label>
-                <input type="tel" name="phone" placeholder="09..." required onChange={handleChange} className={inputClass} />
+                <input type="tel" name="phone" placeholder="09..." required value={formData.phone} onChange={handleChange} className={inputClass} />
               </div>
               
               <div>
                 <label className={labelClass}>የሚገቡበት ክፍል <span className="text-rose-500">*</span></label>
-                <select name="grade" onChange={handleChange} className={inputClass}>
+                <select name="grade" value={formData.grade} onChange={handleChange} className={inputClass}>
                   {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'].map((g) => (
                     <option key={g} value={g}>{g}</option>
                   ))}
@@ -122,7 +179,7 @@ const RegisterRegularContent = () => {
               
               <div className="md:col-span-2">
                 <label className={labelClass}>መኖሪያ አድራሻ</label>
-                <input type="text" name="address" placeholder="የክፍለ ከተማ፣ ወረዳ እና የቤት ቁጥር መረጃ" onChange={handleChange} className={inputClass} />
+                <input type="text" name="address" placeholder="የክፍለ ከተማ፣ ወረዳ እና የቤት ቁጥር መረጃ" value={formData.address} onChange={handleChange} className={inputClass} />
               </div>
             </div>
           </div>

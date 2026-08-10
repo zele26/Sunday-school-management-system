@@ -44,8 +44,10 @@ router.put('/:id/approve', async (req, res) => {
     }
 
     // Create User
+    const fullName = [reg.firstName, reg.middleName, reg.lastName].filter(Boolean).join(' ').trim() || reg.fullName;
+
     const user = await User.create({
-      fullName: reg.fullName,
+      fullName,
       phone: reg.phone,
       email: reg.email || undefined,
       password: reg.password,
@@ -60,8 +62,12 @@ router.put('/:id/approve', async (req, res) => {
     const student = await Student.create({
       userId: user._id,
       studentId,
-      firstName: reg.fullName,
+      firstName: reg.firstName || reg.fullName,
+      middleName: reg.middleName || '',
+      lastName: reg.lastName || '',
       grade: reg.grade,
+      educationLevel: reg.educationLevel || '',
+      profession: reg.profession || '',
       dob: reg.dateOfBirth || '',
       address: reg.address || '',
       parentName: reg.parentName || '',

@@ -54,15 +54,23 @@ const generateStudentId = async (studentType) => {
 router.post('/', upload.single('receipt'), async (req, res) => {
   try {
     const {
-      fullName, gender, dateOfBirth, phone, grade, address,
+      fullName, firstName, middleName, lastName, educationLevel, profession,
+      gender, dateOfBirth, phone, grade, address,
       parentName, parentPhone, parentEmail,
       email, password, studentType,
     } = req.body;
 
-    if (!fullName || !grade || !phone || !password || !studentType) {
+    const normalizedFirstName = (firstName || fullName || '').toString().trim();
+    const normalizedMiddleName = (middleName || '').toString().trim();
+    const normalizedLastName = (lastName || '').toString().trim();
+    const normalizedEducationLevel = (educationLevel || '').toString().trim();
+    const normalizedProfession = (profession || '').toString().trim();
+    const normalizedFullName = [normalizedFirstName, normalizedMiddleName, normalizedLastName].filter(Boolean).join(' ').trim();
+
+    if (!normalizedFullName || !normalizedEducationLevel || !normalizedProfession || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
-        message: 'ሙሉ ስም፣ ክፍል፣ ስልክ ቁጥር፣ ፓስዎርድ እና የተማሪ አይነት ያስፈልጋሉ።',
+        message: 'First name, middle name, last name, education level, profession, grade, phone, password, and student type are required.',
       });
     }
 
@@ -96,7 +104,12 @@ router.post('/', upload.single('receipt'), async (req, res) => {
 
     const registration = await Registration.create({
       registrationNumber,
-      fullName,
+      fullName: normalizedFullName,
+      firstName: normalizedFirstName,
+      middleName: normalizedMiddleName,
+      lastName: normalizedLastName,
+      educationLevel: normalizedEducationLevel,
+      profession: normalizedProfession,
       gender: gender || 'Male',
       dateOfBirth: dateOfBirth || '',
       phone,

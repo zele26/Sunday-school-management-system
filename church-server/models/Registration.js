@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const registrationSchema = new mongoose.Schema({
   registrationNumber: { type: String, unique: true, required: true },
   fullName: { type: String, required: true },
+  firstName: { type: String, required: true },
+  middleName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  educationLevel: { type: String, required: true },
+  profession: { type: String, required: true },
   gender: { type: String, enum: ['Male', 'Female'], default: 'Male' },
   dateOfBirth: { type: String },
   phone: { type: String, required: true },                  // now required

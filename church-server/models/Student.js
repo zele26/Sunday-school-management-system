@@ -10,6 +10,8 @@ const studentSchema = new mongoose.Schema({
   firstName: String,
   middleName: String,
   lastName: String,
+  educationLevel: String,
+  profession: String,
   dob: String,
   address: String,
   grade: String,
