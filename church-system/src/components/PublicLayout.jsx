@@ -414,34 +414,34 @@ const PublicLayout = () => {
       {/* 🌟 2. HEADER / NAVIGATION BAR */}
       <header className="sticky top-0 z-40 bg-[var(--brand-blue)]/95 backdrop-blur-xl border-b border-white/10 text-white shadow-2xl shadow-blue-950/40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-24 sm:h-28">
+          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
             
             {/* Logo & Brand Name */}
             <Link 
               to="/" 
-              className="flex items-center space-x-4 space-x-reverse group focus:outline-none transition-all duration-300"
+              className="flex items-center space-x-2 sm:space-x-4 space-x-reverse group focus:outline-none transition-all duration-300"
             >
               {/* Logo Container with Enhanced Styling */}
-              <div className="relative flex items-center justify-center">
+              <div className="relative flex items-center justify-center flex-shrink-0">
                 {/* Outer glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/40 via-blue-400/20 to-[var(--brand-yellow)]/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 scale-105"></div>
                 
                 {/* Logo frame with border */}
-                <div className="relative p-2 rounded-2xl bg-white/5 border-2 border-white/20 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/60 group-hover:bg-white/10 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/20">
+                <div className="relative p-1 sm:p-2 rounded-2xl bg-white/5 border-2 border-white/20 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/60 group-hover:bg-white/10 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/20">
                   <img 
                     src={ChurchLogo} 
                     alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
-                    className="h-16 sm:h-20 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
+                    className="h-12 sm:h-16 lg:h-20 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Church Name and Subtitle */}
-              <div className="hidden sm:flex flex-col justify-center">
-                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-white leading-tight group-hover:text-[var(--brand-yellow)] transition-colors duration-300">
+              <div className="flex flex-col justify-center min-w-0">
+                <span className="font-extrabold text-sm sm:text-lg lg:text-2xl tracking-tight text-white leading-tight group-hover:text-[var(--brand-yellow)] transition-colors duration-300 truncate">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[10px] sm:text-xs text-[var(--brand-yellow)] font-bold tracking-wider uppercase mt-0.5 group-hover:text-white transition-colors duration-300">
+                <span className="text-[9px] sm:text-[10px] lg:text-xs text-[var(--brand-yellow)] font-bold tracking-wider uppercase mt-0 sm:mt-0.5 group-hover:text-white transition-colors duration-300 truncate">
                   ሰንበት ትምህርት ቤት
                 </span>
               </div>
