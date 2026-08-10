@@ -906,7 +906,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { apiFetch } from '../api/apiClient';
 import bgImage from '../assets/Lidetachurch.jpg';
-import logoImage from '../assets/SundaySchoolLogo.png'; // make sure this file exists
+import logoImage from '../assets/ChurchLogo.png';
 
 const Login = () => {
   const navigate = useNavigate();
