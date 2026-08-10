@@ -374,11 +374,11 @@ const PublicLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white font-sans">
+    <div className="min-h-screen flex flex-col bg-[var(--brand-blue-dark)] text-white selection:bg-[var(--brand-yellow)] selection:text-[var(--brand-blue-dark)] font-sans">
       
       {/* 🌟 1. SLIDING BIBLE VERSE & PROMOTION TICKER */}
       <div 
-        className="relative z-50 bg-slate-900 border-b border-slate-800/80 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
+        className="relative z-50 bg-[var(--brand-blue)] border-b border-white/10 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
         onMouseEnter={() => setIsTickerPaused(true)}
         onMouseLeave={() => setIsTickerPaused(false)}
       >
@@ -411,7 +411,7 @@ const PublicLayout = () => {
       </div>
 
       {/* 🌟 2. HEADER / NAVIGATION BAR */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/80 text-white shadow-2xl shadow-black/40 transition-all">
+      <header className="sticky top-0 z-40 bg-[var(--brand-blue)]/95 backdrop-blur-xl border-b border-white/10 text-white shadow-2xl shadow-blue-950/40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             
@@ -422,17 +422,17 @@ const PublicLayout = () => {
             >
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-amber-500 rounded-2xl blur opacity-30 group-hover:opacity-75 transition duration-500 group-hover:scale-105" />
-                <div className="relative w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-900/50 group-hover:scale-105 transition-transform duration-300 border border-emerald-300/20">
+                <div className="relative w-11 h-11 rounded-xl bg-gradient-to-tr from-[var(--brand-blue)] via-blue-600 to-[var(--brand-yellow)] flex items-center justify-center text-white shadow-lg shadow-blue-950/50 group-hover:scale-105 transition-transform duration-300 border border-white/20">
                   <span className="text-xl font-extrabold drop-shadow">ተ</span>
                 </div>
               </div>
 
               <div className="flex flex-col">
-                <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent group-hover:to-amber-300 transition-colors duration-300">
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-blue-50 to-[var(--brand-yellow)] bg-clip-text text-transparent group-hover:to-yellow-300 transition-colors duration-300">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[11px] text-emerald-400 font-semibold -mt-1 tracking-wider uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[11px] text-[var(--brand-yellow)] font-semibold -mt-1 tracking-wider uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse" />
                   ሰንበት ትምህርት ቤት
                 </span>
               </div>
@@ -523,9 +523,9 @@ const PublicLayout = () => {
                 to="/login"
                 className="relative group overflow-hidden rounded-xl p-px font-semibold text-sm focus:outline-none"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 group-hover:opacity-90 transition-opacity duration-300 animate-pulse" />
-                <div className="relative px-5 py-2.5 rounded-[11px] bg-slate-900 group-hover:bg-opacity-0 transition-all duration-300 flex items-center space-x-2 space-x-reverse text-white">
-                  <svg className="w-4 h-4 text-emerald-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="absolute inset-0 bg-gradient-to-r from-[var(--brand-blue)] via-blue-600 to-[var(--brand-yellow)] group-hover:opacity-90 transition-opacity duration-300 animate-pulse" />
+                <div className="relative px-5 py-2.5 rounded-[11px] bg-[var(--brand-blue-dark)] group-hover:bg-opacity-0 transition-all duration-300 flex items-center space-x-2 space-x-reverse text-white">
+                  <svg className="w-4 h-4 text-[var(--brand-yellow)] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
                   <span>ይግቡ</span>
@@ -618,14 +618,14 @@ const PublicLayout = () => {
       {/* 🌟 3. MAIN CONTENT AREA */}
       <main className="flex-1 relative">
         {/* Subtle decorative background glow for visual depth */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--brand-yellow)]/10 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
         
         <Outlet />
       </main>
 
       {/* 🌟 4. PRE-FOOTER PROMOTION & CTA BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 border-t border-slate-800/80 py-12">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[var(--brand-blue-dark)] via-[var(--brand-blue)] to-blue-950 border-t border-white/10 py-12">
         <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -636,7 +636,7 @@ const PublicLayout = () => {
             <div className="absolute -left-10 -top-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="space-y-3 text-center lg:text-left max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-yellow)]/20 border border-[var(--brand-yellow)]/40 text-[var(--brand-yellow)] text-xs font-semibold">
                 <span>✨ የእግዚአብሔር ቃል ለትውልድ</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
@@ -650,13 +650,13 @@ const PublicLayout = () => {
             <div className="flex flex-col sm:flex-row gap-3.5 w-full lg:w-auto shrink-0">
               <Link
                 to="/register-regular"
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all duration-200 text-center flex items-center justify-center gap-2"
+                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-yellow)] hover:from-blue-700 hover:to-yellow-400 text-white font-bold text-sm shadow-lg shadow-blue-900/30 hover:shadow-yellow-500/40 hover:-translate-y-0.5 transition-all duration-200 text-center flex items-center justify-center gap-2"
               >
                 <span>📝 በመደበኛ ይመዝገቡ</span>
               </Link>
               <Link
                 to="/register-distance"
-                className="px-6 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 hover:text-white font-semibold text-sm border border-slate-600/60 hover:border-slate-500 transition-all duration-200 text-center flex items-center justify-center gap-2"
+                className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/20 hover:border-white/40 transition-all duration-200 text-center flex items-center justify-center gap-2"
               >
                 <span>🌐 በርቀት ይመዝገቡ</span>
               </Link>
@@ -667,9 +667,9 @@ const PublicLayout = () => {
       </section>
 
       {/* 🌟 5. FOOTER SECTION */}
-      <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 pt-14 pb-10 relative overflow-hidden">
+      <footer className="bg-[var(--brand-blue)] text-blue-100 border-t border-white/10 pt-14 pb-10 relative overflow-hidden">
         {/* Subtle top glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-[var(--brand-yellow)]/60 to-transparent" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 relative z-10">
           

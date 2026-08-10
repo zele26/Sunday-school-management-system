@@ -61,21 +61,21 @@ return (
   {/* Mobile Overlay - Darkens background when sidebar is open */}
   {isMobileSidebarOpen && (
     <div 
-      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+      className="fixed inset-0 bg-blue-950/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
       onClick={() => setIsMobileSidebarOpen(false)}
     />
   )}
 
   {/* Sidebar Navigation */}
   <aside 
-    className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+    className={`fixed inset-y-0 left-0 z-50 w-72 bg-[var(--brand-blue-dark)] text-white border-r border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
       isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
     }`}
   >
     {/* Sidebar Header */}
-    <div className="h-16 flex items-center px-6 border-b border-slate-100 shrink-0">
-      <div className="flex items-center gap-3 text-blue-600">
-        <span className="bg-blue-100 p-1.5 rounded-lg text-lg">🛡️</span>
+    <div className="h-16 flex items-center px-6 border-b border-white/10 shrink-0">
+      <div className="flex items-center gap-3 text-[var(--brand-yellow)]">
+        <span className="bg-white/10 p-1.5 rounded-lg text-lg">🛡️</span>
         <span className="text-lg font-bold tracking-tight">Admin Center</span>
       </div>
     </div>
@@ -94,8 +94,8 @@ return (
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
               isActive
-                ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                ? 'bg-[var(--brand-yellow)]/20 text-[var(--brand-yellow)] shadow-sm border border-[var(--brand-yellow)]/30'
+                : 'text-blue-100 hover:bg-white/10 hover:text-white border border-transparent'
             }`
           }
         >
@@ -106,8 +106,8 @@ return (
     </div>
 
     {/* Sidebar Footer (Optional styling area) */}
-    <div className="p-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
-      <div className="text-xs text-center text-slate-400">
+    <div className="p-4 border-t border-white/10 bg-white/10 shrink-0">
+      <div className="text-xs text-center text-blue-100">
         v1.0.0 Dashboard
       </div>
     </div>
