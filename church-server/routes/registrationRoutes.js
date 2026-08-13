@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const Registration = require('../models/Registration');   // ✅  one level up
+const Registration = require('../models/Registration');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
 const multer = require('multer');
@@ -16,7 +16,7 @@ const generateRegNumber = async () => {
   return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
 };
 
-// Ethiopian year suffix (e.g. "18" for 2018)
+// Ethiopian year suffix (e.g. "18" for 2018) – not used here but kept for admin route
 const getEthiopianYearSuffix = () => {
   const now = new Date();
   const gregorianYear = now.getFullYear();
@@ -27,30 +27,9 @@ const getEthiopianYearSuffix = () => {
   return String(ethiopianYear % 100).padStart(2, '0');
 };
 
-// Generate permanent School ID (e.g., TKR‑0001/18 or TKD‑0001/18)
-const generateStudentId = async (studentType) => {
-  const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
-  const yearSuffix = getEthiopianYearSuffix();
-
-  const lastStudent = await Registration.findOne({
-    studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
-  })
-    .sort({ studentId: -1 })
-    .limit(1);
-
-  let lastNumber = 0;
-  if (lastStudent && lastStudent.studentId) {
-    const parts = lastStudent.studentId.split('/')[0].split('-');
-    lastNumber = parseInt(parts[1]) || 0;
-  }
-
-  const newNumber = String(lastNumber + 1).padStart(4, '0');
-  return `${prefix}-${newNumber}/${yearSuffix}`;
-};
-
 // ---------- PUBLIC ROUTES ----------
 
-// POST /api/registrations – submit registration (phone required, email optional)
+// POST /api/registrations – submit registration
 router.post('/', upload.single('receipt'), async (req, res) => {
   try {
     const {
@@ -100,8 +79,8 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     }
 
     const registrationNumber = await generateRegNumber();
-    const studentId = await generateStudentId(studentType);
 
+    // ✅ Do NOT generate studentId at this stage
     const registration = await Registration.create({
       registrationNumber,
       fullName: normalizedFullName,
@@ -122,7 +101,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       password: hashedPassword,
       studentType,
       receiptUrl,
-      studentId,
+      // studentId intentionally omitted – will be set on approval
       status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
     });
 
@@ -133,7 +112,6 @@ router.post('/', upload.single('receipt'), async (req, res) => {
         : 'ምዝገባዎ ተቀባይነት አግኝቷል። ማረጋገጫውን ይጠብቁ።',
       registration: {
         registrationNumber: registration.registrationNumber,
-        studentId: registration.studentId,
         status: registration.status,
       },
     });
@@ -160,14 +138,14 @@ router.post('/login', async (req, res) => {
       status: reg.status,
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
-      studentId: reg.studentId,
+      studentId: reg.studentId || null,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET /api/registrations/payment-info (unchanged)
+// GET /api/registrations/payment-info
 router.get('/payment-info', async (req, res) => {
   try {
     const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
@@ -178,7 +156,7 @@ router.get('/payment-info', async (req, res) => {
   }
 });
 
-// PUT /api/registrations/upload-receipt (unchanged)
+// PUT /api/registrations/upload-receipt
 router.put('/upload-receipt', async (req, res) => {
   try {
     const { registrationNumber, transactionRef, receiptUrl } = req.body;

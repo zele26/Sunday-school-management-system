@@ -1,27 +1,66 @@
+// church-server/routes/admin/registrationRoutes.js
 const express = require('express');
 const router = express.Router();
 const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const Student = require('../../models/Student');
 const crypto = require('crypto');
+const { protect, authorize } = require('../../middleware/auth');
 
-// ---------- List pending ----------
-router.get('/', async (req, res) => {
+// ---------- Helper: Ethiopian year (full, e.g., 2018) ----------
+const getEthiopianYear = () => {
+  const now = new Date();
+  const gregorianYear = now.getFullYear();
+  // Ethiopian New Year is Meskerem 1 (September 11/12)
+  const ethiopianYear =
+    now >= new Date(gregorianYear, 8, 11)
+      ? gregorianYear - 7
+      : gregorianYear - 8;
+  return ethiopianYear;
+};
+
+// ---------- Helper: generate official Student ID ----------
+const generateStudentId = async (studentType) => {
+  const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
+  const year = getEthiopianYear();
+
+  // Find the last student with this prefix, ordered by studentId descending
+  const lastStudent = await Registration.findOne({
+    studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
+  })
+    .sort({ studentId: -1 })
+    .limit(1);
+
+  let lastNumber = 0;
+  if (lastStudent && lastStudent.studentId) {
+    // Format: PREFIX-YEAR-NUMBER (e.g., TKD-2018-0001)
+    const parts = lastStudent.studentId.split('-');
+    if (parts.length === 3) {
+      lastNumber = parseInt(parts[2]) || 0;
+    }
+  }
+
+  const newNumber = String(lastNumber + 1).padStart(4, '0');
+  return `${prefix}-${year}-${newNumber}`;
+};
+
+// ---------- List pending (protected) ----------
+router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
     const registrations = await Registration.find({ status: 'Pending Verification' }).sort({ createdAt: -1 });
-    res.json(registrations);
+    res.json({ success: true, registrations });
   } catch (err) {
     console.error('List error:', err);
     res.status(500).json({ success: false, message: 'Server error while fetching registrations' });
   }
 });
 
-// ---------- Approve ----------
-router.put('/:id/approve', async (req, res) => {
+// ---------- Approve (protected) ----------
+router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
   try {
     const reg = await Registration.findById(req.params.id);
     if (!reg || reg.status !== 'Pending Verification')
-      return res.status(400).json({ message: 'ምዝገባው ለማጽደቅ ዝግጁ አይደለም' });
+      return res.status(400).json({ success: false, message: 'ምዝገባው ለማጽደቅ ዝግጁ አይደለም' });
 
     // Check duplicate email if provided
     if (reg.email && reg.email.trim() !== '') {
@@ -29,7 +68,7 @@ router.put('/:id/approve', async (req, res) => {
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: `ኢሜይል "${reg.email}" ቀድሞውኑ ሌላ ተጠቃሚ ይጠቀምበታል። እባክዎ ይህን ምዝገባ ውድቅ ያድርጉ እና ተማሪው ሌላ ኢሜይል እንዲጠቀም ያሳውቁ።`
+          message: `ኢሜይል "${reg.email}" ቀድሞውኑ ሌላ ተጠቃሚ ይጠቀምበታል።`
         });
       }
     }
@@ -55,9 +94,8 @@ router.put('/:id/approve', async (req, res) => {
       status: 'approved',
     });
 
-    // Generate Student ID and QR code
-    const studentId = `STU-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
-    const qrCodeValue = crypto.randomUUID();
+    // ✅ Generate official student ID using new format
+    const studentId = await generateStudentId(reg.studentType);
 
     const student = await Student.create({
       userId: user._id,
@@ -73,16 +111,17 @@ router.put('/:id/approve', async (req, res) => {
       parentName: reg.parentName || '',
       parentPhone: reg.parentPhone || '',
       parentEmail: reg.parentEmail || '',
-      qrCode: qrCodeValue,
+      qrCode: crypto.randomUUID(),
       studentType: reg.studentType,
+      registrationNumber: reg.registrationNumber,
     });
 
-    // Update registration status – skip validation in case old records miss required fields
+    // Update registration status
     reg.status = 'Approved';
     reg.studentId = studentId;
     reg.reviewedBy = req.user._id;
     reg.reviewedAt = new Date();
-    await reg.save({ validateBeforeSave: false });   // <-- FIXED
+    await reg.save({ validateBeforeSave: false });
 
     res.json({ success: true, message: 'ምዝገባው ጸድቋል። የተማሪ መለያ ተሰጥቷል።', studentId });
   } catch (err) {
@@ -91,18 +130,18 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// ---------- Reject ----------
-router.put('/:id/reject', async (req, res) => {
+// ---------- Reject (protected) ----------
+router.put('/:id/reject', protect, authorize('admin'), async (req, res) => {
   try {
     const { reason } = req.body;
     const reg = await Registration.findById(req.params.id);
-    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+    if (!reg) return res.status(404).json({ success: false, message: 'ምዝገባ አልተገኘም' });
 
     reg.status = 'Rejected';
     reg.rejectionReason = reason || '';
     reg.reviewedBy = req.user._id;
     reg.reviewedAt = new Date();
-    await reg.save({ validateBeforeSave: false });   // <-- FIXED
+    await reg.save({ validateBeforeSave: false });
 
     res.json({ success: true, message: 'ምዝገባው ውድቅ ተደርጓል' });
   } catch (err) {
