@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
+import useAuthStore from '../../store/authStore';
 
 const StudentsManagement = () => {
   const navigate = useNavigate();

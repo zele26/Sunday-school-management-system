@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
+import useAuthStore from '../../store/authStore';
 
 const StudentProfile = () => {
   const [profile, setProfile] = useState(null);
