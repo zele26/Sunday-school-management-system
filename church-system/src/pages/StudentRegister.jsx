@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import bgImage from '../assets/Lidetachurch.jpg';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { API_BASE_URL } from '../api/apiClient';
 
 const StudentRegister = () => {
   const [step, setStep] = useState('form');

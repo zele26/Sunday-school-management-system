@@ -104,11 +104,10 @@ const RegistrationsManagement = () => {
       </div>
 
       {message.text && (
-        <div className={`p-3 rounded-xl text-sm ${
-          message.type === 'success'
+        <div className={`p-3 rounded-xl text-sm ${message.type === 'success'
             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
             : 'bg-rose-50 text-rose-700 border border-rose-200'
-        }`}>
+          }`}>
           {message.text}
         </div>
       )}
@@ -140,11 +139,10 @@ const RegistrationsManagement = () => {
                   <td className="py-2 px-2 font-medium">{r.fullName}</td>
                   <td className="py-2 px-2">{r.grade}</td>
                   <td className="py-2 px-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      r.studentType === 'distance'
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${r.studentType === 'distance'
                         ? 'bg-amber-100 text-amber-700'
                         : 'bg-emerald-100 text-emerald-700'
-                    }`}>
+                      }`}>
                       {r.studentType}
                     </span>
                   </td>
@@ -195,11 +193,10 @@ const RegistrationsManagement = () => {
               </div>
               <div>
                 <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Student Type</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                  selectedRegistration.studentType === 'distance'
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${selectedRegistration.studentType === 'distance'
                     ? 'bg-amber-100 text-amber-700'
                     : 'bg-emerald-100 text-emerald-700'
-                }`}>
+                  }`}>
                   {selectedRegistration.studentType}
                 </span>
               </div>
@@ -247,29 +244,50 @@ const RegistrationsManagement = () => {
                 <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Phone</span>
                 <span className="text-slate-800">{selectedRegistration.phone}</span>
               </div>
+              <div>
+                <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Email</span>
+                <span className="text-slate-800">{selectedRegistration.email || '-'}</span>
+              </div>
               <div className="col-span-2">
                 <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Address</span>
                 <span className="text-slate-800">{selectedRegistration.address || '-'}</span>
               </div>
             </div>
 
-            {/* Parent / Guardian */}
+            {/* Emergency Contact */}
+            {/* Emergency Contact */}
             <div>
               <h4 className="font-bold text-slate-700 uppercase text-xs tracking-wider mb-3 border-b border-slate-100 pb-2">
-                ወላጅ / አሳዳጊ መረጃ
+                የአደጋ ጊዜ ተጠሪ (Emergency Contact)
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Parent Name</span>
-                  <span className="text-slate-800">{selectedRegistration.parentName || '-'}</span>
+                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Name</span>
+                  <span className="text-slate-800">
+                    {selectedRegistration.emergencyFirstName || selectedRegistration.parentName || '-'}{' '}
+                    {selectedRegistration.emergencyMiddleName || ''}{' '}
+                    {selectedRegistration.emergencyLastName || ''}
+                  </span>
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Parent Phone</span>
-                  <span className="text-slate-800">{selectedRegistration.parentPhone || '-'}</span>
+                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Relationship</span>
+                  <span className="text-slate-800">{selectedRegistration.relationship || 'Father'}</span>
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Parent Email</span>
-                  <span className="text-slate-800">{selectedRegistration.parentEmail || '-'}</span>
+                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Phone</span>
+                  <span className="text-slate-800">
+                    {selectedRegistration.emergencyPhone || selectedRegistration.parentPhone || '-'}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Email</span>
+                  <span className="text-slate-800">
+                    {selectedRegistration.emergencyEmail || selectedRegistration.parentEmail || '-'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="font-semibold text-slate-400 uppercase text-xs block mb-1">Address</span>
+                  <span className="text-slate-800">{selectedRegistration.emergencyAddress || '-'}</span>
                 </div>
               </div>
             </div>

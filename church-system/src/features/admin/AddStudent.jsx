@@ -1,7 +1,6 @@
 // src/features/admin/AddStudent.jsx
 import React, { useState } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 
 const AddStudent = () => {
   const [loading, setLoading] = useState(false);

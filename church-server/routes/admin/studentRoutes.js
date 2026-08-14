@@ -371,26 +371,37 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- List students (with search, filter, pagination) ----------
-// ✅ Fixed: added authentication, search trim, and success wrapper
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const { search, grade, page = 1, limit = 20 } = req.query;
+    const { search, grade, studentType, page = 1, limit = 20 } = req.query;
     const query = {};
 
-    // ✅ Only search if search term is provided and not empty
+    // Search by name (Student fields) or email (User fields)
     if (search && search.trim()) {
+      const s = search.trim();
+      // Find users matching name/email
       const userQuery = {
         $or: [
-          { fullName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { fullName: { $regex: s, $options: 'i' } },
+          { email: { $regex: s, $options: 'i' } }
         ]
       };
       const users = await User.find(userQuery).select('_id');
       const userIds = users.map(u => u._id);
-      query.userId = { $in: userIds };
+
+      // Also search directly on Student name fields
+      query.$or = [
+        { userId: { $in: userIds } },
+        { firstName: { $regex: s, $options: 'i' } },
+        { middleName: { $regex: s, $options: 'i' } },
+        { lastName: { $regex: s, $options: 'i' } },
+        { studentId: { $regex: s, $options: 'i' } },
+        { studentPhone: { $regex: s, $options: 'i' } },
+      ];
     }
 
     if (grade) query.grade = grade;
+    if (studentType) query.studentType = studentType;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await Student.countDocuments(query);
@@ -402,7 +413,6 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    // ✅ Wrapped response with success flag
     res.json({
       success: true,
       students,
@@ -623,27 +633,61 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- Update Student ----------
-// ✅ Added missing route
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
-    const { firstName, middleName, lastName, dob, grade, address, contactPhone } = req.body;
+    const {
+      firstName, middleName, lastName, dob, grade, address, studentPhone, contactPhone,
+      educationLevel, profession, gender, studentType,
+      emergencyFirstName, emergencyMiddleName, emergencyLastName,
+      relationship, emergencyPhone, emergencyEmail, emergencyAddress,
+      contactEmail, contactAddress
+    } = req.body;
 
     const student = await Student.findById(req.params.id);
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    if (firstName) student.firstName = firstName;
+    if (firstName !== undefined) student.firstName = firstName;
     if (middleName !== undefined) student.middleName = middleName;
-    if (lastName) student.lastName = lastName;
-    if (dob) student.dob = dob;
-    if (grade) student.grade = grade;
-    if (address) student.address = address;
-    if (contactPhone) student.studentPhone = contactPhone;
+    if (lastName !== undefined) student.lastName = lastName;
+    if (dob !== undefined) student.dob = dob;
+    if (grade !== undefined) student.grade = grade;
+    if (address !== undefined) student.address = address;
+    if (educationLevel !== undefined) student.educationLevel = educationLevel;
+    if (profession !== undefined) student.profession = profession;
+    if (gender !== undefined) student.gender = gender;
+    if (studentType !== undefined) student.studentType = studentType;
+
+    const phoneValue = studentPhone || contactPhone;
+    if (phoneValue !== undefined) student.studentPhone = phoneValue;
+
+    const ePhone = emergencyPhone || contactPhone || student.emergencyPhone;
+    const eEmail = emergencyEmail || contactEmail || student.emergencyEmail;
+    const eAddr = emergencyAddress || contactAddress || student.emergencyAddress;
+    const eFirst = emergencyFirstName || student.emergencyFirstName;
+    const eMiddle = emergencyMiddleName !== undefined ? emergencyMiddleName : student.emergencyMiddleName;
+    const eLast = emergencyLastName !== undefined ? emergencyLastName : student.emergencyLastName;
+    const eRel = relationship || student.relationship;
+
+    if (emergencyFirstName !== undefined) student.emergencyFirstName = emergencyFirstName;
+    if (emergencyMiddleName !== undefined) student.emergencyMiddleName = emergencyMiddleName;
+    if (emergencyLastName !== undefined) student.emergencyLastName = emergencyLastName;
+    if (relationship !== undefined) student.relationship = relationship;
+    if (emergencyPhone !== undefined) student.emergencyPhone = emergencyPhone;
+    if (emergencyEmail !== undefined) student.emergencyEmail = emergencyEmail;
+    if (emergencyAddress !== undefined) student.emergencyAddress = emergencyAddress;
+
+    student.parentName = eFirst;
+    student.parentPhone = ePhone;
+    student.parentEmail = eEmail;
+    student.contactPhone = ePhone;
+    student.contactEmail = eEmail;
+    student.contactAddress = eAddr;
 
     await student.save();
 
-    if (firstName || lastName) {
+    if (firstName || middleName || lastName) {
       const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ');
       await User.findByIdAndUpdate(student.userId, { fullName });
     }

@@ -11,7 +11,6 @@ const { protect, authorize } = require('../../middleware/auth');
 const getEthiopianYear = () => {
   const now = new Date();
   const gregorianYear = now.getFullYear();
-  // Ethiopian New Year is Meskerem 1 (September 11/12)
   const ethiopianYear =
     now >= new Date(gregorianYear, 8, 11)
       ? gregorianYear - 7
@@ -24,7 +23,6 @@ const generateStudentId = async (studentType) => {
   const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
   const year = getEthiopianYear();
 
-  // Find the last student with this prefix, ordered by studentId descending
   const lastStudent = await Registration.findOne({
     studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
   })
@@ -33,7 +31,6 @@ const generateStudentId = async (studentType) => {
 
   let lastNumber = 0;
   if (lastStudent && lastStudent.studentId) {
-    // Format: PREFIX-YEAR-NUMBER (e.g., TKD-2018-0001)
     const parts = lastStudent.studentId.split('-');
     if (parts.length === 3) {
       lastNumber = parseInt(parts[2]) || 0;
@@ -94,26 +91,49 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       status: 'approved',
     });
 
-    // ✅ Generate official student ID using new format
+    // Generate official student ID
     const studentId = await generateStudentId(reg.studentType);
 
+    // Fallback values for emergency contact
+    const emergencyFirstName = reg.emergencyFirstName || reg.parentName || '';
+    const emergencyMiddleName = reg.emergencyMiddleName || '';
+    const emergencyLastName = reg.emergencyLastName || '';
+    const emergencyPhone = reg.emergencyPhone || reg.parentPhone || '';
+    const emergencyEmail = reg.emergencyEmail || reg.parentEmail || '';
+    const emergencyAddress = reg.emergencyAddress || '';
+
+    // Create Student profile with all details
     const student = await Student.create({
       userId: user._id,
       studentId,
+      registrationNumber: reg.registrationNumber,
       firstName: reg.firstName || reg.fullName,
       middleName: reg.middleName || '',
       lastName: reg.lastName || '',
       grade: reg.grade,
+      batch: reg.batch || null,
       educationLevel: reg.educationLevel || '',
       profession: reg.profession || '',
+      gender: reg.gender || 'Male',
       dob: reg.dateOfBirth || '',
       address: reg.address || '',
-      parentName: reg.parentName || '',
-      parentPhone: reg.parentPhone || '',
-      parentEmail: reg.parentEmail || '',
+      studentPhone: reg.phone,
+      email: reg.email || '',
+      emergencyFirstName,
+      emergencyMiddleName,
+      emergencyLastName,
+      relationship: reg.relationship || 'Father',
+      emergencyPhone,
+      emergencyEmail,
+      emergencyAddress,
+      parentName: emergencyFirstName,
+      parentPhone: emergencyPhone,
+      parentEmail: emergencyEmail,
+      contactPhone: emergencyPhone,
+      contactEmail: emergencyEmail,
+      contactAddress: emergencyAddress,
       qrCode: crypto.randomUUID(),
       studentType: reg.studentType,
-      registrationNumber: reg.registrationNumber,
     });
 
     // Update registration status

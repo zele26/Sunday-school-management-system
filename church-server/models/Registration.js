@@ -10,13 +10,30 @@ const registrationSchema = new mongoose.Schema({
   profession: { type: String, required: true },
   gender: { type: String, enum: ['Male', 'Female'], default: 'Male' },
   dateOfBirth: { type: String },
-  phone: { type: String, required: true },                  // now required
+  phone: { type: String, required: true },
   grade: { type: String, required: true },
+  batch: { type: String, default: null },      // for distance students
   address: { type: String },
-  parentName: { type: String },
-  parentPhone: { type: String },
-  parentEmail: { type: String },
-  email: { type: String, lowercase: true },                 // optional
+
+  // Emergency contact (new detailed fields)
+  emergencyFirstName: { type: String, default: '' },
+  emergencyMiddleName: { type: String, default: '' },
+  emergencyLastName: { type: String, default: '' },
+  relationship: {
+    type: String,
+    enum: ['Father', 'Mother', 'Brother', 'Sister', 'Relative'],
+    default: 'Father',
+  },
+  emergencyPhone: { type: String, required: true },
+  emergencyEmail: { type: String, default: '' },
+  emergencyAddress: { type: String, default: '' },
+
+  // Legacy parent fields (optional)
+  parentName: { type: String, default: '' },
+  parentPhone: { type: String, default: '' },
+  parentEmail: { type: String, default: '' },
+
+  email: { type: String, lowercase: true, default: '' },   // optional
   password: { type: String, required: true },
   studentType: { type: String, enum: ['regular', 'distance'], required: true },
   transactionRef: { type: String },
@@ -29,7 +46,7 @@ const registrationSchema = new mongoose.Schema({
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   reviewedAt: { type: Date },
   rejectionReason: { type: String },
-  studentId: { type: String },   // will be set after approval
+  studentId: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

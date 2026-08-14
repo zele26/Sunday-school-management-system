@@ -1,8 +1,11 @@
 // src/pages/Register.jsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import bgImage from '../assets/Lidetachurch.jpg';
+import { API_BASE_URL } from '../api/apiClient';
 
 const Register = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -68,7 +71,7 @@ const Register = () => {
     };
 
     try {
-      const res = await fetch('https://church-api-3l2c.onrender.com/api/auth/register', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

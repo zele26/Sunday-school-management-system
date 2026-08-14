@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, MemoryRouter, useInRouterContext } from 'react-router-dom';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { API_BASE_URL } from '../api/apiClient';
 
 // Helper: translate raw status + studentType into a clear Amharic message
 const getStatusMessage = (status, studentType) => {

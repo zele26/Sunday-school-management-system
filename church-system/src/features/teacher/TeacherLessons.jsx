@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 
 const TeacherLessons = () => {
   const [lessons, setLessons] = useState([]);

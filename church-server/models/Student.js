@@ -7,25 +7,40 @@ const studentSchema = new mongoose.Schema({
     sparse: true, 
     default: null 
   },
-  firstName: String,
-  middleName: String,
-  lastName: String,
-  educationLevel: String,
-  profession: String,
-  dob: String,
-  address: String,
-  grade: String,
-  regYear: String,
-  emergencyFirstName: String,
-  emergencyMiddleName: String,
-  emergencyLastName: String,
-  relationship: String,
-  contactPhone: String,
-  contactAddress: String,
-  contactEmail: String,
+  registrationNumber: { type: String, default: '' },
+  firstName: { type: String, required: true },
+  middleName: { type: String, default: '' },
+  lastName: { type: String, required: true },
+  educationLevel: { type: String, default: '' },
+  profession: { type: String, default: '' },
+  gender: { type: String, enum: ['Male', 'Female'], default: 'Male' },
+  dob: { type: String, default: '' },
+  address: { type: String, default: '' },
+  grade: { type: String, required: true },
+  batch: { type: String, default: null },          // for distance students
+  regYear: { type: String },
+  studentPhone: { type: String, default: '' },     // main phone (login)
+  email: { type: String, lowercase: true, default: '' },
+  parentName: { type: String, default: '' },
+  parentPhone: { type: String, default: '' },
+  parentEmail: { type: String, default: '' },
+  // New emergency contact fields
+  emergencyFirstName: { type: String, default: '' },
+  emergencyMiddleName: { type: String, default: '' },
+  emergencyLastName: { type: String, default: '' },
+  relationship: {
+    type: String,
+    enum: ['Father', 'Mother', 'Brother', 'Sister', 'Relative'],
+    default: 'Father',
+  },
+  emergencyPhone: { type: String, default: '' },
+  emergencyEmail: { type: String, default: '' },
+  emergencyAddress: { type: String, default: '' },
+  contactPhone: { type: String, default: '' },
+  contactAddress: { type: String, default: '' },
+  contactEmail: { type: String, default: '' },
   registrationDate: { type: Date, default: Date.now },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
-  studentPhone: String,
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   qrCode: { type: String, unique: true, sparse: true },
@@ -33,7 +48,6 @@ const studentSchema = new mongoose.Schema({
 }, { collection: 'students' });
 
 // ✅ Auto-generate studentId before saving if not provided
-// Fixed: removed 'next' parameter – Mongoose handles async automatically
 studentSchema.pre('save', async function() {
   if (!this.studentId) {
     const year = new Date().getFullYear();

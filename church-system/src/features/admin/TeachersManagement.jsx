@@ -1,10 +1,8 @@
 // src/features/admin/TeachersManagement.jsx
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiFetch } from '../../api/apiClient';
+import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
 const TeachersManagement = () => {
   const navigate = useNavigate();

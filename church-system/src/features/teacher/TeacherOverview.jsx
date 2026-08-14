@@ -1,7 +1,6 @@
 // src/features/teacher/TeacherOverview.jsx
 import React, { useState, useEffect } from 'react';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 
 const TeacherOverview = () => {
   const [stats, setStats] = useState({ classes: 0, students: 0, assignments: 0, pendingExams: 0 });

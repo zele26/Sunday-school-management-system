@@ -7,7 +7,7 @@ import useAuthStore from '../store/authStore';
 //    - In Vercel / local dev: you can set VITE_API_URL to your Render backend.
 //    - Fallback: if running on localhost, use localhost:5000, else use Render.
 // ------------------------------------------------------------------
-const API_BASE_URL = (() => {
+export const API_BASE_URL = (() => {
   // If VITE_API_URL is explicitly set, use it
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;

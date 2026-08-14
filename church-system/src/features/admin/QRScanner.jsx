@@ -1,10 +1,8 @@
 // src/features/admin/QRScanner.jsx
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { apiFetch } from '../../api/apiClient';
+import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
-
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
 
 // Simple beep / buzz using AudioContext
 const playBeep = (type = 'success') => {

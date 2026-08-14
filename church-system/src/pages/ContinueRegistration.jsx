@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, MemoryRouter, useInRouterContext } from 'react-router-dom';
 
-const API_BASE_URL = 'https://church-api-3l2c.onrender.com';
+import { API_BASE_URL } from '../api/apiClient';
 
 const ContinueRegistrationContent = () => {
   const [phone, setPhone] = useState('');

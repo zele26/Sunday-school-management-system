@@ -16,16 +16,7 @@ const generateRegNumber = async () => {
   return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
 };
 
-// Ethiopian year suffix (e.g. "18" for 2018) – not used here but kept for admin route
-const getEthiopianYearSuffix = () => {
-  const now = new Date();
-  const gregorianYear = now.getFullYear();
-  const ethiopianYear =
-    now >= new Date(gregorianYear, 8, 11)   // Meskerem 1
-      ? gregorianYear - 7
-      : gregorianYear - 8;
-  return String(ethiopianYear % 100).padStart(2, '0');
-};
+const isValidPhone = (phone) => /^\d{10}$/.test(phone);
 
 // ---------- PUBLIC ROUTES ----------
 
@@ -35,9 +26,22 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const {
       fullName, firstName, middleName, lastName, educationLevel, profession,
       gender, dateOfBirth, phone, grade, address,
+      // New emergency fields
+      emergencyFirstName, emergencyMiddleName, emergencyLastName,
+      relationship, emergencyPhone, emergencyEmail, emergencyAddress,
+      // Old emergency/parent fields (for backward compatibility)
       parentName, parentPhone, parentEmail,
       email, password, studentType,
     } = req.body;
+
+    // Map old parent fields to new emergency fields if new ones are missing
+    const finalEmergencyFirstName = (emergencyFirstName || parentName || '').toString().trim();
+    const finalEmergencyMiddleName = (emergencyMiddleName || '').toString().trim();
+    const finalEmergencyLastName = (emergencyLastName || '').toString().trim();
+    const finalRelationship = relationship || 'Father';
+    const finalEmergencyPhone = (emergencyPhone || parentPhone || '').toString().trim();
+    const finalEmergencyEmail = (emergencyEmail || parentEmail || '').toString().trim();
+    const finalEmergencyAddress = (emergencyAddress || '').toString().trim();
 
     const normalizedFirstName = (firstName || fullName || '').toString().trim();
     const normalizedMiddleName = (middleName || '').toString().trim();
@@ -46,6 +50,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const normalizedProfession = (profession || '').toString().trim();
     const normalizedFullName = [normalizedFirstName, normalizedMiddleName, normalizedLastName].filter(Boolean).join(' ').trim();
 
+    // Basic required fields
     if (!normalizedFullName || !normalizedEducationLevel || !normalizedProfession || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
@@ -53,19 +58,36 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       });
     }
 
-    // Check duplicate phone
-    const existingReg = await Registration.findOne({ phone, status: { $ne: 'Rejected' } });
-    if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
-    const existingUser = await User.findOne({ phone });
-    if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
+    // Validate student phone
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ success: false, message: 'ስልክ ቁጥር በትክክል 10 አሃዝ መሆን አለበት' });
+    }
 
-    // Check email if provided
+    // Validate emergency contact – must have name and phone from either set
+    if (!finalEmergencyFirstName || !finalEmergencyPhone) {
+      return res.status(400).json({ success: false, message: 'የአደጋ ጊዜ ተጠሪ ስም እና ስልክ ግዴታ ነው' });
+    }
+    if (!isValidPhone(finalEmergencyPhone)) {
+      return res.status(400).json({ success: false, message: 'የአደጋ ጊዜ ተጠሪ ስልክ በትክክል 10 አሃዝ መሆን አለበት' });
+    }
+
+    // Email optional but validated
     if (email && email.trim() !== '') {
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'ኢሜይል ትክክል አይደለም' });
+      }
       const existingEmailReg = await Registration.findOne({ email: email.toLowerCase(), status: { $ne: 'Rejected' } });
       if (existingEmailReg) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ምዝገባ አለው' });
       const existingEmailUser = await User.findOne({ email: email.toLowerCase() });
       if (existingEmailUser) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
     }
+
+    // Check duplicate phone
+    const existingReg = await Registration.findOne({ phone, status: { $ne: 'Rejected' } });
+    if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -80,7 +102,14 @@ router.post('/', upload.single('receipt'), async (req, res) => {
 
     const registrationNumber = await generateRegNumber();
 
-    // ✅ Do NOT generate studentId at this stage
+    // Determine batch and grade for distance students
+    let finalGrade = grade;
+    let batch = null;
+    if (studentType === 'distance') {
+      batch = 'Batch 1';
+      finalGrade = batch;
+    }
+
     const registration = await Registration.create({
       registrationNumber,
       fullName: normalizedFullName,
@@ -92,16 +121,25 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       gender: gender || 'Male',
       dateOfBirth: dateOfBirth || '',
       phone,
-      grade,
+      grade: finalGrade,
+      batch,
       address: address || '',
-      parentName: parentName || '',
-      parentPhone: parentPhone || '',
-      parentEmail: parentEmail || '',
+      // New emergency fields
+      emergencyFirstName: finalEmergencyFirstName,
+      emergencyMiddleName: finalEmergencyMiddleName,
+      emergencyLastName: finalEmergencyLastName,
+      relationship: finalRelationship,
+      emergencyPhone: finalEmergencyPhone,
+      emergencyEmail: finalEmergencyEmail,
+      emergencyAddress: finalEmergencyAddress,
+      // Legacy fields for backward compatibility
+      parentName: finalEmergencyFirstName,
+      parentPhone: finalEmergencyPhone,
+      parentEmail: finalEmergencyEmail,
       email: email?.toLowerCase() || '',
       password: hashedPassword,
       studentType,
       receiptUrl,
-      // studentId intentionally omitted – will be set on approval
       status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
     });
 
@@ -113,6 +151,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       registration: {
         registrationNumber: registration.registrationNumber,
         status: registration.status,
+        batch: registration.batch || null,
       },
     });
   } catch (err) {
@@ -138,7 +177,8 @@ router.post('/login', async (req, res) => {
       status: reg.status,
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
-      studentId: reg.studentId || null,
+      studentId: reg.status === 'Approved' ? reg.studentId : null,
+      batch: reg.batch || null,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

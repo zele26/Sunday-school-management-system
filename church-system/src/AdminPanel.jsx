@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { API_BASE_URL } from './api/apiClient';
 import { Link, useLocation } from 'react-router-dom';
 
 const defaultUsers = [
@@ -123,7 +124,7 @@ const AdminPanel = ({ onLogout }) => {
 
     const loadData = async () => {
       try {
-        const response = await fetch('https://church-api-3l2c.onrender.com/api/admin/panel-data');
+        const response = await fetch(`${API_BASE_URL}/api/admin/panel-data`);
         if (!response.ok) throw new Error('Server returned an error');
 
         const payload = await response.json();
@@ -197,7 +198,7 @@ const AdminPanel = ({ onLogout }) => {
 
     localStorage.setItem('adminPanelData', JSON.stringify(payload));
 
-    fetch('https://church-api-3l2c.onrender.com/api/admin/panel-data', {
+    fetch(`${API_BASE_URL}/api/admin/panel-data`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
