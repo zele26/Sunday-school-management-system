@@ -93,14 +93,8 @@ export async function apiFetch(url, options = {}) {
       throw new Error('Session expired – please log in again');
     }
 
-    // No token to refresh — just return the 401 response so callers can handle it
     return res;
   }
 
   return res;
 }
-
-// ------------------------------------------------------------------
-// 3) Optional: export the base URL for direct use (e.g., CSV downloads)
-// ------------------------------------------------------------------
-export { API_BASE_URL };
