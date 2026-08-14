@@ -429,22 +429,32 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 // ---------- Export Students as CSV ----------
 router.get('/export', protect, authorize('admin'), async (req, res) => {
   try {
-    const { search, grade } = req.query;
+    const { search, grade, studentType } = req.query;
     const query = {};
 
     if (search && search.trim()) {
+      const s = search.trim();
       const userQuery = {
         $or: [
-          { fullName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { fullName: { $regex: s, $options: 'i' } },
+          { email: { $regex: s, $options: 'i' } }
         ]
       };
       const users = await User.find(userQuery).select('_id');
       const userIds = users.map(u => u._id);
-      query.userId = { $in: userIds };
+
+      query.$or = [
+        { userId: { $in: userIds } },
+        { firstName: { $regex: s, $options: 'i' } },
+        { middleName: { $regex: s, $options: 'i' } },
+        { lastName: { $regex: s, $options: 'i' } },
+        { studentId: { $regex: s, $options: 'i' } },
+        { studentPhone: { $regex: s, $options: 'i' } },
+      ];
     }
 
     if (grade) query.grade = grade;
+    if (studentType) query.studentType = studentType;
 
     const students = await Student.find(query)
       .populate('userId', 'email fullName')
@@ -454,25 +464,31 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       .lean();
 
     const csvData = students.map(s => ({
-      'Student ID': s._id.toString(),
+      'School ID': s.studentId || 'N/A',
+      'Registration No': s.registrationNumber || '',
+      'Student Type': s.studentType || 'regular',
+      'Batch': s.batch || '',
       'First Name': s.firstName || '',
       'Middle Name': s.middleName || '',
       'Last Name': s.lastName || '',
+      'Gender': s.gender || 'Male',
+      'Education Level': s.educationLevel || '',
+      'Profession': s.profession || '',
       'Grade': s.grade || '',
       'Date of Birth': s.dob || '',
       'Address': s.address || '',
       'Student Phone': s.studentPhone || '',
-      'Email (login)': s.userId?.email || '',
+      'Email (login)': s.userId?.email || s.email || '',
       'Assigned Teacher': s.teacher?.fullName || '',
       'Teacher Email': s.teacher?.email || '',
       'Courses': s.courses?.map(c => c.name).join('; ') || '',
-      'Emergency First Name': s.emergencyFirstName || '',
+      'Emergency First Name': s.emergencyFirstName || s.parentName || '',
       'Emergency Middle Name': s.emergencyMiddleName || '',
       'Emergency Last Name': s.emergencyLastName || '',
-      'Relationship': s.relationship || '',
-      'Emergency Phone': s.contactPhone || '',
-      'Emergency Email': s.contactEmail || '',
-      'Emergency Address': s.contactAddress || '',
+      'Relationship': s.relationship || 'Father',
+      'Emergency Phone': s.emergencyPhone || s.contactPhone || s.parentPhone || '',
+      'Emergency Email': s.emergencyEmail || s.contactEmail || s.parentEmail || '',
+      'Emergency Address': s.emergencyAddress || s.contactAddress || '',
       'Registration Date': s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : '',
     }));
 
@@ -480,9 +496,12 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
     const parser = new Parser({ fields });
     const csv = parser.parse(csvData);
 
-    res.setHeader('Content-Type', 'text/csv');
+    // Prepend UTF-8 BOM (\uFEFF) so Microsoft Excel renders Amharic characters cleanly
+    const utf8Csv = '\uFEFF' + csv;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
-    res.status(200).send(csv);
+    res.status(200).send(utf8Csv);
   } catch (err) {
     console.error('Export error:', err);
     res.status(500).json({ message: err.message });
