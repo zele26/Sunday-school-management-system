@@ -14,7 +14,7 @@ const RegisterRegularContent = () => {
     gender: 'Male',
     dateOfBirth: '',
     phone: '',
-    grade: '7th grade',
+    grade: 'Grade 7',
     address: '',
     email: '',
     password: '',
@@ -264,19 +264,19 @@ const RegisterRegularContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">👤</div>
-              <h2 className="text-lg font-bold text-slate-800">የግል መረጃ</h2>
+              <h2 className="text-lg font-bold text-slate-800">የግል መረጃ (Personal Info)</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>የተመዝጋቢው ስም <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የመጀመሪያ ስም (First Name) <span className="text-rose-500">*</span></label>
                 <input type="text" name="firstName" placeholder="የመጀመሪያ ስም" required value={formData.firstName} onChange={handleChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>የአባት ስም <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የአባት ስም (Middle Name) <span className="text-rose-500">*</span></label>
                 <input type="text" name="middleName" placeholder="የመካከለኛ ስም" required value={formData.middleName} onChange={handleChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>የአያት ስም <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የአያት ስም (Last Name) <span className="text-rose-500">*</span></label>
                 <input type="text" name="lastName" placeholder="የአባት/የእናት ስም" required value={formData.lastName} onChange={handleChange} className={inputClass} />
               </div>
               <div>
@@ -338,8 +338,15 @@ const RegisterRegularContent = () => {
               <div>
                 <label className={labelClass}>የሚገቡበት ክፍል <span className="text-rose-500">*</span></label>
                 <select name="grade" value={formData.grade} onChange={handleChange} className={inputClass}>
-                  {['7ኛ ክፍል (7th Grade)', '8ኛ ክፍል (8th Grade)', '9ኛ ክፍል (9th Grade)', '10ኛ ክፍል (10th Grade)', '11ኛ ክፍል (11th Grade)', '12ኛ ክፍል (12th Grade)'].map((g) => (
-                    <option key={g} value={g}>{g}</option>
+                  {[
+                    { label: '7ኛ ክፍል (Grade 7)', value: 'Grade 7' },
+                    { label: '8ኛ ክፍል (Grade 8)', value: 'Grade 8' },
+                    { label: '9ኛ ክፍል (Grade 9)', value: 'Grade 9' },
+                    { label: '10ኛ ክፍል (Grade 10)', value: 'Grade 10' },
+                    { label: '11ኛ ክፍል (Grade 11)', value: 'Grade 11' },
+                    { label: '12ኛ ክፍል (Grade 12)', value: 'Grade 12' },
+                  ].map((g) => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
                   ))}
                 </select>
               </div>
@@ -354,7 +361,7 @@ const RegisterRegularContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">👨‍👩‍👧</div>
-              <h2 className="text-lg font-bold text-slate-800">የአደጋ ጊዜ ተጠሪ መረጃ</h2>
+              <h2 className="text-lg font-bold text-slate-800">የአደጋ ጊዜ ተጠሪ መረጃ (Emergency Info)</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
@@ -409,7 +416,7 @@ const RegisterRegularContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">🔐</div>
-              <h2 className="text-lg font-bold text-slate-800">የመግቢያ መረጃ</h2>
+              <h2 className="text-lg font-bold text-slate-800">የመግቢያ መረጃ (Login Info)</h2>
             </div>
             <div className="space-y-5">
               <div>
