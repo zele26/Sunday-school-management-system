@@ -226,7 +226,7 @@ const registrationRoutes = require('./routes/registrationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
-/*
+
 // --- NEW CORE / EDUCATION / TEMP ROUTES (safe loading) ---
 let corePersonRoutes = null;
 let coreDepartmentRoutes = null;
@@ -258,7 +258,7 @@ try {
   tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes');
 } catch (err) {
   console.warn('⚠️ Temporary migration route not loaded:', err.message);
-} */
+}
 
 const app = express();
 
@@ -312,7 +312,7 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
-/*// --- NEW ROUTE MOUNTING (only if loaded successfully) ---
+// --- NEW ROUTE MOUNTING (only if loaded successfully) ---
 if (corePersonRoutes) app.use('/api/core/persons', corePersonRoutes);
 if (coreDepartmentRoutes) app.use('/api/core/departments', coreDepartmentRoutes);
 if (coreDepartmentMembershipRoutes) app.use('/api/core/department-memberships', coreDepartmentMembershipRoutes);
@@ -323,7 +323,7 @@ if (eduAcademicYearRoutes) app.use('/api/education/academic-years', eduAcademicY
 if (eduGradeRoutes) app.use('/api/education/grades', eduGradeRoutes);
 
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
-*/
+
 // --- Health Check ---
 app.get('/api/test', (req, res) => {
   res.json({
