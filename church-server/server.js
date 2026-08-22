@@ -34,6 +34,11 @@ const eduGradeRoutes = require('./routes/education/gradeRoutes');
 
 const app = express();
 
+
+// Temporary migration route (remove after use)
+const tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes');
+app.use('/api/admin/temp', tempMigrationRoutes);
+
 // --- MIDDLEWARE ---
 app.use(bodyParser.json({ limit: '50mb' })); // ✅ body-parser
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
