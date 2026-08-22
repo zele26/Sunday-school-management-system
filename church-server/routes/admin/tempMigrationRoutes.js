@@ -15,7 +15,7 @@ const { protect, authorize } = require('../../middleware/auth');
 // POST /api/admin/temp/run-education-core-migration
 router.post('/run-education-core-migration', protect, authorize('admin'), async (req, res) => {
   try {
-    // 1. Seed default programs
+    // Seed Programs
     const programMap = {};
     const programs = [
       { name: 'Regular Education', code: 'REG', type: 'regular' },
@@ -27,7 +27,7 @@ router.post('/run-education-core-migration', protect, authorize('admin'), async 
       programMap[p.code] = program;
     }
 
-    // 2. Seed study modes
+    // Seed Study Modes
     const studyModeMap = {};
     const studyModes = [
       { name: 'Regular', code: 'REGULAR' },
@@ -39,7 +39,7 @@ router.post('/run-education-core-migration', protect, authorize('admin'), async 
       studyModeMap[sm.code] = mode;
     }
 
-    // 3. Seed schedules
+    // Seed Schedules
     const scheduleMap = {};
     const schedules = [
       { name: 'Weekend', code: 'WEEKEND' },
@@ -51,30 +51,25 @@ router.post('/run-education-core-migration', protect, authorize('admin'), async 
       scheduleMap[s.code] = schedule;
     }
 
-    // 4. Seed current academic year
+    // Seed Academic Year
     const currentYear = new Date().getFullYear().toString();
     let academicYear = await AcademicYear.findOne({ name: currentYear });
     if (!academicYear) academicYear = await AcademicYear.create({ name: currentYear, status: 'active' });
 
-    // 5. Process all existing students
+    // Process Students
     const students = await Student.find({});
     let createdProfiles = 0;
     let createdEnrollments = 0;
 
     for (const student of students) {
-      // Find Person by phone/email
       let person = await Person.findOne({
         $or: [
           { phone: student.studentPhone || student.contactPhone || '' },
           { email: student.email || '' },
         ],
       });
-      if (!person) {
-        console.warn(`⚠️ No Person found for student ${student.studentId}. Skipping.`);
-        continue;
-      }
+      if (!person) continue;
 
-      // Create or find StudentProfile
       let profile = await StudentProfile.findOne({ personId: person._id });
       if (!profile) {
         profile = await StudentProfile.create({
@@ -86,11 +81,8 @@ router.post('/run-education-core-migration', protect, authorize('admin'), async 
         createdProfiles++;
       }
 
-      // Determine program and study mode
       const programCode = student.studentType === 'distance' ? 'DIS' : 'REG';
       const modeCode = student.studentType === 'distance' ? 'DISTANCE' : 'REGULAR';
-
-      // Determine grade (only for regular)
       let gradeId = null;
       if (student.studentType === 'regular') {
         const gradeName = student.grade;
@@ -105,13 +97,11 @@ router.post('/run-education-core-migration', protect, authorize('admin'), async 
         }
       }
 
-      // Create AcademicEnrollment if not exists
       const existing = await AcademicEnrollment.findOne({
         studentProfileId: profile._id,
         academicYearId: academicYear._id,
         programId: programMap[programCode]._id,
       });
-
       if (!existing) {
         await AcademicEnrollment.create({
           studentProfileId: profile._id,
