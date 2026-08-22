@@ -26,6 +26,12 @@ const corePersonRoutes = require('./routes/core/personRoutes');
 const coreDepartmentRoutes = require('./routes/core/departmentRoutes');
 const coreDepartmentMembershipRoutes = require('./routes/core/departmentMembershipRoutes');
 
+// Education module routes (New Architecture)
+const eduStudentProfileRoutes = require('./routes/education/studentProfileRoutes');
+const eduProgramRoutes = require('./routes/education/programRoutes');
+const eduAcademicYearRoutes = require('./routes/education/academicYearRoutes');
+const eduGradeRoutes = require('./routes/education/gradeRoutes');
+
 const app = express();
 
 // --- MIDDLEWARE ---
@@ -144,6 +150,13 @@ app.use((err, req, res, next) => {
 app.use('/api/core/persons', corePersonRoutes);
 app.use('/api/core/departments', coreDepartmentRoutes);
 app.use('/api/core/department-memberships', coreDepartmentMembershipRoutes);
+
+
+
+app.use('/api/education/student-profiles', eduStudentProfileRoutes);
+app.use('/api/education/programs', eduProgramRoutes);
+app.use('/api/education/academic-years', eduAcademicYearRoutes);
+app.use('/api/education/grades', eduGradeRoutes);
 
 // --- START SERVER ---
 const PORT = process.env.PORT || 5000;
