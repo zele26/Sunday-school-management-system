@@ -21,6 +21,11 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
 
+// Core routes (New Architecture)
+const corePersonRoutes = require('./routes/core/personRoutes');
+const coreDepartmentRoutes = require('./routes/core/departmentRoutes');
+const coreDepartmentMembershipRoutes = require('./routes/core/departmentMembershipRoutes');
+
 const app = express();
 
 // --- MIDDLEWARE ---
@@ -135,6 +140,10 @@ app.use((err, req, res, next) => {
       : err.message
   });
 });
+
+app.use('/api/core/persons', corePersonRoutes);
+app.use('/api/core/departments', coreDepartmentRoutes);
+app.use('/api/core/department-memberships', coreDepartmentMembershipRoutes);
 
 // --- START SERVER ---
 const PORT = process.env.PORT || 5000;
