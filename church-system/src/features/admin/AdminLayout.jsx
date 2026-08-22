@@ -177,10 +177,11 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import { apiFetch } from '../../api/apiClient';   // ✅ new import
 
 const navItems = [
   { path: '/admin', label: 'Overview', icon: '🏠', end: true },
+  { path: '/admin/people', label: 'People', icon: '👥' },
+  { path: '/admin/departments', label: 'Departments', icon: '🏛️' },
   { path: '/admin/users', label: 'Users', icon: '👤' },
   { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
   { path: '/admin/add-student', label: 'Add Student', icon: '🧑‍🎓' },
@@ -201,8 +202,6 @@ const navItems = [
   { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
   { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
   { path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
-  { path: '/admin/people', label: 'People', icon: '👥' },
-  { path: '/admin/departments', label: 'Departments', icon: '🏛️' },
 ];
 
 const AdminLayout = ({ onLogout }) => {
@@ -210,16 +209,10 @@ const AdminLayout = ({ onLogout }) => {
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // ✅ temporary migration state
-  const [migrating, setMigrating] = useState(false);
-  const [migrationMessage, setMigrationMessage] = useState('');
-
-  // Close mobile sidebar automatically when navigating
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, [location]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileSidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -237,39 +230,18 @@ const AdminLayout = ({ onLogout }) => {
     navigate('/', { replace: true });
   };
 
-  // ✅ temporary migration runner
-  const runMigration = async () => {
-    setMigrating(true);
-    setMigrationMessage('');
-    try {
-      const res = await apiFetch('/api/admin/temp/run-education-core-migration', {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMigrationMessage(`✅ Migration done! Profiles: ${data.createdProfiles}, Enrollments: ${data.createdEnrollments}`);
-      } else {
-        setMigrationMessage(`❌ Migration failed: ${data.message || 'Error'}`);
-      }
-    } catch (err) {
-      setMigrationMessage('❌ Network error during migration.');
-    } finally {
-      setMigrating(false);
-    }
-  };
-
   return (
     <div>
       {/* Mobile Overlay */}
       {isMobileSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-blue-950/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation */}
-      <aside 
+      <aside
         className={`fixed inset-y-0 left-0 z-50 w-72 bg-[var(--brand-blue-dark)] text-white border-r border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
@@ -287,7 +259,7 @@ const AdminLayout = ({ onLogout }) => {
           <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
             Main Menu
           </p>
-          
+
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -307,18 +279,8 @@ const AdminLayout = ({ onLogout }) => {
           ))}
         </div>
 
-        {/* Sidebar Footer with temporary migration button */}
-        <div className="p-4 border-t border-white/10 bg-white/10 shrink-0 space-y-3">
-          <button
-            onClick={runMigration}
-            disabled={migrating}
-            className="w-full bg-[var(--brand-yellow)] hover:bg-yellow-400 text-[var(--brand-blue-dark)] px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
-          >
-            {migrating ? 'Running Migration…' : '⚡ Run Edu Core Migration'}
-          </button>
-          {migrationMessage && (
-            <p className="text-xs text-blue-100 break-words">{migrationMessage}</p>
-          )}
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-white/10 bg-white/10 shrink-0">
           <div className="text-xs text-center text-blue-100">
             v1.0.0 Dashboard
           </div>

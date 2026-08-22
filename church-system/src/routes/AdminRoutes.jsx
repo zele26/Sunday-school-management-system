@@ -33,6 +33,8 @@ export default function AdminRoutes() {
   return (
     <Routes>
       <Route index element={<AdminOverview />} />
+      <Route path="people" element={<PeopleManagement />} />
+      <Route path="departments" element={<DepartmentsManagement />} />
       <Route path="users" element={<UsersManagement />} />
       <Route path="approvals" element={<ApprovalsManagement />} />
       <Route path="add-student" element={<AddStudent />} />
@@ -56,9 +58,6 @@ export default function AdminRoutes() {
       <Route path="edit-teacher/:id" element={<EditTeacher />} />
       <Route path="password-resets" element={<PasswordResets />} />
       <Route path="resource-approval" element={<ResourceApproval />} />
-      <Route path="/admin/people" element={<PeopleManagement />} />
-      <Route path="/admin/departments" element={<DepartmentsManagement />} />
-
     </Routes>
   );
 }
