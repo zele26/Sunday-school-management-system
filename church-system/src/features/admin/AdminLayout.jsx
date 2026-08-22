@@ -201,6 +201,8 @@ const navItems = [
   { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
   { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
   { path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
+  { path: '/admin/people', label: 'People', icon: '👥' },
+  { path: '/admin/departments', label: 'Departments', icon: '🏛️' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

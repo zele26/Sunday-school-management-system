@@ -26,6 +26,8 @@ import TeachersManagement from '../features/admin/TeachersManagement';
 import EditTeacher from '../features/admin/EditTeacher';
 import EditStudent from '../features/admin/EditStudent';
 import ResourceApproval from '../features/admin/ResourceApproval';
+import PeopleManagement from '../features/admin/PeopleManagement';
+import DepartmentsManagement from '../features/admin/DepartmentsManagement';
 
 export default function AdminRoutes() {
   return (
@@ -54,6 +56,9 @@ export default function AdminRoutes() {
       <Route path="edit-teacher/:id" element={<EditTeacher />} />
       <Route path="password-resets" element={<PasswordResets />} />
       <Route path="resource-approval" element={<ResourceApproval />} />
+      <Route path="/admin/people" element={<PeopleManagement />} />
+      <Route path="/admin/departments" element={<DepartmentsManagement />} />
+
     </Routes>
   );
 }
