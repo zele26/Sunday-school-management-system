@@ -209,8 +209,8 @@ const AdminLayout = ({ onLogout }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // ✅ temporary migration state
-  const [migrating, setMigrating] = useState(false);
-  const [migrationMessage, setMigrationMessage] = useState('');
+  //const [migrating, setMigrating] = useState(false);
+ // const [migrationMessage, setMigrationMessage] = useState('');
 
   // Close mobile sidebar automatically when navigating
   useEffect(() => {
@@ -236,7 +236,7 @@ const AdminLayout = ({ onLogout }) => {
   };
 
   // ✅ temporary migration runner
-  const runMigration = async () => {
+ /* const runMigration = async () => {
     setMigrating(true);
     setMigrationMessage('');
     try {
@@ -254,7 +254,7 @@ const AdminLayout = ({ onLogout }) => {
     } finally {
       setMigrating(false);
     }
-  };
+  };*/
 
   return (
     <div>
