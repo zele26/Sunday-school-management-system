@@ -182,6 +182,7 @@ const navItems = [
   { path: '/admin', label: 'Overview', icon: '🏠', end: true },
   { path: '/admin/people', label: 'People', icon: '👥' },
   { path: '/admin/departments', label: 'Departments', icon: '🏛️' },
+  { path: '/admin/department-memberships', label: 'Memberships', icon: '🔗' },
   { path: '/admin/users', label: 'Users', icon: '👤' },
   { path: '/admin/approvals', label: 'Approvals', icon: '✅' },
   { path: '/admin/add-student', label: 'Add Student', icon: '🧑‍🎓' },
