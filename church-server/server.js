@@ -36,6 +36,8 @@ let eduScheduleRoutes = null;
 let tempMigrationRoutes = null;
 let churchMembershipRoutes = null;
 
+let eduProgressionRoutes = null;
+try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } catch (e) { console.warn('⚠️ progressionRoutes not loaded:', e.message); }
 // Load Core routes individually
 try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { console.warn('⚠️ personRoutes not loaded:', e.message); }
 try { coreDepartmentRoutes = require('./routes/core/departmentRoutes'); } catch (e) { console.warn('⚠️ departmentRoutes not loaded:', e.message); }
@@ -142,6 +144,7 @@ if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
 
 if (churchMembershipRoutes) app.use('/api/core/church-memberships', churchMembershipRoutes);
 
+if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
 // Health Check
 app.get('/api/test', (req, res) => {
   res.json({

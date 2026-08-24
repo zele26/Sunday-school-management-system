@@ -5,6 +5,7 @@ const StudentProfilesManagement = () => {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     fetchProfiles();
@@ -21,10 +22,28 @@ const StudentProfilesManagement = () => {
         setError('Failed to load student profiles');
       }
     } catch (err) {
-      console.error(err);
       setError('Network error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProgress = async (studentProfileId) => {
+    if (!window.confirm('Progress this student to next grade/batch?')) return;
+    setMessage('');
+    try {
+      const res = await apiFetch(`/api/education/students/${studentProfileId}/progress`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage(`✅ ${data.message}`);
+        fetchProfiles();
+      } else {
+        setMessage(`❌ ${data.message || 'Failed to progress'}`);
+      }
+    } catch (err) {
+      setMessage('❌ Network error');
     }
   };
 
@@ -37,10 +56,11 @@ const StudentProfilesManagement = () => {
         </button>
       </div>
 
+      {message && <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm">{message}</div>}
+      {error && <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-sm">{error}</div>}
+
       {loading ? (
         <div className="py-12 text-center text-slate-400">Loading student profiles...</div>
-      ) : error ? (
-        <div className="py-8 text-center text-red-500">{error}</div>
       ) : profiles.length === 0 ? (
         <div className="py-12 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
           No student profiles found.
@@ -54,6 +74,7 @@ const StudentProfilesManagement = () => {
                 <th className="py-2 px-2">Person</th>
                 <th className="py-2 px-2">Status</th>
                 <th className="py-2 px-2">Admission Date</th>
+                <th className="py-2 px-2">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y text-sm">
@@ -74,6 +95,14 @@ const StudentProfilesManagement = () => {
                   </td>
                   <td className="py-2 px-2 text-xs text-slate-500">
                     {profile.admissionDate ? new Date(profile.admissionDate).toLocaleDateString() : '-'}
+                  </td>
+                  <td className="py-2 px-2">
+                    <button
+                      onClick={() => handleProgress(profile._id)}
+                      className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all shadow-sm"
+                    >
+                      Progress
+                    </button>
                   </td>
                 </tr>
               ))}
