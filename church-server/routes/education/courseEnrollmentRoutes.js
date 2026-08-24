@@ -1,10 +1,8 @@
+// church-server/routes/education/courseEnrollmentRoutes.js
 const express = require('express');
 const router = express.Router();
 const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
 const CourseEnrollment = require('../../models/education/CourseEnrollment');
-const Course = require('../../models/Course');
-const Teacher = require('../../models/Teacher');
-const User = require('../../models/User');
 const { protect, authorize } = require('../../middleware/auth');
 
 // GET /api/education/academic-enrollments/:enrollmentId/courses
@@ -13,8 +11,8 @@ router.get('/enrollments/:enrollmentId/courses', protect, authorize('admin'), as
     const { enrollmentId } = req.params;
     const courseEnrollments = await CourseEnrollment.find({ academicEnrollmentId: enrollmentId })
       .populate('courseId', 'name grade description')
-      .populate('teachers', 'fullName firstName middleName lastName email')
-      .populate('teacherId', 'fullName firstName middleName lastName email');
+      .populate('teachers', 'personId firstName lastName email')
+      .populate('teacherId', 'personId firstName lastName email');
     res.json({ success: true, courseEnrollments });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -31,25 +29,18 @@ router.post('/enrollments/:enrollmentId/courses', protect, authorize('admin'), a
     const enrollment = await AcademicEnrollment.findById(enrollmentId);
     if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
 
-    // Check duplicate
     const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
-    if (exists) return res.status(400).json({ success: false, message: 'Course already assigned to this enrollment' });
+    if (exists) return res.status(400).json({ success: false, message: 'Course already assigned' });
 
     const courseEnrollment = await CourseEnrollment.create({
       academicEnrollmentId: enrollmentId,
       courseId,
       teachers: teacherIds,
-      teacherId: teacherIds[0] || null,  // keep first as legacy single for compatibility
+      teacherId: teacherIds[0] || null,
       status: 'enrolled',
     });
 
-    // Populate for response
-    const populated = await CourseEnrollment.populate(courseEnrollment, [
-      { path: 'courseId', select: 'name' },
-      { path: 'teachers', select: 'fullName email' },
-    ]);
-
-    res.status(201).json({ success: true, courseEnrollment: populated });
+    res.status(201).json({ success: true, courseEnrollment });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -59,8 +50,7 @@ router.post('/enrollments/:enrollmentId/courses', protect, authorize('admin'), a
 router.post('/enrollments/:enrollmentId/bulk-courses', protect, authorize('admin'), async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const { items } = req.body;   // items: [{ courseId, teacherIds }]
-
+    const { items } = req.body;
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ success: false, message: 'items array is required' });
     }
@@ -92,11 +82,12 @@ router.post('/enrollments/:enrollmentId/bulk-courses', protect, authorize('admin
       created,
     });
   } catch (err) {
+    console.error('Bulk course assignment error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// PUT /api/education/course-enrollments/:id/complete – mark course completed
+// PUT /api/education/course-enrollments/:id/complete
 router.put('/course-enrollments/:id/complete', protect, authorize('admin'), async (req, res) => {
   try {
     const { finalResult, mark } = req.body;
