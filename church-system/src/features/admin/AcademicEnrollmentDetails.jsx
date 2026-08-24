@@ -20,7 +20,7 @@ const AcademicEnrollmentDetails = () => {
   // Bulk add states
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
-  const [teacherSelections, setTeacherSelections] = useState({}); // courseId -> array of teacherIds
+  const [teacherSelections, setTeacherSelections] = useState({});
 
   const [certificate, setCertificate] = useState(null);
   const [showCertificate, setShowCertificate] = useState(false);
@@ -55,22 +55,26 @@ const AcademicEnrollmentDetails = () => {
 
   const fetchAvailableCourses = async () => {
     try {
-      const res = await apiFetch('/api/admin/courses');
+      const res = await apiFetch('/api/education/courses');   // ✅ use new endpoint
       if (res.ok) {
         const data = await res.json();
         setAvailableCourses(data.courses || []);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Failed to fetch education courses:', err);
+    }
   };
 
   const fetchTeachers = async () => {
     try {
-      const res = await apiFetch('/api/admin/teachers');
+      const res = await apiFetch('/api/education/teacher-profiles');   // ✅ use new endpoint
       if (res.ok) {
         const data = await res.json();
-        setTeachers(data.teachers || []);
+        setTeachers(data.profiles || []);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Failed to fetch teacher profiles:', err);
+    }
   };
 
   // ---------- Single Add ----------
@@ -205,6 +209,13 @@ const AcademicEnrollmentDetails = () => {
     } catch (err) {}
   };
 
+  const getTeacherName = (teacherProfile) => {
+    if (!teacherProfile) return '—';
+    const person = teacherProfile.personId;
+    if (person) return `${person.firstName || ''} ${person.lastName || ''}`.trim();
+    return teacherProfile.teacherNumber || '—';
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
       <h2 className="text-xl font-bold text-slate-800">የትምህርት ዝርዝር (Enrollment Details)</h2>
@@ -259,7 +270,7 @@ const AcademicEnrollmentDetails = () => {
                         onChange={() => toggleTeacherSelection(t._id)}
                         className="w-4 h-4 text-blue-600 rounded"
                       />
-                      <span className="text-sm">{t.fullName || t.userId?.fullName}</span>
+                      <span className="text-sm">{getTeacherName(t)}</span>
                     </label>
                   ))}
                 </div>
@@ -286,13 +297,13 @@ const AcademicEnrollmentDetails = () => {
                 </thead>
                 <tbody className="divide-y">
                   {courses.map(ce => {
-                    const teacherList = ce.teachers?.length > 0
-                      ? ce.teachers.map(t => t.fullName).join(', ')
-                      : ce.teacherId ? ce.teacherId.fullName : '—';
+                    const teacherNames = ce.teachers?.length > 0
+                      ? ce.teachers.map(t => getTeacherName(t)).join(', ')
+                      : ce.teacherId ? getTeacherName(ce.teacherId) : '—';
                     return (
                       <tr key={ce._id}>
                         <td className="py-2">{ce.courseId?.name}</td>
-                        <td className="py-2">{teacherList}</td>
+                        <td className="py-2">{teacherNames}</td>
                         <td className="py-2">{ce.status}</td>
                         <td className="py-2">
                           {ce.status !== 'completed' && (
@@ -361,7 +372,7 @@ const AcademicEnrollmentDetails = () => {
                               onChange={() => toggleTeacherForCourse(course._id, t._id)}
                               className="w-4 h-4 text-blue-600 rounded"
                             />
-                            <span className="text-sm">{t.fullName || t.userId?.fullName}</span>
+                            <span className="text-sm">{getTeacherName(t)}</span>
                           </label>
                         ))}
                       </div>
@@ -369,6 +380,9 @@ const AcademicEnrollmentDetails = () => {
                   </div>
                 );
               })}
+              {availableCourses.length === 0 && (
+                <p className="text-center text-slate-400 py-4">ምንም ኮርስ አልተገኘም</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
