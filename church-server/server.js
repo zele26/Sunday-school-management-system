@@ -35,6 +35,8 @@ let eduStudyModeRoutes = null;
 let eduScheduleRoutes = null;
 let tempMigrationRoutes = null;
 let churchMembershipRoutes = null;
+let eduCourseEnrollmentRoutes = null;
+let eduCertificateRoutes = null;
 
 let eduProgressionRoutes = null;
 try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } catch (e) { console.warn('⚠️ progressionRoutes not loaded:', e.message); }
@@ -42,6 +44,10 @@ try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } 
 try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { console.warn('⚠️ personRoutes not loaded:', e.message); }
 try { coreDepartmentRoutes = require('./routes/core/departmentRoutes'); } catch (e) { console.warn('⚠️ departmentRoutes not loaded:', e.message); }
 try { coreDepartmentMembershipRoutes = require('./routes/core/departmentMembershipRoutes'); } catch (e) { console.warn('⚠️ departmentMembershipRoutes not loaded:', e.message); }
+try { eduCourseEnrollmentRoutes = require('./routes/education/courseEnrollmentRoutes'); } catch (e) { console.warn('⚠️ courseEnrollmentRoutes not loaded:', e.message); }
+try { eduCertificateRoutes = require('./routes/education/certificateRoutes'); } catch (e) { console.warn('⚠️ certificateRoutes not loaded:', e.message); }
+
+
 
 // Load Education module routes individually
 try { eduStudentProfileRoutes = require('./routes/education/studentProfileRoutes'); } catch (e) { console.warn('⚠️ studentProfileRoutes not loaded:', e.message); }
@@ -145,6 +151,9 @@ if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
 if (churchMembershipRoutes) app.use('/api/core/church-memberships', churchMembershipRoutes);
 
 if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
+
+if (eduCourseEnrollmentRoutes) app.use('/api/education', eduCourseEnrollmentRoutes);
+if (eduCertificateRoutes) app.use('/api/education', eduCertificateRoutes);
 // Health Check
 app.get('/api/test', (req, res) => {
   res.json({
