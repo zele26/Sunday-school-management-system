@@ -34,6 +34,7 @@ let eduEnrollmentRoutes = null;
 let eduStudyModeRoutes = null;
 let eduScheduleRoutes = null;
 let tempMigrationRoutes = null;
+let churchMembershipRoutes = null;
 
 // Load Core routes individually
 try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { console.warn('⚠️ personRoutes not loaded:', e.message); }
@@ -49,6 +50,8 @@ try { eduAcademicEnrollmentRoutes = require('./routes/education/academicEnrollme
 try { eduEnrollmentRoutes = require('./routes/education/enrollmentRoutes'); } catch (e) { console.warn('⚠️ enrollmentRoutes not loaded:', e.message); }
 try { eduStudyModeRoutes = require('./routes/education/studyModeRoutes'); } catch (e) { console.warn('⚠️ studyModeRoutes not loaded:', e.message); }
 try { eduScheduleRoutes = require('./routes/education/scheduleRoutes'); } catch (e) { console.warn('⚠️ scheduleRoutes not loaded:', e.message); }
+
+try { churchMembershipRoutes = require('./routes/core/churchMembershipRoutes'); } catch (e) { console.warn('⚠️ churchMembershipRoutes not loaded:', e.message); }
 
 // Load temporary migration route
 try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } catch (e) { console.warn('⚠️ tempMigrationRoutes not loaded:', e.message); }
@@ -136,6 +139,8 @@ if (eduScheduleRoutes) app.use('/api/education/schedules', eduScheduleRoutes);
 
 // Temporary migration route
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
+
+if (churchMembershipRoutes) app.use('/api/core/church-memberships', churchMembershipRoutes);
 
 // Health Check
 app.get('/api/test', (req, res) => {

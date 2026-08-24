@@ -34,6 +34,7 @@ import ProgramsManagement from '../features/admin/ProgramsManagement';
 import AcademicYearsManagement from '../features/admin/AcademicYearsManagement';
 import AcademicEnrollmentsManagement from '../features/admin/AcademicEnrollmentsManagement';
 import ManualEnrollment from '../features/admin/ManualEnrollment';
+import ChurchMembershipsManagement from '../features/admin/ChurchMembershipsManagement';
 
 export default function AdminRoutes() {
   return (
@@ -70,6 +71,7 @@ export default function AdminRoutes() {
       <Route path="academic-years" element={<AcademicYearsManagement />} />
       <Route path="academic-enrollments" element={<AcademicEnrollmentsManagement />} />
       <Route path="manual-enrollment" element={<ManualEnrollment />} />
+      <Route path="church-memberships" element={<ChurchMembershipsManagement />} />
     </Routes>
   );
 }
