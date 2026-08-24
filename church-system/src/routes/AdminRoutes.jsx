@@ -29,6 +29,10 @@ import ResourceApproval from '../features/admin/ResourceApproval';
 import PeopleManagement from '../features/admin/PeopleManagement';
 import DepartmentsManagement from '../features/admin/DepartmentsManagement';
 import DepartmentMembershipsManagement from '../features/admin/DepartmentMembershipsManagement';
+import StudentProfilesManagement from '../features/admin/StudentProfilesManagement';
+import ProgramsManagement from '../features/admin/ProgramsManagement';
+import AcademicYearsManagement from '../features/admin/AcademicYearsManagement';
+import AcademicEnrollmentsManagement from '../features/admin/AcademicEnrollmentsManagement';
 
 export default function AdminRoutes() {
   return (
@@ -60,6 +64,10 @@ export default function AdminRoutes() {
       <Route path="password-resets" element={<PasswordResets />} />
       <Route path="resource-approval" element={<ResourceApproval />} />
       <Route path="department-memberships" element={<DepartmentMembershipsManagement />} />
+      <Route path="student-profiles" element={<StudentProfilesManagement />} />
+      <Route path="programs" element={<ProgramsManagement />} />
+      <Route path="academic-years" element={<AcademicYearsManagement />} />
+      <Route path="academic-enrollments" element={<AcademicEnrollmentsManagement />} />
     </Routes>
   );
 }

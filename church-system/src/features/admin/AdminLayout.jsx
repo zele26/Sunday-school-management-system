@@ -203,6 +203,10 @@ const navItems = [
   { path: '/admin/attendance-reports', label: 'Attendance', icon: '📊' },
   { path: '/admin/registrations', label: 'Registrations', icon: '📋' },
   { path: '/admin/password-resets', label: 'Password Resets', icon: '🔑' },
+  { path: '/admin/student-profiles', label: 'Student Profiles', icon: '🎓' },
+  { path: '/admin/programs', label: 'Programs', icon: '📘' },
+  { path: '/admin/academic-years', label: 'Academic Years', icon: '📅' },
+  { path: '/admin/academic-enrollments', label: 'Enrollments', icon: '📝' },
 ];
 
 const AdminLayout = ({ onLogout }) => {

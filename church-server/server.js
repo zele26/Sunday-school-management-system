@@ -226,7 +226,7 @@ const registrationRoutes = require('./routes/registrationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
-
+const eduAcademicEnrollmentRoutes = require('./routes/education/academicEnrollmentRoutes');
 // --- NEW CORE / EDUCATION / TEMP ROUTES (safe loading) ---
 let corePersonRoutes = null;
 let coreDepartmentRoutes = null;
@@ -260,12 +260,16 @@ try {
   console.warn('⚠️ Temporary migration route not loaded:', err.message);
 }
 
+
+
 const app = express();
 
 // --- MIDDLEWARE ---
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
+
+app.use('/api/education/academic-enrollments', eduAcademicEnrollmentRoutes);
 
 app.use(cors({
   origin: true,
