@@ -37,8 +37,8 @@ let eduScheduleRoutes = null;
 let eduCourseEnrollmentRoutes = null;
 let eduCertificateRoutes = null;
 let eduProgressionRoutes = null;
-let eduCourseRoutes = null;          // new education courses
-let eduTeacherProfileRoutes = null; // new teacher profiles
+let eduCourseRoutes = null;
+let eduTeacherProfileRoutes = null;
 let tempMigrationRoutes = null;
 
 try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { console.warn('⚠️ personRoutes not loaded:', e.message); }
@@ -277,6 +277,50 @@ app.post('/api/admin/temp/run-full-education-migration', async (req, res) => {
     });
   } catch (err) {
     console.error('Migration error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Embedded temporary bulk course assignment endpoint
+app.post('/api/education/academic-enrollments/:enrollmentId/bulk-courses', async (req, res) => {
+  try {
+    const AcademicEnrollment = require('./models/education/AcademicEnrollment');
+    const CourseEnrollment = require('./models/education/CourseEnrollment');
+    const { enrollmentId } = req.params;
+    const { items } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'items array is required' });
+    }
+
+    const enrollment = await AcademicEnrollment.findById(enrollmentId);
+    if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
+
+    const created = [];
+    for (const item of items) {
+      const { courseId, teacherIds = [] } = item;
+      if (!courseId) continue;
+
+      const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
+      if (exists) continue;
+
+      const courseEnrollment = await CourseEnrollment.create({
+        academicEnrollmentId: enrollmentId,
+        courseId,
+        teachers: teacherIds,
+        teacherId: teacherIds[0] || null,
+        status: 'enrolled',
+      });
+      created.push(courseEnrollment);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${created.length} course(s) assigned successfully.`,
+      created,
+    });
+  } catch (err) {
+    console.error('Bulk course assignment error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
