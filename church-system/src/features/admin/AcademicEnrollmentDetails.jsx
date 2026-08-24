@@ -140,7 +140,7 @@ const handleBulkSubmit = async () => {
     teacherIds: teacherSelections[courseId] || [],
   }));
 
-  console.log('Bulk submit payload:', { enrollmentId, items }); // 🔍 debug
+  console.log('📦 Bulk payload:', { enrollmentId, items });
 
   try {
     const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/bulk-courses`, {
@@ -153,10 +153,12 @@ const handleBulkSubmit = async () => {
       setShowBulkModal(false);
       fetchEnrollmentDetails();
     } else {
-      setError(data.message || 'Failed to assign courses');
+      console.error('Server error:', res.status, data);
+      setError(data.message || `Server error (${res.status})`);
     }
   } catch (err) {
-    setError('Network error during bulk assignment');
+    console.error('Network error:', err);
+    setError(`Network error: ${err.message || 'Check console for details'}`);
   }
 };
 
