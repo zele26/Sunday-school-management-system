@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
 const CourseEnrollment = require('../../models/education/CourseEnrollment');
-const Course = require('../../models/Course');          // legacy Course
-const Teacher = require('../../models/Teacher');        // legacy Teacher
+const Course = require('../../models/Course');
+const Teacher = require('../../models/Teacher');
+const User = require('../../models/User');
 const { protect, authorize } = require('../../middleware/auth');
 
 // GET /api/education/academic-enrollments/:enrollmentId/courses
@@ -12,41 +13,90 @@ router.get('/enrollments/:enrollmentId/courses', protect, authorize('admin'), as
     const { enrollmentId } = req.params;
     const courseEnrollments = await CourseEnrollment.find({ academicEnrollmentId: enrollmentId })
       .populate('courseId', 'name grade description')
-      .populate('teacherId', 'fullName firstName lastName email');
+      .populate('teachers', 'fullName firstName middleName lastName email')
+      .populate('teacherId', 'fullName firstName middleName lastName email');
     res.json({ success: true, courseEnrollments });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// POST /api/education/academic-enrollments/:enrollmentId/courses – add course with teacher
+// POST single course
 router.post('/enrollments/:enrollmentId/courses', protect, authorize('admin'), async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const { courseId, teacherId } = req.body;
+    const { courseId, teacherIds = [] } = req.body;
     if (!courseId) return res.status(400).json({ success: false, message: 'courseId is required' });
 
     const enrollment = await AcademicEnrollment.findById(enrollmentId);
     if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
 
-    // check duplicate
+    // Check duplicate
     const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
     if (exists) return res.status(400).json({ success: false, message: 'Course already assigned to this enrollment' });
 
     const courseEnrollment = await CourseEnrollment.create({
       academicEnrollmentId: enrollmentId,
       courseId,
-      teacherId: teacherId || null,
+      teachers: teacherIds,
+      teacherId: teacherIds[0] || null,  // keep first as legacy single for compatibility
       status: 'enrolled',
     });
 
-    res.status(201).json({ success: true, courseEnrollment });
+    // Populate for response
+    const populated = await CourseEnrollment.populate(courseEnrollment, [
+      { path: 'courseId', select: 'name' },
+      { path: 'teachers', select: 'fullName email' },
+    ]);
+
+    res.status(201).json({ success: true, courseEnrollment: populated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// PUT /api/education/course-enrollments/:id/complete – mark course completed with grade/mark
+// POST bulk courses
+router.post('/enrollments/:enrollmentId/bulk-courses', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+    const { items } = req.body;   // items: [{ courseId, teacherIds }]
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'items array is required' });
+    }
+
+    const enrollment = await AcademicEnrollment.findById(enrollmentId);
+    if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
+
+    const created = [];
+    for (const item of items) {
+      const { courseId, teacherIds = [] } = item;
+      if (!courseId) continue;
+
+      const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
+      if (exists) continue;
+
+      const courseEnrollment = await CourseEnrollment.create({
+        academicEnrollmentId: enrollmentId,
+        courseId,
+        teachers: teacherIds,
+        teacherId: teacherIds[0] || null,
+        status: 'enrolled',
+      });
+      created.push(courseEnrollment);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${created.length} course(s) assigned successfully.`,
+      created,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/education/course-enrollments/:id/complete – mark course completed
 router.put('/course-enrollments/:id/complete', protect, authorize('admin'), async (req, res) => {
   try {
     const { finalResult, mark } = req.body;
@@ -60,48 +110,6 @@ router.put('/course-enrollments/:id/complete', protect, authorize('admin'), asyn
     await courseEnrollment.save();
 
     res.json({ success: true, courseEnrollment });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-
-// POST /api/education/academic-enrollments/:enrollmentId/bulk-courses
-router.post('/enrollments/:enrollmentId/bulk-courses', protect, authorize('admin'), async (req, res) => {
-  try {
-    const { enrollmentId } = req.params;
-    const { items } = req.body;   // items: [{ courseId, teacherId }]
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'items array is required' });
-    }
-
-    const enrollment = await AcademicEnrollment.findById(enrollmentId);
-    if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
-
-    const created = [];
-    for (const item of items) {
-      const { courseId, teacherId } = item;
-      if (!courseId) continue;
-
-      // Check duplicate
-      const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
-      if (exists) continue; // skip already assigned courses
-
-      const courseEnrollment = await CourseEnrollment.create({
-        academicEnrollmentId: enrollmentId,
-        courseId,
-        teacherId: teacherId || null,
-        status: 'enrolled',
-      });
-      created.push(courseEnrollment);
-    }
-
-    res.status(201).json({
-      success: true,
-      message: `${created.length} course(s) assigned successfully.`,
-      created,
-    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

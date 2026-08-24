@@ -13,14 +13,14 @@ const AcademicEnrollmentDetails = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  // Single add states (keep)
+  // Single add states
   const [selectedCourse, setSelectedCourse] = useState('');
-  const [selectedTeacher, setSelectedTeacher] = useState('');
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
 
   // Bulk add states
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
-  const [teacherAssignments, setTeacherAssignments] = useState({});
+  const [teacherSelections, setTeacherSelections] = useState({}); // courseId -> array of teacherIds
 
   const [certificate, setCertificate] = useState(null);
   const [showCertificate, setShowCertificate] = useState(false);
@@ -80,13 +80,13 @@ const AcademicEnrollmentDetails = () => {
     try {
       const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/courses`, {
         method: 'POST',
-        body: JSON.stringify({ courseId: selectedCourse, teacherId: selectedTeacher || undefined }),
+        body: JSON.stringify({ courseId: selectedCourse, teacherIds: selectedTeacherIds }),
       });
       const data = await res.json();
       if (res.ok) {
         setMessage('Course added successfully');
         setSelectedCourse('');
-        setSelectedTeacher('');
+        setSelectedTeacherIds([]);
         fetchEnrollmentDetails();
       } else {
         setError(data.message || 'Failed to add course');
@@ -96,10 +96,16 @@ const AcademicEnrollmentDetails = () => {
     }
   };
 
+  const toggleTeacherSelection = (teacherId) => {
+    setSelectedTeacherIds(prev =>
+      prev.includes(teacherId) ? prev.filter(id => id !== teacherId) : [...prev, teacherId]
+    );
+  };
+
   // ---------- Bulk Add ----------
   const openBulkModal = () => {
     setSelectedCourseIds([]);
-    setTeacherAssignments({});
+    setTeacherSelections({});
     setShowBulkModal(true);
   };
 
@@ -107,10 +113,19 @@ const AcademicEnrollmentDetails = () => {
     setSelectedCourseIds(prev =>
       prev.includes(courseId) ? prev.filter(id => id !== courseId) : [...prev, courseId]
     );
+    if (!teacherSelections[courseId]) {
+      setTeacherSelections(prev => ({ ...prev, [courseId]: [] }));
+    }
   };
 
-  const handleTeacherAssignment = (courseId, teacherId) => {
-    setTeacherAssignments(prev => ({ ...prev, [courseId]: teacherId }));
+  const toggleTeacherForCourse = (courseId, teacherId) => {
+    setTeacherSelections(prev => {
+      const current = prev[courseId] || [];
+      const updated = current.includes(teacherId)
+        ? current.filter(id => id !== teacherId)
+        : [...current, teacherId];
+      return { ...prev, [courseId]: updated };
+    });
   };
 
   const handleBulkSubmit = async (e) => {
@@ -119,7 +134,7 @@ const AcademicEnrollmentDetails = () => {
 
     const items = selectedCourseIds.map(courseId => ({
       courseId,
-      teacherId: teacherAssignments[courseId] || undefined,
+      teacherIds: teacherSelections[courseId] || [],
     }));
 
     try {
@@ -209,15 +224,14 @@ const AcademicEnrollmentDetails = () => {
             <div><span className="font-semibold">ሁኔታ:</span> {enrollment.status}</div>
           </div>
 
-          {/* Buttons to open add forms */}
+          {/* Buttons */}
           <div className="flex gap-3">
             <button
               onClick={openBulkModal}
               className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold"
             >
-              ➕ ብዙ ኮርሶችን ጨምር (Bulk Add)
+              ➕ ብዙ ኮርሶችን ጨምር
             </button>
-            {/* Single add can remain but hidden? keep as link */}
             <button
               onClick={() => setSelectedCourse('')}
               className="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold"
@@ -226,17 +240,31 @@ const AcademicEnrollmentDetails = () => {
             </button>
           </div>
 
-          {/* Single add form (collapsible via state maybe) */}
+          {/* Single add form (visible when selectedCourse changed or after clicking) */}
           {selectedCourse !== '' && (
-            <form onSubmit={handleAddCourse} className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className="border rounded-xl p-2">
+            <form onSubmit={handleAddCourse} className="space-y-3">
+              <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className="border rounded-xl p-2 w-full">
                 <option value="">— ኮርስ ይምረጡ —</option>
                 {availableCourses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
               </select>
-              <select value={selectedTeacher} onChange={e => setSelectedTeacher(e.target.value)} className="border rounded-xl p-2">
-                <option value="">— መምህር ይምረጡ —</option>
-                {teachers.map(t => <option key={t._id} value={t._id}>{t.fullName || t.userId?.fullName}</option>)}
-              </select>
+
+              <div>
+                <label className="block text-sm font-semibold mb-1">መምህሮች (Teachers)</label>
+                <div className="flex flex-wrap gap-2">
+                  {teachers.map(t => (
+                    <label key={t._id} className="flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeacherIds.includes(t._id)}
+                        onChange={() => toggleTeacherSelection(t._id)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="text-sm">{t.fullName || t.userId?.fullName}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               <button type="submit" className="bg-blue-600 text-white rounded-xl px-4 py-2">አስገባ</button>
             </form>
           )}
@@ -251,24 +279,29 @@ const AcademicEnrollmentDetails = () => {
                 <thead>
                   <tr className="border-b text-xs uppercase text-slate-400">
                     <th className="py-2">ኮርስ</th>
-                    <th className="py-2">መምህር</th>
+                    <th className="py-2">መምህር(ዎች)</th>
                     <th className="py-2">ሁኔታ</th>
                     <th className="py-2">እርምጃ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {courses.map(ce => (
-                    <tr key={ce._id}>
-                      <td className="py-2">{ce.courseId?.name}</td>
-                      <td className="py-2">{ce.teacherId?.fullName || '—'}</td>
-                      <td className="py-2">{ce.status}</td>
-                      <td className="py-2">
-                        {ce.status !== 'completed' && (
-                          <button onClick={() => handleCompleteCourse(ce._id)} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg">አጠናቅቅ</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                  {courses.map(ce => {
+                    const teacherList = ce.teachers?.length > 0
+                      ? ce.teachers.map(t => t.fullName).join(', ')
+                      : ce.teacherId ? ce.teacherId.fullName : '—';
+                    return (
+                      <tr key={ce._id}>
+                        <td className="py-2">{ce.courseId?.name}</td>
+                        <td className="py-2">{teacherList}</td>
+                        <td className="py-2">{ce.status}</td>
+                        <td className="py-2">
+                          {ce.status !== 'completed' && (
+                            <button onClick={() => handleCompleteCourse(ce._id)} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg">አጠናቅቅ</button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -297,35 +330,45 @@ const AcademicEnrollmentDetails = () => {
       {/* Bulk Add Modal */}
       {showBulkModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-3xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start">
               <h3 className="text-xl font-bold text-slate-800">ብዙ ኮርሶችን ጨምር</h3>
               <button onClick={() => setShowBulkModal(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold">&times;</button>
             </div>
-            <p className="text-sm text-slate-500">ኮርሶችን ምረጡ እና ለእያንዳንዱ መምህር ይመድቡ።</p>
+            <p className="text-sm text-slate-500">ኮርሶችን ምረጡ እና ለእያንዳንዱ ብዙ መምህሮችን ይመድቡ።</p>
 
             <div className="space-y-2">
-              {availableCourses.map(course => (
-                <div key={course._id} className={`flex items-center gap-3 p-3 rounded-xl border ${selectedCourseIds.includes(course._id) ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
-                  <input
-                    type="checkbox"
-                    checked={selectedCourseIds.includes(course._id)}
-                    onChange={() => toggleCourseSelection(course._id)}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  <span className="font-medium text-slate-800 flex-1">{course.name}</span>
-                  {selectedCourseIds.includes(course._id) && (
-                    <select
-                      value={teacherAssignments[course._id] || ''}
-                      onChange={(e) => handleTeacherAssignment(course._id, e.target.value)}
-                      className="border rounded-lg p-1.5 text-sm w-40"
-                    >
-                      <option value="">— መምህር —</option>
-                      {teachers.map(t => <option key={t._id} value={t._id}>{t.fullName || t.userId?.fullName}</option>)}
-                    </select>
-                  )}
-                </div>
-              ))}
+              {availableCourses.map(course => {
+                const isSelected = selectedCourseIds.includes(course._id);
+                return (
+                  <div key={course._id} className={`p-3 rounded-xl border ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleCourseSelection(course._id)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="font-medium text-slate-800 flex-1">{course.name}</span>
+                    </div>
+                    {isSelected && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {teachers.map(t => (
+                          <label key={t._id} className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={(teacherSelections[course._id] || []).includes(t._id)}
+                              onChange={() => toggleTeacherForCourse(course._id, t._id)}
+                              className="w-4 h-4 text-blue-600 rounded"
+                            />
+                            <span className="text-sm">{t.fullName || t.userId?.fullName}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
