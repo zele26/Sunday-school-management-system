@@ -132,32 +132,33 @@ const AcademicEnrollmentDetails = () => {
     });
   };
 
-  const handleBulkSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedCourseIds.length === 0) return;
+const handleBulkSubmit = async () => {
+  if (selectedCourseIds.length === 0) return;
 
-    const items = selectedCourseIds.map(courseId => ({
-      courseId,
-      teacherIds: teacherSelections[courseId] || [],
-    }));
+  const items = selectedCourseIds.map(courseId => ({
+    courseId,
+    teacherIds: teacherSelections[courseId] || [],
+  }));
 
-    try {
-      const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/bulk-courses`, {
-        method: 'POST',
-        body: JSON.stringify({ items }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage(data.message || 'Courses assigned');
-        setShowBulkModal(false);
-        fetchEnrollmentDetails();
-      } else {
-        setError(data.message || 'Failed to assign courses');
-      }
-    } catch (err) {
-      setError('Network error');
+  console.log('Bulk submit payload:', { enrollmentId, items }); // 🔍 debug
+
+  try {
+    const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/bulk-courses`, {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setMessage(data.message || 'Courses assigned');
+      setShowBulkModal(false);
+      fetchEnrollmentDetails();
+    } else {
+      setError(data.message || 'Failed to assign courses');
     }
-  };
+  } catch (err) {
+    setError('Network error during bulk assignment');
+  }
+};
 
   // ---------- Complete Course ----------
   const handleCompleteCourse = async (courseEnrollmentId) => {
@@ -387,7 +388,7 @@ const AcademicEnrollmentDetails = () => {
 
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setShowBulkModal(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl">ይቅር</button>
-              <button onClick={handleBulkSubmit} disabled={selectedCourseIds.length === 0} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50">አስገባ</button>
+              <button type="button" onClick={handleBulkSubmit} disabled={selectedCourseIds.length === 0} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50">አስገባ</button>
             </div>
           </div>
         </div>
