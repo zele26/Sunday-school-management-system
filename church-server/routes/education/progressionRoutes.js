@@ -10,11 +10,28 @@ const Schedule = require('../../models/education/Schedule');
 const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
 const { protect, authorize } = require('../../middleware/auth');
 
-// Helper: get next academic year name
 const getNextYearName = (currentYearName) => {
   const current = parseInt(currentYearName) || new Date().getFullYear();
   return String(current + 1);
 };
+
+// GET /api/education/students/:studentProfileId/history – get academic history
+router.get('/students/:studentProfileId/history', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { studentProfileId } = req.params;
+    const enrollments = await AcademicEnrollment.find({ studentProfileId })
+      .populate('academicYearId', 'name')
+      .populate('programId', 'name code type')
+      .populate('gradeId', 'name level')
+      .populate('studyModeId', 'name code')
+      .populate('scheduleId', 'name code')
+      .sort({ academicYearId: 1, startDate: 1 });
+    res.json({ success: true, enrollments });
+  } catch (err) {
+    console.error('Fetch history error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 // POST /api/education/students/:studentProfileId/progress
 router.post('/students/:studentProfileId/progress', protect, authorize('admin'), async (req, res) => {
@@ -26,7 +43,7 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
       return res.status(404).json({ success: false, message: 'Student profile not found' });
     }
 
-    // Find latest enrollment (most recent academic year)
+    // Find latest active enrollment
     const currentEnrollment = await AcademicEnrollment.findOne({
       studentProfileId: studentProfile._id,
       status: 'active',
@@ -42,11 +59,10 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
       return res.status(400).json({ success: false, message: 'No active enrollment found for this student' });
     }
 
-    const programCode = currentEnrollment.programId.code;
     const isRegular = currentEnrollment.programId.type === 'regular';
-
-    // Determine next grade/batch
+    let nextName = '';
     let nextGradeId = null;
+
     if (isRegular) {
       if (!currentEnrollment.gradeId) {
         return res.status(400).json({ success: false, message: 'Regular student has no grade assigned' });
@@ -56,30 +72,22 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
       if (nextLevel > 12) {
         return res.status(400).json({ success: false, message: 'Student already completed Grade 12' });
       }
-      const nextGradeName = `Grade ${nextLevel}`;
-      let nextGrade = await Grade.findOne({ name: nextGradeName, programId: currentEnrollment.programId._id });
+      nextName = `Grade ${nextLevel}`;
+      let nextGrade = await Grade.findOne({ name: nextName, programId: currentEnrollment.programId._id });
       if (!nextGrade) {
-        nextGrade = await Grade.create({
-          name: nextGradeName,
-          level: nextLevel,
-          programId: currentEnrollment.programId._id,
-        });
+        nextGrade = await Grade.create({ name: nextName, level: nextLevel, programId: currentEnrollment.programId._id });
       }
       nextGradeId = nextGrade._id;
     } else {
       // Distance: batch progression
-      const currentGradeName = currentEnrollment.gradeId?.name || currentEnrollment.programId.name;
+      const currentGradeName = currentEnrollment.gradeId?.name || '';
       const batchMatch = currentGradeName.match(/(\d+)/);
       const currentBatch = batchMatch ? parseInt(batchMatch[1]) : 1;
       const nextBatch = currentBatch + 1;
-      const nextBatchName = `Batch ${nextBatch}`;
-      let nextBatchGrade = await Grade.findOne({ name: nextBatchName, programId: currentEnrollment.programId._id });
+      nextName = `Batch ${nextBatch}`;
+      let nextBatchGrade = await Grade.findOne({ name: nextName, programId: currentEnrollment.programId._id });
       if (!nextBatchGrade) {
-        nextBatchGrade = await Grade.create({
-          name: nextBatchName,
-          level: nextBatch, // store batch number as level for ordering
-          programId: currentEnrollment.programId._id,
-        });
+        nextBatchGrade = await Grade.create({ name: nextName, level: nextBatch, programId: currentEnrollment.programId._id });
       }
       nextGradeId = nextBatchGrade._id;
     }
@@ -92,7 +100,7 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
       nextYear = await AcademicYear.create({ name: nextYearName, status: 'active' });
     }
 
-    // Check if an enrollment already exists for next year and same program
+    // Check duplicate
     const existingNext = await AcademicEnrollment.findOne({
       studentProfileId: studentProfile._id,
       academicYearId: nextYear._id,
@@ -103,7 +111,7 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
       return res.status(400).json({ success: false, message: 'Student already has an enrollment for the next year/grade' });
     }
 
-    // Mark current enrollment as completed
+    // Complete current enrollment
     currentEnrollment.status = 'completed';
     currentEnrollment.completionStatus = 'Promoted';
     currentEnrollment.endDate = new Date();
@@ -123,8 +131,7 @@ router.post('/students/:studentProfileId/progress', protect, authorize('admin'),
 
     res.json({
       success: true,
-      message: `Student progressed to ${isRegular ? nextGradeName : nextBatchName} for ${nextYearName}.`,
-      currentEnrollment,
+      message: `Student progressed to ${nextName} for ${nextYearName}.`,
       newEnrollment,
     });
   } catch (err) {
