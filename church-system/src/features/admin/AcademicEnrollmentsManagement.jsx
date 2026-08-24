@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiFetch } from '../../api/apiClient';
 
 const AcademicEnrollmentsManagement = () => {
@@ -21,7 +22,6 @@ const AcademicEnrollmentsManagement = () => {
         setError('Failed to load enrollments');
       }
     } catch (err) {
-      console.error(err);
       setError('Network error');
     } finally {
       setLoading(false);
@@ -53,9 +53,10 @@ const AcademicEnrollmentsManagement = () => {
                 <th className="py-2 px-2">Student</th>
                 <th className="py-2 px-2">Year</th>
                 <th className="py-2 px-2">Program</th>
-                <th className="py-2 px-2">Grade</th>
-                <th className="py-2 px-2">Study Mode</th>
+                <th className="py-2 px-2">Grade/Batch</th>
+                <th className="py-2 px-2">Mode</th>
                 <th className="py-2 px-2">Status</th>
+                <th className="py-2 px-2">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y text-sm">
@@ -76,6 +77,14 @@ const AcademicEnrollmentsManagement = () => {
                     }`}>
                       {enroll.status}
                     </span>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Link
+                      to={`/admin/academic-enrollments/${enroll._id}`}
+                      className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all"
+                    >
+                      Details
+                    </Link>
                   </td>
                 </tr>
               ))}

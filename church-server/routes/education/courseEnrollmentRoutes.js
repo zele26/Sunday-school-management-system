@@ -65,4 +65,46 @@ router.put('/course-enrollments/:id/complete', protect, authorize('admin'), asyn
   }
 });
 
+
+// POST /api/education/academic-enrollments/:enrollmentId/bulk-courses
+router.post('/enrollments/:enrollmentId/bulk-courses', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+    const { items } = req.body;   // items: [{ courseId, teacherId }]
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'items array is required' });
+    }
+
+    const enrollment = await AcademicEnrollment.findById(enrollmentId);
+    if (!enrollment) return res.status(404).json({ success: false, message: 'Enrollment not found' });
+
+    const created = [];
+    for (const item of items) {
+      const { courseId, teacherId } = item;
+      if (!courseId) continue;
+
+      // Check duplicate
+      const exists = await CourseEnrollment.findOne({ academicEnrollmentId: enrollmentId, courseId });
+      if (exists) continue; // skip already assigned courses
+
+      const courseEnrollment = await CourseEnrollment.create({
+        academicEnrollmentId: enrollmentId,
+        courseId,
+        teacherId: teacherId || null,
+        status: 'enrolled',
+      });
+      created.push(courseEnrollment);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${created.length} course(s) assigned successfully.`,
+      created,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;
