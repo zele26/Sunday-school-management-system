@@ -37,6 +37,8 @@ let eduScheduleRoutes = null;
 let eduCourseEnrollmentRoutes = null;
 let eduCertificateRoutes = null;
 let eduProgressionRoutes = null;
+let eduCourseRoutes = null;          // new education courses
+let eduTeacherProfileRoutes = null; // new teacher profiles
 let tempMigrationRoutes = null;
 
 try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { console.warn('⚠️ personRoutes not loaded:', e.message); }
@@ -55,6 +57,8 @@ try { eduScheduleRoutes = require('./routes/education/scheduleRoutes'); } catch 
 try { eduCourseEnrollmentRoutes = require('./routes/education/courseEnrollmentRoutes'); } catch (e) { console.warn('⚠️ courseEnrollmentRoutes not loaded:', e.message); }
 try { eduCertificateRoutes = require('./routes/education/certificateRoutes'); } catch (e) { console.warn('⚠️ certificateRoutes not loaded:', e.message); }
 try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } catch (e) { console.warn('⚠️ progressionRoutes not loaded:', e.message); }
+try { eduCourseRoutes = require('./routes/education/courseRoutes'); } catch (e) { console.warn('⚠️ courseRoutes not loaded:', e.message); }
+try { eduTeacherProfileRoutes = require('./routes/education/teacherProfileRoutes'); } catch (e) { console.warn('⚠️ teacherProfileRoutes not loaded:', e.message); }
 try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } catch (e) { console.warn('⚠️ tempMigrationRoutes not loaded:', e.message); }
 
 const app = express();
@@ -104,7 +108,7 @@ app.post('/api/test-body', (req, res) => {
   res.json({ received: req.body, contentType: req.headers['content-type'] });
 });
 
-// --- ROUTE MOUNTING ---
+// --- ROUTE MOUNTING (All API routes before fallback) ---
 app.use('/api/auth', authRoutes);
 app.use('/api/admin/teachers', teacherAdminRoutes);
 app.use('/api/admin', adminRoutes);
@@ -133,9 +137,11 @@ if (eduAcademicEnrollmentRoutes) app.use('/api/education/academic-enrollments', 
 if (eduEnrollmentRoutes) app.use('/api/education/enroll', eduEnrollmentRoutes);
 if (eduStudyModeRoutes) app.use('/api/education/study-modes', eduStudyModeRoutes);
 if (eduScheduleRoutes) app.use('/api/education/schedules', eduScheduleRoutes);
-if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
 if (eduCourseEnrollmentRoutes) app.use('/api/education', eduCourseEnrollmentRoutes);
 if (eduCertificateRoutes) app.use('/api/education', eduCertificateRoutes);
+if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
+if (eduCourseRoutes) app.use('/api/education/courses', eduCourseRoutes);
+if (eduTeacherProfileRoutes) app.use('/api/education/teacher-profiles', eduTeacherProfileRoutes);
 
 // Temporary migration route (from file, if exists)
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
@@ -291,11 +297,16 @@ app.get(/^(?!\/api).*/, (req, res) => {
   res.status(404).send('Frontend build not found. Run the Vite app first.');
 });
 
-// Global Error Handler
+// --- GLOBAL ERROR HANDLER ---
 app.use((err, req, res, next) => {
   console.error('❌ Global error handler:', err);
-  if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
-  if (err.message && err.message.includes('Invalid file type')) return res.status(400).json({ success: false, message: err.message });
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ success: false, message: 'File too large. Maximum size is 10MB.' });
+  }
+  if (err.message && err.message.includes('Invalid file type')) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map(e => e.message);
     return res.status(400).json({ success: false, message: 'Validation error', errors: messages });
@@ -304,21 +315,26 @@ app.use((err, req, res, next) => {
     const field = Object.keys(err.keyPattern)[0];
     return res.status(400).json({ success: false, message: `${field} already exists. Please use a different value.` });
   }
-  res.status(500).json({ success: false, message: process.env.NODE_ENV === 'production' ? 'An internal server error occurred' : err.message });
+  res.status(500).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production' ? 'An internal server error occurred' : err.message
+  });
 });
 
-// Start Server
+// --- START SERVER ---
 const PORT = process.env.PORT || 5000;
 
 async function start() {
   try {
     await connectToDatabase();
     console.log('✅ Database connected');
+
     const User = require('./models/User');
     try { await User.collection.dropIndex('email_1'); } catch (e) {}
     try { await User.collection.dropIndex('phone_1'); } catch (e) {}
     await User.createIndexes();
     console.log('✅ Sparse indexes ensured for User model');
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
