@@ -30,6 +30,9 @@ let eduProgramRoutes = null;
 let eduAcademicYearRoutes = null;
 let eduGradeRoutes = null;
 let eduAcademicEnrollmentRoutes = null;
+let eduEnrollmentRoutes = null;
+let eduStudyModeRoutes = null;
+let eduScheduleRoutes = null;
 let tempMigrationRoutes = null;
 
 // Load Core routes individually
@@ -37,12 +40,15 @@ try { corePersonRoutes = require('./routes/core/personRoutes'); } catch (e) { co
 try { coreDepartmentRoutes = require('./routes/core/departmentRoutes'); } catch (e) { console.warn('⚠️ departmentRoutes not loaded:', e.message); }
 try { coreDepartmentMembershipRoutes = require('./routes/core/departmentMembershipRoutes'); } catch (e) { console.warn('⚠️ departmentMembershipRoutes not loaded:', e.message); }
 
-// Load Education routes individually
+// Load Education module routes individually
 try { eduStudentProfileRoutes = require('./routes/education/studentProfileRoutes'); } catch (e) { console.warn('⚠️ studentProfileRoutes not loaded:', e.message); }
 try { eduProgramRoutes = require('./routes/education/programRoutes'); } catch (e) { console.warn('⚠️ programRoutes not loaded:', e.message); }
 try { eduAcademicYearRoutes = require('./routes/education/academicYearRoutes'); } catch (e) { console.warn('⚠️ academicYearRoutes not loaded:', e.message); }
 try { eduGradeRoutes = require('./routes/education/gradeRoutes'); } catch (e) { console.warn('⚠️ gradeRoutes not loaded:', e.message); }
 try { eduAcademicEnrollmentRoutes = require('./routes/education/academicEnrollmentRoutes'); } catch (e) { console.warn('⚠️ academicEnrollmentRoutes not loaded:', e.message); }
+try { eduEnrollmentRoutes = require('./routes/education/enrollmentRoutes'); } catch (e) { console.warn('⚠️ enrollmentRoutes not loaded:', e.message); }
+try { eduStudyModeRoutes = require('./routes/education/studyModeRoutes'); } catch (e) { console.warn('⚠️ studyModeRoutes not loaded:', e.message); }
+try { eduScheduleRoutes = require('./routes/education/scheduleRoutes'); } catch (e) { console.warn('⚠️ scheduleRoutes not loaded:', e.message); }
 
 // Load temporary migration route
 try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } catch (e) { console.warn('⚠️ tempMigrationRoutes not loaded:', e.message); }
@@ -59,14 +65,11 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
-    // Allow listed origins
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    // For now allow all other origins; you can restrict later
-    return callback(null, true);
+    return callback(null, true); // allow all others for now
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -127,6 +130,9 @@ if (eduProgramRoutes) app.use('/api/education/programs', eduProgramRoutes);
 if (eduAcademicYearRoutes) app.use('/api/education/academic-years', eduAcademicYearRoutes);
 if (eduGradeRoutes) app.use('/api/education/grades', eduGradeRoutes);
 if (eduAcademicEnrollmentRoutes) app.use('/api/education/academic-enrollments', eduAcademicEnrollmentRoutes);
+if (eduEnrollmentRoutes) app.use('/api/education/enroll', eduEnrollmentRoutes);
+if (eduStudyModeRoutes) app.use('/api/education/study-modes', eduStudyModeRoutes);
+if (eduScheduleRoutes) app.use('/api/education/schedules', eduScheduleRoutes);
 
 // Temporary migration route
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);

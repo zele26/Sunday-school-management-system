@@ -33,6 +33,7 @@ import StudentProfilesManagement from '../features/admin/StudentProfilesManageme
 import ProgramsManagement from '../features/admin/ProgramsManagement';
 import AcademicYearsManagement from '../features/admin/AcademicYearsManagement';
 import AcademicEnrollmentsManagement from '../features/admin/AcademicEnrollmentsManagement';
+import ManualEnrollment from '../features/admin/ManualEnrollment';
 
 export default function AdminRoutes() {
   return (
@@ -68,6 +69,7 @@ export default function AdminRoutes() {
       <Route path="programs" element={<ProgramsManagement />} />
       <Route path="academic-years" element={<AcademicYearsManagement />} />
       <Route path="academic-enrollments" element={<AcademicEnrollmentsManagement />} />
+      <Route path="manual-enrollment" element={<ManualEnrollment />} />
     </Routes>
   );
 }

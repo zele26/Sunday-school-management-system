@@ -207,6 +207,7 @@ const navItems = [
   { path: '/admin/programs', label: 'Programs', icon: '📘' },
   { path: '/admin/academic-years', label: 'Academic Years', icon: '📅' },
   { path: '/admin/academic-enrollments', label: 'Enrollments', icon: '📝' },
+  { path: '/admin/manual-enrollment', label: 'Manual Enrollment', icon: '📝' },
 ];
 
 const AdminLayout = ({ onLogout }) => {
