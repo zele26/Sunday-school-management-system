@@ -379,7 +379,7 @@ async function start() {
     await User.createIndexes();
     console.log('✅ Sparse indexes ensured for User model');
 
-    app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`🌐 Health check at http://localhost:${PORT}/api/test`);
