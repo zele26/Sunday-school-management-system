@@ -13,7 +13,7 @@ pipeline {
         
         // Vault Configuration
         VAULT_ADDR        = 'http://127.0.0.1:8200'
-        VAULT_SECRET_PATH = 'secret/data/church-app-db'
+        VAULT_SECRET_PATH = 'secret/church-app-db'
         
         // Git Repository & Branch
         GIT_REPO_URL      = 'https://github.com/zele26/Sunday-school-management-system.git'
@@ -44,10 +44,10 @@ pipeline {
         stage('Fetch Vault Secrets') {
             steps {
                 echo "===> Stage 2: Authenticating with HashiCorp Vault..."
-                // Fixed: using 'vaultSecrets' instead of 'secretRoots'
                 withVault(configuration: [vaultUrl: "${env.VAULT_ADDR}", vaultCredentialId: 'vault-dev-token'], 
                           vaultSecrets: [
                               [path: "${env.VAULT_SECRET_PATH}", 
+                               engineVersion: 2, // <--- THIS IS THE CRITICAL FIX
                                secretValues: [
                                    [envVar: 'DB_USER', vaultKey: 'username'],
                                    [envVar: 'DB_PASS', vaultKey: 'password']
