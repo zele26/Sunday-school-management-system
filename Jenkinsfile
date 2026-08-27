@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // --- Global & Infrastructure Configuration ---
-        HARBOR_HOST       = 'harbor.yourdomain.com'
+        HARBOR_HOST       = 'localhost:5000'
         HARBOR_PROJECT    = 'church-project'
         HARBOR_REGISTRY   = "${HARBOR_HOST}/${HARBOR_PROJECT}"
         
@@ -12,15 +12,14 @@ pipeline {
         FRONTEND_IMAGE_NAME = "${HARBOR_REGISTRY}/frontend"
         
         // Vault Configuration
-        VAULT_ADDR        = 'https://vault.yourdomain.com:8200'
-        VAULT_SECRET_PATH = 'secret/data/church-project/production'
+        VAULT_ADDR        = 'http://127.0.0.1:8200'
+        VAULT_SECRET_PATH = 'secret/data/church-app-db' // Matched to the secret we made earlier
         
         // Git Repository & Branch
         GIT_REPO_URL      = 'https://github.com/zele26/Sunday-school-management-system.git'
         GIT_BRANCH        = 'main'
         
-        // Dynamic build tag
-        IMAGE_TAG         = "${BUILD_NUMBER}-${GIT_COMMIT.take(8)}"
+        // Note: IMAGE_TAG is removed from here and moved to Stage 1
     }
 
     options {
@@ -36,7 +35,10 @@ pipeline {
                 echo "===> Stage 1: Checking out source code from Git..."
                 checkout scm
                 script {
-                    echo "Building Commit: ${env.GIT_COMMIT} on branch ${env.BRANCH_NAME}"
+                    // FIX 1: Generate the dynamic tag AFTER checkout
+                    env.GIT_SHORT_COMMIT = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                    env.IMAGE_TAG = "${BUILD_NUMBER}-${env.GIT_SHORT_COMMIT}"
+                    echo "Building Image Tag: ${env.IMAGE_TAG} on branch ${env.BRANCH_NAME}"
                 }
             }
         }
@@ -44,13 +46,17 @@ pipeline {
         stage('Fetch Vault Secrets') {
             steps {
                 echo "===> Stage 2: Authenticating with HashiCorp Vault..."
-                /*
-                 Uses Jenkins HashiCorp Vault Plugin to inject secrets securely into pipeline environment.
-                 Configured with AppRole / Token credentials ID in Jenkins ('vault-approle-credentials').
-                */
-                withCredentials([usernamePassword(credentialsId: 'vault-approle-credentials', usernameVariable: 'VAULT_ROLE_ID', passwordVariable: 'VAULT_SECRET_ID')]) {
+                // FIX 2: Using the proper HashiCorp Vault Plugin with our Dev Token
+                withVault(configuration: [vaultUrl: env.VAULT_ADDR, vaultCredentialId: 'vault-dev-token'], 
+                          secretRoots: [
+                              [path: env.VAULT_SECRET_PATH, 
+                               secretValues: [
+                                   [envVar: 'DB_USER', vaultKey: 'username'],
+                                   [envVar: 'DB_PASS', vaultKey: 'password']
+                               ]]
+                          ]) {
                     script {
-                        echo "Successfully verified Vault connection at ${env.VAULT_ADDR} for path ${env.VAULT_SECRET_PATH}"
+                        echo "Successfully verified Vault connection and pulled database secrets!"
                     }
                 }
             }
@@ -63,7 +69,6 @@ pipeline {
                         dir('church-server') {
                             echo "===> Testing Backend (Node.js)..."
                             sh 'npm ci'
-                            // Run unit tests if test script is defined
                             sh 'npm test --if-present'
                         }
                     }
@@ -84,24 +89,18 @@ pipeline {
         stage('SAST - SonarQube Code Analysis') {
             steps {
                 echo "===> Stage 4: Running Static Application Security Testing (SAST)..."
-                /*
-                 Requires SonarQube Scanner configured in Jenkins Global Tool Configuration
-                 and SonarQube Server endpoint configured in Jenkins System Configuration.
-                */
                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
                     script {
-                        // Backend Sonar Scan
                         dir('church-server') {
                             sh """
                             echo "Scanning Backend..."
-                            // npx sonar-scanner -Dsonar.projectKey=church-backend -Dsonar.sources=. -Dsonar.host.url=https://sonarqube.yourdomain.com -Dsonar.login=\${SONAR_TOKEN} || true
+                            // npx sonar-scanner -Dsonar.projectKey=church-backend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
                             """
                         }
-                        // Frontend Sonar Scan
                         dir('church-system') {
                             sh """
                             echo "Scanning Frontend..."
-                            // npx sonar-scanner -Dsonar.projectKey=church-frontend -Dsonar.sources=src -Dsonar.host.url=https://sonarqube.yourdomain.com -Dsonar.login=\${SONAR_TOKEN} || true
+                            // npx sonar-scanner -Dsonar.projectKey=church-frontend -Dsonar.sources=src -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
                             """
                         }
                     }
@@ -171,12 +170,17 @@ pipeline {
         stage('Image Signing (Cosign)') {
             steps {
                 echo "===> Stage 9: Signing Container Images with Cosign..."
-                withCredentials([string(credentialsId: 'cosign-private-key-passphrase', variable: 'COSIGN_PASSWORD')]) {
+                withCredentials([
+                    string(credentialsId: 'cosign-private-key-passphrase', variable: 'COSIGN_PASSWORD'),
+                    file(credentialsId: 'cosign-private-key', variable: 'COSIGN_KEY_FILE')
+                ]) {
                     script {
                         sh """
                         echo "Signing backend image..."
-                        // cosign sign --key k8s://cosign-system/cosign-key ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} || true
-                        echo "Signed ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}"
+                        cosign sign --key \${COSIGN_KEY_FILE} --tlog-upload=false -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        
+                        echo "Signing frontend image..."
+                        cosign sign --key \${COSIGN_KEY_FILE} --tlog-upload=false -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
                     }
                 }
@@ -198,11 +202,13 @@ pipeline {
                         # Update Frontend deployment image tag
                         sed -i 's|image: .*frontend:.*|image: ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/frontend/deployment.yaml
                         
-                        # Commit and push updated manifests to trigger ArgoCD Sync
+                        # Commit the changes
                         git add k8s-manifests/backend/deployment.yaml k8s-manifests/frontend/deployment.yaml
                         git commit -m "ci(gitops): auto-update image tag to ${env.IMAGE_TAG} [skip ci]" || echo "No changes to commit"
                         
-                        git push https://\${GIT_USER}:\${GIT_PAT}@github.com/zele26/Sunday-school-management-system.git HEAD:\${GIT_BRANCH}
+                        # Pull latest changes to avoid fast-forward rejection, then push
+                        git pull --rebase origin ${env.GIT_BRANCH}
+                        git push https://\${GIT_USER}:\${GIT_PAT}@github.com/zele26/Sunday-school-management-system.git HEAD:${env.GIT_BRANCH}
                         """
                     }
                 }
