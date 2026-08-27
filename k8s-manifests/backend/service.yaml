@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: church-backend
+  namespace: church-production
+  labels:
+    app.kubernetes.io/name: church-backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: sunday-school-system
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP
+      name: http
+  selector:
+    app: church-backend

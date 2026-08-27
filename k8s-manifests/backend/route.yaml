@@ -1,0 +1,21 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: church-backend-route
+  namespace: church-production
+  labels:
+    app.kubernetes.io/name: church-backend
+    app.kubernetes.io/component: api
+  annotations:
+    haproxy.router.openshift.io/hsts_header: max-age=31536000;includeSubDomains;preload
+spec:
+  host: api-church.apps.yourdomain.com
+  to:
+    kind: Service
+    name: church-backend
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
