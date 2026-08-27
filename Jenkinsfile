@@ -47,7 +47,7 @@ pipeline {
                 withVault(configuration: [vaultUrl: "${env.VAULT_ADDR}", vaultCredentialId: 'vault-dev-token'], 
                           vaultSecrets: [
                               [path: "${env.VAULT_SECRET_PATH}", 
-                               engineVersion: 2, // <--- THIS IS THE CRITICAL FIX
+                               engineVersion: 2, 
                                secretValues: [
                                    [envVar: 'DB_USER', vaultKey: 'username'],
                                    [envVar: 'DB_PASS', vaultKey: 'password']
@@ -66,7 +66,7 @@ pipeline {
                     steps {
                         dir('church-server') {
                             echo "===> Testing Backend (Node.js)..."
-                            sh 'npm ci'
+                            sh 'npm install' // Changed from npm ci
                             sh 'npm test --if-present'
                         }
                     }
@@ -75,7 +75,7 @@ pipeline {
                     steps {
                         dir('church-system') {
                             echo "===> Testing & Linting Frontend (React/Vite)..."
-                            sh 'npm ci'
+                            sh 'npm install' // Changed from npm ci
                             sh 'npm run lint --if-present'
                             sh 'npm run build'
                         }
