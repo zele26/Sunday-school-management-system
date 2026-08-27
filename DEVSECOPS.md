@@ -39,12 +39,12 @@ vault secrets enable -path=secret kv-v2
 ### Step 1.2: Store Production Environment Secrets
 ```bash
 vault kv put secret/church-project/production \
-  MONGO_URI="mongodb://zelalemfiseha26_db_user:zolazola@ac-cxhsxhf-shard-00-00.pj2hwsn.mongodb.net:27017,ac-cxhsxhf-shard-00-01.pj2hwsn.mongodb.net:27017,ac-cxhsxhf-shard-00-02.pj2hwsn.mongodb.net:27017/church_db?ssl=true&replicaSet=atlas-565zob-shard-0&authSource=admin&appName=workconnect" \
-  JWT_SECRET="7f8a9b2c4d6e8f0a1b3c5d7e9f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8r" \
-  REFRESH_TOKEN_SECRET="7f8a9b2c4d6e8f0a1b3c5d7e9f1a2b3c4d5e6f7a8b9c0diidjvbd4545" \
-  CLOUDINARY_CLOUD_NAME="dh6o29yiy" \
-  CLOUDINARY_API_KEY="912664363111828" \
-  CLOUDINARY_API_SECRET="9pWv9HnHrEtQIVJofd2f_zVgp0s"
+  MONGO_URI="mongodb+srv://<db_user>:<db_password>@cluster.mongodb.net/church_db" \
+  JWT_SECRET="<your-jwt-secret-key>" \
+  REFRESH_TOKEN_SECRET="<your-refresh-token-secret-key>" \
+  CLOUDINARY_CLOUD_NAME="<your-cloudinary-cloud-name>" \
+  CLOUDINARY_API_KEY="<your-cloudinary-api-key>" \
+  CLOUDINARY_API_SECRET="<your-cloudinary-api-secret>"
 ```
 
 ### Step 1.3: Enable Kubernetes Authentication for OpenShift
