@@ -13,13 +13,11 @@ pipeline {
         
         // Vault Configuration
         VAULT_ADDR        = 'http://127.0.0.1:8200'
-        VAULT_SECRET_PATH = 'secret/data/church-app-db' // Matched to the secret we made earlier
+        VAULT_SECRET_PATH = 'secret/data/church-app-db'
         
         // Git Repository & Branch
         GIT_REPO_URL      = 'https://github.com/zele26/Sunday-school-management-system.git'
         GIT_BRANCH        = 'main'
-        
-        // Note: IMAGE_TAG is removed from here and moved to Stage 1
     }
 
     options {
@@ -35,7 +33,7 @@ pipeline {
                 echo "===> Stage 1: Checking out source code from Git..."
                 checkout scm
                 script {
-                    // FIX 1: Generate the dynamic tag AFTER checkout
+                    // Generate dynamic tag AFTER checkout prevents NullPointerException
                     env.GIT_SHORT_COMMIT = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
                     env.IMAGE_TAG = "${BUILD_NUMBER}-${env.GIT_SHORT_COMMIT}"
                     echo "Building Image Tag: ${env.IMAGE_TAG} on branch ${env.BRANCH_NAME}"
@@ -46,10 +44,10 @@ pipeline {
         stage('Fetch Vault Secrets') {
             steps {
                 echo "===> Stage 2: Authenticating with HashiCorp Vault..."
-                // FIX 2: Using the proper HashiCorp Vault Plugin with our Dev Token
-                withVault(configuration: [vaultUrl: env.VAULT_ADDR, vaultCredentialId: 'vault-dev-token'], 
-                          secretRoots: [
-                              [path: env.VAULT_SECRET_PATH, 
+                // Fixed: using 'vaultSecrets' instead of 'secretRoots'
+                withVault(configuration: [vaultUrl: "${env.VAULT_ADDR}", vaultCredentialId: 'vault-dev-token'], 
+                          vaultSecrets: [
+                              [path: "${env.VAULT_SECRET_PATH}", 
                                secretValues: [
                                    [envVar: 'DB_USER', vaultKey: 'username'],
                                    [envVar: 'DB_PASS', vaultKey: 'password']
