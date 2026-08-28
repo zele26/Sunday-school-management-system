@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 
 const TeacherLessons = () => {
