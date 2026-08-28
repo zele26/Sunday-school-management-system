@@ -165,7 +165,7 @@ pipeline {
             }
         }
 
-        stage('Image Signing (Cosign)') {
+stage('Image Signing (Cosign)') {
             steps {
                 echo "===> Stage 9: Signing Container Images with Cosign..."
                 withCredentials([
@@ -175,10 +175,10 @@ pipeline {
                     script {
                         sh """
                         echo "Signing backend image..."
-                        cosign sign --key \${COSIGN_KEY_FILE} --tlog-upload=false -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         
                         echo "Signing frontend image..."
-                        cosign sign --key \${COSIGN_KEY_FILE} --tlog-upload=false -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
                     }
                 }
