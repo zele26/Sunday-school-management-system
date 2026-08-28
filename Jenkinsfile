@@ -200,9 +200,12 @@ stage('Image Signing (Cosign)') {
                         # Update Frontend deployment image tag
                         sed -i 's|image: .*frontend:.*|image: ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/frontend/deployment.yaml
                         
-                        # Commit the changes
+                        # Commit the manifest changes
                         git add k8s-manifests/backend/deployment.yaml k8s-manifests/frontend/deployment.yaml
                         git commit -m "ci(gitops): auto-update image tag to ${env.IMAGE_TAG} [skip ci]" || echo "No changes to commit"
+                        
+                        # Stash any other garbage files (like package-lock.json updates) so rebase works
+                        git stash
                         
                         # Pull latest changes to avoid fast-forward rejection, then push
                         git pull --rebase origin ${env.GIT_BRANCH}
