@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: harbor.yourdomain.com/church-project/frontend:1-latest
+          image: localhost:5000/church-project/frontend:14-51ed5714
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
