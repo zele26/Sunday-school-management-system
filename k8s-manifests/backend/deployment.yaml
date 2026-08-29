@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: "192.168.137.195:5000/church-project/backend:16-8e8fa309"
+          image: harbor.apps-crc.testing/church-project/backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
@@ -67,5 +67,5 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
-      #imagePullSecrets:
-        #- name: harbor-pull-secret
+      imagePullSecrets:
+        - name: harbor-pull-secret
