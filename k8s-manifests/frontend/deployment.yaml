@@ -61,4 +61,4 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
       imagePullSecrets:
-        - name: harbor-pull-secret
+        - name: harbor-secret
