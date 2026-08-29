@@ -30,11 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-<<<<<<< HEAD
-          image: localhost:5000/church-project/frontend:16-8e8fa309
-=======
-          image: 192.168.137.195:5000/church-project/frontend:16-8e8fa309
->>>>>>> 25fe430 (fix the image pull error)
+          image: "192.168.137.195:5000/church-project/frontend:16-8e8fa309"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
