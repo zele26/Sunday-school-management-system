@@ -67,5 +67,5 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
-      imagePullSecrets:
-        - name: harbor-pull-secret
+      #imagePullSecrets:
+        #- name: harbor-pull-secret
