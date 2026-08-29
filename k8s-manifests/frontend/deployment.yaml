@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: church-frontend
-  namespace: church-production
+  namespace: church-app
   labels:
     app.kubernetes.io/name: church-frontend
     app.kubernetes.io/component: ui

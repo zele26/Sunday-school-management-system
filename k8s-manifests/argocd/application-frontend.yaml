@@ -13,7 +13,7 @@ spec:
     path: k8s-manifests/frontend
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: church-production
+    namespace: church-app
   syncPolicy:
     automated:
       prune: true
