@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: localhost:5000/church-project/backend:15-9c88962d
+          image: localhost:5000/church-project/backend:16-8e8fa309
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
