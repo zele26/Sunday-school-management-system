@@ -36,7 +36,7 @@ pipeline {
                     // Generate dynamic tag AFTER checkout prevents NullPointerException
                     env.GIT_SHORT_COMMIT = sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
                     env.IMAGE_TAG = "${BUILD_NUMBER}-${env.GIT_SHORT_COMMIT}"
-                    echo "Building Image Tag: ${env.IMAGE_TAG} on branch ${env.BRANCH_NAME}"
+                    echo "Building Image Tag: ${env.IMAGE_TAG} on branch ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
                 }
             }
         }
@@ -92,13 +92,13 @@ pipeline {
                         dir('church-server') {
                             sh """
                             echo "Scanning Backend..."
-                            // npx sonar-scanner -Dsonar.projectKey=church-backend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
+                            # npx sonar-scanner -Dsonar.projectKey=church-backend -Dsonar.sources=. -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
                             """
                         }
                         dir('church-system') {
                             sh """
                             echo "Scanning Frontend..."
-                            // npx sonar-scanner -Dsonar.projectKey=church-frontend -Dsonar.sources=src -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
+                            # npx sonar-scanner -Dsonar.projectKey=church-frontend -Dsonar.sources=src -Dsonar.host.url=http://localhost:9000 -Dsonar.login=\${SONAR_TOKEN} || true
                             """
                         }
                     }
@@ -158,15 +158,21 @@ stage('Push to Harbor Registry') {
                         n=1
                         until [ \$n -ge 6 ]
                         do
-                           docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
-                           docker push ${env.BACKEND_IMAGE_NAME}:latest && \
-                           docker push ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
-                           docker push ${env.FRONTEND_IMAGE_NAME}:latest && break
+                           if docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
+                              docker push ${env.BACKEND_IMAGE_NAME}:latest && \
+                              docker push ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
+                              docker push ${env.FRONTEND_IMAGE_NAME}:latest; then
+                              break
+                           fi
                            
                            echo "Push failed, retrying in 5 seconds... (Attempt \$n)"
                            n=\$((n+1))
                            sleep 5
                         done
+                        if [ \$n -ge 6 ]; then
+                           echo "Error: Failed to push images to Harbor after 5 attempts."
+                           exit 1
+                        fi
                         """
                     }
                 }
