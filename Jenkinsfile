@@ -225,12 +225,11 @@ stage('GitOps Update (Manifest Tags)') {
     }
 
     post {
-         always {
+       always {
     echo "Cleaning up local workspace images..."
     sh "docker rmi ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} ${env.BACKEND_IMAGE_NAME}:latest || true"
     sh "docker rmi ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG} ${env.FRONTEND_IMAGE_NAME}:latest || true"
 }
-        }
         success {
             echo "SUCCESS: DevSecOps pipeline executed successfully! Image tag ${env.IMAGE_TAG} pushed & GitOps sync triggered."
         }
