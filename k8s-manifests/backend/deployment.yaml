@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: backend
-          image: localhost:5000/church-project/backend:21-173b1e75
+          image: harbor.apps-crc.testing/church-project/backend:41-de34e5f3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
