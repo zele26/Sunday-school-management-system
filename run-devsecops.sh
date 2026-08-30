@@ -55,9 +55,9 @@ echo -e "${GREEN}✓ Docker images built successfully.${NC}"
 echo -e "\n${YELLOW}[Stage 4/5] Scanning Containers with Trivy...${NC}"
 if command -v trivy &> /dev/null; then
     echo "Scanning backend image with Trivy..."
-    trivy image --severity HIGH,CRITICAL --exit-code 0 church-backend:local
+    trivy image --db-repository ghcr.io/aquasecurity/trivy-db:2 --severity HIGH,CRITICAL --exit-code 0 church-backend:local
     echo "Scanning frontend image with Trivy..."
-    trivy image --severity HIGH,CRITICAL --exit-code 0 church-frontend:local
+    trivy image --db-repository ghcr.io/aquasecurity/trivy-db:2 --severity HIGH,CRITICAL --exit-code 0 church-frontend:local
     echo -e "${GREEN}✓ Trivy scans complete.${NC}"
 else
     echo -e "${YELLOW}Trivy is not installed on this system. Skipping container scanning.${NC}"
@@ -66,11 +66,21 @@ fi
 
 # Step 5: Docker Compose Stack Deployment
 echo -e "\n${YELLOW}[Stage 5/5] Deploying Stack via Docker Compose...${NC}"
-docker-compose down || true
-docker-compose up --build -d
+COMPOSE_CMD="docker compose"
+if ! docker compose version &>/dev/null; then
+    if command -v docker-compose &>/dev/null; then
+        COMPOSE_CMD="docker-compose"
+    else
+        echo -e "${RED}Error: Neither 'docker compose' nor 'docker-compose' found!${NC}"
+        exit 1
+    fi
+fi
+
+$COMPOSE_CMD down || true
+$COMPOSE_CMD up --build -d
 
 echo -e "\n${GREEN}=====================================================${NC}"
 echo -e "${GREEN} DevSecOps Local Pipeline Completed Successfully!    ${NC}"
-echo -e "${GREEN} Frontend running at http://localhost:80              ${NC}"
+echo -e "${GREEN} Frontend running at http://localhost:8082            ${NC}"
 echo -e "${GREEN} Backend running at http://localhost:5000           ${NC}"
 echo -e "${GREEN}=====================================================${NC}"

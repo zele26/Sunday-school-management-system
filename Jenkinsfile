@@ -137,10 +137,10 @@ pipeline {
                 script {
                     sh """
                     echo "Scanning Backend Image..."
-                    trivy image --severity HIGH,CRITICAL --exit-code 0 ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                    trivy image --db-repository ghcr.io/aquasecurity/trivy-db:2 --severity HIGH,CRITICAL --exit-code 0 ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
 
                     echo "Scanning Frontend Image..."
-                    trivy image --severity HIGH,CRITICAL --exit-code 0 ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                    trivy image --db-repository ghcr.io/aquasecurity/trivy-db:2 --severity HIGH,CRITICAL --exit-code 0 ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                     """
                 }
             }
