@@ -154,9 +154,9 @@ stage('Push to Harbor Registry') {
                         sh """
                         echo "\${HARBOR_PASSWORD}" | docker login ${env.HARBOR_HOST} -u "\${HARBOR_USER}" --password-stdin
                         
-                        # Fixed loop retry syntax
+                        # Increased retry attempts to handle 503 blips
                         n=1
-                        until [ \$n -ge 4 ]
+                        until [ \$n -ge 6 ]
                         do
                            docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
                            docker push ${env.BACKEND_IMAGE_NAME}:latest && \
@@ -182,11 +182,12 @@ stage('Push to Harbor Registry') {
                 ]) {
                     script {
                         sh """
-                        # Bypass self-signed TLS verification via environment variable for modern Cosign versions
+                        # Use COSIGN_INSECURE=1 to bypass self-signed certificate errors for local registry
                         export COSIGN_EXPERIMENTAL=1
+                        export COSIGN_INSECURE=1
                         
-                        cosign sign --key \${COSIGN_KEY_FILE} -y --registry-client-opts="insecure=true" ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        cosign sign --key \${COSIGN_KEY_FILE} -y --registry-client-opts="insecure=true" ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
                     }
                 }
