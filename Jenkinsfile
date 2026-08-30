@@ -154,7 +154,7 @@ stage('Push to Harbor Registry') {
                         sh """
                         echo "\${HARBOR_PASSWORD}" | docker login ${env.HARBOR_HOST} -u "\${HARBOR_USER}" --password-stdin
                         
-                        # Push images one at a time. If one fails, it only retries that specific image.
+                        # Push sequentially. If one fails, it only retries that specific image.
                         for img in "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}" "${env.BACKEND_IMAGE_NAME}:latest" "${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}" "${env.FRONTEND_IMAGE_NAME}:latest"; do
                             n=1
                             until [ \$n -ge 6 ]
@@ -165,9 +165,8 @@ stage('Push to Harbor Registry') {
                                 sleep 5
                             done
                             
-                            # Fail the whole pipeline if an image completely fails 5 times
                             if [ \$n -ge 6 ]; then
-                                echo "ERROR: Failed to push \$img after 5 attempts."
+                                echo "ERROR: Failed to push \$img after 5 attempts. Harbor disk may be full!"
                                 exit 1
                             fi
                         done
@@ -188,7 +187,7 @@ stage('Push to Harbor Registry') {
                         sh """
                         export COSIGN_EXPERIMENTAL=1
                         
-                        # Using the correct flag to bypass the CRC self-signed certificate x509 error
+                        # Use the correct flag to bypass the CRC self-signed certificate x509 error
                         cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
