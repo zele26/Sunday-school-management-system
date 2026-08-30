@@ -154,25 +154,23 @@ stage('Push to Harbor Registry') {
                         sh """
                         echo "\${HARBOR_PASSWORD}" | docker login ${env.HARBOR_HOST} -u "\${HARBOR_USER}" --password-stdin
                         
-                        # Increased retry attempts to handle 503 blips
-                        n=1
-                        until [ \$n -ge 6 ]
-                        do
-                           if docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
-                              docker push ${env.BACKEND_IMAGE_NAME}:latest && \
-                              docker push ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
-                              docker push ${env.FRONTEND_IMAGE_NAME}:latest; then
-                              break
-                           fi
-                           
-                           echo "Push failed, retrying in 5 seconds... (Attempt \$n)"
-                           n=\$((n+1))
-                           sleep 5
+                        # Push images one at a time. If one fails, it only retries that specific image.
+                        for img in "${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}" "${env.BACKEND_IMAGE_NAME}:latest" "${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}" "${env.FRONTEND_IMAGE_NAME}:latest"; do
+                            n=1
+                            until [ \$n -ge 6 ]
+                            do
+                                docker push \$img && break
+                                echo "Push failed for \$img, retrying in 5 seconds... (Attempt \$n)"
+                                n=\$((n+1))
+                                sleep 5
+                            done
+                            
+                            # Fail the whole pipeline if an image completely fails 5 times
+                            if [ \$n -ge 6 ]; then
+                                echo "ERROR: Failed to push \$img after 5 attempts."
+                                exit 1
+                            fi
                         done
-                        if [ \$n -ge 6 ]; then
-                           echo "Error: Failed to push images to Harbor after 5 attempts."
-                           exit 1
-                        fi
                         """
                     }
                 }
@@ -188,12 +186,11 @@ stage('Push to Harbor Registry') {
                 ]) {
                     script {
                         sh """
-                        # Use COSIGN_INSECURE=1 to bypass self-signed certificate errors for local registry
                         export COSIGN_EXPERIMENTAL=1
-                        export COSIGN_INSECURE=1
                         
-                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        cosign sign --key \${COSIGN_KEY_FILE} -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        # Using the correct flag to bypass the CRC self-signed certificate x509 error
+                        cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
                     }
                 }
