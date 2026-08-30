@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: frontend
-          image: harbor.apps-crc.testing/church-project/frontend:latest
+          image: harbor.apps-crc.testing/church-project/frontend:v4
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
