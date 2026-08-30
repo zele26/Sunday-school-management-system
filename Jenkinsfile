@@ -176,7 +176,7 @@ stage('Push to Harbor Registry') {
             }
         }
 
-        stage('Image Signing (Cosign)') {
+       stage('Image Signing (Cosign)') {
     steps {
         echo "===> Stage 9: Signing Container Images with Cosign..."
         withCredentials([
@@ -187,8 +187,8 @@ stage('Push to Harbor Registry') {
                 sh """
                 export COSIGN_EXPERIMENTAL=1
                 
-                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry --allow-http-registry ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry --allow-http-registry ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                 """
             }
         }
