@@ -182,9 +182,11 @@ stage('Push to Harbor Registry') {
                 ]) {
                     script {
                         sh """
-                        # Added --insecure flag to bypass self-signed CRC/Harbor cert checks
-                        cosign sign --insecure --key \${COSIGN_KEY_FILE} -y ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        cosign sign --insecure --key \${COSIGN_KEY_FILE} -y ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        # Bypass self-signed TLS verification via environment variable for modern Cosign versions
+                        export COSIGN_EXPERIMENTAL=1
+                        
+                        cosign sign --key \${COSIGN_KEY_FILE} -y --registry-client-opts="insecure=true" ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                        cosign sign --key \${COSIGN_KEY_FILE} -y --registry-client-opts="insecure=true" ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
                         """
                     }
                 }
