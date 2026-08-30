@@ -186,35 +186,38 @@ stage('Image Signing (Cosign)') {
         }
 
         stage('GitOps Update (Manifest Tags)') {
-            steps {
-                echo "===> Stage 10: Updating Kubernetes / OpenShift Manifest Image Tags for ArgoCD..."
-                withCredentials([usernamePassword(credentialsId: 'github-gitops-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PAT')]) {
-                    script {
-                        sh """
-                        git config user.name "Jenkins DevSecOps Bot"
-                        git config user.email "devsecops-bot@yourdomain.com"
-                        
-                        # Update Backend deployment image tag
-                        sed -i 's|image: .*backend:.*|image: ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/backend/deployment.yaml
-                        
-                        # Update Frontend deployment image tag
-                        sed -i 's|image: .*frontend:.*|image: ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/frontend/deployment.yaml
-                        
-                        # Commit the manifest changes
-                        git add k8s-manifests/backend/deployment.yaml k8s-manifests/frontend/deployment.yaml
-                        git commit -m "ci(gitops): auto-update image tag to ${env.IMAGE_TAG} [skip ci]" || echo "No changes to commit"
-                        
-                        # Stash any other garbage files (like package-lock.json updates) so rebase works
-                        git stash
-                        
-                        # Pull latest changes to avoid fast-forward rejection, then push
-                        git pull --rebase origin ${env.GIT_BRANCH}
-                        git push https://\${GIT_USER}:\${GIT_PAT}@github.com/zele26/Sunday-school-management-system.git HEAD:${env.GIT_BRANCH}
-                        """
-                    }
-                }
+    steps {
+        echo "===> Stage 10: Updating Kubernetes / OpenShift Manifest Image Tags for ArgoCD..."
+        withCredentials([usernamePassword(credentialsId: 'github-gitops-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PAT')]) {
+            script {
+                sh """
+                git config user.name "Jenkins DevSecOps Bot"
+                git config user.email "devsecops-bot@yourdomain.com"
+                
+                # Ensure we are fully up-to-date before modifying files
+                git pull --rebase origin ${env.GIT_BRANCH}
+                
+                # Update Backend deployment image tag
+                sed -i 's|image: .*backend:.*|image: ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/backend/deployment.yaml
+                
+                # Update Frontend deployment image tag
+                sed -i 's|image: .*frontend:.*|image: ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}|g' k8s-manifests/frontend/deployment.yaml
+                
+                # Check if there are actual modifications before committing
+                if git diff --quiet; then
+                    echo "No changes detected in manifests to commit."
+                else
+                    git add k8s-manifests/backend/deployment.yaml k8s-manifests/frontend/deployment.yaml
+                    git commit -m "ci(gitops): auto-update image tag to ${env.IMAGE_TAG} [skip ci]"
+                    
+                    # Push safely using the Personal Access Token credential injection
+                    git push https://\${GIT_USER}:\${GIT_PAT}@github.com/zele26/Sunday-school-management-system.git HEAD:${env.GIT_BRANCH}
+                fi
+                """
             }
         }
+    }
+}
     }
 
     post {
