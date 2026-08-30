@@ -146,24 +146,31 @@ pipeline {
             }
         }
 
-        stage('Push to Harbor Registry') {
-            steps {
-                echo "===> Stage 8: Pushing Images to Enterprise Harbor Registry..."
-                withCredentials([usernamePassword(credentialsId: 'harbor-robot-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASSWORD')]) {
-                    script {
-                        sh """
-                        echo "\${HARBOR_PASSWORD}" | docker login ${env.HARBOR_HOST} -u "\${HARBOR_USER}" --password-stdin
-                        
-                        docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        docker push ${env.BACKEND_IMAGE_NAME}:latest
-                        
-                        docker push ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        docker push ${env.FRONTEND_IMAGE_NAME}:latest
-                        """
-                    }
-                }
+stage('Push to Harbor Registry') {
+    steps {
+        echo "===> Stage 8: Pushing Images to Enterprise Harbor Registry..."
+        withCredentials([usernamePassword(credentialsId: 'harbor-robot-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASSWORD')]) {
+            script {
+                sh """
+                echo "\${HARBOR_PASSWORD}" | docker login ${env.HARBOR_HOST} -u "\${HARBOR_USER}" --password-stdin
+                
+                # Retry logic for robust pushes against local registry blips
+                n=0
+                until [ \$n -ge 3 ]
+                do
+                   docker push ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
+                   docker push ${env.BACKEND_IMAGE_NAME}:latest && \
+                   docker push ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG} && \
+                   docker push ${env.FRONTEND_IMAGE_NAME}:latest && break
+                   n=\$([\$n -l 1] && expr \$n + 1 || echo 3)
+                   echo "Push failed, retrying in 5 seconds... (Attempt \$n)"
+                   sleep 5
+                done
+                """
             }
         }
+    }
+}
 
 stage('Image Signing (Cosign)') {
             steps {
