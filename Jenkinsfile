@@ -177,24 +177,23 @@ stage('Push to Harbor Registry') {
         }
 
         stage('Image Signing (Cosign)') {
-            steps {
-                echo "===> Stage 9: Signing Container Images with Cosign..."
-                withCredentials([
-                    string(credentialsId: 'cosign-private-key-passphrase', variable: 'COSIGN_PASSWORD'),
-                    file(credentialsId: 'cosign-private-key', variable: 'COSIGN_KEY_FILE')
-                ]) {
-                    script {
-                        sh """
-                        export COSIGN_EXPERIMENTAL=1
-                        
-                        # Use the correct flag to bypass the CRC self-signed certificate x509 error
-                        cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        cosign sign --key \${COSIGN_KEY_FILE} -y --insecure-skip-verify ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
-                        """
-                    }
-                }
+    steps {
+        echo "===> Stage 9: Signing Container Images with Cosign..."
+        withCredentials([
+            string(credentialsId: 'cosign-private-key-passphrase', variable: 'COSIGN_PASSWORD'),
+            file(credentialsId: 'cosign-private-key', variable: 'COSIGN_KEY_FILE')
+        ]) {
+            script {
+                sh """
+                export COSIGN_EXPERIMENTAL=1
+                
+                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry ${env.BACKEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                cosign sign --key \${COSIGN_KEY_FILE} -y --allow-insecure-registry ${env.FRONTEND_IMAGE_NAME}:${env.IMAGE_TAG}
+                """
             }
         }
+    }
+}
 
 stage('GitOps Update (Manifest Tags)') {
     steps {
