@@ -185,7 +185,7 @@ stage('Image Signing (Cosign)') {
             }
         }
 
-        stage('GitOps Update (Manifest Tags)') {
+stage('GitOps Update (Manifest Tags)') {
     steps {
         echo "===> Stage 10: Updating Kubernetes / OpenShift Manifest Image Tags for ArgoCD..."
         withCredentials([usernamePassword(credentialsId: 'github-gitops-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PAT')]) {
@@ -193,6 +193,10 @@ stage('Image Signing (Cosign)') {
                 sh """
                 git config user.name "Jenkins DevSecOps Bot"
                 git config user.email "devsecops-bot@yourdomain.com"
+                
+                # Discard any dirty lockfile modifications from npm install steps
+                git checkout .
+                git reset --hard HEAD
                 
                 # Ensure we are fully up-to-date before modifying files
                 git pull --rebase origin ${env.GIT_BRANCH}
