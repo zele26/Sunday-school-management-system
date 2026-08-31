@@ -9,8 +9,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-800 selection:bg-amber-500 selection:text-slate-950">
       {/* Hero Section */}
-      <section 
-        className="relative min-h-[90vh] flex items-center justify-center bg-cover bg-center py-24 px-4 overflow-hidden" 
+      <section
+        className="relative min-h-[90vh] flex items-center justify-center bg-cover bg-center py-24 px-4 overflow-hidden"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
         {/* Deep Royal Blue & Dark Overlay with subtle gradient to match the institution logo */}
@@ -19,8 +19,7 @@ const Home = () => {
         <div className="relative z-10 max-w-4xl mx-auto text-center text-white space-y-8">
           <span className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-300 border border-amber-500/30 text-sm font-semibold px-5 py-2 rounded-full backdrop-blur-md shadow-lg shadow-amber-500/10 tracking-wide">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            እንኳን ደህና መጡ! openshifit
-          </span>
+            እንኳን ደህና መጡ! openshifit          </span>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-tight text-white drop-shadow-md">
             ተክለሳዊሮስ ሰንበት ትምህርት ቤት
@@ -40,8 +39,8 @@ const Home = () => {
             </button>
 
             {/* Login button (Styled with Royal Blue Glassmorphism) */}
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="w-full sm:w-auto bg-blue-900/40 hover:bg-blue-900/60 border border-blue-400/30 backdrop-blur-xl text-white px-9 py-4 rounded-2xl font-semibold shadow-lg shadow-blue-950/50 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
             >
               ይግቡ
@@ -140,7 +139,7 @@ const Home = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
             </div>
-            
+
             <div className="space-y-1">
               <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">
                 ምዝገባ አይነት ይምረጡ
