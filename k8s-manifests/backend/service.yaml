@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: api
     app.kubernetes.io/part-of: sunday-school-system
 spec:
-  type: CusterIP
+  type: ClusterIP
   ports:
     - port: 5000
       targetPort: 5000
