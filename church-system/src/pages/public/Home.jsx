@@ -19,7 +19,7 @@ const Home = () => {
         <div className="relative z-10 max-w-4xl mx-auto text-center text-white space-y-8">
           <span className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-300 border border-amber-500/30 text-sm font-semibold px-5 py-2 rounded-full backdrop-blur-md shadow-lg shadow-amber-500/10 tracking-wide">
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            እንኳን ደህና መጡ! openshifit          </span>
+            እንኳን ደህና መጡ!</span>
 
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-tight text-white drop-shadow-md">
             ተክለሳዊሮስ ሰንበት ትምህርት ቤት
