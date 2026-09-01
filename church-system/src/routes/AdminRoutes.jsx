@@ -36,14 +36,18 @@ import AcademicEnrollmentsManagement from '../features/admin/AcademicEnrollments
 import ManualEnrollment from '../features/admin/ManualEnrollment';
 import ChurchMembershipsManagement from '../features/admin/ChurchMembershipsManagement';
 import AcademicEnrollmentDetails from '../features/admin/AcademicEnrollmentDetails';
-
+import DepartmentHub from '../features/admin/DepartmentHub';
+import AdminDistanceHub from '../features/admin/AdminDistanceHub';
 
 export default function AdminRoutes() {
   return (
     <Routes>
       <Route index element={<AdminOverview />} />
+      <Route path="distance-hub" element={<AdminDistanceHub />} />
       <Route path="people" element={<PeopleManagement />} />
       <Route path="departments" element={<DepartmentsManagement />} />
+      <Route path="departments/:id/hub" element={<DepartmentHub />} />
+      <Route path="department-hub" element={<DepartmentHub />} />
       <Route path="users" element={<UsersManagement />} />
       <Route path="approvals" element={<ApprovalsManagement />} />
       <Route path="add-student" element={<AddStudent />} />

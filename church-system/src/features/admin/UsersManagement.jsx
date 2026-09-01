@@ -4,15 +4,27 @@ import { apiFetch } from '../../api/apiClient';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const [stats, setStats] = useState({ total: 0, admin: 0, teacher: 0, student: 0, pending: 0, approved: 0 });
+  const [stats, setStats] = useState({
+    total: 0,
+    superadmin: 0,
+    department_admin: 0,
+    admin: 0,
+    teacher: 0,
+    student: 0,
+    member: 0,
+    pending: 0,
+    approved: 0,
+  });
 
   // Edit Modal
   const [showEditModal, setShowEditModal] = useState(false);
@@ -22,16 +34,40 @@ const UsersManagement = () => {
     email: '',
     phone: '',
     role: '',
+    departmentId: '',
     status: '',
     gender: '',
     city: '',
+    notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
 
+  // Member Journey & History Modal
+  const [showJourneyModal, setShowJourneyModal] = useState(false);
+  const [selectedJourneyUser, setSelectedJourneyUser] = useState(null);
+  const [journeyData, setJourneyData] = useState(null);
+  const [journeyLoading, setJourneyLoading] = useState(false);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
   useEffect(() => {
     fetchUsers();
-  }, [page, search, roleFilter, statusFilter]);
+  }, [page, search, roleFilter, statusFilter, deptFilter]);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await apiFetch('/api/core/departments');
+      if (res.ok) {
+        const data = await res.json();
+        setDepartments(data.departments || data || []);
+      }
+    } catch (err) {
+      console.warn('Failed to load departments:', err);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -40,6 +76,7 @@ const UsersManagement = () => {
       if (search) params.append('search', search);
       if (roleFilter) params.append('role', roleFilter);
       if (statusFilter) params.append('status', statusFilter);
+      if (deptFilter) params.append('departmentId', deptFilter);
 
       const res = await apiFetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error('Failed to fetch users');
@@ -48,14 +85,21 @@ const UsersManagement = () => {
       setUsers(list);
       setTotalPages(data.totalPages || 1);
 
-      setStats({
-        total: data.total || list.length,
-        admin: list.filter(u => u.role === 'admin').length,
-        teacher: list.filter(u => u.role === 'teacher').length,
-        student: list.filter(u => u.role === 'student').length,
-        pending: list.filter(u => u.status === 'pending').length,
-        approved: list.filter(u => u.status === 'approved' || u.status === 'active').length,
-      });
+      if (data.stats) {
+        setStats(data.stats);
+      } else {
+        setStats({
+          total: data.total || list.length,
+          superadmin: list.filter(u => u.role === 'superadmin').length,
+          department_admin: list.filter(u => u.role === 'department_admin').length,
+          admin: list.filter(u => u.role === 'admin').length,
+          teacher: list.filter(u => u.role === 'teacher').length,
+          student: list.filter(u => u.role === 'student').length,
+          member: list.filter(u => u.role === 'member').length,
+          pending: list.filter(u => u.status === 'pending').length,
+          approved: list.filter(u => u.status === 'approved' || u.status === 'active').length,
+        });
+      }
       setSelectedUsers([]);
       setSelectAll(false);
     } catch (err) {
@@ -80,31 +124,39 @@ const UsersManagement = () => {
     setPage(1);
   };
 
-  // ---------- Bulk Actions ----------
-  const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(users.map(u => u._id));
-    }
-    setSelectAll(!selectAll);
+  const handleDeptFilter = (e) => {
+    setDeptFilter(e.target.value);
+    setPage(1);
   };
 
+  // Selection
   const toggleSelectUser = (id) => {
     if (selectedUsers.includes(id)) {
-      setSelectedUsers(selectedUsers.filter(s => s !== id));
+      setSelectedUsers(selectedUsers.filter(uId => uId !== id));
     } else {
       setSelectedUsers([...selectedUsers, id]);
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers([]);
+      setSelectAll(false);
+    } else {
+      setSelectedUsers(users.map(u => u._id));
+      setSelectAll(true);
+    }
+  };
+
+  // Bulk Actions
   const approveSelected = async () => {
-    if (selectedUsers.length === 0) return;
-    if (!confirm(`Approve ${selectedUsers.length} user(s)?`)) return;
+    if (!confirm(`Approve ${selectedUsers.length} users?`)) return;
     try {
-      for (const id of selectedUsers) {
-        await apiFetch(`/api/admin/users/${id}/approve`, { method: 'PUT' });
-      }
+      await apiFetch('/api/admin/users/bulk-approve', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUsers }),
+      });
       fetchUsers();
       setSelectedUsers([]);
       setSelectAll(false);
@@ -114,12 +166,13 @@ const UsersManagement = () => {
   };
 
   const rejectSelected = async () => {
-    if (selectedUsers.length === 0) return;
-    if (!confirm(`Reject ${selectedUsers.length} user(s)?`)) return;
+    if (!confirm(`Reject ${selectedUsers.length} users?`)) return;
     try {
-      for (const id of selectedUsers) {
-        await apiFetch(`/api/admin/users/${id}/reject`, { method: 'PUT' });
-      }
+      await apiFetch('/api/admin/users/bulk-reject', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUsers }),
+      });
       fetchUsers();
       setSelectedUsers([]);
       setSelectAll(false);
@@ -129,12 +182,13 @@ const UsersManagement = () => {
   };
 
   const deleteSelected = async () => {
-    if (selectedUsers.length === 0) return;
-    if (!confirm(`Delete ${selectedUsers.length} user(s)?`)) return;
+    if (!confirm(`Delete ${selectedUsers.length} users?`)) return;
     try {
-      for (const id of selectedUsers) {
-        await apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
-      }
+      await apiFetch('/api/admin/users/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: selectedUsers }),
+      });
       fetchUsers();
       setSelectedUsers([]);
       setSelectAll(false);
@@ -143,7 +197,7 @@ const UsersManagement = () => {
     }
   };
 
-  // ---------- Single User Actions ----------
+  // Single User Actions
   const handleApprove = async (id) => {
     if (!confirm('Approve this user?')) return;
     try {
@@ -174,17 +228,19 @@ const UsersManagement = () => {
     }
   };
 
-  // ---------- Edit Modal ----------
+  // Edit Modal
   const openEditModal = (user) => {
     setEditingUser(user);
     setEditForm({
       fullName: user.fullName || '',
       email: user.email || '',
       phone: user.phone || '',
-      role: user.role || '',
-      status: user.status || '',
+      role: user.role || 'student',
+      departmentId: user.departmentId?._id || user.departmentId || '',
+      status: user.status || 'pending',
       gender: user.gender || '',
       city: user.city || '',
+      notes: '',
     });
     setMsg({ type: '', text: '' });
     setShowEditModal(true);
@@ -204,9 +260,11 @@ const UsersManagement = () => {
         fullName: editForm.fullName.trim(),
         phone: editForm.phone.trim(),
         role: editForm.role,
+        departmentId: editForm.departmentId || null,
         status: editForm.status,
         gender: editForm.gender,
         city: editForm.city.trim(),
+        notes: editForm.notes.trim(),
       };
 
       const res = await apiFetch(`/api/admin/users/${editingUser._id}`, {
@@ -216,7 +274,7 @@ const UsersManagement = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg({ type: 'success', text: '✅ User updated successfully!' });
+        setMsg({ type: 'success', text: '✅ User role & details updated with history preserved!' });
         setTimeout(() => {
           setShowEditModal(false);
           fetchUsers();
@@ -231,7 +289,26 @@ const UsersManagement = () => {
     }
   };
 
-  // ---------- Pagination ----------
+  // Member Journey Modal
+  const openJourneyModal = async (user) => {
+    setSelectedJourneyUser(user);
+    setShowJourneyModal(true);
+    setJourneyLoading(true);
+    setJourneyData(null);
+
+    try {
+      const res = await apiFetch(`/api/admin/users/${user._id}/journey`);
+      if (res.ok) {
+        const data = await res.json();
+        setJourneyData(data);
+      }
+    } catch (err) {
+      console.error('Failed to load user journey:', err);
+    } finally {
+      setJourneyLoading(false);
+    }
+  };
+
   const pageButtons = () => {
     const buttons = [];
     for (let i = 1; i <= totalPages; i++) {
@@ -252,263 +329,485 @@ const UsersManagement = () => {
     return buttons;
   };
 
-  // Helper: role badge color (same as teacher/student)
   const getRoleBadge = (role) => {
-    const colors = {
-      admin: 'bg-purple-50 text-purple-700 border-purple-200',
-      teacher: 'bg-amber-50 text-amber-700 border-amber-200',
-      student: 'bg-blue-50 text-blue-700 border-blue-200',
-    };
-    return colors[role] || 'bg-slate-50 text-slate-700 border-slate-200';
+    switch (role) {
+      case 'superadmin':
+        return 'bg-amber-100 text-amber-900 border-amber-300 font-bold';
+      case 'department_admin':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold';
+      case 'admin':
+        return 'bg-purple-50 text-purple-700 border-purple-200 font-semibold';
+      case 'teacher':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'student':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'member':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
   };
 
-  // Helper: status badge color (same as teacher/student)
   const getStatusBadge = (status) => {
     const colors = {
       approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
       rejected: 'bg-rose-50 text-rose-700 border-rose-200',
-      created: 'bg-slate-50 text-slate-700 border-slate-200',
+      created: 'bg-blue-50 text-blue-700 border-blue-200',
     };
-    return colors[status] || 'bg-slate-50 text-slate-700 border-slate-200';
+    return colors[status?.toLowerCase()] || 'bg-slate-50 text-slate-600 border-slate-200';
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 transition-all">
-      {/* Header – Matches Students & Teachers */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-5">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
-            <span className="p-2 bg-blue-50 text-blue-600 rounded-xl shadow-sm">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </span>
-            User Management
-          </h2>
-          <p className="text-sm text-slate-500">Manage all users, approve registrations, assign roles, and monitor activity.</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">User & Role Management (የአባላትና የአስተዳደር አስተዳደር)</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Manage user accounts, assign Super Admin & Department Admin roles, and preserve lifetime member progression history.
+          </p>
         </div>
       </div>
 
-      {/* Stats Cards – Same as Students & Teachers */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-100">
-          <p className="text-xs text-blue-600 font-semibold uppercase">Total Users</p>
-          <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Users</span>
+          <p className="text-2xl font-extrabold text-slate-800 mt-1">{stats.total}</p>
         </div>
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
-          <p className="text-xs text-purple-600 font-semibold uppercase">Admins</p>
-          <p className="text-2xl font-bold text-purple-800">{stats.admin}</p>
+        <div className="bg-white p-4 rounded-2xl border border-amber-100 bg-amber-50/20 shadow-sm">
+          <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider">👑 Super Admins</span>
+          <p className="text-2xl font-extrabold text-amber-600 mt-1">{stats.superadmin || stats.admin}</p>
         </div>
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-100">
-          <p className="text-xs text-amber-600 font-semibold uppercase">Teachers</p>
-          <p className="text-2xl font-bold text-amber-800">{stats.teacher}</p>
+        <div className="bg-white p-4 rounded-2xl border border-indigo-100 bg-indigo-50/20 shadow-sm">
+          <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider">🏛️ Dept Admins</span>
+          <p className="text-2xl font-extrabold text-indigo-600 mt-1">{stats.department_admin}</p>
         </div>
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100">
-          <p className="text-xs text-emerald-600 font-semibold uppercase">Students</p>
-          <p className="text-2xl font-bold text-emerald-800">{stats.student}</p>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">👨‍🏫 Teachers</span>
+          <p className="text-2xl font-extrabold text-amber-700 mt-1">{stats.teacher}</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">🎓 Students</span>
+          <p className="text-2xl font-extrabold text-blue-600 mt-1">{stats.student}</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-yellow-100 bg-yellow-50/20 shadow-sm">
+          <span className="text-[11px] font-bold text-yellow-700 uppercase tracking-wider">⏳ Pending</span>
+          <p className="text-2xl font-extrabold text-yellow-600 mt-1">{stats.pending}</p>
         </div>
       </div>
 
-      {/* Search & Filter – Same style */}
-      <div className="flex flex-col md:flex-row gap-3.5 bg-slate-50/70 p-4 rounded-2xl border border-slate-100">
-        <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
+      {/* Filter / Search Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Search</label>
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder="Search by name, email, phone..."
             value={search}
             onChange={handleSearch}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"
           />
         </div>
-        <select
-          value={roleFilter}
-          onChange={handleRoleFilter}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer min-w-[160px]"
-        >
-          <option value="">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="teacher">Teacher</option>
-          <option value="student">Student</option>
-        </select>
-        <select
-          value={statusFilter}
-          onChange={handleStatusFilter}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer min-w-[160px]"
-        >
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="active">Active</option>
-        </select>
-        {selectedUsers.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={approveSelected}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
-            >
-              Approve ({selectedUsers.length})
-            </button>
-            <button
-              onClick={rejectSelected}
-              className="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
-            >
-              Reject ({selectedUsers.length})
-            </button>
-            <button
-              onClick={deleteSelected}
-              className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm"
-            >
-              Delete ({selectedUsers.length})
-            </button>
-          </div>
-        )}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Filter by Role</label>
+          <select
+            value={roleFilter}
+            onChange={handleRoleFilter}
+            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="">All Roles</option>
+            <option value="superadmin">👑 Super Admin</option>
+            <option value="department_admin">🏛️ Department Admin</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+            <option value="member">Church Member</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Filter by Department</label>
+          <select
+            value={deptFilter}
+            onChange={handleDeptFilter}
+            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="">All Departments</option>
+            {departments.map(d => (
+              <option key={d._id} value={d._id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">Filter by Status</label>
+          <select
+            value={statusFilter}
+            onChange={handleStatusFilter}
+            className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer"
+          >
+            <option value="">All Statuses</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-semibold text-slate-500">Loading users...</p>
+      {/* Bulk Action Controls */}
+      {selectedUsers.length > 0 && (
+        <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+          <span className="text-sm font-semibold text-blue-900">{selectedUsers.length} users selected:</span>
+          <button
+            onClick={approveSelected}
+            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700"
+          >
+            Approve
+          </button>
+          <button
+            onClick={rejectSelected}
+            className="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700"
+          >
+            Reject
+          </button>
+          <button
+            onClick={deleteSelected}
+            className="px-3 py-1.5 bg-red-700 text-white rounded-lg text-xs font-semibold hover:bg-red-800"
+          >
+            Delete
+          </button>
         </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-sm">
-            <table className="w-full text-left border-collapse bg-white">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200/60 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                  <th className="py-3.5 px-4">
-                    <input
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </th>
-                  <th className="py-3.5 px-4">Name</th>
-                  <th className="py-3.5 px-4">Email</th>
-                  <th className="py-3.5 px-4">Role</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Joined</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="py-8 text-center text-slate-400">
-                      No users found.
-                    </td>
-                  </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u._id || u.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(u._id)}
-                          onChange={() => toggleSelectUser(u._id)}
-                          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-800">
-                        {u.fullName || u.username}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600">{u.email}</td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${getRoleBadge(u.role)}`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${getStatusBadge(u.status)}`}>
-                          {u.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 text-xs">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex gap-1.5 justify-end flex-wrap">
-                          {u.status === 'pending' && (
-                            <>
-                              <button
-                                onClick={() => handleApprove(u._id)}
-                                className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition-all shadow-sm"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleReject(u._id)}
-                                className="text-xs bg-yellow-50 text-yellow-700 font-semibold px-3 py-1.5 rounded-xl border border-yellow-200 hover:bg-yellow-100 transition-all shadow-sm"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                          <button
-                            onClick={() => openEditModal(u)}
-                            className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all shadow-sm"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(u._id)}
-                            className="text-xs bg-rose-50 text-rose-700 font-semibold px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-100 transition-all shadow-sm"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-6 pt-4 border-t border-slate-100">
-              {pageButtons()}
-            </div>
-          )}
-        </>
       )}
 
-      {/* ========== Edit User Modal – Light, Clean, Consistent ========== */}
-      {showEditModal && editingUser && (
-        <div className="fixed inset-0 bg-slate-200/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            {/* Header – Light Gradient (matches student/teacher modals) */}
-            <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-t-3xl text-slate-800 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-lg shadow-sm">
-                    ✏️
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold tracking-tight">Edit User</h3>
-                    <p className="text-xs text-slate-500">Update account details and permissions</p>
-                  </div>
+      {/* Users Table */}
+      <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white">
+        <table className="w-full text-left text-sm text-slate-600">
+          <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase tracking-wider">
+            <tr>
+              <th className="p-4">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={toggleSelectAll}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+              </th>
+              <th className="p-4">User</th>
+              <th className="p-4">Role</th>
+              <th className="p-4">Department</th>
+              <th className="p-4">Status</th>
+              <th className="p-4">Contact</th>
+              <th className="p-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {loading ? (
+              <tr>
+                <td colSpan="7" className="p-8 text-center text-slate-400">Loading users...</td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="p-8 text-center text-slate-400">No users found matching the criteria.</td>
+              </tr>
+            ) : (
+              users.map((u) => (
+                <tr key={u._id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(u._id)}
+                      onChange={() => toggleSelectUser(u._id)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="p-4">
+                    <div className="font-semibold text-slate-900">{u.fullName}</div>
+                    <div className="text-xs text-slate-400">{u.email || 'No email'}</div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-2.5 py-1 rounded-full text-xs border ${getRoleBadge(u.role)}`}>
+                        {u.role === 'superadmin' && '👑 '}
+                        {u.role === 'department_admin' && '🏛️ '}
+                        {u.role}
+                      </span>
+                      {u.roles && u.roles.length > 1 && (
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold" title="Multi-role member">
+                          +{u.roles.length - 1}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    {u.departmentId ? (
+                      <span className="px-2.5 py-0.5 rounded-lg text-xs bg-slate-100 text-slate-800 font-medium border border-slate-200">
+                        {u.departmentId.name || u.departmentId}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">Church-wide</span>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-1 rounded-full text-xs border font-medium ${getStatusBadge(u.status)}`}>
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-xs text-slate-500">
+                    <div>{u.phone || '—'}</div>
+                    <div>{u.city ? `${u.city}` : ''}</div>
+                  </td>
+                  <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                    <button
+                      onClick={() => openJourneyModal(u)}
+                      className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+                      title="View full timeline journey & preserved profiles"
+                    >
+                      📜 Journey
+                    </button>
+
+                    {u.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleApprove(u._id)}
+                          className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs hover:bg-emerald-100 font-medium"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(u._id)}
+                          className="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs hover:bg-rose-100 font-medium"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => openEditModal(u)}
+                      className="px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u._id)}
+                      className="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center pt-2">
+          <span className="text-xs text-slate-400">Page {page} of {totalPages}</span>
+          <div className="flex gap-1.5">{pageButtons()}</div>
+        </div>
+      )}
+
+      {/* Member Journey & Lifetime Progression Modal */}
+      {showJourneyModal && selectedJourneyUser && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-100">
+            {/* Modal Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-xl">
+                  📜
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-base text-white">
+                    {selectedJourneyUser.fullName} — የአባል ጉዞ (Member Journey)
+                  </h3>
+                  <p className="text-xs text-amber-300 font-medium">
+                    የአባሉ ታሪክና የዕድገት ሂደት (Preserved Lifetime Progression)
+                  </p>
                 </div>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="w-8 h-8 rounded-full bg-white hover:bg-slate-100 flex items-center justify-center text-slate-500 font-bold transition-all shadow-sm"
-                >
-                  &times;
-                </button>
               </div>
+              <button
+                onClick={() => setShowJourneyModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Body */}
-            <div className="p-6 space-y-6">
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {journeyLoading ? (
+                <div className="py-16 text-center text-slate-400">
+                  <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                  <p className="text-sm">የአባሉን ታሪክ በመጫን ላይ...</p>
+                </div>
+              ) : journeyData ? (
+                <div className="space-y-6">
+                  {/* Current Active Badges */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase">ወቅታዊ ደረጃ (Current Active Role)</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getRoleBadge(journeyData.user?.role)}`}>
+                          {journeyData.user?.role}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getStatusBadge(journeyData.user?.status)}`}>
+                          {journeyData.user?.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[11px] font-bold text-slate-400 uppercase">የተመደበበት ክፍል (Department)</span>
+                      <p className="text-xs font-bold text-slate-800 mt-1">
+                        {journeyData.user?.departmentId?.name || 'Church-wide / All'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Chronological Role History Timeline */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase text-slate-600 tracking-wider flex items-center gap-2">
+                      <span>⏳ የደረጃዎች የጊዜ ሰሌዳ (Role Progression Timeline)</span>
+                    </h4>
+
+                    {journeyData.user?.roleHistory && journeyData.user.roleHistory.length > 0 ? (
+                      <div className="relative pl-6 border-l-2 border-amber-300 space-y-4 py-1">
+                        {journeyData.user.roleHistory.map((item, idx) => (
+                          <div key={idx} className="relative group">
+                            <span className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-sm group-hover:scale-125 transition-transform" />
+                            <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-xs space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${getRoleBadge(item.role)}`}>
+                                  {item.role}
+                                </span>
+                                <span className="text-[11px] font-semibold text-slate-400">
+                                  {new Date(item.startDate).toLocaleDateString()} {item.endDate ? `— ${new Date(item.endDate).toLocaleDateString()}` : '— Present'}
+                                </span>
+                              </div>
+                              {item.notes && (
+                                <p className="text-xs text-slate-600 font-medium pt-0.5">{item.notes}</p>
+                              )}
+                              {item.changedBy && (
+                                <p className="text-[10px] text-slate-400">የመዘገበው: {item.changedBy.fullName || item.changedBy.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400 border border-dashed border-slate-200">
+                        የተመዘገበ የታሪክ ማስታወሻ የለም።
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-Profiles Grid (Preserved Records) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    {/* Student Record Card */}
+                    <div className="p-4 rounded-2xl border border-blue-100 bg-blue-50/20 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                          <span>🎓 የተማሪነት መዝገብ</span>
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          journeyData.student ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          {journeyData.student ? 'ተገኝቷል (Preserved)' : 'የለም'}
+                        </span>
+                      </div>
+                      {journeyData.student ? (
+                        <div className="text-xs text-slate-600 space-y-1 pt-1">
+                          <p><span className="font-semibold text-slate-500">የተማሪ መለያ: </span><span className="font-mono font-bold text-blue-700">{journeyData.student.studentId || 'TKD-STU'}</span></p>
+                          <p><span className="font-semibold text-slate-500">ዓይነት: </span>{journeyData.student.studentType || 'regular'}</p>
+                          <p><span className="font-semibold text-slate-500">ደረጃ/ባች: </span>{journeyData.student.batch || journeyData.student.grade || '—'}</p>
+                          {journeyData.student.courses?.length > 0 && (
+                            <p><span className="font-semibold text-slate-500">የተመዘገቡ ኮርሶች: </span>{journeyData.student.courses.length} ኮርሶች</p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400">የተማሪነት መዝገብ አልተገኘም።</p>
+                      )}
+                    </div>
+
+                    {/* Teacher Record Card */}
+                    <div className="p-4 rounded-2xl border border-amber-100 bg-amber-50/20 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                          <span>👨‍🏫 የመምህርነት መዝገብ</span>
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          journeyData.teacher ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                          {journeyData.teacher ? 'ተገኝቷል (Preserved)' : 'የለም'}
+                        </span>
+                      </div>
+                      {journeyData.teacher ? (
+                        <div className="text-xs text-slate-600 space-y-1 pt-1">
+                          <p><span className="font-semibold text-slate-500">የመምህር መለያ: </span><span className="font-mono font-bold text-amber-800">{journeyData.teacher.teacherId}</span></p>
+                          <p><span className="font-semibold text-slate-500">ሁኔታ: </span>{journeyData.teacher.status}</p>
+                          <p><span className="font-semibold text-slate-500">ምዝገባ ቀን: </span>{new Date(journeyData.teacher.registrationDate || journeyData.teacher.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400">የመምህርነት መዝገብ አልተገኘም።</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Department Service History */}
+                  {journeyData.memberships && journeyData.memberships.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <span>🏛️ የአገልግሎት ክፍሎች (Department Memberships)</span>
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {journeyData.memberships.map((m) => (
+                          <div key={m._id} className="p-3 bg-white border border-slate-200 rounded-xl text-xs flex items-center justify-between">
+                            <span className="font-bold text-slate-800">{m.departmentId?.name}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 font-bold text-slate-600">{m.role || 'Member'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-right">
+              <button
+                onClick={() => setShowJourneyModal(false)}
+                className="px-5 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 transition-colors"
+              >
+                ዝጋ (Close)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100">
+            <div className="p-6 bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-lg">Edit User & Role (አባልና ሚና አሻሽል)</h3>
+                <p className="text-xs text-blue-200">የአባሉን ሚና ሲቀይሩ ታሪኩና መረጃው አይጠፋም</p>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-white/70 hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
               {msg.text && (
                 <div
                   className={`p-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
@@ -517,117 +816,138 @@ const UsersManagement = () => {
                       : 'bg-rose-50 border border-rose-200 text-rose-700'
                   }`}
                 >
-                  <span className="text-lg">{msg.type === 'success' ? '✅' : '⚠️'}</span>
+                  <span>{msg.type === 'success' ? '✅' : '⚠️'}</span>
                   <span>{msg.text}</span>
                 </div>
               )}
 
-              {/* User Info Card – Clean */}
-              <div className="bg-slate-50/70 rounded-xl p-4 border border-slate-100 space-y-1">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">User</p>
-                <p className="font-semibold text-slate-800">{editingUser.fullName}</p>
-                <p className="text-sm text-slate-500">{editingUser.email}</p>
-                {editingUser.phone && <p className="text-sm text-slate-500">{editingUser.phone}</p>}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={editForm.fullName}
+                  onChange={handleEditChange}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"
+                />
               </div>
 
-              {/* Form Fields – Same style as student/teacher edit forms */}
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Full Name</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={editForm.fullName}
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Role (ሚና)</label>
+                  <select
+                    name="role"
+                    value={editForm.role}
                     onChange={handleEditChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
-                  />
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer font-medium"
+                  >
+                    <option value="superadmin">👑 Super Admin (Full Access)</option>
+                    <option value="department_admin">🏛️ Department Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="teacher">👨‍🏫 Teacher</option>
+                    <option value="student">🎓 Student</option>
+                    <option value="member">Church Member</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Phone</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Assigned Department</label>
+                  <select
+                    name="departmentId"
+                    value={editForm.departmentId}
+                    onChange={handleEditChange}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="">Church-wide / All</option>
+                    {departments.map(d => (
+                      <option key={d._id} value={d._id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Reason / Promotion Note (የለውጡ ምክንያት / ማስታወሻ)
+                </label>
+                <input
+                  type="text"
+                  name="notes"
+                  placeholder="e.g. ተማሪነቱን ጨርሶ ወደ መምህርነት ተዛውሯል (Graduated Batch 4)"
+                  value={editForm.notes}
+                  onChange={handleEditChange}
+                  className="w-full p-2.5 border border-amber-300 bg-amber-50/30 rounded-xl text-xs outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Phone</label>
                   <input
-                    type="tel"
+                    type="text"
                     name="phone"
                     value={editForm.phone}
                     onChange={handleEditChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={editForm.city}
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={editForm.status}
                     onChange={handleEditChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
-                  />
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 cursor-pointer font-medium"
+                  >
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="active">Active</option>
+                  </select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Role</label>
-                    <select
-                      name="role"
-                      value={editForm.role}
-                      onChange={handleEditChange}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status</label>
-                    <select
-                      name="status"
-                      value={editForm.status}
-                      onChange={handleEditChange}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="approved">Approved</option>
-                      <option value="rejected">Rejected</option>
-                      <option value="active">Active</option>
-                    </select>
-                  </div>
-                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Gender</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Gender</label>
                   <select
                     name="gender"
                     value={editForm.gender}
                     onChange={handleEditChange}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none cursor-pointer"
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"
                   >
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={editForm.city}
+                    onChange={handleEditChange}
+                    className="w-full p-2.5 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Footer – Clean buttons */}
-            <div className="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-3xl">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
               <button
+                type="button"
                 onClick={() => setShowEditModal(false)}
-                className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
+                className="px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
-                onClick={saveEdit}
+                type="button"
                 disabled={submitting}
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                onClick={saveEdit}
+                className="px-5 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:from-blue-800 hover:to-indigo-800 transition-all disabled:opacity-50"
               >
-                {submitting ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <span>Save Changes</span>
-                    <span>➔</span>
-                  </>
-                )}
+                {submitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

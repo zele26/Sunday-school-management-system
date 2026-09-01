@@ -1,7 +1,7 @@
 // church-server/routes/uploadRoutes.js
 const express = require('express');
 const router = express.Router();
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('../config/cloudinary');
 const multer = require('multer');
 const { protect } = require('../middleware/auth');
 
@@ -23,12 +23,6 @@ const upload = multer({
       cb(new Error('Invalid file type'), false);
     }
   }
-});
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // ---------- Upload Resource File (still protected) ----------

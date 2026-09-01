@@ -6,7 +6,7 @@ const Payment = require('../models/Payment');
 const User = require('../models/User');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('../config/cloudinary');
 
 // ---------- HELPERS ----------
 

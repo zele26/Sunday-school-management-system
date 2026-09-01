@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');                        // <-- added
 const User = require('../../models/User');
+const Department = require('../../models/Department');
 const Student = require('../../models/Student');
 const PasswordResetRequest = require('../../models/PasswordResetRequest');
 const { AdminPanelData } = require('../../models/PanelData');
@@ -19,20 +20,266 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// ---------- All Users ----------
+// ---------- All Users (with pagination, search, department population) ----------
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
-    res.json(users);
+    const { search, role, status, departmentId, page, limit } = req.query;
+    const query = {};
+
+    if (role) query.role = role;
+    if (status) query.status = status;
+    if (departmentId) query.departmentId = departmentId;
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 1000;
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .select('-password')
+      .populate('departmentId', 'name code')
+      .populate('assignedDepartments', 'name code')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    // Global Stats
+    const [totalCount, superadminCount, deptAdminCount, adminCount, teacherCount, studentCount, memberCount, pendingCount, approvedCount] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'superadmin' }),
+      User.countDocuments({ role: 'department_admin' }),
+      User.countDocuments({ role: 'admin' }),
+      User.countDocuments({ role: 'teacher' }),
+      User.countDocuments({ role: 'student' }),
+      User.countDocuments({ role: 'member' }),
+      User.countDocuments({ status: 'pending' }),
+      User.countDocuments({ status: { $in: ['approved', 'active'] } }),
+    ]);
+
+    res.json({
+      success: true,
+      users,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+      stats: {
+        total: totalCount,
+        superadmin: superadminCount,
+        department_admin: deptAdminCount,
+        admin: adminCount,
+        teacher: teacherCount,
+        student: studentCount,
+        member: memberCount,
+        pending: pendingCount,
+        approved: approvedCount,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Update User (Role, Department, Details with History Preservation) ----------
+router.put('/users/:id', async (req, res) => {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      role,
+      status,
+      departmentId,
+      assignedDepartments,
+      gender,
+      city,
+      wereda,
+      kebele,
+      notes,
+    } = req.body;
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (fullName) user.fullName = fullName.trim();
+    if (email !== undefined) user.email = email ? email.toLowerCase().trim() : undefined;
+    if (phone !== undefined) user.phone = phone ? phone.trim() : undefined;
+    if (status) user.status = status;
+    if (gender !== undefined) user.gender = gender;
+    if (city !== undefined) user.city = city;
+    if (wereda !== undefined) user.wereda = wereda;
+    if (kebele !== undefined) user.kebele = kebele;
+
+    // Handle department assignment
+    if (departmentId !== undefined) {
+      user.departmentId = departmentId || null;
+    }
+    if (assignedDepartments !== undefined && Array.isArray(assignedDepartments)) {
+      user.assignedDepartments = assignedDepartments;
+    }
+
+    // Role Change & Lifetime History Preservation
+    const previousRole = user.role || 'student';
+    const isRoleChanged = role && role !== previousRole;
+
+    if (!user.roles || user.roles.length === 0) {
+      user.roles = [previousRole];
+    }
+
+    if (isRoleChanged) {
+      // If roleHistory is empty, backfill the previous role entry
+      if (!user.roleHistory || user.roleHistory.length === 0) {
+        user.roleHistory = [
+          {
+            role: previousRole,
+            status: 'Promoted',
+            startDate: user.createdAt || new Date(),
+            endDate: new Date(),
+            notes: `Initial role: ${previousRole}`,
+          },
+        ];
+      } else {
+        // Close last active role entry
+        const lastEntry = user.roleHistory[user.roleHistory.length - 1];
+        if (lastEntry && !lastEntry.endDate) {
+          lastEntry.endDate = new Date();
+          lastEntry.status = 'Promoted';
+        }
+      }
+
+      // Add new role to role history
+      user.roleHistory.push({
+        role: role,
+        status: 'Active',
+        departmentId: departmentId || user.departmentId || null,
+        startDate: new Date(),
+        notes: notes || `Role changed from ${previousRole} to ${role}`,
+        changedBy: req.user?._id || null,
+      });
+
+      // Maintain multi-role array
+      if (!user.roles.includes(role)) {
+        user.roles.push(role);
+      }
+      user.role = role;
+
+      // Auto-provision Teacher record if promoted to teacher, while preserving Student records
+      if (role === 'teacher') {
+        try {
+          const Teacher = require('../../models/Teacher');
+          let teacherDoc = await Teacher.findOne({ userId: user._id });
+          if (!teacherDoc) {
+            const count = await Teacher.countDocuments();
+            const year = new Date().getFullYear();
+            await Teacher.create({
+              userId: user._id,
+              teacherId: `TCH-${year}-${String(count + 1).padStart(4, '0')}`,
+              phone: user.phone || '',
+              email: user.email || '',
+              status: 'active',
+              registrationDate: new Date(),
+            });
+          }
+        } catch (tErr) {
+          console.warn('Auto teacher provisioning notice:', tErr.message);
+        }
+      }
+    }
+
+    await user.save();
+    await user.populate('departmentId', 'name code');
+    await user.populate('assignedDepartments', 'name code');
+
+    res.json({
+      success: true,
+      message: 'User updated and role history preserved successfully',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        roles: user.roles,
+        roleHistory: user.roleHistory,
+        status: user.status,
+        departmentId: user.departmentId,
+        assignedDepartments: user.assignedDepartments,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Member Journey & Lifetime Progression Profile ----------
+router.get('/users/:id/journey', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('-password')
+      .populate('departmentId', 'name code')
+      .populate('assignedDepartments', 'name code')
+      .populate('roleHistory.departmentId', 'name code')
+      .populate('roleHistory.changedBy', 'fullName email');
+
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Historical Student profile & records (never lost upon promotion)
+    const student = await Student.findOne({ userId: user._id })
+      .populate('courses', 'name code grade')
+      .populate('teacher', 'fullName email');
+
+    // Historical Teacher profile & records
+    let teacher = null;
+    try {
+      const Teacher = require('../../models/Teacher');
+      teacher = await Teacher.findOne({ userId: user._id });
+    } catch (e) {}
+
+    // Historical Department Memberships
+    let memberships = [];
+    try {
+      const DepartmentMembership = require('../../models/DepartmentMembership');
+      memberships = await DepartmentMembership.find({ userId: user._id })
+        .populate('departmentId', 'name code')
+        .sort({ createdAt: -1 });
+    } catch (e) {}
+
+    res.json({
+      success: true,
+      user,
+      student,
+      teacher,
+      memberships,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Delete User ----------
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ---------- Pending Approvals ----------
 router.get('/pending-approvals', async (req, res) => {
   try {
-    const pending = await User.find({ status: 'pending' }).select('-password');
+    const pending = await User.find({ status: 'pending' })
+      .select('-password')
+      .populate('departmentId', 'name code')
+      .sort({ createdAt: -1 });
     res.json(pending);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -45,6 +292,8 @@ router.put('/users/:id/approve', async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     user.status = 'approved';
+    if (req.body.role) user.role = req.body.role;
+    if (req.body.departmentId) user.departmentId = req.body.departmentId;
     await user.save();
     res.json({ success: true, message: 'User approved successfully' });
   } catch (err) {

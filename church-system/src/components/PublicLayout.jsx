@@ -45,7 +45,7 @@
 //   <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white transition-all">
 //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 //       <div className="flex items-center justify-between h-20">
-        
+
 //         {/* Logo & Brand Name */}
 //         <Link 
 //           to="/" 
@@ -68,7 +68,7 @@
 
 //         {/* Desktop Navigation Links */}
 //         <nav className="hidden lg:flex items-center space-x-1 space-x-reverse text-sm font-medium">
-          
+
 //           {/* Main Nav Items */}
 //           {primaryNavLinks.map((link) => (
 //             <Link
@@ -168,7 +168,7 @@
 //     {/* Mobile Navigation Drawer */}
 //     {isMobileMenuOpen && (
 //       <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-4 pt-3 pb-6 space-y-4 animate-in slide-in-from-top duration-300">
-        
+
 //         {/* Primary Nav Links */}
 //         <div className="space-y-1 border-b border-slate-800/80 pb-3">
 //           <span className="px-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
@@ -235,9 +235,9 @@
 //   {/* Footer Section */}
 //   <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 pt-12 pb-8">
 //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-      
+
 //       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        
+
 //         {/* Column 1: Brand Info */}
 //         <div className="md:col-span-2 space-y-4">
 //           <div className="flex items-center space-x-3 space-x-reverse">
@@ -330,7 +330,7 @@ const PublicLayout = () => {
   const [isRegDropdownOpen, setIsRegDropdownOpen] = useState(false);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const [isTickerPaused, setIsTickerPaused] = useState(false);
-  
+
   const location = useLocation();
   const dropdownRef = useRef(null);
 
@@ -362,29 +362,31 @@ const PublicLayout = () => {
 
   const primaryNavLinks = [
     { to: '/about', label: 'ስለኛ' },
+    { to: '/distance-education', label: 'የርቀት ትምህርት (Distance Ed)' },
     { to: '/classes', label: 'ክፍሎች' },
     { to: '/announcements', label: 'ማስታወቂያዎች' },
     { to: '/contact', label: 'ያግኙን' },
   ];
 
   const registrationLinks = [
-    { to: '/register-regular', label: 'የመደበኛ ተማሪ ምዝገባ', icon: '📝' },
-    { to: '/register-distance', label: 'የርቀት ተማሪ ምዝገባ', icon: '🌐' },
+    { to: '/distance-education', label: 'ስለ ርቀት ትምህርት መረጃ', icon: '📖' },
+    { to: '/register-distance', label: 'የርቀት ተማሪ ምዝገባ (Distance)', icon: '🌐' },
+    { to: '/register-regular', label: 'የመደበኛ ተማሪ ምዝገባ (Regular)', icon: '📝' },
     { to: '/continue-registration', label: 'ምዝገባዎን ይቀጥሉ', icon: '🔄' },
     { to: '/check-status', label: 'ሁኔታ አረጋግጥ', icon: '🔍' },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--brand-blue-dark)] text-white selection:bg-[var(--brand-yellow)] selection:text-[var(--brand-blue-dark)] font-sans">
-      
+
       {/* 🌟 1. SLIDING BIBLE VERSE & PROMOTION TICKER */}
-      <div 
+      <div
         className="relative z-50 bg-[var(--brand-blue)] border-b border-white/10 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
         onMouseEnter={() => setIsTickerPaused(true)}
         onMouseLeave={() => setIsTickerPaused(false)}
       >
         <div className={`absolute inset-0 bg-gradient-to-r ${tickerItems[currentTickerIndex].bg} transition-all duration-700 pointer-events-none`} />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-3 flex-1 overflow-hidden">
             <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 shadow-sm transition-colors duration-500 ${tickerItems[currentTickerIndex].badgeColor}`}>
@@ -401,9 +403,8 @@ const PublicLayout = () => {
               <button
                 key={idx}
                 onClick={() => setCurrentTickerIndex(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  currentTickerIndex === idx ? 'w-5 bg-emerald-400' : 'w-1.5 bg-slate-600 hover:bg-slate-400'
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${currentTickerIndex === idx ? 'w-5 bg-emerald-400' : 'w-1.5 bg-slate-600 hover:bg-slate-400'
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
@@ -415,22 +416,22 @@ const PublicLayout = () => {
       <header className="sticky top-0 z-40 bg-[var(--brand-blue)]/95 backdrop-blur-xl border-b border-white/10 text-white shadow-2xl shadow-blue-950/40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
-            
+
             {/* Logo & Brand Name */}
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="flex items-center space-x-2 sm:space-x-4 space-x-reverse group focus:outline-none transition-all duration-300"
             >
               {/* Logo Container with Enhanced Styling */}
               <div className="relative flex items-center justify-center flex-shrink-0">
                 {/* Outer glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/40 via-blue-400/20 to-[var(--brand-yellow)]/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 scale-105"></div>
-                
+
                 {/* Logo frame with border */}
                 <div className="relative p-1 sm:p-2 rounded-2xl bg-white/5 border-2 border-white/20 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/60 group-hover:bg-white/10 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/20">
-                  <img 
-                    src={ChurchLogo} 
-                    alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                  <img
+                    src={ChurchLogo}
+                    alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
                     className="h-12 sm:h-16 lg:h-20 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
                   />
                 </div>
@@ -449,17 +450,16 @@ const PublicLayout = () => {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center space-x-1.5 space-x-reverse text-sm font-medium">
-              
+
               {/* Main Nav Items */}
               {primaryNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2.5 rounded-xl transition-all duration-200 relative group ${
-                    location.pathname === link.to
+                  className={`px-4 py-2.5 rounded-xl transition-all duration-200 relative group ${location.pathname === link.to
                       ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-400 font-bold border border-emerald-500/20 shadow-inner'
                       : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }`}
+                    }`}
                 >
                   <span>{link.label}</span>
                   {location.pathname === link.to && (
@@ -472,18 +472,16 @@ const PublicLayout = () => {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
-                  className={`flex items-center space-x-2 space-x-reverse px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none border ${
-                    registrationLinks.some((item) => item.to === location.pathname)
+                  className={`flex items-center space-x-2 space-x-reverse px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none border ${registrationLinks.some((item) => item.to === location.pathname)
                       ? 'bg-gradient-to-r from-emerald-500/15 to-teal-500/15 text-emerald-400 font-bold border-emerald-500/30'
                       : 'text-slate-300 hover:text-white hover:bg-slate-800/60 border-transparent'
-                  }`}
+                    }`}
                 >
                   <span className="text-amber-400">✨</span>
                   <span>ምዝገባና አገልግሎት</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      isRegDropdownOpen ? 'rotate-180 text-emerald-400' : 'text-slate-400'
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-300 ${isRegDropdownOpen ? 'rotate-180 text-emerald-400' : 'text-slate-400'
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -503,17 +501,16 @@ const PublicLayout = () => {
                         2017 ዓ.ም
                       </span>
                     </div>
-                    
+
                     <div className="pt-1.5 space-y-0.5 px-1.5">
                       {registrationLinks.map((item) => (
                         <Link
                           key={item.to}
                           to={item.to}
-                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${
-                            location.pathname === item.to
+                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${location.pathname === item.to
                               ? 'bg-gradient-to-r from-emerald-500/20 to-transparent text-emerald-300 font-semibold border-l-2 border-emerald-400 shadow-sm'
                               : 'text-slate-300 hover:bg-slate-800/80 hover:text-white hover:translate-x-1'
-                          }`}
+                            }`}
                         >
                           <span className="text-lg p-1.5 rounded-lg bg-slate-800/60 group-hover:scale-110 transition-transform">{item.icon}</span>
                           <span className="flex-1">{item.label}</span>
@@ -565,7 +562,7 @@ const PublicLayout = () => {
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
           <div className="lg:hidden bg-slate-900/95 backdrop-blur-2xl border-b border-slate-800 px-4 pt-3 pb-6 space-y-5 animate-in slide-in-from-top duration-300">
-            
+
             {/* Primary Nav Links */}
             <div className="space-y-1.5 border-b border-slate-800/80 pb-4">
               <span className="px-3 text-[11px] font-bold text-emerald-400/80 uppercase tracking-wider">
@@ -575,11 +572,10 @@ const PublicLayout = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    location.pathname === link.to
+                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${location.pathname === link.to
                       ? 'bg-gradient-to-r from-emerald-500/20 to-transparent text-emerald-400 font-bold border-l-4 border-emerald-400'
                       : 'text-slate-200 hover:bg-slate-800/60 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -595,11 +591,10 @@ const PublicLayout = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    location.pathname === item.to
+                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all ${location.pathname === item.to
                       ? 'bg-gradient-to-r from-amber-500/20 to-transparent text-amber-300 font-bold border-l-4 border-amber-400'
                       : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <span className="text-xl bg-slate-800/80 p-1.5 rounded-lg">{item.icon}</span>
                   <span>{item.label}</span>
@@ -629,17 +624,17 @@ const PublicLayout = () => {
         {/* Subtle decorative background glow for visual depth */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--brand-yellow)]/10 rounded-full blur-3xl pointer-events-none -z-10" />
         <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
-        
+
         <Outlet />
       </main>
 
       {/* 🌟 4. PRE-FOOTER PROMOTION & CTA BANNER */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[var(--brand-blue-dark)] via-[var(--brand-blue)] to-blue-950 border-t border-white/10 py-12">
         <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 border border-slate-700/60 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-950/30 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group">
-            
+
             {/* Decorative background glow */}
             <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700 pointer-events-none" />
             <div className="absolute -left-10 -top-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -681,9 +676,9 @@ const PublicLayout = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-[var(--brand-yellow)]/60 to-transparent" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 relative z-10">
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 lg:gap-12">
-            
+
             {/* Column 1: Brand Info */}
             <div className="md:col-span-2 space-y-5">
               <div className="flex items-center space-x-5 space-x-reverse group">
@@ -691,12 +686,12 @@ const PublicLayout = () => {
                 <div className="relative flex-shrink-0">
                   {/* Outer glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/50 via-blue-400/30 to-[var(--brand-yellow)]/40 rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-all duration-500"></div>
-                  
+
                   {/* Logo frame with border */}
                   <div className="relative p-3 rounded-2xl bg-white/5 border-2 border-white/30 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/80 group-hover:bg-white/15 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/30">
-                    <img 
-                      src={ChurchLogo} 
-                      alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት" 
+                    <img
+                      src={ChurchLogo}
+                      alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
                       className="h-20 sm:h-24 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
                     />
                   </div>
@@ -711,7 +706,7 @@ const PublicLayout = () => {
               <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
                 የሕፃናትና ወጣቶች መንፈሳዊ ትምህርት ማዕከል — በሃይማኖትና በምግባር የታነጸ፣ ለቤተክርስቲያንና ለሀገር የሚጠቅም ትውልድ እንገነባለን።
               </p>
-              
+
               {/* Spiritual Badge */}
               <div className="pt-2 flex items-center gap-2 text-xs text-slate-400">
                 <span className="px-2.5 py-1 rounded-md bg-slate-800/80 border border-slate-700/60 text-slate-300">

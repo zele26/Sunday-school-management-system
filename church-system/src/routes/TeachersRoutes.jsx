@@ -16,11 +16,13 @@ import TeacherResources from '../features/teacher/TeacherResources';
 import TeacherExams from '../features/teacher/TeacherExams';
 import TeacherExamDetail from '../features/teacher/TeacherExamDetail';
 import TeacherResults from '../features/teacher/TeacherResults';
+import TeacherDistanceHub from '../features/teacher/TeacherDistanceHub';
 
 export default function TeacherRoutes() {
   return (
     <Routes>
       <Route index element={<TeacherOverview />} />
+      <Route path="distance-hub" element={<TeacherDistanceHub />} />
       <Route path="classes" element={<TeacherClasses />} />
       <Route path="courses" element={<TeacherCourses />} />
       <Route path="content" element={<TeacherContent />} />
@@ -36,9 +38,6 @@ export default function TeacherRoutes() {
       <Route path="exams" element={<TeacherExams />} />
       <Route path="exams/:quizId" element={<TeacherExamDetail />} />
       <Route path="results" element={<TeacherResults />} />
-
-      {/* Future components */}
-      {/* <Route path="assignments" element={<TeacherAssignments />} /> */}
     </Routes>
   );
 }

@@ -20,7 +20,19 @@ router.post('/refresh', async (req, res) => {
     // generateAccessToken is defined in the controller file; call it to make a fresh access token
     const accessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'fallback_secret_key', { expiresIn: '7d' });
 
-    return res.json({ success: true, accessToken, user: { id: user._id, fullName: user.fullName, role: user.role } });
+    return res.json({
+      success: true,
+      accessToken,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        departmentId: user.departmentId,
+        assignedDepartments: user.assignedDepartments || [],
+        mustChangePassword: user.mustChangePassword,
+      }
+    });
   } catch (err) {
     console.error('Refresh token error:', err.message || err);
     return res.status(401).json({ success: false, message: 'Invalid refresh token' });
@@ -42,6 +54,8 @@ router.get('/me', protect, async (req, res) => {
       email: req.user.email,
       phone: req.user.phone,
       role: req.user.role,
+      departmentId: req.user.departmentId,
+      assignedDepartments: req.user.assignedDepartments || [],
       mustChangePassword: req.user.mustChangePassword,
     },
   });

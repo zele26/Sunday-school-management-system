@@ -12,12 +12,14 @@ import StudentExams from '../features/student/StudentExams';
 import StudentTakeExam from '../features/student/StudentTakeExam';
 import StudentResults from '../features/student/StudentResults';
 import StudentResultDetail from '../features/student/StudentResultDetail';
+import DistanceClassroom from '../features/student/DistanceClassroom';
 
 export default function StudentRoutes() {
   return (
     <Routes>
       <Route index element={<StudentOverview />} />
       <Route path="courses" element={<StudentCourses />} />
+      <Route path="distance-classroom/:courseId" element={<DistanceClassroom />} />
       <Route path="attendance" element={<StudentAttendance />} />
       <Route path="announcements" element={<StudentAnnouncements />} />
       <Route path="profile" element={<StudentProfileModule />} />
@@ -25,11 +27,7 @@ export default function StudentRoutes() {
       <Route path="exams" element={<StudentExams />} />
       <Route path="exams/:quizId" element={<StudentTakeExam />} />
       <Route path="results" element={<StudentResults />} />
-      <Route path="results" element={<StudentResults />} />
       <Route path="results/:resultId" element={<StudentResultDetail />} />
-      {/* Placeholders for future components – uncomment when ready */}
-      {/* <Route path="assignments" element={<StudentAssignments />} /> */}
-      {/* <Route path="exams" element={<StudentExams />} /> */}
     </Routes>
   );
 }

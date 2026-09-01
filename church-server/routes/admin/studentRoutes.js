@@ -413,12 +413,25 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
+    const [totalCount, regularCount, distanceCount, qrCount] = await Promise.all([
+      Student.countDocuments(),
+      Student.countDocuments({ studentType: 'regular' }),
+      Student.countDocuments({ studentType: 'distance' }),
+      Student.countDocuments({ qrCode: { $exists: true, $ne: '' } }),
+    ]);
+
     res.json({
       success: true,
       students,
       total,
       page: parseInt(page),
-      totalPages: Math.ceil(total / parseInt(limit))
+      totalPages: Math.ceil(total / parseInt(limit)),
+      stats: {
+        total: totalCount,
+        regular: regularCount,
+        distance: distanceCount,
+        withQR: qrCount,
+      }
     });
   } catch (err) {
     console.error('List students error:', err);

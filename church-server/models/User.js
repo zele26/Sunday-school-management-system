@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+require('./Department');
 
 const userSchema = new mongoose.Schema(
   {
@@ -28,9 +29,49 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'teacher', 'admin'],
+      enum: ['superadmin', 'admin', 'department_admin', 'teacher', 'student', 'member'],
       default: 'student',
     },
+    roles: [{
+      type: String,
+      enum: ['superadmin', 'admin', 'department_admin', 'teacher', 'student', 'member'],
+    }],
+    roleHistory: [
+      {
+        role: { type: String, required: true },
+        title: { type: String, default: '' },
+        status: { type: String, enum: ['Active', 'Completed', 'Graduated', 'Promoted', 'Transferred', 'Archived'], default: 'Active' },
+        departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', default: null },
+        startDate: { type: Date, default: Date.now },
+        endDate: { type: Date, default: null },
+        notes: { type: String, default: '' },
+        changedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      },
+    ],
+    studentProfileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'StudentProfile',
+      default: null,
+    },
+    teacherProfileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TeacherProfile',
+      default: null,
+    },
+    personId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Person',
+      default: null,
+    },
+    departmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+      default: null,
+    },
+    assignedDepartments: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+    }],
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'created', 'active'],

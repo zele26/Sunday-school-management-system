@@ -2,6 +2,7 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import ChurchLogo from '../../assets/ChurchLogo.png';
 
 const StudentLayout = ({ onLogout }) => {
   const user = useAuthStore((state) => state.user);
@@ -23,22 +24,22 @@ const StudentLayout = ({ onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-800 flex flex-col">
       {/* Top Navbar */}
-      <header className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-8 py-4 flex justify-between items-center shadow-lg border-b border-indigo-900/40 sticky top-0 z-20">
+      <header className="bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white px-6 md:px-8 py-3.5 flex justify-between items-center shadow-lg border-b border-amber-400/20 sticky top-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center text-xl shadow-inner">
-            ⛪
+          <div className="w-11 h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-md flex-shrink-0">
+            <img src={ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-indigo-300">
-              ተክለሳዊሮስ ሰንበት ትምህርት ቤት
+            <h1 className="text-base font-extrabold tracking-wide text-white">
+              ተክለ ሳዊሮስ ሰንበት ት/ቤት
             </h1>
-            <p className="text-[10px] text-indigo-300 font-medium">የተማሪዎች ፖርታል (Student Portal)</p>
+            <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">የተማሪዎች ፖርታል (Student Portal)</p>
           </div>
         </div>
 
         <button
           onClick={onLogout}
-          className="bg-rose-500/10 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm"
+          className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm"
         >
           <span>ይውጡ (Logout)</span>
           <span>🚪</span>
@@ -84,10 +85,9 @@ const StudentLayout = ({ onLogout }) => {
               to={item.path}
               end={item.end}
               className={({ isActive }) =>
-                `px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                `px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${isActive
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                 }`
               }
             >

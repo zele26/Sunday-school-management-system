@@ -33,6 +33,10 @@ import ContinueRegistration from './pages/ContinueRegistration';
 import RegisterRegular from './pages/RegisterRegular';
 import RegisterDistance from './pages/RegisterDistance';
 import CheckStatus from './pages/CheckStatus';
+import DistanceEducationPage from './pages/public/DistanceEducationPage';
+import VerifyCertificatePage from './pages/public/VerifyCertificatePage';
+import DirectCertificateView from './pages/public/DirectCertificateView';
+import DistanceClassroom from './features/student/DistanceClassroom';
 
 // Change password
 import ChangePasswordModal from './components/ChangePasswordModal';
@@ -63,7 +67,10 @@ function App() {
           useAuthStore.getState().updateUser({
             id: data.user.id,
             fullName: data.user.fullName,
+            email: data.user.email,
             role: data.user.role,
+            departmentId: data.user.departmentId,
+            assignedDepartments: data.user.assignedDepartments,
             mustChangePassword: data.user.mustChangePassword,
           });
         } else {
@@ -93,7 +100,7 @@ function App() {
 
   const getRedirectPath = () => {
     if (!user) return '/';
-    if (user.role === 'admin') return '/admin';
+    if (['admin', 'superadmin', 'department_admin'].includes(user.role)) return '/admin';
     if (user.role === 'teacher') return '/teacher';
     return '/dashboard';
   };
@@ -113,9 +120,18 @@ function App() {
           <Route path="/student-register" element={<StudentRegister />} />
           <Route path="/register-regular" element={<RegisterRegular />} />
           <Route path="/register-distance" element={<RegisterDistance />} />
+          <Route path="/distance-education" element={<DistanceEducationPage />} />
+          <Route path="/verify-certificate/:certNumber" element={<VerifyCertificatePage />} />
+          <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
+          <Route path="/certificate/:certNumber" element={<DirectCertificateView />} />
+          <Route path="/certificate" element={<DirectCertificateView />} />
           <Route path="/continue-registration" element={<ContinueRegistration />} />
           <Route path="/check-status" element={<CheckStatus />} />
         </Route>
+
+        {/* Standalone LMS Classroom */}
+        <Route path="/student/distance-classroom/:courseId" element={<DistanceClassroom />} />
+        <Route path="/dashboard/distance-classroom/:courseId" element={<DistanceClassroom />} />
 
         {/* Auth pages */}
         <Route path="/login" element={!isLoggedIn ? <Login /> : <Navigate to={getRedirectPath()} replace />} />

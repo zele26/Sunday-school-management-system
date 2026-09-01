@@ -6,6 +6,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const connectToDatabase = require('./config/db');
+require('./config/cloudinary');
 
 // --- EXISTING ROUTE IMPORTS ---
 const authRoutes = require('./routes/authRoutes');
@@ -57,8 +58,9 @@ try { eduScheduleRoutes = require('./routes/education/scheduleRoutes'); } catch 
 try { eduCourseEnrollmentRoutes = require('./routes/education/courseEnrollmentRoutes'); } catch (e) { console.warn('⚠️ courseEnrollmentRoutes not loaded:', e.message); }
 try { eduCertificateRoutes = require('./routes/education/certificateRoutes'); } catch (e) { console.warn('⚠️ certificateRoutes not loaded:', e.message); }
 try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } catch (e) { console.warn('⚠️ progressionRoutes not loaded:', e.message); }
-try { eduCourseRoutes = require('./routes/education/courseRoutes'); } catch (e) { console.warn('⚠️ courseRoutes not loaded:', e.message); }
 try { eduTeacherProfileRoutes = require('./routes/education/teacherProfileRoutes'); } catch (e) { console.warn('⚠️ teacherProfileRoutes not loaded:', e.message); }
+let distanceLmsRoutes = null;
+try { distanceLmsRoutes = require('./routes/education/distanceLmsRoutes'); } catch (e) { console.warn('⚠️ distanceLmsRoutes not loaded:', e.message); }
 try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } catch (e) { console.warn('⚠️ tempMigrationRoutes not loaded:', e.message); }
 
 const app = express();
@@ -109,27 +111,22 @@ app.post('/api/test-body', (req, res) => {
 });
 
 // --- ROUTE MOUNTING (All API routes before fallback) ---
+// 1. Auth & Core User/Admin routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin/teachers', teacherAdminRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/teachers', teacherAdminRoutes);
 app.use('/api/admin/students', adminStudentRoutes);
-app.use('/api/student', studentRoutes);
-app.use('/api/teacher', teacherRoutes);
-app.use('/api/resources', resourceRoutes);
-app.use('/api/assignments', assignmentRoutes);
-app.use('/api/quizzes', quizRoutes);
-app.use('/api/registrations', registrationRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/attendance', attendanceRoutes);
 
-// Core routes
+// 2. Core Church Domain routes
 if (corePersonRoutes) app.use('/api/core/persons', corePersonRoutes);
 if (coreDepartmentRoutes) app.use('/api/core/departments', coreDepartmentRoutes);
 if (coreDepartmentMembershipRoutes) app.use('/api/core/department-memberships', coreDepartmentMembershipRoutes);
 if (churchMembershipRoutes) app.use('/api/core/church-memberships', churchMembershipRoutes);
 
-// Education module routes
+// 3. Education Module routes (Standardized under /api/education)
 if (eduStudentProfileRoutes) app.use('/api/education/student-profiles', eduStudentProfileRoutes);
+if (eduTeacherProfileRoutes) app.use('/api/education/teacher-profiles', eduTeacherProfileRoutes);
 if (eduProgramRoutes) app.use('/api/education/programs', eduProgramRoutes);
 if (eduAcademicYearRoutes) app.use('/api/education/academic-years', eduAcademicYearRoutes);
 if (eduGradeRoutes) app.use('/api/education/grades', eduGradeRoutes);
@@ -141,7 +138,27 @@ if (eduCourseEnrollmentRoutes) app.use('/api/education', eduCourseEnrollmentRout
 if (eduCertificateRoutes) app.use('/api/education', eduCertificateRoutes);
 if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
 if (eduCourseRoutes) app.use('/api/education/courses', eduCourseRoutes);
-if (eduTeacherProfileRoutes) app.use('/api/education/teacher-profiles', eduTeacherProfileRoutes);
+if (distanceLmsRoutes) {
+  app.use('/api/education/distance', distanceLmsRoutes);
+  app.use('/api/public/certificates', distanceLmsRoutes);
+}
+
+// Education Academic Activities & Portals (Both /api/education/* and legacy root aliases)
+app.use('/api/education/assignments', assignmentRoutes);
+app.use('/api/education/quizzes', quizRoutes);
+app.use('/api/education/resources', resourceRoutes);
+app.use('/api/education/attendance', attendanceRoutes);
+app.use('/api/education/student', studentRoutes);
+app.use('/api/education/teacher', teacherRoutes);
+
+// Legacy Root Route Aliases (Ensures complete zero-breakage backward compatibility)
+app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/resources', resourceRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/registrations', registrationRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Temporary migration route (from file, if exists)
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);

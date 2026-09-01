@@ -329,27 +329,27 @@ exports.login = async (req, res) => {
     // ✅ FIX: Check approval - allow multiple status values
     const approvedStatuses = ['approved', 'Approved', 'active', 'Active'];
     const isApproved = approvedStatuses.includes(user.status);
-    
+
     // 🚀 Special bypass for admin@example.com (temporary fix)
     const isAdminBypass = user.email === 'admin@example.com';
-    
+
     if (!isApproved && !isAdminBypass) {
       if (user.status === 'pending') {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Your account is pending admin approval.' 
+        return res.status(403).json({
+          success: false,
+          message: 'Your account is pending admin approval.'
         });
       }
       if (user.status === 'rejected') {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Your account registration request was declined.' 
+        return res.status(403).json({
+          success: false,
+          message: 'Your account registration request was declined.'
         });
       }
       // Fallback for any other status
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Your account is pending admin approval.' 
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is pending admin approval.'
       });
     }
 
@@ -381,7 +381,10 @@ exports.login = async (req, res) => {
       user: {
         id: user._id,
         fullName: user.fullName,
+        email: user.email,
         role: user.role,
+        departmentId: user.departmentId,
+        assignedDepartments: user.assignedDepartments || [],
         studentId: studentIdValue || undefined,
         mustChangePassword: user.mustChangePassword || false,
       },

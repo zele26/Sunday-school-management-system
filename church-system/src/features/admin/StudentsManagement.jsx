@@ -50,12 +50,16 @@ const StudentsManagement = () => {
       setTotalPages(data.totalPages || 1);
 
       // Stats
-      setStats({
-        total: data.total || 0,
-        regular: list.filter(s => s.studentType === 'regular').length,
-        distance: list.filter(s => s.studentType === 'distance').length,
-        withQR: list.filter(s => s.qrCode).length,
-      });
+      if (data.stats) {
+        setStats(data.stats);
+      } else {
+        setStats({
+          total: data.total || 0,
+          regular: list.filter(s => s.studentType === 'regular').length,
+          distance: list.filter(s => s.studentType === 'distance').length,
+          withQR: list.filter(s => s.qrCode).length,
+        });
+      }
       setSelectedStudents([]);
       setSelectAll(false);
     } catch (err) {
