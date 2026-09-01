@@ -55,7 +55,7 @@ router.get('/my-courses', protect, async (req, res) => {
     }
 
     const batch = student?.batch || student?.grade || 'Batch 1';
-    
+
     // Find all distance courses matching student batch or general distance courses
     const courses = await Course.find({
       studentType: 'distance',
@@ -66,9 +66,9 @@ router.get('/my-courses', protect, async (req, res) => {
         { grade: null },
       ]
     })
-    .populate('teacher', 'fullName email')
-    .populate('instructors', 'fullName email')
-    .sort({ order: 1, createdAt: 1 });
+      .populate('teacher', 'fullName email')
+      .populate('instructors', 'fullName email')
+      .sort({ order: 1, createdAt: 1 });
 
     const courseCards = await Promise.all(courses.map(async (course) => {
       let progress = null;
@@ -146,7 +146,7 @@ router.get('/courses/:courseId/learn', protect, async (req, res) => {
 
       // Find student module progress entry
       const modProg = progress?.moduleProgress?.find(p => p.moduleId.toString() === mod._id.toString());
-      
+
       // Determine lock status
       let isUnlocked = false;
       let lockReason = '';
@@ -173,7 +173,7 @@ router.get('/courses/:courseId/learn', protect, async (req, res) => {
           titleAmharic: lesson.titleAmharic || lesson.title,
           order: lesson.order,
           durationMinutes: lesson.videoDurationSeconds ? Math.ceil(lesson.videoDurationSeconds / 60) : (lesson.readingEstimatedMinutes || 10),
-          
+
           // Video components
           videoUrl: lesson.videoUrl,
           videoTitle: lesson.videoTitle,
@@ -198,7 +198,7 @@ router.get('/courses/:courseId/learn', protect, async (req, res) => {
           quizId: lesson.quizId,
           assignmentId: lesson.assignmentId,
           attachedResources: lesson.attachedResources || [],
-          
+
           isFullyCompleted: lProg?.isFullyCompleted || false,
         };
       });
@@ -347,7 +347,7 @@ router.post('/lessons/:lessonId/progress', protect, async (req, res) => {
     if (lesson.moduleId) {
       const moduleLessons = await Lesson.find({ moduleId: lesson.moduleId, status: 'Published' });
       const totalLessonsCount = moduleLessons.length || 1;
-      
+
       const completedCount = moduleLessons.filter(l => {
         const item = progress.lessonProgress.find(p => p.lessonId.toString() === l._id.toString());
         return item && item.isFullyCompleted;
@@ -496,8 +496,8 @@ router.post('/quizzes/:quizId/submit', protect, async (req, res) => {
       attemptsCount: ar.attemptsCount,
       unlockedNextModule,
       results: questionResults,
-      message: passed 
-        ? '🎉 እንኳን ደስ አለዎት! ፈተናውን በስኬት አልፈዋል።' 
+      message: passed
+        ? '🎉 እንኳን ደስ አለዎት! ፈተናውን በስኬት አልፈዋል።'
         : `⚠️ የሚያሳልፈው ውጤት ${passingMark}% ነው። እባክዎ ትምህርቱን ደግመው ይከልሱና እንደገና ይፈተኑ።`,
     });
   } catch (err) {
@@ -574,7 +574,7 @@ router.get('/teacher/overview', protect, authorize('teacher', 'admin', 'superadm
   try {
     const isSuperAdmin = req.user.role === 'superadmin' || req.user.role === 'admin';
     const query = { studentType: 'distance' };
-    
+
     if (!isSuperAdmin) {
       query.$or = [
         { teacher: req.user._id },
@@ -865,7 +865,7 @@ async function getStudentClearance(student, batch) {
   const completedCourses = courseStatuses.filter(c => c.isCompleted);
   const incompleteCourses = courseStatuses.filter(c => !c.isCompleted);
   const isEligible = requiredCourses.length > 0 && incompleteCourses.length === 0;
-  const overallBatchProgressPct = requiredCourses.length > 0 
+  const overallBatchProgressPct = requiredCourses.length > 0
     ? Math.round(courseStatuses.reduce((acc, c) => acc + c.progressPct, 0) / requiredCourses.length)
     : 0;
 
@@ -1020,9 +1020,9 @@ router.get('/certificates/my-certificates', protect, async (req, res) => {
 router.get('/public/verify/:certNumber', async (req, res) => {
   try {
     const { certNumber } = req.params;
-    const cert = await Certificate.findOne({ 
-      certificateNumber: certNumber.trim().toUpperCase(), 
-      status: 'Valid' 
+    const cert = await Certificate.findOne({
+      certificateNumber: certNumber.trim().toUpperCase(),
+      status: 'Valid'
     });
 
     if (!cert) {
@@ -1048,6 +1048,13 @@ router.get('/public/verify/:certNumber', async (req, res) => {
         honors: cert.honors,
         status: cert.status,
         institution: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት (Teklesawiros Sunday School)',
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/education/distance/public/certificate/:certNumber – Full Certificate View
 router.get('/public/certificate/:certNumber', async (req, res) => {
   try {
