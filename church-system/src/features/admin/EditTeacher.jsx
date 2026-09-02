@@ -35,37 +35,62 @@ const EditTeacher = () => {
         const teacherRes = await apiFetch(`/api/admin/teachers/${id}`);
         if (teacherRes.ok) {
           const data = await teacherRes.json();
-          const teacher = data.teacher;
-          setForm({
-            firstName: teacher.firstName || '',
-            middleName: teacher.middleName || '',
-            lastName: teacher.lastName || '',
-            email: teacher.email || '',
-            phone: teacher.phone || '',
-            subject: teacher.subject || '',
-            qualification: teacher.qualification || '',
-            experience: teacher.experience || '',
-            bio: teacher.bio || '',
-            address: teacher.address || '',
-            city: teacher.city || '',
-            gender: teacher.gender || '',
-            dateOfBirth: teacher.dateOfBirth || '',
-            coursesTaught: teacher.coursesTaught || [],
-          });
-          setSelectedCourses(teacher.coursesTaught || []);
+          const teacher = data.teacher || data;
+          if (teacher) {
+            let fName = teacher.firstName || '';
+            let mName = teacher.middleName || '';
+            let lName = teacher.lastName || '';
+
+            if (!fName && teacher.fullName) {
+              const parts = teacher.fullName.trim().split(/\s+/);
+              fName = parts[0] || '';
+              if (parts.length === 2) {
+                lName = parts[1] || '';
+              } else if (parts.length > 2) {
+                mName = parts.slice(1, -1).join(' ');
+                lName = parts[parts.length - 1] || '';
+              }
+            }
+
+            let dob = '';
+            if (teacher.dateOfBirth) {
+              dob = typeof teacher.dateOfBirth === 'string'
+                ? teacher.dateOfBirth.split('T')[0]
+                : new Date(teacher.dateOfBirth).toISOString().split('T')[0];
+            }
+
+            setForm({
+              firstName: fName,
+              middleName: mName,
+              lastName: lName,
+              email: teacher.email || teacher.userId?.email || '',
+              phone: teacher.phone || teacher.userId?.phone || '',
+              subject: teacher.subject || '',
+              qualification: teacher.qualification || '',
+              experience: teacher.experience || '',
+              bio: teacher.bio || '',
+              address: teacher.address || '',
+              city: teacher.city || '',
+              gender: teacher.gender || '',
+              dateOfBirth: dob,
+              coursesTaught: Array.isArray(teacher.coursesTaught) ? teacher.coursesTaught : [],
+            });
+            setSelectedCourses(Array.isArray(teacher.coursesTaught) ? teacher.coursesTaught : []);
+          }
         } else {
-          setMsg({ type: 'error', text: 'Failed to load teacher data.' });
+          const errData = await teacherRes.json().catch(() => ({}));
+          setMsg({ type: 'error', text: errData.message || 'Failed to load teacher data.' });
         }
 
         // Fetch courses for selection
         const coursesRes = await apiFetch('/api/admin/courses');
         if (coursesRes.ok) {
-          const data = await coursesRes.json();
+          const data = await coursesRes.json().catch(() => []);
           if (Array.isArray(data)) setAvailableCourses(data);
           else if (data.courses && Array.isArray(data.courses)) setAvailableCourses(data.courses);
         }
       } catch (err) {
-        console.error(err);
+        console.error('Fetch teacher error:', err);
         setMsg({ type: 'error', text: 'Network error.' });
       } finally {
         setLoading(false);

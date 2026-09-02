@@ -31,22 +31,32 @@ const TeachersManagement = () => {
 
       const res = await apiFetch(`/api/admin/teachers?${params}`);
       if (!res.ok) throw new Error('Failed to fetch teachers');
-      const data = await res.json();
-      setTeachers(data.teachers);
-      setTotalPages(data.totalPages);
+      const data = await res.json().catch(() => ({}));
+      
+      const teacherList = Array.isArray(data.teachers)
+        ? data.teachers
+        : Array.isArray(data)
+        ? data
+        : Array.isArray(data.users)
+        ? data.users
+        : [];
+
+      setTeachers(teacherList);
+      setTotalPages(data.totalPages || 1);
       
       // Update stats
-      const all = data.teachers || [];
       setStats({
-        total: data.total || 0,
-        active: all.filter(t => t.isActive !== false).length,
-        inactive: all.filter(t => t.isActive === false).length,
+        total: data.total ?? teacherList.length ?? 0,
+        active: teacherList.filter(t => t && t.isActive !== false && t.status !== 'inactive').length,
+        inactive: teacherList.filter(t => t && (t.isActive === false || t.status === 'inactive')).length,
       });
       
       setSelectedTeachers([]);
       setSelectAll(false);
     } catch (err) {
-      console.error(err);
+      console.error('Fetch teachers error:', err);
+      setTeachers([]);
+      setStats({ total: 0, active: 0, inactive: 0 });
     } finally {
       setLoading(false);
     }
@@ -67,7 +77,7 @@ const TeachersManagement = () => {
     if (selectAll) {
       setSelectedTeachers([]);
     } else {
-      setSelectedTeachers(teachers.map(t => t._id));
+      setSelectedTeachers((teachers || []).map(t => t._id).filter(Boolean));
     }
     setSelectAll(!selectAll);
   };
@@ -189,7 +199,7 @@ const TeachersManagement = () => {
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
           <p className="text-xs text-purple-600 font-semibold uppercase">Subjects</p>
           <p className="text-2xl font-bold text-purple-800">
-            {new Set(teachers.map(t => t.subject).filter(Boolean)).size}
+            {new Set((teachers || []).map(t => t?.subject).filter(Boolean)).size}
           </p>
         </div>
       </div>

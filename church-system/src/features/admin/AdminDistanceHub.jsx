@@ -1,7 +1,7 @@
-// src/features/admin/AdminDistanceHub.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
 import VerifiableCertificate from '../../components/VerifiableCertificate';
+import CurriculumLessonStudio from '../../components/CurriculumLessonStudio';
 
 const AdminDistanceHub = () => {
   const [metrics, setMetrics] = useState(null);
@@ -10,6 +10,9 @@ const AdminDistanceHub = () => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'courses' | 'certificates'
+
+  // Curriculum & Lesson Studio Modal State
+  const [studioCourse, setStudioCourse] = useState(null);
 
   // Certificate Issuance
   const [selectedStudentForCert, setSelectedStudentForCert] = useState('');
@@ -231,12 +234,13 @@ const AdminDistanceHub = () => {
                   <th className="p-3">ደረጃ (Batch)</th>
                   <th className="p-3">የተመደበ መምህር</th>
                   <th className="p-3">ሁኔታ</th>
+                  <th className="p-3 text-right">የትምህርት ማዕከል (Curriculum)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {courses.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="p-6 text-center text-slate-400">ምንም የርቀት ኮርስ አልተገኘም።</td>
+                    <td colSpan="6" className="p-6 text-center text-slate-400">ምንም የርቀት ኮርስ አልተገኘም።</td>
                   </tr>
                 ) : (
                   courses.map((c) => (
@@ -249,6 +253,15 @@ const AdminDistanceHub = () => {
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {c.status || 'Active'}
                         </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => setStudioCourse(c)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:brightness-110 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 ml-auto"
+                        >
+                          <span>🎬</span>
+                          <span>ትምህርቶችና ቪዲዮዎች (Manage Lessons)</span>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -382,6 +395,16 @@ const AdminDistanceHub = () => {
         <VerifiableCertificate
           certificate={generatedCert}
           onClose={() => setGeneratedCert(null)}
+        />
+      )}
+
+      {/* Curriculum & Lesson Studio Modal */}
+      {studioCourse && (
+        <CurriculumLessonStudio
+          courseId={studioCourse._id}
+          courseName={studioCourse.nameAmharic || studioCourse.name}
+          onClose={() => setStudioCourse(null)}
+          onUpdated={fetchAdminData}
         />
       )}
     </div>

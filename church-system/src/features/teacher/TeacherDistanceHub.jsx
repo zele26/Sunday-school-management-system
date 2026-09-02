@@ -1,12 +1,16 @@
 // src/features/teacher/TeacherDistanceHub.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import CurriculumLessonStudio from '../../components/CurriculumLessonStudio';
 
 const TeacherDistanceHub = () => {
   const [courses, setCourses] = useState([]);
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCourse, setActiveCourse] = useState(null);
+
+  // Curriculum & Lesson Studio Modal State
+  const [studioCourse, setStudioCourse] = useState(null);
 
   // Grading Modal
   const [gradingSubmission, setGradingSubmission] = useState(null);
@@ -184,12 +188,23 @@ const TeacherDistanceHub = () => {
               <p className="text-xs text-slate-400">የትምህርት ሂደትና የውጤት መከታተያ</p>
             </div>
 
-            <button
-              onClick={() => setShowAddModuleModal(true)}
-              className="px-4 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-md transition-all"
-            >
-              + አዲስ ሞጁል ጨምር (Add Module)
-            </button>
+            <div className="flex items-center gap-2">
+              {activeCourse && (
+                <button
+                  onClick={() => setStudioCourse(activeCourse)}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-xl text-xs font-black hover:brightness-110 shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <span>🎬</span>
+                  <span>ትምህርቶችን አስተዳድር (Manage Lessons)</span>
+                </button>
+              )}
+              <button
+                onClick={() => setShowAddModuleModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-md transition-all"
+              >
+                + አዲስ ሞጁል (Add Module)
+              </button>
+            </div>
           </div>
 
           {/* Student Progress Table */}
@@ -382,6 +397,16 @@ const TeacherDistanceHub = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Curriculum & Lesson Studio Modal */}
+      {studioCourse && (
+        <CurriculumLessonStudio
+          courseId={studioCourse._id}
+          courseName={studioCourse.nameAmharic || studioCourse.name}
+          onClose={() => setStudioCourse(null)}
+          onUpdated={fetchTeacherData}
+        />
       )}
     </div>
   );

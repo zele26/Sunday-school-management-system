@@ -735,6 +735,40 @@ router.get('/admin/analytics', protect, authorize('admin', 'superadmin', 'depart
   }
 });
 
+// GET /api/education/distance/courses/:courseId/curriculum – Full Curriculum Tree (Modules & Lessons for Teachers/Admins)
+router.get('/courses/:courseId/curriculum', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findById(courseId).select('name nameAmharic code grade teacher description');
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
+    const modules = await Module.find({ courseId }).sort({ order: 1, createdAt: 1 });
+    const moduleTree = await Promise.all(modules.map(async (m) => {
+      const lessons = await Lesson.find({ moduleId: m._id }).sort({ order: 1, createdAt: 1 });
+      return {
+        _id: m._id,
+        title: m.title,
+        titleAmharic: m.titleAmharic || m.title,
+        description: m.description,
+        descriptionAmharic: m.descriptionAmharic || m.description,
+        order: m.order,
+        estimatedHours: m.estimatedHours,
+        mandatoryActivities: m.mandatoryActivities,
+        status: m.status,
+        lessons,
+      };
+    }));
+
+    res.json({
+      success: true,
+      course,
+      modules: moduleTree,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // POST /api/education/distance/courses/:courseId/modules – Create Module
 router.post('/courses/:courseId/modules', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
   try {
@@ -745,9 +779,9 @@ router.post('/courses/:courseId/modules', protect, authorize('admin', 'superadmi
     const newModule = await Module.create({
       courseId,
       title,
-      titleAmharic,
-      description,
-      descriptionAmharic,
+      titleAmharic: titleAmharic || title,
+      description: description || '',
+      descriptionAmharic: descriptionAmharic || description || '',
       order: order || (count + 1),
       estimatedHours: estimatedHours || 2,
       mandatoryActivities: mandatoryActivities || {
@@ -766,6 +800,55 @@ router.post('/courses/:courseId/modules', protect, authorize('admin', 'superadmi
       success: true,
       message: 'ሞጁል በተሳካ ሁኔታ ተፈጥሯል (Module created successfully)',
       module: newModule,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/education/distance/modules/:moduleId – Update Module
+router.put('/modules/:moduleId', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    const { title, titleAmharic, description, descriptionAmharic, order, estimatedHours, status } = req.body;
+
+    const moduleDoc = await Module.findById(moduleId);
+    if (!moduleDoc) return res.status(404).json({ success: false, message: 'Module not found' });
+
+    if (title !== undefined) moduleDoc.title = title;
+    if (titleAmharic !== undefined) moduleDoc.titleAmharic = titleAmharic;
+    if (description !== undefined) moduleDoc.description = description;
+    if (descriptionAmharic !== undefined) moduleDoc.descriptionAmharic = descriptionAmharic;
+    if (order !== undefined) moduleDoc.order = order;
+    if (estimatedHours !== undefined) moduleDoc.estimatedHours = estimatedHours;
+    if (status !== undefined) moduleDoc.status = status;
+
+    await moduleDoc.save();
+
+    res.json({
+      success: true,
+      message: 'ሞጁሉ በተሳካ ሁኔታ ተሻሽሏል (Module updated successfully)',
+      module: moduleDoc,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/education/distance/modules/:moduleId – Delete Module & its lessons
+router.delete('/modules/:moduleId', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+    const moduleDoc = await Module.findById(moduleId);
+    if (!moduleDoc) return res.status(404).json({ success: false, message: 'Module not found' });
+
+    await Lesson.deleteMany({ moduleId });
+    await Course.findByIdAndUpdate(moduleDoc.courseId, { $pull: { modules: moduleId } });
+    await Module.findByIdAndDelete(moduleId);
+
+    res.json({
+      success: true,
+      message: 'ሞጁሉና ትምህርቶቹ በተሳካ ሁኔታ ተሰርዘዋል (Module deleted successfully)',
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -819,6 +902,71 @@ router.post('/modules/:moduleId/lessons', protect, authorize('admin', 'superadmi
       success: true,
       message: 'ትምህርት በተሳካ ሁኔታ ተጨምሯል (Lesson created successfully)',
       lesson: newLesson,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/education/distance/lessons/:lessonId – Update Lesson (YouTube video URL, reading, audio, etc.)
+router.put('/lessons/:lessonId', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+    const {
+      title,
+      titleAmharic,
+      videoUrl,
+      videoTitle,
+      videoDurationSeconds,
+      isVideoMandatory,
+      readingContent,
+      readingContentAmharic,
+      readingEstimatedMinutes,
+      isReadingMandatory,
+      audioUrl,
+      audioTitle,
+      order,
+    } = req.body;
+
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+
+    if (title !== undefined) lesson.title = title;
+    if (titleAmharic !== undefined) lesson.titleAmharic = titleAmharic;
+    if (videoUrl !== undefined) lesson.videoUrl = videoUrl;
+    if (videoTitle !== undefined) lesson.videoTitle = videoTitle;
+    if (videoDurationSeconds !== undefined) lesson.videoDurationSeconds = videoDurationSeconds;
+    if (isVideoMandatory !== undefined) lesson.isVideoMandatory = isVideoMandatory;
+    if (readingContent !== undefined) lesson.readingContent = readingContent;
+    if (readingContentAmharic !== undefined) lesson.readingContentAmharic = readingContentAmharic;
+    if (readingEstimatedMinutes !== undefined) lesson.readingEstimatedMinutes = readingEstimatedMinutes;
+    if (isReadingMandatory !== undefined) lesson.isReadingMandatory = isReadingMandatory;
+    if (audioUrl !== undefined) lesson.audioUrl = audioUrl;
+    if (audioTitle !== undefined) lesson.audioTitle = audioTitle;
+    if (order !== undefined) lesson.order = order;
+
+    await lesson.save();
+
+    res.json({
+      success: true,
+      message: 'ትምህርቱ በተሳካ ሁኔታ ተሻሽሏል (Lesson updated successfully)',
+      lesson,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/education/distance/lessons/:lessonId – Delete Lesson
+router.delete('/lessons/:lessonId', protect, authorize('admin', 'superadmin', 'department_admin', 'teacher'), async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+    const lesson = await Lesson.findByIdAndDelete(lessonId);
+    if (!lesson) return res.status(404).json({ success: false, message: 'Lesson not found' });
+
+    res.json({
+      success: true,
+      message: 'ትምህርት በተሳካ ሁኔታ ተሰርዟል (Lesson deleted successfully)',
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
