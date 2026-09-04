@@ -1,6 +1,15 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ClipboardList, ArrowLeft, Plus, Check, Award, TrendingUp, BookOpen, Users, X } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
+import { Select } from '../../components/ui/Select';
+import { toast } from '../../utils/toast';
 
 const AcademicEnrollmentDetails = () => {
   const { enrollmentId } = useParams();
@@ -10,8 +19,6 @@ const AcademicEnrollmentDetails = () => {
   const [availableCourses, setAvailableCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   // Single add states
   const [selectedCourse, setSelectedCourse] = useState('');
@@ -21,9 +28,6 @@ const AcademicEnrollmentDetails = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
   const [teacherSelections, setTeacherSelections] = useState({});
-
-  const [certificate, setCertificate] = useState(null);
-  const [showCertificate, setShowCertificate] = useState(false);
 
   useEffect(() => {
     fetchEnrollmentDetails();
@@ -39,7 +43,7 @@ const AcademicEnrollmentDetails = () => {
         const data = await res.json();
         setEnrollment(data.enrollment);
       } else {
-        setError('Failed to load enrollment');
+        toast.error('Failed to load enrollment');
       }
       const coursesRes = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/courses`);
       if (coursesRes.ok) {
@@ -47,7 +51,7 @@ const AcademicEnrollmentDetails = () => {
         setCourses(coursesData.courseEnrollments || []);
       }
     } catch (err) {
-      setError('Network error');
+      toast.error('Network error');
     } finally {
       setLoading(false);
     }
@@ -55,29 +59,28 @@ const AcademicEnrollmentDetails = () => {
 
   const fetchAvailableCourses = async () => {
     try {
-      const res = await apiFetch('/api/education/courses');   // ✅ use new endpoint
+      const res = await apiFetch('/api/education/courses');
       if (res.ok) {
         const data = await res.json();
         setAvailableCourses(data.courses || []);
       }
     } catch (err) {
-      console.error('Failed to fetch education courses:', err);
+      console.error(err);
     }
   };
 
   const fetchTeachers = async () => {
     try {
-      const res = await apiFetch('/api/education/teacher-profiles');   // ✅ use new endpoint
+      const res = await apiFetch('/api/education/teacher-profiles');
       if (res.ok) {
         const data = await res.json();
         setTeachers(data.profiles || []);
       }
     } catch (err) {
-      console.error('Failed to fetch teacher profiles:', err);
+      console.error(err);
     }
   };
 
-  // ---------- Single Add ----------
   const handleAddCourse = async (e) => {
     e.preventDefault();
     if (!selectedCourse) return;
@@ -86,131 +89,34 @@ const AcademicEnrollmentDetails = () => {
         method: 'POST',
         body: JSON.stringify({ courseId: selectedCourse, teacherIds: selectedTeacherIds }),
       });
-      const data = await res.json();
       if (res.ok) {
-        setMessage('Course added successfully');
+        toast.success('ኮርሱ በተሳካ ሁኔታ ተጨምሯል!');
         setSelectedCourse('');
         setSelectedTeacherIds([]);
         fetchEnrollmentDetails();
       } else {
-        setError(data.message || 'Failed to add course');
+        toast.error('ኮርስ መጨመር አልተቻለም');
       }
     } catch (err) {
-      setError('Network error');
+      toast.error('Network error');
     }
   };
 
-  const toggleTeacherSelection = (teacherId) => {
-    setSelectedTeacherIds(prev =>
-      prev.includes(teacherId) ? prev.filter(id => id !== teacherId) : [...prev, teacherId]
-    );
-  };
-
-  // ---------- Bulk Add ----------
-  const openBulkModal = () => {
-    setSelectedCourseIds([]);
-    setTeacherSelections({});
-    setShowBulkModal(true);
-  };
-
-  const toggleCourseSelection = (courseId) => {
-    setSelectedCourseIds(prev =>
-      prev.includes(courseId) ? prev.filter(id => id !== courseId) : [...prev, courseId]
-    );
-    if (!teacherSelections[courseId]) {
-      setTeacherSelections(prev => ({ ...prev, [courseId]: [] }));
-    }
-  };
-
-  const toggleTeacherForCourse = (courseId, teacherId) => {
-    setTeacherSelections(prev => {
-      const current = prev[courseId] || [];
-      const updated = current.includes(teacherId)
-        ? current.filter(id => id !== teacherId)
-        : [...current, teacherId];
-      return { ...prev, [courseId]: updated };
-    });
-  };
-
-const handleBulkSubmit = async () => {
-  if (selectedCourseIds.length === 0) return;
-
-  const items = selectedCourseIds.map(courseId => ({
-    courseId,
-    teacherIds: teacherSelections[courseId] || [],
-  }));
-
-  console.log('📦 Bulk payload:', { enrollmentId, items });
-
-  try {
-    const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/bulk-courses`, {
-      method: 'POST',
-      body: JSON.stringify({ items }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setMessage(data.message || 'Courses assigned');
-      setShowBulkModal(false);
-      fetchEnrollmentDetails();
-    } else {
-      console.error('Server error:', res.status, data);
-      setError(data.message || `Server error (${res.status})`);
-    }
-  } catch (err) {
-    console.error('Network error:', err);
-    setError(`Network error: ${err.message || 'Check console for details'}`);
-  }
-};
-
-  // ---------- Complete Course ----------
   const handleCompleteCourse = async (courseEnrollmentId) => {
-    const mark = prompt('Enter final mark/grade (optional):');
     try {
-      const res = await apiFetch(`/api/education/course-enrollments/${courseEnrollmentId}/complete`, {
+      const res = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/courses/${courseEnrollmentId}/complete`, {
         method: 'PUT',
-        body: JSON.stringify({ finalResult: mark || '', mark: mark || null }),
       });
       if (res.ok) {
-        setMessage('Course marked completed');
+        toast.success('ኮርሱ እንደተጠናቀቀ ተመዝግቧል');
         fetchEnrollmentDetails();
       }
-    } catch (err) {}
-  };
-
-  const allCoursesCompleted = courses.length > 0 && courses.every(c => c.status === 'completed');
-
-  // ---------- Progression ----------
-  const handleProgress = async () => {
-    if (!enrollment?.studentProfileId) return;
-    try {
-      const res = await apiFetch(`/api/education/students/${enrollment.studentProfileId}/progress`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Progression successful: ' + data.message);
-        navigate('/admin/academic-enrollments');
-      } else {
-        alert(data.message || 'Failed to progress');
-      }
     } catch (err) {
-      alert('Network error');
+      toast.error('Network error');
     }
   };
 
-  // ---------- Certificate ----------
-  const handleGenerateCertificate = async () => {
-    try {
-      const res = await apiFetch(`/api/education/students/${enrollment.studentProfileId}/certificate`);
-      if (res.ok) {
-        const data = await res.json();
-        setCertificate(data.certificate);
-        setShowCertificate(true);
-      } else {
-        alert('Certificate not available yet');
-      }
-    } catch (err) {}
-  };
+  const allCoursesCompleted = courses.length > 0 && courses.every((c) => c.status === 'completed');
 
   const getTeacherName = (teacherProfile) => {
     if (!teacherProfile) return '—';
@@ -219,202 +125,141 @@ const handleBulkSubmit = async () => {
     return teacherProfile.teacherNumber || '—';
   };
 
+  if (loading) {
+    return (
+      <div className="py-16 text-center text-slate-400 dark:text-slate-500">
+        <div className="w-8 h-8 border-2 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-sm font-medium">የምዝገባ ዝርዝር በመጫን ላይ...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <h2 className="text-xl font-bold text-slate-800">የትምህርት ዝርዝር (Enrollment Details)</h2>
-      {error && <div className="p-3 bg-rose-50 text-rose-700 rounded-xl">{error}</div>}
-      {message && <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl">{message}</div>}
+    <div className="space-y-6 max-w-5xl mx-auto">
+      <PageHeader
+        title="የትምህርት ምዝገባ ዝርዝር (Enrollment Details)"
+        subtitle="የተማሪውን የዓመቱ ኮርሶች፣ መምህራን እና የማጠናቀቂያ ሁኔታዎች እዚህ ይከታተሉ"
+        icon={ClipboardList}
+        badge={<Badge variant="gold" size="sm">{enrollment?.status || 'Active'}</Badge>}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate('/admin/academic-enrollments')} className="gap-2">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>ወደ ምዝገባዎች ተመለስ</span>
+          </Button>
+        }
+      />
 
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Loading...</div>
-      ) : enrollment ? (
-        <>
-          <div className="bg-slate-50 p-4 rounded-2xl grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div><span className="font-semibold">ዓመተ ትምህርት:</span> {enrollment.academicYearId?.name}</div>
-            <div><span className="font-semibold">ፕሮግራም:</span> {enrollment.programId?.name}</div>
-            <div><span className="font-semibold">ደረጃ/ባች:</span> {enrollment.gradeId?.name || '—'}</div>
-            <div><span className="font-semibold">የጥናት ሁነታ:</span> {enrollment.studyModeId?.name}</div>
-            <div><span className="font-semibold">ሰሌዳ:</span> {enrollment.scheduleId?.name || '—'}</div>
-            <div><span className="font-semibold">ሁኔታ:</span> {enrollment.status}</div>
-          </div>
-
-          {/* Buttons */}
-          <div className="flex gap-3">
-            <button
-              onClick={openBulkModal}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold"
-            >
-              ➕ ብዙ ኮርሶችን ጨምር
-            </button>
-            <button
-              onClick={() => setSelectedCourse('')}
-              className="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold"
-            >
-              አንድ ኮርስ ጨምር
-            </button>
-          </div>
-
-          {/* Single add form (visible when selectedCourse changed or after clicking) */}
-          {selectedCourse !== '' && (
-            <form onSubmit={handleAddCourse} className="space-y-3">
-              <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className="border rounded-xl p-2 w-full">
-                <option value="">— ኮርስ ይምረጡ —</option>
-                {availableCourses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-              </select>
-
-              <div>
-                <label className="block text-sm font-semibold mb-1">መምህሮች (Teachers)</label>
-                <div className="flex flex-wrap gap-2">
-                  {teachers.map(t => (
-                    <label key={t._id} className="flex items-center gap-1 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedTeacherIds.includes(t._id)}
-                        onChange={() => toggleTeacherSelection(t._id)}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <span className="text-sm">{getTeacherName(t)}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button type="submit" className="bg-blue-600 text-white rounded-xl px-4 py-2">አስገባ</button>
-            </form>
-          )}
-
-          {/* Courses List */}
-          <div>
-            <h3 className="font-semibold mb-2">የተመዘገቡ ኮርሶች</h3>
-            {courses.length === 0 ? (
-              <p className="text-slate-400">ምንም ኮርስ የለም</p>
-            ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b text-xs uppercase text-slate-400">
-                    <th className="py-2">ኮርስ</th>
-                    <th className="py-2">መምህር(ዎች)</th>
-                    <th className="py-2">ሁኔታ</th>
-                    <th className="py-2">እርምጃ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {courses.map(ce => {
-                    const teacherNames = ce.teachers?.length > 0
-                      ? ce.teachers.map(t => getTeacherName(t)).join(', ')
-                      : ce.teacherId ? getTeacherName(ce.teacherId) : '—';
-                    return (
-                      <tr key={ce._id}>
-                        <td className="py-2">{ce.courseId?.name}</td>
-                        <td className="py-2">{teacherNames}</td>
-                        <td className="py-2">{ce.status}</td>
-                        <td className="py-2">
-                          {ce.status !== 'completed' && (
-                            <button onClick={() => handleCompleteCourse(ce._id)} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg">አጠናቅቅ</button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleProgress}
-              disabled={!allCoursesCompleted}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
-            >
-              ወደ ቀጣይ ክፍል አሳድግ
-            </button>
-            <button
-              onClick={handleGenerateCertificate}
-              disabled={!allCoursesCompleted}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-xl disabled:opacity-50"
-            >
-              ሰርተፍኬት አውጣ
-            </button>
-          </div>
-        </>
-      ) : null}
-
-      {/* Bulk Add Modal */}
-      {showBulkModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-3xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-start">
-              <h3 className="text-xl font-bold text-slate-800">ብዙ ኮርሶችን ጨምር</h3>
-              <button onClick={() => setShowBulkModal(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 font-bold">&times;</button>
+      {/* Summary Info */}
+      {enrollment && (
+        <Card variant="elevated" padding="md">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">ዓመተ ትምህርት</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.academicYearId?.name || '—'}</span>
             </div>
-            <p className="text-sm text-slate-500">ኮርሶችን ምረጡ እና ለእያንዳንዱ ብዙ መምህሮችን ይመድቡ።</p>
-
-            <div className="space-y-2">
-              {availableCourses.map(course => {
-                const isSelected = selectedCourseIds.includes(course._id);
-                return (
-                  <div key={course._id} className={`p-3 rounded-xl border ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleCourseSelection(course._id)}
-                        className="w-4 h-4 text-blue-600 rounded"
-                      />
-                      <span className="font-medium text-slate-800 flex-1">{course.name}</span>
-                    </div>
-                    {isSelected && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {teachers.map(t => (
-                          <label key={t._id} className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-xl border border-slate-200 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={(teacherSelections[course._id] || []).includes(t._id)}
-                              onChange={() => toggleTeacherForCourse(course._id, t._id)}
-                              className="w-4 h-4 text-blue-600 rounded"
-                            />
-                            <span className="text-sm">{getTeacherName(t)}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {availableCourses.length === 0 && (
-                <p className="text-center text-slate-400 py-4">ምንም ኮርስ አልተገኘም</p>
-              )}
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">ፕሮግራም</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.programId?.name || '—'}</span>
             </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button onClick={() => setShowBulkModal(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl">ይቅር</button>
-              <button type="button" onClick={handleBulkSubmit} disabled={selectedCourseIds.length === 0} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50">አስገባ</button>
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">ደረጃ/ባች</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.gradeId?.name || '—'}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">የጥናት ሁነታ</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.studyModeId?.name || '—'}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">ሰሌዳ</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.scheduleId?.name || '—'}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block font-semibold uppercase">ሁኔታ</span>
+              <Badge variant={enrollment.status === 'active' ? 'approved' : 'neutral'} size="sm">
+                {enrollment.status || 'Active'}
+              </Badge>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Certificate Modal */}
-      {showCertificate && certificate && (
-        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full text-center shadow-2xl">
-            <h2 className="text-3xl font-bold text-[var(--brand-blue-dark)] mb-2">ሰርተፍኬት</h2>
-            <p className="text-xs text-slate-400 mb-6">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</p>
-            <p className="text-lg mb-2">ለ <span className="font-bold">{certificate.studentName}</span></p>
-            <p className="mb-1">የተማሪ መለያ: {certificate.studentNumber}</p>
-            <p className="mb-1">ፕሮግራም: {certificate.program}</p>
-            <p className="mb-1">ደረጃ/ባች: {certificate.grade}</p>
-            <p className="mb-1">ዓመተ ትምህርት: {certificate.academicYear}</p>
-            <p className="mb-1">የተሰጠበት ቀን: {certificate.issueDateEthiopian}</p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button onClick={() => setShowCertificate(false)} className="px-4 py-2 bg-slate-100 rounded-xl">ዝጋ</button>
-              <button onClick={() => window.print()} className="px-4 py-2 bg-blue-600 text-white rounded-xl">አትም</button>
-            </div>
+      {/* Add Course Form */}
+      <Card variant="default" padding="md">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">ኮርስ ጨምር (Add Course)</h3>
+        <form onSubmit={handleAddCourse} className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <Select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
+              <option value="">— ኮርስ ይምረጡ —</option>
+              {availableCourses.map((c) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </Select>
           </div>
+          <Button variant="primary" type="submit" disabled={!selectedCourse} className="gap-2 shrink-0">
+            <Plus className="w-4 h-4" />
+            <span>ኮርስ ጨምር</span>
+          </Button>
+        </form>
+      </Card>
+
+      {/* Enrolled Courses Table */}
+      <Card variant="default" padding="none">
+        <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex justify-between items-center">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">የተመዘገቡ ኮርሶች ({courses.length})</h3>
+          {allCoursesCompleted && <Badge variant="approved" size="sm">ሁሉም ተጠናቀዋል</Badge>}
         </div>
-      )}
+
+        {courses.length === 0 ? (
+          <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-2">
+            <BookOpen className="w-10 h-10 mx-auto opacity-40" />
+            <p className="text-sm font-semibold">ምንም የተመዘገበ ኮርስ የለም</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50">
+                  <th className="py-3 px-4">ኮርስ</th>
+                  <th className="py-3 px-4">መምህር(ዎች)</th>
+                  <th className="py-3 px-4">ሁኔታ</th>
+                  <th className="py-3 px-4 text-right">እርምጃ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                {courses.map((ce) => {
+                  const teacherNames = ce.teachers?.length > 0
+                    ? ce.teachers.map((t) => getTeacherName(t)).join(', ')
+                    : ce.teacherId ? getTeacherName(ce.teacherId) : '—';
+                  return (
+                    <tr key={ce._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{ce.courseId?.name}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">{teacherNames}</td>
+                      <td className="py-3 px-4">
+                        <Badge variant={ce.status === 'completed' ? 'approved' : 'active'} size="sm">
+                          {ce.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {ce.status !== 'completed' && (
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={() => handleCompleteCourse(ce._id)}
+                            className="gap-1"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>አጠናቅቅ</span>
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

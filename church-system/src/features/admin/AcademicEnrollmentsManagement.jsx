@@ -1,97 +1,124 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { apiFetch } from '../../api/apiClient';
+import { ClipboardList, RefreshCw, Eye } from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Badge,
+  DataTable,
+  DataTableColumnHeader,
+} from '../../components/ui';
+import { useAcademicEnrollments } from '../../hooks/queries/useAcademic';
 
 const AcademicEnrollmentsManagement = () => {
-  const [enrollments, setEnrollments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: enrollments = [], isLoading, isFetching, refetch } = useAcademicEnrollments();
 
-  useEffect(() => {
-    fetchEnrollments();
-  }, []);
-
-  const fetchEnrollments = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch('/api/education/academic-enrollments');
-      if (res.ok) {
-        const data = await res.json();
-        setEnrollments(data.enrollments || []);
-      } else {
-        setError('Failed to load enrollments');
-      }
-    } catch (err) {
-      setError('Network error');
-    } finally {
-      setLoading(false);
+  const getStatusVariant = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'active';
+      case 'completed':
+      case 'approved':
+        return 'approved';
+      case 'pending':
+        return 'pending';
+      case 'dropped':
+      case 'rejected':
+        return 'rejected';
+      default:
+        return 'neutral';
     }
   };
 
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">Academic Enrollments</h2>
-        <button onClick={fetchEnrollments} className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl">
-          🔄 Refresh
-        </button>
-      </div>
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'student',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
+        cell: ({ row }) => {
+          const profile = row.original.studentProfileId?.personId;
+          const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown';
+          return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
+        },
+      },
+      {
+        accessorKey: 'academicYear',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Year" />,
+        cell: ({ row }) => <span>{row.original.academicYearId?.name || '-'}</span>,
+      },
+      {
+        accessorKey: 'program',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Program" />,
+        cell: ({ row }) => <span>{row.original.programId?.name || '-'}</span>,
+      },
+      {
+        accessorKey: 'grade',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Grade / Batch" />,
+        cell: ({ row }) => <span>{row.original.gradeId?.name || '-'}</span>,
+      },
+      {
+        accessorKey: 'studyMode',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Mode" />,
+        cell: ({ row }) => <span>{row.original.studyModeId?.name || '-'}</span>,
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ getValue }) => (
+          <Badge variant={getStatusVariant(getValue())} size="sm">
+            {getValue() || 'pending'}
+          </Badge>
+        ),
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => (
+          <div className="text-right">
+            <Link
+              to={`/admin/academic-enrollments/${row.original._id}`}
+              className="inline-flex items-center gap-1.5 text-xs bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] dark:text-blue-400 hover:bg-[var(--brand-primary)] hover:text-white dark:hover:bg-blue-600 font-bold px-3 py-1.5 rounded-xl transition-all duration-150"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Details</span>
+            </Link>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
 
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Loading enrollments...</div>
-      ) : error ? (
-        <div className="py-8 text-center text-red-500">{error}</div>
-      ) : enrollments.length === 0 ? (
-        <div className="py-12 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
-          No enrollments found.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b text-xs uppercase text-slate-400">
-                <th className="py-2 px-2">Student</th>
-                <th className="py-2 px-2">Year</th>
-                <th className="py-2 px-2">Program</th>
-                <th className="py-2 px-2">Grade/Batch</th>
-                <th className="py-2 px-2">Mode</th>
-                <th className="py-2 px-2">Status</th>
-                <th className="py-2 px-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y text-sm">
-              {enrollments.map(enroll => (
-                <tr key={enroll._id} className="hover:bg-slate-50">
-                  <td className="py-2 px-2 font-medium text-slate-800">
-                    {enroll.studentProfileId?.personId ? `${enroll.studentProfileId.personId.firstName} ${enroll.studentProfileId.personId.lastName}` : 'Unknown'}
-                  </td>
-                  <td className="py-2 px-2">{enroll.academicYearId?.name || '-'}</td>
-                  <td className="py-2 px-2">{enroll.programId?.name || '-'}</td>
-                  <td className="py-2 px-2">{enroll.gradeId?.name || '-'}</td>
-                  <td className="py-2 px-2">{enroll.studyModeId?.name || '-'}</td>
-                  <td className="py-2 px-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      enroll.status === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                      enroll.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>
-                      {enroll.status}
-                    </span>
-                  </td>
-                  <td className="py-2 px-2">
-                    <Link
-                      to={`/admin/academic-enrollments/${enroll._id}`}
-                      className="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1.5 rounded-xl border border-blue-200 hover:bg-blue-100 transition-all"
-                    >
-                      Details
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="የአካዳሚክ ምዝገባዎች (Academic Enrollments)"
+        subtitle="የተማሪዎችን የክፍልና የትምህርት ዘመን ምዝገባ ሁኔታዎች እዚህ ይከታተሉ"
+        icon={ClipboardList}
+        badge={<Badge variant="gold" size="sm">{enrollments.length} ምዝገባዎች</Badge>}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            <span>አድስ (Refresh)</span>
+          </Button>
+        }
+      />
+
+      <DataTable
+        columns={columns}
+        data={enrollments}
+        isLoading={isLoading}
+        emptyMessage="ምንም የተመዘገበ ተማሪ አልተገኘም (No enrollments found)"
+        emptyIcon={ClipboardList}
+      />
     </div>
   );
 };

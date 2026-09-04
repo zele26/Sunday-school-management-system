@@ -1,19 +1,37 @@
+'use client';
+
 import React from 'react';
+import { ShieldAlert, Clock, User } from 'lucide-react';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
 
 const AuditLogsManagement = () => {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="border-b border-slate-100 pb-4">
-        <h2 className="text-xl font-bold text-slate-800">የሲስተም ኦዲት እና እንቅስቃሴዎች (Audit Logs)</h2>
-        <p className="text-xs text-slate-500 mt-1">በሲስተሙ ውስጥ የተከናወኑ ሁሉንም አስተዳደራዊ እንቅስቃሴዎች ይመልከቱ።</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="የሲስተም ኦዲት እና እንቅስቃሴዎች (Audit Logs)"
+        subtitle="በሲስተሙ ውስጥ የተከናወኑ ሁሉንም አስተዳደራዊ እንቅስቃሴዎች ይመልከቱ"
+        icon={ShieldAlert}
+        badge={<Badge variant="gold" size="sm">የደህንነት መዝገብ</Badge>}
+      />
 
-      <div className="divide-y divide-slate-100 text-xs text-slate-600">
-        <div className="py-3 flex justify-between">
-          <span>አድሚን ሲስተሙ ውስጥ ገብቷል (Admin Logged In)</span>
-          <span className="text-slate-400">ዛሬ 09:00</span>
+      <Card variant="default" padding="none">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-300">
+          <div className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center">
+                <User className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white">አድሚን ሲስተሙ ውስጥ ገብቷል (Admin Logged In)</p>
+                <p className="text-[11px] text-slate-400">IP: 127.0.0.1 • Role: Superadmin</p>
+              </div>
+            </div>
+            <Badge variant="neutral" size="sm">ዛሬ 09:00</Badge>
+          </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -1,74 +1,94 @@
-// src/features/student/StudentLayout.jsx
+'use client';
+
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import {
+  Home,
+  BookOpen,
+  CalendarCheck,
+  Bell,
+  User,
+  FolderOpen,
+  FileText,
+  GraduationCap,
+  TrendingUp,
+  LogOut,
+  Sparkles,
+} from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import ChurchLogo from '../../assets/ChurchLogo.png';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { Badge } from '../../components/ui/Badge';
 
-const StudentLayout = ({ onLogout }) => {
+const StudentLayout = ({ children, onLogout }) => {
   const user = useAuthStore((state) => state.user);
   const studentName = user?.fullName || 'ተማሪ';
-  const studentId = user?.studentId || '';   // from login response
+  const studentId = user?.studentId || '';
 
   const navItems = [
-    { label: 'መነሻ ገጽ (Dashboard)', path: '/dashboard', icon: '🏠', end: true },
-    { label: 'የኔ ኮርሶች (My Courses)', path: '/dashboard/courses', icon: '📚' },
-    { label: 'የመገኘት ሁኔታ (Attendance)', path: '/dashboard/attendance', icon: '📅' },
-    { label: 'ማስታወቂያዎች (Announcements)', path: '/dashboard/announcements', icon: '🔔' },
-    { label: 'የግል መረጃ (Profile)', path: '/dashboard/profile', icon: '👤' },
-    { label: 'Resources', path: '/dashboard/resources', icon: '📖' },
-    { label: 'Assignments', path: '/dashboard/assignments', icon: '📝' },
-    { label: 'Exams', path: '/dashboard/exams', icon: '📊' },
-    { label: 'Results', path: '/dashboard/results', icon: '📈' },
+    { label: 'መነሻ ገጽ (Dashboard)', path: '/dashboard', icon: <Home className="w-4 h-4 text-indigo-500" />, end: true },
+    { label: 'የኔ ኮርሶች (My Courses)', path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4 text-blue-500" /> },
+    { label: 'የመገኘት ሁኔታ (Attendance)', path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4 text-emerald-500" /> },
+    { label: 'ማስታወቂያዎች (Announcements)', path: '/dashboard/announcements', icon: <Bell className="w-4 h-4 text-amber-500" /> },
+    { label: 'የግል መረጃ (Profile)', path: '/dashboard/profile', icon: <User className="w-4 h-4 text-purple-500" /> },
+    { label: 'ማጣቀሻዎች (Resources)', path: '/dashboard/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
+    { label: 'የቤት ሥራዎች (Assignments)', path: '/dashboard/assignments', icon: <FileText className="w-4 h-4 text-teal-500" /> },
+    { label: 'ፈተናዎች (Exams)', path: '/dashboard/exams', icon: <GraduationCap className="w-4 h-4 text-rose-500" /> },
+    { label: 'ውጤት (Results)', path: '/dashboard/results', icon: <TrendingUp className="w-4 h-4 text-green-500" /> },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-800 flex flex-col">
+    <div className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] font-sans flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white px-6 md:px-8 py-3.5 flex justify-between items-center shadow-lg border-b border-amber-400/20 sticky top-0 z-20">
+      <header className="bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-lg border-b border-amber-400/20 sticky top-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-md flex-shrink-0">
-            <img src={ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-md flex-shrink-0">
+            <img src={ChurchLogo?.src || ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-base font-extrabold tracking-wide text-white">
+            <h1 className="text-sm sm:text-base font-extrabold tracking-wide text-white">
               ተክለ ሳዊሮስ ሰንበት ት/ቤት
             </h1>
-            <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">የተማሪዎች ፖርታል (Student Portal)</p>
+            <p className="text-[10px] text-[var(--brand-gold)] font-bold uppercase tracking-wider">የተማሪዎች ፖርታል (Student Portal)</p>
           </div>
         </div>
 
-        <button
-          onClick={onLogout}
-          className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm"
-        >
-          <span>ይውጡ (Logout)</span>
-          <span>🚪</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20" />
+          <button
+            onClick={onLogout}
+            className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm"
+          >
+            <span>Logout</span>
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </header>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-6 flex-1 w-full">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 flex-1 w-full">
         {/* Banner Card */}
-        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-indigo-200/50 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-indigo-900/20 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="relative z-10 space-y-2">
-            <span className="bg-white/20 backdrop-blur-md border border-white/20 text-xs font-semibold px-3 py-1 rounded-full text-indigo-100">
+            <Badge variant="gold" size="sm">
+              <Sparkles className="w-3 h-3" />
               ሰላምታ
-            </span>
-            <h2 className="text-3xl font-black tracking-tight">
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
               ሰላም፣ {studentName}! 👋
             </h2>
             {studentId && (
               <div className="flex items-center gap-2 text-xs font-mono text-indigo-200 mt-1">
                 <span className="opacity-70">ID:</span>
-                <span className="font-bold tracking-widest bg-white/10 px-2 py-0.5 rounded">{studentId}</span>
+                <span className="font-bold tracking-widest bg-white/20 px-2 py-0.5 rounded-lg border border-white/20">{studentId}</span>
               </div>
             )}
-            <p className="text-indigo-100 text-xs md:text-sm max-w-lg leading-relaxed">
+            <p className="text-indigo-100 text-xs sm:text-sm max-w-lg leading-relaxed">
               የሰንበት ትምህርት ቤት ትምህርቶችዎን፣ የመገኘት መዝገብዎን እና የቅርብ ጊዜ ማስታወቂያዎችን እዚህ ይከታተሉ።
             </p>
           </div>
 
-          <div className="relative z-10 w-20 h-20 md:w-24 md:h-24 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center text-4xl shadow-2xl flex-shrink-0">
+          <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-2xl flex-shrink-0">
             🎓
           </div>
 
@@ -78,16 +98,17 @@ const StudentLayout = ({ onLogout }) => {
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200/80 flex flex-wrap gap-1 md:gap-2">
+        <nav className="bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-wrap gap-1.5 transition-colors">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.end}
               className={({ isActive }) =>
-                `px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${isActive
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                `px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800'
                 }`
               }
             >
@@ -98,8 +119,8 @@ const StudentLayout = ({ onLogout }) => {
         </nav>
 
         {/* Dynamic Outlet Body */}
-        <main className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-sm min-h-[400px]">
-          <Outlet />
+        <main className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-sm min-h-[400px] transition-colors">
+          {children || <Outlet />}
         </main>
       </div>
     </div>

@@ -1,54 +1,60 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import bgImage from '../../assets/Lidetachurch.jpg';
 import { apiFetch } from '../../api/apiClient';
+import { forgotPasswordSchema } from '../../schemas';
 
 export default function ForgotPassword() {
-  const [identifier, setIdentifier] = useState('');
-  const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      identifier: '',
+    },
+  });
+
+  const onSubmit = async (data) => {
     setMsg({ type: '', text: '' });
 
-    const val = identifier.trim();
-    if (!val) {
-      return setMsg({ type: 'error', text: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ።' });
-    }
+    const val = data.identifier.trim();
 
-    setLoading(true);
     try {
       const res = await apiFetch('/api/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ identifier: val }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const resData = await res.json().catch(() => ({}));
       if (res.ok) {
         setMsg({
           type: 'success',
-          text: data.message || 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
+          text: resData.message || 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
         });
-        setIdentifier('');
+        reset();
       } else {
-        setMsg({ type: 'error', text: data.message || 'ጥያቄውን መላክ አልተቻለም' });
+        setMsg({ type: 'error', text: resData.message || 'ጥያቄውን መላክ አልተቻለም' });
       }
     } catch {
       setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል (Network error)' });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center fixed inset-0 font-sans selection:bg-indigo-500 selection:text-white"
-      style={{ backgroundImage: `url(${bgImage})` }}
+      style={{ backgroundImage: `url(${bgImage?.src || bgImage})` }}
     >
       {/* Top Floating Back Button */}
       <Link
-        to="/login"
+        href="/login"
         className="fixed top-5 left-5 z-30 inline-flex items-center gap-2 bg-slate-900/70 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-semibold backdrop-blur-md border border-white/20 shadow-lg transition-all"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,27 +93,34 @@ export default function ForgotPassword() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-semibold text-slate-700 block">
               ኢሜይል / ስልክ ቁጥር / የተማሪ መለያ *
             </label>
             <input
               type="text"
-              required
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              {...register('identifier')}
               placeholder="example@gmail.com / 0911... / STU-..."
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
+              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 transition-all outline-none ${
+                errors.identifier
+                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-600/20'
+              }`}
             />
+            {errors.identifier && (
+              <p className="text-[11px] text-rose-500 font-medium mt-1">
+                {errors.identifier.message}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-semibold text-sm shadow-md hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? (
+            {isSubmitting ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
               <>
@@ -119,7 +132,7 @@ export default function ForgotPassword() {
         </form>
 
         <div className="pt-4 border-t border-slate-100 text-center">
-          <Link to="/login" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold hover:underline">
+          <Link href="/login" className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold hover:underline">
             ← ወደ መግቢያ ገጽ ተመለስ (Back to Login)
           </Link>
         </div>

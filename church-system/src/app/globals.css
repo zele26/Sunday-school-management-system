@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  
+  /* Brand Primary (Church Royal Blue) */
+  --brand-primary: #0f4c9c;
+  --brand-primary-hover: #0d3e80;
+  --brand-primary-dark: #08214d;
+  --brand-primary-navy: #051533;
+  --brand-primary-light: #2563eb;
+  --brand-primary-soft: #eff6ff;
+
+  /* Brand Accent (Church Gold) */
+  --brand-gold: #ffcc00;
+  --brand-gold-hover: #e6b800;
+  --brand-gold-warm: #f59e0b;
+  --brand-gold-dark: #d97706;
+  --brand-gold-light: #fef9c3;
+  --brand-gold-soft: rgba(255, 204, 0, 0.15);
+
+  /* Surfaces & Backgrounds */
+  --surface-page: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-card-subtle: #f1f5f9;
+  --surface-header: #ffffff;
+  
+  /* Typography & Content */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  /* Borders & Dividers */
+  --border-subtle: #e2e8f0;
+  --border-default: #cbd5e1;
+  --border-focus: #0f4c9c;
+
+  /* Status Colors */
+  --status-success: #10b981;
+  --status-success-soft: #d1fae5;
+  --status-warning: #f59e0b;
+  --status-warning-soft: #fef3c7;
+  --status-danger: #ef4444;
+  --status-danger-soft: #fee2e2;
+  --status-info: #0284c7;
+  --status-info-soft: #e0f2fe;
+
+  /* Backward compatibility tokens */
+  --church-blue-primary: var(--brand-primary);
+  --church-blue-dark: var(--brand-primary-dark);
+  --church-blue-navy: var(--brand-primary-navy);
+  --church-gold: var(--brand-gold);
+  --brand-blue: var(--brand-primary);
+  --brand-blue-dark: var(--brand-primary-dark);
+  --brand-yellow: var(--brand-gold);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface-page: #051533;
+  --surface-card: #08214d;
+  --surface-card-subtle: #0c2b64;
+  --surface-header: #051533;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
+
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.18);
+  --border-focus: #ffcc00;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+  font-family: 'Inter', 'Noto Sans Ethiopic', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--brand-gold);
+  color: #051533;
+}
+
+/* Glassmorphic Utility Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+}
+
+.dark .glass-panel {
+  background: rgba(8, 33, 77, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.glass-card-gold {
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.12), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 204, 0, 0.35);
+}
+
+/* Custom Sleek Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(15, 76, 156, 0.25);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 76, 156, 0.5);
+}
+

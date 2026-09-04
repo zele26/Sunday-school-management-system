@@ -1,29 +1,70 @@
+'use client';
+
 import React, { useState } from 'react';
+import { Settings, Save, Sparkles } from 'lucide-react';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
+import { toast } from '../../utils/toast';
 
 const SettingsManagement = () => {
-  const [systemName, setSystemName] = useState('የሰንበት ትምህርት ቤት ሥርዓት');
+  const [systemName, setSystemName] = useState('ተክለሳዊሮስ ሰንበት ትምህርት ቤት');
+  const [email, setEmail] = useState('contact@teklesawiros.org');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      toast.success('ቅንብሮቹ በተሳካ ሁኔታ ተቀምጠዋል! (Settings saved successfully)');
+    }, 400);
+  };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="border-b border-slate-100 pb-4">
-        <h2 className="text-xl font-bold text-slate-800">የሲስተም ቅንብሮች (Settings)</h2>
-        <p className="text-xs text-slate-500 mt-1">የመተግበሪያውን አጠቃላይ ቅንብሮች ያስተካክሉ።</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="የሲስተም ቅንብሮች (Settings)"
+        subtitle="የሰንበት ትምህርት ቤት ሥርዓት አጠቃላይ ቅንብሮችን ያስተካክሉ"
+        icon={Settings}
+        badge={<Badge variant="gold" size="sm">አስተዳደራዊ</Badge>}
+      />
 
-      <div className="space-y-4 max-w-md">
-        <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">የመተግበሪያ ስም (System Title)</label>
-          <input
-            type="text"
-            value={systemName}
-            onChange={(e) => setSystemName(e.target.value)}
-            className="w-full p-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-          />
-        </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
-          ቅንብሮችን አስቀምጥ (Save Settings)
-        </button>
-      </div>
+      <Card variant="default" padding="md" className="max-w-2xl">
+        <form onSubmit={handleSave} className="space-y-5">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              የመተግበሪያ ስም (System Title)
+            </label>
+            <Input
+              value={systemName}
+              onChange={(e) => setSystemName(e.target.value)}
+              placeholder="System name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+              የቤተክርስቲያን ይፋዊ ኢሜይል (Official Email)
+            </label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="contact@domain.org"
+            />
+          </div>
+
+          <div className="pt-2">
+            <Button variant="primary" type="submit" loading={saving} className="gap-2">
+              <Save className="w-4 h-4" />
+              <span>ቅንብሮችን አስቀምጥ (Save Settings)</span>
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 };

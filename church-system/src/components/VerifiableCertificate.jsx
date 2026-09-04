@@ -1,3 +1,5 @@
+'use client';
+
 // src/components/VerifiableCertificate.jsx
 import React from 'react';
 import ChurchLogo from '../assets/ChurchLogo.png';
@@ -37,7 +39,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
         {/* Action Header (Hidden during print) */}
         <div className="px-6 py-4 bg-gradient-to-r from-[#051533] to-[#08214d] text-white flex justify-between items-center print:hidden rounded-t-3xl border-b border-amber-500/30">
           <div className="flex items-center gap-3">
-            <img src={ChurchLogo} alt="Logo" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,204,0,0.6)]" />
+            <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,204,0,0.6)]" />
             <div>
               <h3 className="font-extrabold text-sm text-white">ይፋዊ የሰንበት ት/ቤት የምስክር ወረቀት</h3>
               <p className="text-[10px] text-amber-300">Official Ethiopian Orthodox Sunday School Diploma</p>
@@ -79,7 +81,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               <div className="col-span-3 flex justify-start">
                 <div className="p-1 bg-white border-2 border-amber-500/60 rounded-2xl shadow-md overflow-hidden">
                   <img
-                    src={ChurchLeftImg}
+                    src={ChurchLeftImg?.src || ChurchLeftImg}
                     alt="ቅድስት ልደታ ለማርያም"
                     className="w-20 h-16 sm:w-28 sm:h-20 object-cover rounded-xl"
                   />
@@ -94,7 +96,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                 </p>
                 <div className="flex justify-center my-1">
                   <img
-                    src={ChurchLogo}
+                    src={ChurchLogo?.src || ChurchLogo}
                     alt="Church Seal"
                     className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-[0_0_10px_rgba(255,204,0,0.7)]"
                   />
@@ -111,7 +113,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               <div className="col-span-3 flex justify-end">
                 <div className="p-1 bg-white border-2 border-amber-500/60 rounded-2xl shadow-md overflow-hidden">
                   <img
-                    src={ChurchRightImg}
+                    src={ChurchRightImg?.src || ChurchRightImg}
                     alt="መድኃኔዓለም ቤተክርስቲያን"
                     className="w-20 h-16 sm:w-28 sm:h-20 object-cover rounded-xl"
                   />

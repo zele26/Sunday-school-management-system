@@ -1,39 +1,31 @@
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { Church, RefreshCw, UserPlus, Search } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
+import {
+  PageHeader,
+  Card,
+  Button,
+  Input,
+  Badge,
+  DataTable,
+  DataTableColumnHeader,
+} from '../../components/ui';
+import {
+  useChurchMemberships,
+  useAssignChurchMembership,
+} from '../../hooks/queries/usePeople';
 
 const ChurchMembershipsManagement = () => {
-  const [memberships, setMemberships] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-
-  // Form state
   const [personId, setPersonId] = useState('');
   const [memberId, setMemberId] = useState('');
   const [personSearch, setPersonSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => {
-    fetchMemberships();
-  }, []);
-
-  const fetchMemberships = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch('/api/core/church-memberships');
-      if (res.ok) {
-        const data = await res.json();
-        setMemberships(data.memberships || []);
-      } else {
-        setError('Failed to load memberships');
-      }
-    } catch (err) {
-      setError('Network error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: memberships = [], isLoading, isFetching, refetch } = useChurchMemberships();
+  const assignMutation = useAssignChurchMembership();
 
   const handlePersonSearch = async (e) => {
     const query = e.target.value;
@@ -61,127 +53,142 @@ const ChurchMembershipsManagement = () => {
     setShowDropdown(false);
   };
 
-  const handleAssign = async (e) => {
+  const handleAssign = (e) => {
     e.preventDefault();
     if (!personId || !memberId) {
-      alert('Please select person and enter member ID');
+      alert('እባክዎ ሰው ይምረጡና የቤተክርስቲያን መታወቂያ ያስገቡ');
       return;
     }
-    try {
-      const res = await apiFetch('/api/core/church-memberships', {
-        method: 'POST',
-        body: JSON.stringify({ personId, memberId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage('✅ Church membership assigned successfully!');
-        setPersonId('');
-        setMemberId('');
-        setPersonSearch('');
-        fetchMemberships();
-      } else {
-        setMessage(`❌ ${data.message || 'Failed to assign'}`);
+    assignMutation.mutate(
+      { personId, memberId },
+      {
+        onSuccess: () => {
+          setPersonId('');
+          setMemberId('');
+          setPersonSearch('');
+        },
       }
-    } catch (err) {
-      setMessage('❌ Network error');
-    }
+    );
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'person',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Person" />,
+        cell: ({ row }) => {
+          const p = row.original.personId;
+          const name = p ? `${p.firstName} ${p.lastName}` : 'Unknown';
+          return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
+        },
+      },
+      {
+        accessorKey: 'memberId',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Church Member ID" />,
+        cell: ({ getValue }) => (
+          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+            {getValue() || '-'}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: () => <Badge variant="approved" size="sm">Active Member</Badge>,
+      },
+      {
+        accessorKey: 'createdAt',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Assigned Date" />,
+        cell: ({ getValue }) => (
+          <span className="text-xs text-slate-500 dark:text-slate-400">
+            {getValue() ? new Date(getValue()).toLocaleDateString() : '-'}
+          </span>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-slate-800">Church Memberships</h2>
-        <button onClick={fetchMemberships} className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl">
-          🔄 Refresh
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="የቤተክርስቲያን አባልነት (Church Memberships)"
+        subtitle="የምእመናንን የደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት ይፋዊ የአባልነት መታወቂያ ያስተዳድሩ"
+        icon={Church}
+        badge={<Badge variant="gold" size="sm">{memberships.length} አባላት</Badge>}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            <span>አድስ</span>
+          </Button>
+        }
+      />
 
-      {error && <div className="p-3 rounded-xl bg-rose-50 text-rose-700 text-sm">{error}</div>}
-      {message && <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-sm">{message}</div>}
+      {/* Assignment Card */}
+      <Card variant="default" padding="md">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+          የቤተክርስቲያን መታወቂያ ቁጥር መድብ
+        </h3>
+        <form onSubmit={handleAssign} className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div className="relative flex-1 w-full">
+            <Input
+              icon={Search}
+              placeholder="ሰው በስም ይፈልጉ..."
+              value={personSearch}
+              onChange={handlePersonSearch}
+            />
+            {showDropdown && searchResults.length > 0 && (
+              <div className="absolute z-50 left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                {searchResults.map((p) => (
+                  <button
+                    key={p._id}
+                    type="button"
+                    onClick={() => selectPerson(p)}
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 last:border-0"
+                  >
+                    {p.firstName} {p.middleName} {p.lastName}{' '}
+                    <span className="text-xs text-slate-400">({p.phone || 'No phone'})</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-      {/* Assign Membership Form */}
-      <form onSubmit={handleAssign} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-        <div className="relative">
-          <label className="block text-sm font-semibold text-slate-700 mb-1">Search Person</label>
-          <input
-            type="text"
-            value={personSearch}
-            onChange={handlePersonSearch}
-            placeholder="Type name, phone, or email..."
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm"
-          />
-          {showDropdown && searchResults.length > 0 && (
-            <div className="absolute z-10 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto">
-              {searchResults.map(person => (
-                <button
-                  type="button"
-                  key={person._id}
-                  onClick={() => selectPerson(person)}
-                  className="w-full text-left px-4 py-2 hover:bg-slate-50 text-sm"
-                >
-                  {person.firstName} {person.lastName} — {person.phone || person.email}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">Permanent Member ID</label>
-          <input
-            type="text"
-            value={memberId}
-            onChange={(e) => setMemberId(e.target.value)}
-            placeholder="e.g., MEM-000123"
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold"
-        >
-          Assign Membership
-        </button>
-      </form>
+          <div className="w-full sm:w-64">
+            <Input
+              placeholder="Church Member ID (e.g. CM-1002)"
+              value={memberId}
+              onChange={(e) => setMemberId(e.target.value)}
+              required
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={assignMutation.isPending}
+            className="gap-2 shrink-0"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>{assignMutation.isPending ? 'በመመደብ ላይ...' : 'መድብ (Assign)'}</span>
+          </Button>
+        </form>
+      </Card>
 
       {/* Memberships Table */}
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Loading memberships...</div>
-      ) : memberships.length === 0 ? (
-        <div className="py-12 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed">
-          No church memberships found.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b text-xs uppercase text-slate-400">
-                <th className="py-2 px-2">Person</th>
-                <th className="py-2 px-2">Member ID</th>
-                <th className="py-2 px-2">Status</th>
-                <th className="py-2 px-2">Assigned At</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y text-sm">
-              {memberships.map(m => (
-                <tr key={m._id} className="hover:bg-slate-50">
-                  <td className="py-2 px-2 font-medium text-slate-800">
-                    {m.personId ? `${m.personId.firstName} ${m.personId.lastName}` : 'Unknown'}
-                  </td>
-                  <td className="py-2 px-2 font-mono text-xs">{m.memberId}</td>
-                  <td className="py-2 px-2">
-                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                      {m.status}
-                    </span>
-                  </td>
-                  <td className="py-2 px-2 text-xs text-slate-500">
-                    {m.assignedAt ? new Date(m.assignedAt).toLocaleDateString() : '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={memberships}
+        isLoading={isLoading}
+        emptyMessage="ምንም የተመዘገበ የቤተክርስቲያን አባል የለም"
+        emptyIcon={Church}
+      />
     </div>
   );
 };

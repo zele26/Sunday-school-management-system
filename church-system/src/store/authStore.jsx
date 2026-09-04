@@ -1,29 +1,24 @@
-// import { create } from 'zustand';
-// import { persist } from 'zustand/middleware';
-
-// const useAuthStore = create(
-//   persist(
-//     (set) => ({
-//       accessToken: null,
-//       user: null,
-//       isLoggedIn: false,
-//       login: (accessToken, user) => set({ accessToken, user, isLoggedIn: true }),
-//       logout: () => set({ accessToken: null, user: null, isLoggedIn: false }),
-//       setAccessToken: (accessToken) => set({ accessToken }),
-//     }),
-//     {
-//       name: 'auth-storage',     // key in localStorage
-//       getStorage: () => localStorage,
-//     }
-//   )
-// );
-
-// export default useAuthStore;
-
-
+'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+const customStorage = {
+  getItem: (name) => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(name);
+  },
+  setItem: (name, value) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: (name) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(name);
+    }
+  },
+};
 
 const useAuthStore = create(
   persist(
@@ -31,21 +26,44 @@ const useAuthStore = create(
       accessToken: null,
       user: null,
       isLoggedIn: false,
+      _hasHydrated: false,
 
-      login: (accessToken, user) => set({ accessToken, user, isLoggedIn: true }),
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
 
-      logout: () => set({ accessToken: null, user: null, isLoggedIn: false }),
+      login: (accessToken, user) => {
+        if (typeof window !== 'undefined' && accessToken) {
+          localStorage.setItem('token', accessToken);
+        }
+        set({ accessToken, user, isLoggedIn: true, _hasHydrated: true });
+      },
 
-      setAccessToken: (accessToken) => set({ accessToken }),
+      logout: () => {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
+        set({ accessToken: null, user: null, isLoggedIn: false });
+      },
 
-      // ✅ ADD THIS FUNCTION – it was missing
-      updateUser: (userData) => set((state) => ({
-        user: { ...state.user, ...userData }
-      })),
+      setAccessToken: (accessToken) => {
+        if (typeof window !== 'undefined' && accessToken) {
+          localStorage.setItem('token', accessToken);
+        }
+        set({ accessToken });
+      },
+
+      updateUser: (userData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : userData,
+        })),
     }),
     {
       name: 'auth-storage',
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => customStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

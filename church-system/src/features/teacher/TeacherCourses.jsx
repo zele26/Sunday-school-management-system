@@ -1,64 +1,64 @@
-// src/features/teacher/TeacherCourses.jsx
-import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../api/apiClient';
+'use client';
+
+import React, { useMemo } from 'react';
+import { BookOpen } from 'lucide-react';
+import {
+  DataTable,
+  DataTableColumnHeader,
+  Badge,
+} from '../../components/ui';
+import { useMyCourses } from '../../hooks/queries/useTeacherPortal';
 
 const TeacherCourses = () => {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: courses = [], isLoading } = useMyCourses();
 
-  useEffect(() => {
-    fetchMyCourses();
-  }, []);
-
-  const fetchMyCourses = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch('/api/teacher/my-courses');
-      if (!res.ok) throw new Error('Failed to fetch courses');
-      const data = await res.json();
-      setCourses(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'name',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Course Name" />,
+        cell: ({ getValue }) => <span className="font-bold text-slate-900 dark:text-white">{getValue()}</span>,
+      },
+      {
+        accessorKey: 'ageGroup',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Age Group / Grade" />,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'Youth'}</Badge>,
+      },
+      {
+        accessorKey: 'schedule',
+        header: 'Schedule',
+        cell: ({ getValue }) => <span className="text-slate-600 dark:text-slate-300">{getValue() || '-'}</span>,
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ getValue }) => (
+          <Badge variant={getValue() === 'Active' ? 'approved' : 'neutral'} size="sm">
+            {getValue() || 'Active'}
+          </Badge>
+        ),
+      },
+    ],
+    []
+  );
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-      <h2 className="text-xl font-bold text-slate-800">My Courses</h2>
-      {loading ? (
-        <div className="text-center text-slate-400 py-8">Loading courses...</div>
-      ) : courses.length === 0 ? (
-        <p className="text-slate-500">You are not assigned to any courses yet.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b text-xs uppercase text-slate-400">
-                <th className="py-2 px-2">Course Name</th>
-                <th className="py-2 px-2">Age Group</th>
-                <th className="py-2 px-2">Schedule</th>
-                <th className="py-2 px-2">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y text-sm text-slate-700">
-              {courses.map(course => (
-                <tr key={course._id} className="hover:bg-slate-50">
-                  <td className="py-2 px-2 font-medium">{course.name}</td>
-                  <td className="py-2 px-2">{course.ageGroup}</td>
-                  <td className="py-2 px-2">{course.schedule || '-'}</td>
-                  <td className="py-2 px-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${course.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                      {course.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-[var(--brand-primary)]" />
+          <span>የእኔ ኮርሶች (My Courses)</span>
+        </h2>
+        <Badge variant="gold" size="sm">{courses.length} ኮርሶች</Badge>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={courses}
+        isLoading={isLoading}
+        emptyMessage="ምንም የተመደበ ኮርስ የለም (You are not assigned to any courses yet)"
+        emptyIcon={BookOpen}
+      />
     </div>
   );
 };

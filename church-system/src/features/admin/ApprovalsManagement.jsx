@@ -1,156 +1,116 @@
-// src/features/admin/ApprovalsManagement.jsx
-import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../api/apiClient';
+'use client';
+
+import React, { useMemo } from 'react';
+import { CheckCircle2, RefreshCw, Check, X } from 'lucide-react';
+import {
+  PageHeader,
+  Button,
+  Badge,
+  DataTable,
+  DataTableColumnHeader,
+} from '../../components/ui';
+import {
+  useApprovals,
+  useApprovePendingUser,
+  useRejectPendingUser,
+} from '../../hooks/queries/useApprovals';
 
 const ApprovalsManagement = () => {
-  const [pendingUsers, setPendingUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null);
-  const [message, setMessage] = useState({ text: '', type: '' });
+  const { data: pendingUsers = [], isLoading, isFetching, refetch } = useApprovals();
+  const approveMutation = useApprovePendingUser();
+  const rejectMutation = useRejectPendingUser();
 
-  const fetchPendingApprovals = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch('/api/admin/pending-approvals');
-      if (res.ok) {
-        const data = await res.json();
-        setPendingUsers(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      console.error('Error loading pending approvals:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPendingApprovals();
-  }, []);
-
-  const handleApprovalAction = async (userId, action) => {
-    setActionLoading(userId);
-    setMessage({ text: '', type: '' });
-    try {
-      const endpoint =
-        action === 'approved'
-          ? `/api/admin/users/${userId}/approve`
-          : `/api/admin/users/${userId}/reject`;
-
-      const res = await apiFetch(endpoint, { method: 'PUT' });
-
-      if (res.ok) {
-        setMessage({
-          text:
-            action === 'approved'
-              ? 'ተጠቃሚው በስኬት ጸድቋል! (User approved successfully!)'
-              : 'ተጠቃሚው ውድቅ ተደርጓል። (User rejected.)',
-          type: 'success',
-        });
-        setPendingUsers((prev) => prev.filter((user) => user._id !== userId));
-      } else {
-        const errorData = await res.json();
-        setMessage({
-          text: errorData.message || 'ትእዛዙ አልተሳካም። (Action failed.)',
-          type: 'error',
-        });
-      }
-    } catch (err) {
-      setMessage({
-        text: 'የአውታረ መረብ ስህተት ተከስቷል። (Network error occurred.)',
-        type: 'error',
-      });
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: 'fullName',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+        cell: ({ row }) => {
+          const u = row.original;
+          return <span className="font-bold text-slate-900 dark:text-white">{u.fullName || u.username}</span>;
+        },
+      },
+      {
+        accessorKey: 'contact',
+        header: 'Phone / Username',
+        cell: ({ row }) => {
+          const u = row.original;
+          return <span className="text-slate-600 dark:text-slate-300">{u.phone || u.username}</span>;
+        },
+      },
+      {
+        accessorKey: 'role',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+        cell: ({ getValue }) => <Badge variant="gold" size="sm">{getValue()}</Badge>,
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: () => <Badge variant="pending" size="sm">Pending</Badge>,
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => {
+          const u = row.original;
+          return (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="success"
+                size="sm"
+                onClick={() => approveMutation.mutate(u._id)}
+                disabled={approveMutation.isPending}
+                className="gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>{approveMutation.isPending ? '...' : 'አጽድቅ (Approve)'}</span>
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => rejectMutation.mutate(u._id)}
+                disabled={rejectMutation.isPending}
+                className="gap-1.5"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{rejectMutation.isPending ? '...' : 'ውድቅ አድርግ'}</span>
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [approveMutation, rejectMutation]
+  );
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">የማጽደቂያ ጥያቄዎች (Pending Approvals)</h2>
-          <p className="text-xs text-slate-500 mt-1">
-            አዳዲስ የተመዘገቡ ተጠቃሚዎችን እና መምህራንን ያጽድቁ ወይም ውድቅ ያድርጉ።
-          </p>
-        </div>
-        <button
-          onClick={fetchPendingApprovals}
-          className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl hover:bg-blue-100 transition"
-        >
-          🔄 አድስ (Refresh)
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="የማጽደቂያ ጥያቄዎች (Pending Approvals)"
+        subtitle="አዳዲስ የተመዘገቡ ተጠቃሚዎችን እና መምህራንን ያጽድቁ ወይም ውድቅ ያድርጉ"
+        icon={CheckCircle2}
+        badge={<Badge variant="pending" size="sm">{pendingUsers.length} የሚጠብቁ</Badge>}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isLoading || isFetching}
+            className="gap-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            <span>አድስ (Refresh)</span>
+          </Button>
+        }
+      />
 
-      {/* Notification Toast */}
-      {message.text && (
-        <div
-          className={`p-3 rounded-xl text-sm font-medium ${
-            message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-rose-50 text-rose-700 border border-rose-200'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      {/* Approvals Table */}
-      {loading ? (
-        <div className="py-12 text-center text-slate-400 text-sm">በመጫን ላይ ነው... (Loading requests...)</div>
-      ) : pendingUsers.length === 0 ? (
-        <div className="py-12 text-center text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
-          ምንም የሚጠበቅ ማጽደቂያ የለም። (No pending registration requests found.)
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 text-slate-400 text-xs uppercase tracking-wider">
-                <th className="py-3 px-3">ስም (Name)</th>
-                <th className="py-3 px-3">መለያ / ኢሜይል (Username/Email)</th>
-                <th className="py-3 px-3">ድርሻ (Role)</th>
-                <th className="py-3 px-3">የተመዘገበበት ቀን (Date)</th>
-                <th className="py-3 px-3 text-right">ርምጃዎች (Actions)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-              {pendingUsers.map((u) => (
-                <tr key={u._id || u.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3.5 px-3 font-semibold text-slate-800">
-                    {u.fullName || u.username}
-                  </td>
-                  <td className="py-3.5 px-3 text-slate-500">{u.email || u.username}</td>
-                  <td className="py-3.5 px-3">
-                    <span className="bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-lg text-xs uppercase border border-amber-200">
-                      {u.role || 'Pending'}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-3 text-xs text-slate-400">
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="py-3.5 px-3 text-right space-x-2">
-                    <button
-                      disabled={actionLoading === u._id}
-                      onClick={() => handleApprovalAction(u._id, 'approved')}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-                    >
-                      {actionLoading === u._id ? '...' : 'አጽድቅ (Approve)'}
-                    </button>
-                    <button
-                      disabled={actionLoading === u._id}
-                      onClick={() => handleApprovalAction(u._id, 'rejected')}
-                      className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs px-3 py-1.5 rounded-lg transition border border-rose-200 disabled:opacity-50"
-                    >
-                      ውድቅ አድርግ (Reject)
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={pendingUsers}
+        isLoading={isLoading}
+        emptyMessage="ምንም የሚጠብቅ የማጽደቂያ ጥያቄ የለም (All requests resolved)"
+        emptyIcon={CheckCircle2}
+      />
     </div>
   );
 };

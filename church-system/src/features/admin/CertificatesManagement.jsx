@@ -1,21 +1,33 @@
+'use client';
+
 import React from 'react';
+import { Award, Plus, Sparkles } from 'lucide-react';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 
 const CertificatesManagement = () => {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">የምስክር ወረቀቶች (Certificates)</h2>
-          <p className="text-xs text-slate-500 mt-1">ትምህርታቸውን ላጠናቀቁ ተማሪዎች ምስክር ወረቀት ያዘጋጁ።</p>
-        </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
-          + ምስክር ወረቀት ስጥ (Issue Certificate)
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="የምስክር ወረቀቶች (Certificates)"
+        subtitle="ትምህርታቸውን ላጠናቀቁ ተማሪዎች ምስክር ወረቀት ያዘጋጁ እና ያረጋግጡ"
+        icon={Award}
+        badge={<Badge variant="gold" size="sm"><Sparkles className="w-3 h-3" /> 0 የተሰጡ</Badge>}
+        actions={
+          <Button variant="gold" size="sm" className="gap-2">
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ ምስክር ወረቀት ስጥ</span>
+          </Button>
+        }
+      />
 
-      <div className="py-12 text-center text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
-        ምንም የተሰጠ ምስክር ወረቀት የለም። (No certificates issued yet.)
-      </div>
+      <Card variant="subtle" padding="lg" className="text-center py-16">
+        <Award className="w-12 h-12 mx-auto text-amber-500 opacity-60 mb-3" />
+        <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">ምንም የተሰጠ ምስክር ወረቀት የለም</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ትምህርታቸውን ያጠናቀቁ ተማሪዎችን መርጠው የምስክር ወረቀት መስጠት ይችላሉ።</p>
+      </Card>
     </div>
   );
 };

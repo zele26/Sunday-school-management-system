@@ -65,6 +65,14 @@ try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } cat
 
 const app = express();
 
+// --- GZIP COMPRESSION MIDDLEWARE ---
+try {
+  const compression = require('compression');
+  app.use(compression());
+} catch (e) {
+  // compression optional fallback
+}
+
 // --- CORS CONFIGURATION ---
 const allowedOrigins = [
   'https://sunday-school-management-system-u68.vercel.app',

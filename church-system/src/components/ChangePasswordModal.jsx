@@ -179,7 +179,7 @@ const ChangePasswordModal = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-950 hover:to-indigo-950 text-white py-3.5 rounded-xl font-extrabold text-sm shadow-xl shadow-blue-950/25 hover:shadow-2xl active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="w-full mt-2 bg-gradient-to-r from-blue-900 via-indigo-900 to-blue-950 hover:from-blue-950 hover:to-indigo-950 active:opacity-90 text-white py-3.5 rounded-xl font-extrabold text-sm shadow-md transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

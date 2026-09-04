@@ -247,7 +247,7 @@ const DistanceClassroom = () => {
       <header className="h-16 bg-[#051533] border-b border-amber-500/30 px-4 md:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xl">
         <div className="flex items-center gap-3">
           <Link to="/student" className="flex items-center gap-2 group">
-            <img src={ChurchLogo} alt="Logo" className="w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(255,204,0,0.5)] group-hover:scale-105 transition-transform" />
+            <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(255,204,0,0.5)] group-hover:scale-105 transition-transform" />
             <div className="hidden sm:block">
               <h1 className="text-xs font-black text-amber-400 tracking-wide">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h1>
               <p className="text-[10px] text-slate-300 font-medium">የርቀት ትምህርት ማዕከል (Distance LMS)</p>

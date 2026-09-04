@@ -1,7 +1,13 @@
-// src/features/admin/DepartmentHub.jsx
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Building2, Users, ArrowLeft, UserPlus, Layers, ShieldCheck } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
+import { PageHeader } from '../../components/ui/PageHeader';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Badge } from '../../components/ui/Badge';
 
 const DepartmentHub = () => {
   const { id } = useParams();
@@ -9,7 +15,6 @@ const DepartmentHub = () => {
   const [department, setDepartment] = useState(null);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     fetchDepartmentData();
@@ -25,7 +30,6 @@ const DepartmentHub = () => {
           setDepartment(data.department || data);
         }
       }
-      // Fetch department memberships
       const memRes = await apiFetch(`/api/core/department-memberships?departmentId=${id || ''}`);
       if (memRes.ok) {
         const memData = await memRes.json();
@@ -40,112 +44,127 @@ const DepartmentHub = () => {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-slate-400 bg-white rounded-3xl shadow-sm border border-slate-100">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-        <p>Loading department hub...</p>
+      <div className="py-16 text-center text-slate-400 dark:text-slate-500">
+        <div className="w-8 h-8 border-2 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-sm font-medium">የክፍሉ መረጃ በመጫን ላይ...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2.5">
-              <span className="px-3 py-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full text-xs font-bold uppercase tracking-wider">
-                {department?.code || 'DEPT'}
-              </span>
-              <span className="text-xs text-blue-200">Department Control Hub</span>
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
-              {department?.name || 'Department Administration'}
-            </h1>
-            <p className="text-blue-100 text-sm max-w-xl">
-              {department?.description || 'Manage departmental activities, member assignments, reports, and coordination.'}
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            <button
+      <PageHeader
+        title={department?.name || 'Department Control Hub'}
+        subtitle={department?.description || 'የክፍሉን አባላት፣ እንቅስቃሴዎች እና ሪፖርቶች እዚህ ያስተዳድሩ'}
+        icon={Building2}
+        badge={<Badge variant="gold" size="sm">{department?.code || 'DEPT'}</Badge>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigate('/admin/departments')}
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-semibold backdrop-blur-sm transition-all"
+              className="gap-2"
             >
-              All Departments
-            </button>
-            <button
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>ወደ ክፍሎች ተመለስ</span>
+            </Button>
+            <Button
+              variant="gold"
+              size="sm"
               onClick={() => navigate('/admin/department-memberships')}
-              className="px-4 py-2 bg-amber-400 text-slate-950 hover:bg-amber-300 rounded-xl text-sm font-bold shadow-md transition-all"
+              className="gap-2"
             >
-              + Assign Member
-            </button>
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>+ አባል መድብ</span>
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Members</p>
-          <p className="text-3xl font-extrabold text-slate-900 mt-1">{members.length}</p>
-          <p className="text-xs text-emerald-600 mt-1 font-medium">Active Servants & Members</p>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department Status</p>
-          <p className="text-3xl font-extrabold text-emerald-600 mt-1">{department?.status || 'Active'}</p>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Operational in Church</p>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Module Scoping</p>
-          <p className="text-3xl font-extrabold text-blue-600 mt-1">Autonomous</p>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Role-Based Access Guarded</p>
-        </div>
+        <Card variant="elevated" padding="md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Members</p>
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{members.length}</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-semibold">ንቁ አገልጋዮችና አባላት</p>
+        </Card>
+
+        <Card variant="elevated" padding="md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department Status</p>
+              <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{department?.status || 'Active'}</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">በቤተክርስቲያኑ ንቁ አገልግሎት ላይ</p>
+        </Card>
+
+        <Card variant="elevated" padding="md">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Module Scoping</p>
+              <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">Autonomous</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Role-Based Access Guarded</p>
+        </Card>
       </div>
 
       {/* Members Section */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+      <Card variant="default" padding="none">
+        <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-slate-800 flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">Department Servants & Members</h3>
-            <p className="text-xs text-slate-500">Individuals officially assigned to this department.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">የክፍሉ አገልጋዮችና አባላት</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">ለዚህ የአገልግሎት ክፍል የተመደቡ ግለሰቦች ዝርዝር</p>
           </div>
-          <span className="px-3 py-1 bg-blue-50 text-blue-700 font-bold text-xs rounded-full">
-            {members.length} Assigned
-          </span>
+          <Badge variant="active" size="sm">{members.length} የተመደቡ</Badge>
         </div>
 
         {members.length === 0 ? (
-          <div className="py-12 text-center text-slate-400">
-            <p className="text-base font-medium">No assigned members in this department yet.</p>
-            <p className="text-xs text-slate-400 mt-1">Use the Memberships manager to assign staff and servants.</p>
+          <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-2">
+            <Users className="w-10 h-10 mx-auto opacity-40" />
+            <p className="text-sm font-semibold">ለዚህ ክፍል የተመደበ አባል የለም</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
-              <thead className="bg-slate-50 text-xs font-semibold text-slate-700 uppercase">
-                <tr>
-                  <th className="p-3">Member</th>
-                  <th className="p-3">Member ID</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Start Date</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50">
+                  <th className="py-3 px-4">Member</th>
+                  <th className="py-3 px-4">Member ID</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4">Start Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
                 {members.map((m) => (
-                  <tr key={m._id} className="hover:bg-slate-50">
-                    <td className="p-3 font-semibold text-slate-800">
+                  <tr key={m._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                       {m.personId?.firstName ? `${m.personId.firstName} ${m.personId.lastName || ''}` : (m.personId?.fullName || 'Member')}
                     </td>
-                    <td className="p-3 font-mono text-xs text-blue-600">
+                    <td className="py-3 px-4 font-mono text-xs text-[var(--brand-primary)] dark:text-blue-400">
                       {m.departmentMemberId || '—'}
                     </td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <td className="py-3 px-4">
+                      <Badge variant={m.status === 'active' ? 'approved' : 'neutral'} size="sm">
                         {m.status || 'Active'}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="p-3 text-xs text-slate-500">
+                    <td className="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">
                       {m.startDate ? new Date(m.startDate).toLocaleDateString() : '—'}
                     </td>
                   </tr>
@@ -154,7 +173,7 @@ const DepartmentHub = () => {
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

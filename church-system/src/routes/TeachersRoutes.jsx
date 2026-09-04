@@ -1,3 +1,5 @@
+'use client';
+
 // src/routes/TeachersRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -19,8 +21,8 @@ import TeacherResults from '../features/teacher/TeacherResults';
 import TeacherDistanceHub from '../features/teacher/TeacherDistanceHub';
 
 export default function TeacherRoutes() {
-  return (
-    <Routes>
+  const teacherRoutesContent = (
+    <>
       <Route index element={<TeacherOverview />} />
       <Route path="distance-hub" element={<TeacherDistanceHub />} />
       <Route path="classes" element={<TeacherClasses />} />
@@ -33,11 +35,21 @@ export default function TeacherRoutes() {
       <Route path="attendance" element={<TeacherAttendance />} />
       <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
       <Route path="resources" element={<TeacherResources />} />
+      <Route path="assignments" element={<TeacherContent />} />
 
       {/* Exam routes */}
       <Route path="exams" element={<TeacherExams />} />
       <Route path="exams/:quizId" element={<TeacherExamDetail />} />
       <Route path="results" element={<TeacherResults />} />
+    </>
+  );
+
+  return (
+    <Routes>
+      <Route path="/teacher">
+        {teacherRoutesContent}
+      </Route>
+      {teacherRoutesContent}
     </Routes>
   );
 }

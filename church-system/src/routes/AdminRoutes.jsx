@@ -1,3 +1,5 @@
+'use client';
+
 // src/routes/AdminRoutes.jsx
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
@@ -40,8 +42,8 @@ import DepartmentHub from '../features/admin/DepartmentHub';
 import AdminDistanceHub from '../features/admin/AdminDistanceHub';
 
 export default function AdminRoutes() {
-  return (
-    <Routes>
+  const adminRoutesContent = (
+    <>
       <Route index element={<AdminOverview />} />
       <Route path="distance-hub" element={<AdminDistanceHub />} />
       <Route path="people" element={<PeopleManagement />} />
@@ -79,6 +81,15 @@ export default function AdminRoutes() {
       <Route path="manual-enrollment" element={<ManualEnrollment />} />
       <Route path="church-memberships" element={<ChurchMembershipsManagement />} />
       <Route path="academic-enrollments/:enrollmentId" element={<AcademicEnrollmentDetails />} />
+    </>
+  );
+
+  return (
+    <Routes>
+      <Route path="/admin">
+        {adminRoutesContent}
+      </Route>
+      {adminRoutesContent}
     </Routes>
   );
 }
