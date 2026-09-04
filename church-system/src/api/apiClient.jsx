@@ -9,15 +9,20 @@ import useAuthStore from '../store/authStore';
 //      routes directly to the same origin and proxies seamlessly to the backend.
 // ------------------------------------------------------------------
 export const API_BASE_URL = (() => {
-  const publicUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (publicUrl && publicUrl.trim()) {
-    return publicUrl.trim().replace(/\/+$/, '');
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, '');
   }
+
   if (typeof window !== 'undefined') {
-    return '';
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    }
   }
-  const backendUrl = process.env.BACKEND_API_URL;
-  return (backendUrl && backendUrl.trim()) ? backendUrl.trim().replace(/\/+$/, '') : 'http://localhost:5000';
+
+  // Default for production (Render)
+  return process.env.BACKEND_API_URL || 'https://church-api-3l2c.onrender.com';
 })();
 
 // In-memory cache for ultra-fast GET responses with TTL
