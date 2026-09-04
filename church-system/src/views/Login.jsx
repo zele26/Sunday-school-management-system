@@ -75,7 +75,20 @@ const Login = () => {
         body: JSON.stringify(payload),
       });
 
-      const resData = await response.json().catch(() => ({ message: 'Invalid server response.' }));
+      let resData = null;
+      try {
+        resData = await response.json();
+      } catch (parseErr) {
+        // If response is not JSON (e.g. 502 Gateway timeout or backend waking up)
+        if (response.status === 502 || response.status === 504 || response.status === 503) {
+          setError('የሰርቨር ግንኙነት ተቋርጧል (Backend server is currently waking up or unavailable. Please wait 30s and try again).');
+        } else if (response.status === 404) {
+          setError('የመግቢያ አገልግሎት አልተገኘም (API endpoint not found. Please check backend URL configuration).');
+        } else {
+          setError(`Invalid server response (HTTP ${response.status}). Please check backend status.`);
+        }
+        return;
+      }
 
       if (response.ok) {
         loginStore(resData.accessToken, resData.user);
@@ -83,13 +96,15 @@ const Login = () => {
         router.replace(destination);
       } else {
         if (response.status === 403) {
-          setError(resData.message || 'Your account is not yet approved or has been rejected.');
+          setError(resData?.message || 'Your account is not yet approved or has been rejected.');
+        } else if (response.status === 401) {
+          setError(resData?.message || 'የተሳሳተ የመግቢያ መረጃ (Invalid username or password).');
         } else {
-          setError(resData.message || 'Login failed');
+          setError(resData?.message || `Login failed (Status ${response.status})`);
         }
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err?.message || 'Network error. Please check your connection or backend status.');
     }
   };
 

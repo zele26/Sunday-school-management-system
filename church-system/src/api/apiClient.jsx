@@ -9,14 +9,15 @@ import useAuthStore from '../store/authStore';
 //      routes directly to the same origin and proxies seamlessly to the backend.
 // ------------------------------------------------------------------
 export const API_BASE_URL = (() => {
-  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+  const publicUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (publicUrl && publicUrl.trim()) {
+    return publicUrl.trim().replace(/\/+$/, '');
   }
-  // If in browser and running on Next.js dev or prod with rewrites:
   if (typeof window !== 'undefined') {
     return '';
   }
-  return process.env?.BACKEND_API_URL || 'http://localhost:5000';
+  const backendUrl = process.env.BACKEND_API_URL;
+  return (backendUrl && backendUrl.trim()) ? backendUrl.trim().replace(/\/+$/, '') : 'http://localhost:5000';
 })();
 
 // In-memory cache for ultra-fast GET responses with TTL
