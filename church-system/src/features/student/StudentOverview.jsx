@@ -182,7 +182,7 @@ const StudentOverview = () => {
       {distanceCourses.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
               <span>🎓 ወቅታዊ የርቀት ትምህርት ኮርሶች (Active Distance Courses)</span>
             </h3>
             <span className="text-xs font-bold text-slate-500">{distanceCourses.length} ኮርሶች</span>
@@ -193,17 +193,17 @@ const StudentOverview = () => {
               <StaggerItem key={c._id}>
                 <MotionCard
                   hoverY={-4}
-                  className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group h-full"
+                  className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group h-full"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      <span className="text-[11px] font-mono font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                         {c.code}
                       </span>
                       <span className="text-xs font-bold text-slate-400">{c.totalModules} ሞጁሎች</span>
                     </div>
 
-                    <h4 className="font-extrabold text-base text-slate-900 group-hover:text-blue-700 transition-colors">
+                    <h4 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-blue-700 transition-colors">
                       {c.nameAmharic || c.name}
                     </h4>
 
@@ -215,12 +215,12 @@ const StudentOverview = () => {
                   </div>
 
                   {/* Progress Bar */}
-                  <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                    <div className="flex justify-between text-xs font-bold text-slate-600">
+                  <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <div className="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
                       <span>የትምህርት ሂደት</span>
-                      <span className="font-mono text-blue-600">{c.progressPct}%</span>
+                      <span className="font-mono text-blue-600 dark:text-blue-400">{c.progressPct}%</span>
                     </div>
-                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500"
                         style={{ width: `${c.progressPct}%` }}
@@ -234,6 +234,70 @@ const StudentOverview = () => {
                   >
                     <span>ወደ ትምህርት ክፍሉ ግባ ➔</span>
                   </Link>
+                </MotionCard>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        </div>
+      )}
+
+      {/* Regular Enrolled Courses Grid */}
+      {courses.length > 0 && distanceCourses.length === 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+              <span>📖 የተመዘገቡባቸው ኮርሶች (Enrolled Courses)</span>
+            </h3>
+            <span className="text-xs font-bold text-slate-500">{courses.length} ኮርሶች</span>
+          </div>
+
+          <StaggerContainer staggerChildren={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courses.map((c) => (
+              <StaggerItem key={c._id || c.id}>
+                <MotionCard
+                  hoverY={-4}
+                  className="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group h-full"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                        {c.code || 'COURSE'}
+                      </span>
+                      <span className="text-xs font-bold text-slate-400">{c.grade || batchOrGrade}</span>
+                    </div>
+
+                    <h4 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                      {c.name || c.title}
+                    </h4>
+
+                    {c.bibleTheme && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                        ✝️ ጭብጥ: {c.bibleTheme}
+                      </p>
+                    )}
+
+                    {c.description && !c.bibleTheme && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                        {c.description}
+                      </p>
+                    )}
+
+                    <div className="text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-700">
+                      <span className="font-semibold text-slate-400">መምህር: </span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">
+                        {c.teacher?.fullName || c.teacherName || 'ሊቀ ማእምራን'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <Link
+                      to="/dashboard/courses"
+                      className="w-full py-2.5 bg-gradient-to-r from-[#1657b8] to-[#0f4c9c] text-white text-center font-bold text-xs rounded-xl shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <span>ዝርዝር መረጃ ይመልከቱ ➔</span>
+                    </Link>
+                  </div>
                 </MotionCard>
               </StaggerItem>
             ))}

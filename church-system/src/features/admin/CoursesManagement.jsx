@@ -8,6 +8,8 @@ import {
   Edit,
   Trash2,
   Clock,
+  Calendar,
+  AlertTriangle,
   LayoutGrid,
   List,
 } from 'lucide-react';
@@ -41,6 +43,7 @@ const CoursesManagement = () => {
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
+  const [conflictError, setConflictError] = useState(null);
 
   const {
     register,
@@ -55,6 +58,10 @@ const CoursesManagement = () => {
       grade: 'Grade 7',
       bibleTheme: '',
       teacher: '',
+      dayOfWeek: 'እሑድ',
+      startTime: '08:30',
+      endTime: '10:00',
+      shift: 'የቀን',
       numberOfLessons: 12,
       lessonDuration: 60,
     },
@@ -74,12 +81,17 @@ const CoursesManagement = () => {
 
   const handleOpenCreate = () => {
     setEditingCourse(null);
+    setConflictError(null);
     reset({
       name: '',
       studentType: 'regular',
       grade: 'Grade 7',
       bibleTheme: '',
       teacher: '',
+      dayOfWeek: 'እሑድ',
+      startTime: '08:30',
+      endTime: '10:00',
+      shift: 'የቀን',
       numberOfLessons: 12,
       lessonDuration: 60,
     });
@@ -88,12 +100,17 @@ const CoursesManagement = () => {
 
   const handleOpenEdit = (c) => {
     setEditingCourse(c);
+    setConflictError(null);
     reset({
       name: c.name || '',
       studentType: c.studentType || 'regular',
       grade: c.grade || 'Grade 7',
       bibleTheme: c.bibleTheme || '',
       teacher: c.teacher?._id || c.teacher || '',
+      dayOfWeek: c.dayOfWeek || 'እሑድ',
+      startTime: c.startTime || '08:30',
+      endTime: c.endTime || '10:00',
+      shift: c.shift || 'የቀን',
       numberOfLessons: c.numberOfLessons || 12,
       lessonDuration: c.lessonDuration || 60,
     });
@@ -101,13 +118,24 @@ const CoursesManagement = () => {
   };
 
   const onSubmit = (data) => {
+    setConflictError(null);
     if (editingCourse) {
       updateMutation.mutate(
         { id: editingCourse._id, payload: data },
-        { onSuccess: () => setShowModal(false) }
+        {
+          onSuccess: () => setShowModal(false),
+          onError: (err) => {
+            if (err.message) setConflictError(err.message);
+          },
+        }
       );
     } else {
-      createMutation.mutate(data, { onSuccess: () => setShowModal(false) });
+      createMutation.mutate(data, {
+        onSuccess: () => setShowModal(false),
+        onError: (err) => {
+          if (err.message) setConflictError(err.message);
+        },
+      });
     }
   };
 
@@ -157,6 +185,20 @@ const CoursesManagement = () => {
           return (
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {t?.fullName || t?.name || <span className="text-slate-400 italic">Unassigned</span>}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: 'schedule',
+        header: 'የክፍል ሰዓት (Schedule)',
+        cell: ({ row }) => {
+          const c = row.original;
+          const scheduleText = c.schedule || (c.dayOfWeek && c.startTime ? `${c.dayOfWeek} ${c.startTime}-${c.endTime}` : null);
+          return (
+            <span className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1 font-mono">
+              <Calendar className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
+              {scheduleText || '—'}
             </span>
           );
         },
@@ -216,7 +258,7 @@ const CoursesManagement = () => {
     <div className="space-y-6">
       <PageHeader
         title="የትምህርቶች ማዕከል (Courses Management)"
-        subtitle="የሰንበት ትምህርት ቤት ኮርሶችን፣ ይዘቶችን እና መምህራንን ያስተዳድሩ"
+        subtitle="የሰንበት ትምህርት ቤት ኮርሶችን፣ የሰዓት መርሃ-ግብር እና መምህራንን ያስተዳድሩ"
         icon={BookOpen}
         badge={<Badge variant="gold" size="sm">{courses.length} ኮርሶች</Badge>}
         actions={
@@ -320,6 +362,17 @@ const CoursesManagement = () => {
                     📖 {c.bibleTheme}
                   </p>
                 )}
+                {c.schedule && (
+                  <div className="mt-2 text-xs font-mono text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
+                    <span>{c.schedule}</span>
+                  </div>
+                )}
+                {c.teacher && (
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-medium">
+                    መምህር: {c.teacher?.fullName || c.teacher?.name || 'የተመደበ'}
+                  </p>
+                )}
                 {c.description && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 leading-relaxed">
                     {c.description}
@@ -352,6 +405,16 @@ const CoursesManagement = () => {
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
               {editingCourse ? 'ኮርስ አሻሽል (Edit Course)' : 'አዲስ ኮርስ ፍጠር (New Course)'}
             </h3>
+
+            {conflictError && (
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <div>
+                  <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል (Schedule Conflict)</p>
+                  <p className="mt-0.5 leading-relaxed">{conflictError}</p>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
@@ -401,16 +464,62 @@ const CoursesManagement = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  መምህር ምረጥ
+                  መምህር ምረጥ (Select Teacher)
                 </label>
                 <Select {...register('teacher')}>
-                  <option value="">መምህር ይምረጡ</option>
-                  {teachers.map((t) => (
-                    <option key={t._id} value={t._id}>
-                      {t.fullName || t.name}
-                    </option>
-                  ))}
+                  <option value="">መምህር ይምረጡ (Unassigned)</option>
+                  {teachers.map((t) => {
+                    const teacherValue = t.userId?._id || t.userId || t._id;
+                    return (
+                      <option key={t._id} value={teacherValue}>
+                        {t.fullName || t.name}
+                      </option>
+                    );
+                  })}
                 </Select>
+              </div>
+
+              {/* Schedule Details */}
+              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    የክፍል መርሃ-ግብር (Schedule & Timeslot)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የሳምንቱ ቀን (Day)</label>
+                    <Select {...register('dayOfWeek')}>
+                      <option value="እሑድ">እሑድ (Sunday)</option>
+                      <option value="ቅዳሜ">ቅዳሜ (Saturday)</option>
+                      <option value="ሰኞ">ሰኞ (Monday)</option>
+                      <option value="ማክሰኞ">ማክሰኞ (Tuesday)</option>
+                      <option value="ረቡዕ">ረቡዕ (Wednesday)</option>
+                      <option value="ሐሙስ">ሐሙስ (Thursday)</option>
+                      <option value="ዓርብ">ዓርብ (Friday)</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">ፈረቃ (Shift)</label>
+                    <Select {...register('shift')}>
+                      <option value="የቀን">የቀን (Weekend / Day)</option>
+                      <option value="የማታ">የማታ (Night / Weekday)</option>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የመጀመሪያ ሰዓት (Start Time)</label>
+                    <Input {...register('startTime')} placeholder="08:30" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የማብቂያ ሰዓት (End Time)</label>
+                    <Input {...register('endTime')} placeholder="10:00" />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

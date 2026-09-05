@@ -4,6 +4,7 @@ const { protect, authorize } = require('../../middleware/auth');
 const User = require('../../models/User');
 const Teacher = require('../../models/Teacher');
 const bcrypt = require('bcryptjs');
+const { checkCoursesListConflict } = require('../../utils/scheduleConflictHelper');
 
 // Helper: generate teacherId
 const generateTeacherId = async () => {
@@ -167,6 +168,19 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       });
     }
 
+    // Validate schedule conflicts among selected courses
+    if (Array.isArray(coursesTaught) && coursesTaught.length > 1) {
+      const conflict = await checkCoursesListConflict(coursesTaught);
+      if (conflict.hasConflict) {
+        return res.status(400).json({
+          success: false,
+          conflict: true,
+          message: conflict.message,
+          conflictingPair: conflict.conflictingPair,
+        });
+      }
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -207,6 +221,15 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       userId: newUser._id,
       coursesTaught: Array.isArray(coursesTaught) ? coursesTaught : [],
     });
+
+    // Sync Course documents so their teacher field matches this user
+    if (Array.isArray(coursesTaught) && coursesTaught.length > 0 && newUser._id) {
+      const EducationCourse = require('../../models/education/Course');
+      await EducationCourse.updateMany(
+        { name: { $in: coursesTaught } },
+        { teacher: newUser._id }
+      );
+    }
 
     console.log('✅ Teacher created successfully:', teacher.teacherId);
 
@@ -280,7 +303,29 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (city !== undefined) teacher.city = city;
     if (gender !== undefined) teacher.gender = gender;
     if (dateOfBirth !== undefined) teacher.dateOfBirth = dateOfBirth;
-    if (coursesTaught !== undefined) teacher.coursesTaught = coursesTaught;
+    if (coursesTaught !== undefined) {
+      const cleanCourses = Array.isArray(coursesTaught) ? coursesTaught : [];
+      if (cleanCourses.length > 1) {
+        const conflict = await checkCoursesListConflict(cleanCourses);
+        if (conflict.hasConflict) {
+          return res.status(400).json({
+            success: false,
+            conflict: true,
+            message: conflict.message,
+            conflictingPair: conflict.conflictingPair,
+          });
+        }
+      }
+      teacher.coursesTaught = cleanCourses;
+      if (teacher.userId) {
+        const EducationCourse = require('../../models/education/Course');
+        // Update assigned courses
+        await EducationCourse.updateMany(
+          { name: { $in: teacher.coursesTaught } },
+          { teacher: teacher.userId }
+        );
+      }
+    }
 
     await teacher.save();
 

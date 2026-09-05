@@ -614,20 +614,27 @@ router.put('/:id/assign-courses', protect, authorize('admin'), async (req, res) 
       return res.status(400).json({ success: false, message: 'courseIds array required' });
     }
 
-    const validCourses = await Course.find({ _id: { $in: courseIds } });
-    if (validCourses.length !== courseIds.length) {
+    // Deduplicate course IDs to guarantee no course is assigned twice
+    const uniqueCourseIds = [...new Set(courseIds.map(id => id ? String(id) : null).filter(Boolean))];
+
+    const EducationCourse = require('../../models/education/Course');
+    const validCourses = await EducationCourse.find({ _id: { $in: uniqueCourseIds } });
+    if (validCourses.length !== uniqueCourseIds.length) {
       return res.status(400).json({ success: false, message: 'Some course IDs are invalid' });
     }
 
     const student = await Student.findByIdAndUpdate(
       req.params.id,
-      { courses: courseIds },
+      { courses: uniqueCourseIds },
       { new: true }
-    ).populate('courses', 'name grade');
+    ).populate({
+      path: 'courses',
+      populate: { path: 'teacher', select: 'fullName email' }
+    });
 
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
-    res.json({ success: true, student });
+    res.json({ success: true, message: 'Courses assigned successfully', student });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -639,18 +646,30 @@ router.put('/:id/add-course', protect, authorize('admin'), async (req, res) => {
     const { courseId } = req.body;
     if (!courseId) return res.status(400).json({ success: false, message: 'Course ID required' });
 
-    const course = await Course.findById(courseId);
+    const EducationCourse = require('../../models/education/Course');
+    const course = await EducationCourse.findById(courseId);
     if (!course) return res.status(400).json({ success: false, message: 'Course not found' });
 
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
-    if (!student.courses.includes(courseId)) {
-      student.courses.push(courseId);
-      await student.save();
+    // Validate duplicate course assignment
+    if (student.courses && student.courses.some(c => String(c?._id || c) === String(courseId))) {
+      return res.status(400).json({
+        success: false,
+        message: `ይህ ኮርስ ("${course.name}") ቀድሞውኑ ለተማሪው ተመድቧል (This course is already assigned to the student).`
+      });
     }
 
-    res.json({ success: true, student: await student.populate('courses', 'name grade') });
+    student.courses.push(courseId);
+    await student.save();
+
+    const populated = await Student.findById(student._id).populate({
+      path: 'courses',
+      populate: { path: 'teacher', select: 'fullName email' }
+    });
+
+    res.json({ success: true, message: 'Course added successfully', student: populated });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

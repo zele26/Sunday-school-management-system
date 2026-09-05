@@ -141,7 +141,7 @@ const Login = () => {
 
             <div className="space-y-2">
               <span className="text-[10px] text-amber-300 font-bold uppercase tracking-wider block">
-                የደብረ ገነት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
+                የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
               </span>
               <h1 className="text-2xl font-black tracking-wide text-white leading-snug">
                 ተክለ ሳዊሮስ ሰንበት ት/ቤት
@@ -192,11 +192,10 @@ const Login = () => {
                     type="text"
                     {...register('credential')}
                     placeholder="example@gmail.com / 0911... / TKD-2026-..."
-                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 transition-all outline-none ${
-                      errors.credential
+                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 transition-all outline-none ${errors.credential
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                         : 'border-slate-200 focus:border-[#1657b8] focus:ring-[#1657b8]/20'
-                    }`}
+                      }`}
                   />
                 </div>
                 {errors.credential && (
@@ -220,11 +219,10 @@ const Login = () => {
                     type="password"
                     {...register('password')}
                     placeholder="••••••••"
-                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 transition-all outline-none ${
-                      errors.password
+                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 transition-all outline-none ${errors.password
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                         : 'border-slate-200 focus:border-[#1657b8] focus:ring-[#1657b8]/20'
-                    }`}
+                      }`}
                   />
                 </div>
                 {errors.password && (

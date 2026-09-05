@@ -46,6 +46,22 @@ const courseSchema = new mongoose.Schema({
   lessonDuration: { type: Number },
   numberOfLessons: { type: Number },
   schedule: { type: String, trim: true },
+  dayOfWeek: {
+    type: String,
+    enum: [
+      'Sunday', 'Saturday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+      'እሑድ', 'ቅዳሜ', 'ሰኞ', 'ማክሰኞ', 'ረቡዕ', 'ሐሙስ', 'ዓርብ',
+      'Weekend', 'Everyday', ''
+    ],
+    default: 'እሑድ',
+  },
+  startTime: { type: String, trim: true, default: '08:30' }, // e.g. "08:30"
+  endTime: { type: String, trim: true, default: '10:00' },   // e.g. "10:00"
+  shift: {
+    type: String,
+    enum: ['day', 'night', 'weekend', 'regular', 'distance', 'የቀን', 'የማታ', ''],
+    default: 'የቀን',
+  },
   language: { type: String, default: 'Amharic' },
   learningObjectives: { type: String, trim: true },
   learningOutcomes: [{ type: String, trim: true }],

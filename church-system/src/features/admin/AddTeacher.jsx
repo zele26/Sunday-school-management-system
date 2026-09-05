@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, ArrowLeft, Save, User, Mail, Lock, Phone, MapPin, BookOpen, GraduationCap } from 'lucide-react';
+import { UserPlus, ArrowLeft, Save, User, Mail, Lock, Phone, MapPin, BookOpen, GraduationCap, AlertTriangle, Calendar } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -11,6 +11,25 @@ import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { toast } from '../../utils/toast';
+
+const DAY_MAP = {
+  sunday: 'SUNDAY',
+  'እሑድ': 'SUNDAY',
+  'እሁድ': 'SUNDAY',
+  saturday: 'SATURDAY',
+  'ቅዳሜ': 'SATURDAY',
+  monday: 'MONDAY',
+  'ሰኞ': 'MONDAY',
+  tuesday: 'TUESDAY',
+  'ማክሰኞ': 'TUESDAY',
+  wednesday: 'WEDNESDAY',
+  'ረቡዕ': 'WEDNESDAY',
+  thursday: 'THURSDAY',
+  'ሐሙስ': 'THURSDAY',
+  friday: 'FRIDAY',
+  'ዓርብ': 'FRIDAY',
+  weekend: 'WEEKEND',
+};
 
 const AddTeacher = () => {
   const navigate = useNavigate();
@@ -61,10 +80,54 @@ const AddTeacher = () => {
     }
   };
 
+  // Real-time client-side conflict detection
+  const scheduleConflicts = useMemo(() => {
+    const selected = availableCourses.filter((c) => selectedCourses.includes(c.name));
+    const conflicts = [];
+
+    const toMin = (t) => {
+      if (!t) return null;
+      const [h, m] = t.split(':').map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+
+    for (let i = 0; i < selected.length; i++) {
+      for (let j = i + 1; j < selected.length; j++) {
+        const c1 = selected[i];
+        const c2 = selected[j];
+        const d1 = DAY_MAP[c1.dayOfWeek?.trim().toLowerCase()] || c1.dayOfWeek;
+        const d2 = DAY_MAP[c2.dayOfWeek?.trim().toLowerCase()] || c2.dayOfWeek;
+
+        const sameDay = d1 && d2 && (d1 === d2 || (d1 === 'WEEKEND' && (d2 === 'SATURDAY' || d2 === 'SUNDAY')));
+
+        if (sameDay && c1.startTime && c1.endTime && c2.startTime && c2.endTime) {
+          const s1 = toMin(c1.startTime);
+          const e1 = toMin(c1.endTime);
+          const s2 = toMin(c2.startTime);
+          const e2 = toMin(c2.endTime);
+
+          if (s1 !== null && e1 !== null && s2 !== null && e2 !== null) {
+            if (Math.max(s1, s2) < Math.min(e1, e2)) {
+              conflicts.push(
+                `"${c1.name}" (${c1.startTime}-${c1.endTime}) እና "${c2.name}" (${c2.startTime}-${c2.endTime}) በዚሁ ቀን (${c1.dayOfWeek || 'Weekend'}) ይደራረባሉ!`
+              );
+            }
+          }
+        }
+      }
+    }
+    return conflicts;
+  }, [availableCourses, selectedCourses]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.fullName || !form.email || !form.password) {
       toast.error('ሙሉ ስም፣ ኢሜይል እና የይለፍ ቃል አስፈላጊ ናቸው');
+      return;
+    }
+
+    if (scheduleConflicts.length > 0) {
+      toast.error('እባክዎ የተደራረቡትን የኮርስ ሰዓቶች ያስተካክሉ (Schedule conflict detected)');
       return;
     }
 
@@ -164,20 +227,63 @@ const AddTeacher = () => {
           </div>
 
           {availableCourses.length > 0 && (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">የሚያስተምሯቸው ኮርሶች (Courses Taught)</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {availableCourses.map((c) => (
-                  <label key={c._id} className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs">
-                    <input
-                      type="checkbox"
-                      checked={selectedCourses.includes(c.name)}
-                      onChange={() => toggleCourseSelection(c.name)}
-                      className="rounded text-[var(--brand-primary)]"
-                    />
-                    <span className="truncate">{c.name}</span>
-                  </label>
-                ))}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  የሚያስተምሯቸው ኮርሶች ({selectedCourses.length} ተመርጠዋል)
+                </label>
+                <span className="text-[11px] text-slate-400">ተመሳሳይ ሰዓት የሌላቸውን መምረጥ ይችላሉ</span>
+              </div>
+
+              {scheduleConflicts.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
+                  <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  <div>
+                    <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል (Schedule Conflict)</p>
+                    {scheduleConflicts.map((c, idx) => (
+                      <p key={idx} className="mt-0.5">• {c}</p>
+                    ))}
+                    <p className="mt-1 font-semibold text-rose-600 dark:text-rose-400">
+                      እባክዎ የተደራረቡትን ኮርሶች ያስተካክሉ ወይም አንዱን ያንሱ።
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {availableCourses.map((c) => {
+                  const isSelected = selectedCourses.includes(c.name);
+                  const scheduleText = c.schedule || (c.dayOfWeek && c.startTime ? `${c.dayOfWeek} ${c.startTime}-${c.endTime}` : 'ሰዓት አልተወሰነም');
+                  return (
+                    <label
+                      key={c._id}
+                      className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer text-xs ${
+                        isSelected
+                          ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)]/5 shadow-xs font-medium text-slate-900 dark:text-white'
+                          : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleCourseSelection(c.name)}
+                        className="rounded text-[var(--brand-primary)] mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold truncate">{c.name}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1 font-mono truncate">
+                          <Calendar className="w-3 h-3 text-[var(--brand-primary)] shrink-0" />
+                          <span>{scheduleText}</span>
+                        </p>
+                        {c.grade && (
+                          <span className="inline-block text-[10px] mt-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            {c.grade}
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -187,7 +293,7 @@ const AddTeacher = () => {
           <Button variant="outline" type="button" onClick={() => navigate('/admin/teachers')}>
             ሰርዝ
           </Button>
-          <Button variant="primary" type="submit" loading={loading} className="gap-2">
+          <Button variant="primary" type="submit" loading={loading} disabled={scheduleConflicts.length > 0} className="gap-2">
             <Save className="w-4 h-4" />
             <span>መምህሩን መዝግብ (Save Teacher)</span>
           </Button>

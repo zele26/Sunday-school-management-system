@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import logoImage from '../../assets/ChurchLogo.png';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard, AnimatedModal } from '../../components/motion';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui';
 
 const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
@@ -44,7 +45,7 @@ const Home = () => {
           <FadeIn delay={0.2} className="space-y-3">
             <span className="inline-flex items-center gap-2 bg-blue-50 text-[#1657b8] border border-blue-200 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full shadow-sm tracking-wide uppercase">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              የደብረ ገነት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
+              የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
             </span>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-[#1657b8]">
@@ -186,7 +187,56 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 🌟 4. REGISTRATION CHOICE MODAL (Animated with AnimatedModal) */}
+      {/* 🌟 4. FAQ ACCORDION SECTION */}
+      <section className="py-16 max-w-4xl mx-auto px-4 sm:px-6">
+        <FadeIn className="text-center mb-10 space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+            ተደጋግመው የሚጠየቁ ጥያቄዎች (FAQ)
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            ስለ ሰንበት ት/ቤቱ አጠቃላይ መረጃዎች
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
+            ስለ ምዝገባ፣ የትምህርት ክፍሎችና የርቀት ትምህርት በተደጋጋሚ የሚነሱ ጥያቄዎችና ምላሾች
+          </p>
+        </FadeIn>
+
+        <FadeIn delay={0.1}>
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger>የመደበኛ እና የርቀት ትምህርት ልዩነቱ ምንድን ነው?</AccordionTrigger>
+                <AccordionContent>
+                  መደበኛ ትምህርት በሳምንቱ መጨረሻ (ቅዳሜና እሑድ) ወይም በማታ በቤተክርስቲያኑ ቅጥር ግቢ በአካል ተገኝቶ የሚማሩት ሲሆን፣ የርቀት ትምህርት ደግሞ በየትኛውም ቦታና ሰዓት በቪዲዮ፣ በንባብና በኦንላይን ፈተናዎች የሚከታተሉት መርሃ ግብር ነው።
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2">
+                <AccordionTrigger>የምዝገባ ዕድሜ ገደብ ስንት ነው?</AccordionTrigger>
+                <AccordionContent>
+                  ለተማሪዎች የምዝገባ ዝቅተኛው ዕድሜ ከ 14 ዓመት በላይ (15 ዓመትና ከዚያ በላይ) መሆን ይኖርበታል፤ እንዲሁም የትውልድ ቀናቸውን በኢትዮጵያ የቀን አቆጣጠር መመዝገብ ይችላሉ።
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3">
+                <AccordionTrigger>የርቀት ትምህርት ምስክር ወረቀት (Certificate) ይሰጣል?</AccordionTrigger>
+                <AccordionContent>
+                  አዎ፤ ሁሉንም አስፈላጊ ኮርሶች እና ምዘናዎች 100% አጠናቅቀው ሲያልፉ በሲስተሙ በቀጥታ በQR ኮድ የሚረጋገጥ ዲጂታልና የታተመ ይፋዊ የዲፕሎማ ምስክር ወረቀት ይሰጣል።
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-4">
+                <AccordionTrigger>የምዝገባ ክፍያዎችን እንዴት መክፈል ይቻላል?</AccordionTrigger>
+                <AccordionContent>
+                  በተዘጋጁት የባንክ ሂሳቦች ወይም በኦንላይን የክፍያ አማራጮች ከፍለው ደረሰኝዎን በምዝገባ ቅጹ ላይ በማያያዝ በቀላሉ ማጠናቀቅ ይችላሉ።
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* 🌟 5. REGISTRATION CHOICE MODAL (Animated with AnimatedModal) */}
       <AnimatedModal
         isOpen={showRegOptions}
         onClose={() => setShowRegOptions(false)}

@@ -47,7 +47,7 @@ const studentSchema = new mongoose.Schema({
   registrationDate: { type: Date, default: Date.now },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EducationCourse' }],
   qrCode: { type: String, unique: true, sparse: true },
   studentType: { type: String, enum: ['regular', 'distance'], default: 'regular' },
 }, { collection: 'students' });

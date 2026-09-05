@@ -18,14 +18,24 @@ const ensureStudent = async (req, res, next) => {
     }
 
     let student = await Student.findOne({ userId: req.user._id });
+    if (!student && req.user.email) {
+      student = await Student.findOne({ email: req.user.email.toLowerCase() });
+    }
+
     if (!student) {
+      const names = (req.user.fullName || 'Student').trim().split(/\s+/);
       student = await Student.create({
         userId: req.user._id,
-        firstName: req.user.fullName || 'Student',
-        lastName: '',
-        grade: '',
+        firstName: names[0] || 'Student',
+        lastName: names.length > 1 ? names.slice(1).join(' ') : '',
+        email: req.user.email ? req.user.email.toLowerCase() : '',
+        grade: 'Grade 7',
+        studentType: 'regular',
       });
       console.log(`✅ Created missing Student document for user ${req.user.email}`);
+    } else if (!student.userId) {
+      student.userId = req.user._id;
+      await student.save();
     }
 
     req.student = student;
@@ -42,7 +52,10 @@ router.get('/profile', async (req, res) => {
   try {
     const student = await Student.findById(req.student._id)
       .populate('userId', 'email')
-      .populate('courses', 'name grade')
+      .populate({
+        path: 'courses',
+        populate: { path: 'teacher', select: 'fullName email' }
+      })
       .populate('teacher', 'fullName email');
     res.json(student);
   } catch (err) {
@@ -94,32 +107,73 @@ router.put('/profile', async (req, res) => {
 });
 
 // ---------- My Attendance ----------
-router.get('/attendance', async (req, res) => {
+const getStudentAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find({ student: req.student._id })
+      .populate('course', 'name')
       .sort({ date: -1 });
     res.json(attendance);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
+};
+
+router.get('/attendance', getStudentAttendance);
+router.get('/my-attendance', getStudentAttendance);
 
 // ---------- My Courses (enrolled) ----------
-router.get('/my-courses', async (req, res) => {
+const getStudentCourses = async (req, res) => {
   try {
     const student = await Student.findById(req.student._id)
-      .populate('courses', 'name grade schedule teacher');
-    res.json(student.courses);
+      .populate({
+        path: 'courses',
+        populate: { path: 'teacher', select: 'fullName email phone' }
+      });
+
+    let coursesList = (student?.courses || []).filter(Boolean);
+
+    // If no explicit courses are manually assigned yet, but the student has a grade or studentType,
+    // automatically retrieve all active courses for their grade/type
+    if (coursesList.length === 0) {
+      const EducationCourse = require('../../models/education/Course');
+      const orConditions = [];
+
+      if (student?.grade) {
+        orConditions.push({ grade: student.grade });
+        orConditions.push({ grade: `Grade ${student.grade}` });
+      }
+
+      if (student?.studentType) {
+        orConditions.push({ studentType: student.studentType });
+      }
+
+      if (orConditions.length > 0) {
+        const autoCourses = await EducationCourse.find({
+          $or: orConditions,
+          status: { $regex: /^active$/i }
+        })
+          .populate('teacher', 'fullName email phone')
+          .sort({ createdAt: -1 });
+
+        coursesList = autoCourses;
+      }
+    }
+
+    res.json(coursesList);
   } catch (err) {
+    console.error('Student courses error:', err);
     res.status(500).json({ message: err.message });
   }
-});
+};
+
+router.get('/my-courses', getStudentCourses);
+router.get('/courses', getStudentCourses);
 
 // ---------- Lessons for my courses ----------
 router.get('/lessons', async (req, res) => {
   try {
     const student = await Student.findById(req.student._id).select('courses');
-    const courseIds = student.courses;
+    const courseIds = student?.courses || [];
     const lessons = await Lesson.find({ course: { $in: courseIds } })
       .populate('course', 'name')
       .sort({ course: 1, order: 1 });
@@ -130,7 +184,7 @@ router.get('/lessons', async (req, res) => {
 });
 
 // ---------- My Exam Results (list) ----------
-router.get('/exam-results', async (req, res) => {
+const getStudentExamResults = async (req, res) => {
   try {
     const results = await ExamResult.find({ student: req.student._id })
       .populate('quiz', 'title')
@@ -139,7 +193,12 @@ router.get('/exam-results', async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
+};
+
+router.get('/exam-results', getStudentExamResults);
+router.get('/my-exams', getStudentExamResults);
+router.get('/results', getStudentExamResults);
+router.get('/my-results', getStudentExamResults);
 
 // ---------- Detailed Exam Result ----------
 router.get('/exam-results/:resultId', async (req, res) => {

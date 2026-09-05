@@ -8,6 +8,10 @@ export const courseModalSchema = z.object({
   grade: z.string().default('Grade 7'),
   bibleTheme: z.string().optional().or(z.literal('')),
   teacher: z.string().optional().or(z.literal('')),
+  dayOfWeek: z.string().default('እሑድ'),
+  startTime: z.string().default('08:30'),
+  endTime: z.string().default('10:00'),
+  shift: z.string().default('የቀን'),
   numberOfLessons: z.coerce.number().min(1, 'ቢያንስ 1 ትምህርት').default(12),
   lessonDuration: z.coerce.number().min(1).default(60),
 });

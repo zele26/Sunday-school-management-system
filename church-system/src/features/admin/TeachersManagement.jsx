@@ -125,6 +125,25 @@ const TeachersManagement = () => {
         cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'General'}</Badge>,
       },
       {
+        accessorKey: 'coursesTaught',
+        header: 'የሚያስተምሯቸው ኮርሶች (Courses)',
+        cell: ({ row }) => {
+          const courses = row.original.coursesTaught;
+          if (!courses || !Array.isArray(courses) || courses.length === 0) {
+            return <span className="text-xs text-slate-400 italic">ያልተመደበ</span>;
+          }
+          return (
+            <div className="flex flex-wrap gap-1 max-w-xs">
+              {courses.map((c, idx) => (
+                <Badge key={idx} variant="gold" size="sm" className="truncate max-w-[140px]">
+                  {c}
+                </Badge>
+              ))}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: 'status',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         cell: ({ row }) => {

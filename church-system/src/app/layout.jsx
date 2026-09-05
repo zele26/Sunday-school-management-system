@@ -2,6 +2,7 @@ import './globals.css';
 import AppInitializer from '../components/AppInitializer';
 import NextRouterAdapter from '../components/NextRouterAdapter';
 import { ToastContainer } from '../utils/toast';
+import { Toaster } from '../components/ui/sonner';
 import { ThemeProvider } from '../components/ui/ThemeProvider';
 import { QueryProvider } from '../providers/QueryProvider';
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
               <AppInitializer>
                 {children}
                 <ToastContainer />
+                <Toaster position="top-right" richColors />
               </AppInitializer>
             </NextRouterAdapter>
           </ThemeProvider>

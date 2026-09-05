@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const EducationCourse = require('../../models/education/Course');
+const Teacher = require('../../models/Teacher');
+const { checkTeacherScheduleConflict } = require('../../utils/scheduleConflictHelper');
 const { protect, authorize } = require('../../middleware/auth');
 
 router.use(protect);
@@ -67,10 +69,30 @@ router.post('/', authorize('admin'), async (req, res) => {
       return res.status(400).json({ success: false, message: 'Course name is required' });
     }
 
-    // Clean empty teacher / prerequisiteCourse
+    // Clean and normalize teacher ID
     if (!courseData.teacher || courseData.teacher === '') {
       delete courseData.teacher;
+    } else if (mongoose.Types.ObjectId.isValid(courseData.teacher)) {
+      // If a Teacher document ID was supplied, resolve to corresponding User ID
+      const teacherDoc = await Teacher.findById(courseData.teacher);
+      if (teacherDoc && teacherDoc.userId) {
+        courseData.teacher = teacherDoc.userId;
+      }
     }
+
+    // Validate schedule collision for assigned teacher
+    if (courseData.teacher) {
+      const conflict = await checkTeacherScheduleConflict(courseData.teacher, courseData);
+      if (conflict.hasConflict) {
+        return res.status(400).json({
+          success: false,
+          conflict: true,
+          message: conflict.message,
+          conflictingCourse: conflict.conflictingCourse,
+        });
+      }
+    }
+
     if (!courseData.prerequisiteCourse || courseData.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(courseData.prerequisiteCourse)) {
       courseData.prerequisiteCourse = null;
     }
@@ -87,8 +109,27 @@ router.post('/', authorize('admin'), async (req, res) => {
       delete courseData.grade;
     }
 
+    // Auto-generate human-readable schedule string if not manually provided
+    if (!courseData.schedule && courseData.dayOfWeek && courseData.startTime && courseData.endTime) {
+      courseData.schedule = `${courseData.dayOfWeek} ${courseData.startTime} - ${courseData.endTime}`;
+    }
+
     const course = await EducationCourse.create(courseData);
-    res.status(201).json(course);
+
+    // Sync course name into Teacher's coursesTaught list
+    if (course.teacher && course.name) {
+      await Teacher.updateOne(
+        { userId: course.teacher },
+        { $addToSet: { coursesTaught: course.name } }
+      );
+    }
+
+    const populatedCourse = await EducationCourse.findById(course._id)
+      .populate('teacher', 'fullName email')
+      .populate('prerequisiteCourse', 'name code')
+      .populate('programId', 'name code');
+
+    res.status(201).json(populatedCourse || course);
   } catch (err) {
     console.error('Create education course error:', err);
     res.status(500).json({ success: false, message: err.message });
@@ -99,8 +140,40 @@ router.post('/', authorize('admin'), async (req, res) => {
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
     const updates = { ...req.body };
+    const oldCourse = await EducationCourse.findById(req.params.id);
+    if (!oldCourse) return res.status(404).json({ success: false, message: 'Course not found' });
 
-    if (updates.teacher === '') delete updates.teacher;
+    if (updates.teacher === '') {
+      updates.teacher = null;
+    } else if (updates.teacher && mongoose.Types.ObjectId.isValid(updates.teacher)) {
+      // If a Teacher document ID was supplied, resolve to corresponding User ID
+      const teacherDoc = await Teacher.findById(updates.teacher);
+      if (teacherDoc && teacherDoc.userId) {
+        updates.teacher = teacherDoc.userId;
+      }
+    }
+
+    const effectiveTeacher = updates.teacher !== undefined ? updates.teacher : oldCourse.teacher;
+    const effectiveSchedule = {
+      dayOfWeek: updates.dayOfWeek || oldCourse.dayOfWeek,
+      startTime: updates.startTime || oldCourse.startTime,
+      endTime: updates.endTime || oldCourse.endTime,
+      name: updates.name || oldCourse.name,
+    };
+
+    // Validate schedule collision for assigned teacher
+    if (effectiveTeacher) {
+      const conflict = await checkTeacherScheduleConflict(effectiveTeacher, effectiveSchedule, req.params.id);
+      if (conflict.hasConflict) {
+        return res.status(400).json({
+          success: false,
+          conflict: true,
+          message: conflict.message,
+          conflictingCourse: conflict.conflictingCourse,
+        });
+      }
+    }
+
     if (updates.prerequisiteCourse === '' || !mongoose.Types.ObjectId.isValid(updates.prerequisiteCourse || '')) {
       updates.prerequisiteCourse = null;
     }
@@ -116,12 +189,36 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       updates.grade = undefined;
     }
 
+    // Auto-update schedule string if day/time updated
+    if (updates.dayOfWeek || updates.startTime || updates.endTime) {
+      const day = updates.dayOfWeek || oldCourse.dayOfWeek || '';
+      const start = updates.startTime || oldCourse.startTime || '';
+      const end = updates.endTime || oldCourse.endTime || '';
+      if (day && start && end) {
+        updates.schedule = `${day} ${start} - ${end}`;
+      }
+    }
+
     const course = await EducationCourse.findByIdAndUpdate(req.params.id, updates, { new: true })
       .populate('teacher', 'fullName email')
       .populate('prerequisiteCourse', 'name code')
       .populate('programId', 'name code');
 
-    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    // Sync Teacher.coursesTaught
+    if (course.teacher && course.name) {
+      await Teacher.updateOne(
+        { userId: course.teacher },
+        { $addToSet: { coursesTaught: course.name } }
+      );
+    }
+    // If teacher was unassigned or changed, clean old teacher's coursesTaught
+    if (oldCourse?.teacher && String(oldCourse.teacher) !== String(course.teacher)) {
+      await Teacher.updateOne(
+        { userId: oldCourse.teacher },
+        { $pull: { coursesTaught: oldCourse.name } }
+      );
+    }
+
     res.json(course);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -133,6 +230,15 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
   try {
     const course = await EducationCourse.findByIdAndDelete(req.params.id);
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+
+    // Remove from teacher's coursesTaught
+    if (course.teacher && course.name) {
+      await Teacher.updateOne(
+        { userId: course.teacher },
+        { $pull: { coursesTaught: course.name } }
+      );
+    }
+
     res.json({ success: true, message: 'Course deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
