@@ -17,3 +17,4 @@ export * from './sheet';
 export * from './accordion';
 export * from './tooltip';
 export * from './sonner';
+export * from './BackButton';

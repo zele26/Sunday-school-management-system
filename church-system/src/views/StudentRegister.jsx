@@ -1,4 +1,3 @@
-// src/pages/StudentRegister.jsx
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
@@ -6,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { studentSelfRegisterSchema } from '../schemas';
 import EthiopianDatePicker from '../components/ui/EthiopianDatePicker';
+import { BackButton } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
 const ADDIS_ABABA_SUBCITIES = [
@@ -90,10 +90,13 @@ const StudentRegister = () => {
 
   if (step === 'success') {
     return (
-      <div className="max-w-md mx-auto mt-20 p-6 bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-100 dark:border-slate-800 text-center">
-        <h2 className="text-2xl font-bold text-emerald-600 mb-4">✅ ምዝገባ ተሳክቷል</h2>
+      <div className="max-w-md mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 text-center">
+        <div className="mb-4 flex justify-start">
+          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        </div>
+        <h2 className="text-2xl font-black text-emerald-600 mb-4">✅ ምዝገባ ተሳክቷል</h2>
         <p className="text-slate-600 dark:text-slate-300 mb-2">የምዝገባ ቁጥርዎ:</p>
-        <p className="text-3xl font-mono font-bold text-[var(--brand-primary)]">{result?.registrationNumber}</p>
+        <p className="text-3xl font-mono font-bold text-[#1657b8] dark:text-amber-400">{result?.registrationNumber}</p>
         <p className="text-sm text-slate-500 mt-2">ሁኔታ: {result?.status === 'Pending Payment' ? 'ክፍያ በመጠበቅ ላይ' : 'ማረጋገጫ በመጠበቅ ላይ'}</p>
 
         {paymentInfo && (
@@ -101,13 +104,13 @@ const StudentRegister = () => {
             <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">የክፍያ መመሪያ</h3>
             <p><strong>የክፍያ መጠን:</strong> {paymentInfo.contributionAmount || 1000} ብር</p>
             <p><strong>የትምህርት ቁሳቁስ:</strong> {paymentInfo.resourceFee || 0} ብር</p>
-            <p className="font-bold text-lg mt-2 text-[var(--brand-primary)]">ጠቅላላ: {paymentInfo.totalAmount || 1000} ብር</p>
+            <p className="font-bold text-lg mt-2 text-[#1657b8] dark:text-amber-400">ጠቅላላ: {paymentInfo.totalAmount || 1000} ብር</p>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{paymentInfo.instructions}</p>
           </div>
         )}
 
         <p className="mt-4 text-sm text-slate-500">ክፍያ ከፍለው ከሆነ ደረሰኝዎን እዚህ ያስገቡ:</p>
-        <Link href="/continue-registration" className="mt-3 inline-block bg-[var(--brand-primary)] text-white px-6 py-2.5 rounded-xl font-semibold shadow-md hover:bg-[var(--brand-primary-hover)] transition">
+        <Link href="/continue-registration" className="mt-3 inline-block bg-[#1657b8] hover:bg-[#124796] text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition">
           ቀጥል ምዝገባ
         </Link>
       </div>
@@ -115,10 +118,20 @@ const StudentRegister = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-6 text-center">የተማሪ ምዝገባ</h1>
+    <div className="max-w-3xl mx-auto py-10 px-4 space-y-6 font-sans">
+      <div className="flex items-center justify-between">
+        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+      </div>
+
+      <div className="text-center">
+        <span className="inline-block bg-blue-100 dark:bg-slate-800 text-[#1657b8] dark:text-amber-400 font-bold px-4 py-1.5 rounded-full text-xs tracking-wider mb-2">
+          ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+        </span>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white">የተማሪ ምዝገባ</h1>
+      </div>
+
       {serverError && <div className="mb-4 p-3 bg-rose-100 text-rose-700 rounded-xl text-sm font-medium">{serverError}</div>}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow border border-slate-100 dark:border-slate-800">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
         <h2 className="font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">የግል መረጃ</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>

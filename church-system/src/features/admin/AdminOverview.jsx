@@ -25,6 +25,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Ca
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
+import StatCard from '../../components/shared/StatCard';
 
 const quickAccessLinks = [
   { path: '/admin/users', label: 'ተጠቃሚዎች (Users)', icon: Users, count: '142' },
@@ -120,7 +121,9 @@ const AdminOverviewContent = () => {
       </FadeIn>
 
       {/* Top Stat Cards Section with Staggered Entrance */}
-      <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+
+      <StatCard statCards={statCards} />
+      {/* <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
@@ -153,7 +156,7 @@ const AdminOverviewContent = () => {
             </StaggerItem>
           );
         })}
-      </StaggerContainer>
+      </StaggerContainer> */}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Quick Access Grid */}

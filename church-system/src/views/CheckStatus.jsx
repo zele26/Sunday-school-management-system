@@ -1,8 +1,8 @@
-// src/pages/CheckStatus.jsx
 import React, { useState } from 'react';
 import Link from 'next/link';
-
+import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../api/apiClient';
+import { BackButton } from '../components/ui';
 
 // Helper: translate raw status + studentType into a clear Amharic message
 const getStatusMessage = (status, studentType) => {
@@ -84,8 +84,12 @@ const CheckStatusContent = () => {
     const isRejected = result.status === 'Rejected';
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4 font-sans">
-        <div className="max-w-md w-full bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/60 text-center animate-in zoom-in-95 duration-500">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
+        <header className="w-full max-w-xl mx-auto flex items-center justify-between py-2">
+          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        </header>
+
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 text-center animate-in zoom-in-95 duration-500 my-auto">
           {/* Status Icon */}
           <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner ${
             isApproved ? 'bg-emerald-100 text-emerald-600' :
@@ -101,30 +105,30 @@ const CheckStatusContent = () => {
             )}
           </div>
 
-          <h2 className="text-2xl font-extrabold text-slate-800 mb-2">የምዝገባ ሁኔታ</h2>
-          <p className="text-sm text-slate-500 mb-6">ከታች የተመዘገቡትን መረጃዎች ይመልከቱ</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">የምዝገባ ሁኔታ</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">ከታች የተመዘገቡትን መረጃዎች ይመልከቱ</p>
 
           {/* User Details Card */}
-          <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-100 mb-6 text-left space-y-4">
+          <div className="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 mb-6 text-left space-y-4">
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">ስም</p>
-              <p className="text-lg font-bold text-slate-800">{result.fullName}</p>
+              <p className="text-lg font-bold text-slate-800 dark:text-white">{result.fullName}</p>
             </div>
-            <div className="h-px w-full bg-slate-200"></div>
+            <div className="h-px w-full bg-slate-200 dark:bg-slate-700"></div>
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">የምዝገባ ቁጥር</p>
-              <p className="text-xl font-black text-blue-600 tracking-widest">{result.registrationNumber}</p>
+              <p className="text-xl font-black text-[#1657b8] dark:text-amber-400 tracking-widest">{result.registrationNumber}</p>
             </div>
           </div>
 
           {/* School ID – only if approved */}
           {isApproved && result.studentId && (
-            <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
-              <p className="text-sm font-bold text-blue-900 mb-2">🏫 የትምህርት ቤት መለያ (School ID)</p>
-              <div className="bg-white py-3 rounded-xl border border-blue-100 shadow-sm mb-4">
-                <p className="text-3xl font-black font-mono text-blue-600 tracking-wider">{result.studentId}</p>
+            <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-amber-50 dark:from-slate-800 dark:to-blue-950 border border-blue-100 dark:border-slate-700 rounded-2xl">
+              <p className="text-sm font-bold text-blue-900 dark:text-amber-300 mb-2">🏫 የትምህርት ቤት መለያ (School ID)</p>
+              <div className="bg-white dark:bg-slate-900 py-3 rounded-xl border border-blue-100 dark:border-slate-800 shadow-sm mb-4">
+                <p className="text-3xl font-black font-mono text-[#1657b8] dark:text-amber-400 tracking-wider">{result.studentId}</p>
               </div>
-              <p className="text-xs text-blue-800/80 font-medium">
+              <p className="text-xs text-blue-800/80 dark:text-slate-300 font-medium">
                 📌 ይህን መለያ ቁጥር እና ፓስዎርድዎን በመጠቀም ወደ ሲስተሙ ይግቡ።
               </p>
             </div>
@@ -132,9 +136,9 @@ const CheckStatusContent = () => {
 
           {/* Status Message */}
           <div className={`p-4 rounded-xl border mb-8 text-left ${
-            isApproved ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800' :
-            isRejected ? 'bg-rose-50/60 border-rose-200 text-rose-800' :
-            'bg-amber-50/60 border-amber-200 text-amber-800'
+            isApproved ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300' :
+            isRejected ? 'bg-rose-50/60 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300' :
+            'bg-amber-50/60 border-amber-200 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300'
           }`}>
             <div className="flex items-start gap-3">
               <span className="text-xl mt-0.5">{isApproved ? '🎉' : isRejected ? '⚠️' : '⏳'}</span>
@@ -165,37 +169,43 @@ const CheckStatusContent = () => {
 
           <button
             onClick={resetForm}
-            className="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+            className="text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
           >
             ← ሌላ ለማረጋገጥ ይመለሱ (Check Another)
           </button>
         </div>
+
+        <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+          ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+        </footer>
       </div>
     );
   }
 
   // ───────────────────────── FORM VIEW ─────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4 font-sans">
-      <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
+      <header className="w-full max-w-xl mx-auto flex items-center justify-between py-2">
+        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+      </header>
+
+      <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500 my-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-50 border border-blue-100 text-[#1657b8] rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
+          <div className="w-16 h-16 bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-slate-700 text-[#1657b8] dark:text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
             🔍
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
             የምዝገባ ሁኔታ ማረጋገጫ
           </h1>
-          <p className="text-slate-500">የምዝገባዎን ደረጃ ለመከታተል መረጃዎን ያስገቡ</p>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">የምዝገባዎን ደረጃ ለመከታተል መረጃዎን ያስገቡ</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/90 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl border border-white/60">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800">
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-sm font-medium rounded-r-xl flex items-center gap-3 animate-in slide-in-from-top-2">
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border-l-4 border-rose-500 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-r-xl flex items-center gap-3 animate-in slide-in-from-top-2">
+              <span className="text-base shrink-0">⚠️</span>
               <span>{error}</span>
             </div>
           )}
@@ -203,7 +213,7 @@ const CheckStatusContent = () => {
           <form onSubmit={handleCheck} className="space-y-5">
             {/* Phone */}
             <div>
-              <label className={labelClass}>ስልክ ቁጥር</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">ስልክ ቁጥር</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +225,7 @@ const CheckStatusContent = () => {
                   placeholder="09..."
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className={inputClass}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1657b8] transition-all text-slate-800 dark:text-white text-sm placeholder:text-slate-400"
                   required
                 />
               </div>
@@ -223,7 +233,7 @@ const CheckStatusContent = () => {
 
             {/* Password */}
             <div>
-              <label className={labelClass}>ፓስዎርድ</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">ፓስዎርድ</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +245,7 @@ const CheckStatusContent = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={inputClass}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1657b8] transition-all text-slate-800 dark:text-white text-sm placeholder:text-slate-400"
                   required
                 />
               </div>
@@ -246,7 +256,7 @@ const CheckStatusContent = () => {
               <button
                 type="submit"
                 disabled={loading || !phone || !password}
-                className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
+                className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-2xl font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -268,8 +278,12 @@ const CheckStatusContent = () => {
           ትክክለኛውን ስልክ ቁጥር እና ፓስዎርድ ማስገባትዎን ያረጋግጡ።
         </p>
       </div>
+
+      <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+        ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+      </footer>
     </div>
   );
 };
 
-export default CheckStatusContent;
+export default CheckStatusContent;

@@ -302,7 +302,7 @@ const AdminLayout = ({ children, onLogout }) => {
 
         {/* Dynamic Page Content Area */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto overflow-x-hidden">
-          <ErrorBoundary>
+          <ErrorBoundary >
             {children || <Outlet />}
           </ErrorBoundary>
         </main>

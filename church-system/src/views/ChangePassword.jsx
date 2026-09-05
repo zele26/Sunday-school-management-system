@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/apiClient';
 import { changePasswordSchema } from '../schemas';
+import { BackButton } from '../components/ui';
 
 const ChangePassword = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -46,22 +47,23 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-8 bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 transition-all space-y-6">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-5">
+    <div className="max-w-md mx-auto mt-12 p-8 bg-white/90 dark:bg-slate-900 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 transition-all space-y-6">
+      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
         <div className="flex items-center gap-3">
-          <span className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl shadow-sm">
+          <span className="p-2.5 bg-blue-50 dark:bg-slate-800 text-[#1657b8] dark:text-amber-400 rounded-2xl shadow-sm">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </span>
-          <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight">ፓስዎርድ ቀይር</h2>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">ፓስዎርድ ቀይር</h2>
         </div>
-        <Link
+        <BackButton
           href="/dashboard"
-          className="text-xs font-semibold text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50/50 px-3.5 py-2 rounded-xl transition-all border border-slate-200/60 flex items-center gap-1.5"
-        >
-          <span>←</span> ዳሽቦርድ
-        </Link>
+          label="ዳሽቦርድ"
+          subLabel="Dashboard"
+          variant="glass"
+          className="text-xs py-1.5 px-3"
+        />
       </div>
 
       {message.text && (

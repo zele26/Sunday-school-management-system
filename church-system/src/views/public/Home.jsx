@@ -12,83 +12,129 @@ const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans antialiased text-slate-800 selection:bg-[var(--brand-gold)] selection:text-slate-950 overflow-x-hidden">
-      {/* 🌟 1. HERO SECTION - Clean, Light & Centered on Official Church Logo */}
-      <section className="relative py-16 sm:py-24 px-4 bg-gradient-to-b from-blue-50/60 via-white to-slate-50 border-b border-slate-200/80 overflow-hidden">
-        {/* Animated Background Ambience */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 left-1/3 w-64 h-64 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 selection:bg-[var(--brand-gold)] selection:text-slate-950 overflow-x-hidden">
+      {/* 🌟 1. HERO SECTION - Elevated Royal Blue & Gold Sacred Design */}
+      <section className="relative pt-12 pb-20 sm:pt-16 sm:pb-28 px-4 bg-gradient-to-b from-blue-50/80 via-white to-slate-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-800 overflow-hidden">
+        {/* Ambient Sacred Mesh Gradients & Aura */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-[#1657b8]/15 via-amber-400/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-amber-400/10 dark:bg-amber-400/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-[#1657b8]/10 dark:bg-[#1657b8]/5 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-7">
+        {/* Subtle Decorative Background Rings */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] border border-amber-400/15 rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] border border-blue-400/10 rounded-full pointer-events-none" />
 
-          {/* Centered Church Logo with Golden Halo & Spring Animation */}
+        <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
+
+          {/* Centered Church Logo with Radiant Golden Halo & Floating Motion */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
-            className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto flex items-center justify-center group cursor-pointer"
+            initial={{ scale: 0.85, opacity: 0, y: 15 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.05 }}
+            className="relative w-36 h-36 sm:w-44 sm:h-44 mx-auto flex items-center justify-center group cursor-pointer"
           >
+            {/* Pulsating Outer Aura */}
             <motion.div
-              animate={{ scale: [1, 1.06, 1], opacity: [0.35, 0.6, 0.35] }}
-              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-full bg-amber-300/40 blur-xl"
+              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.75, 0.4] }}
+              transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+              className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400/50 via-yellow-300/40 to-blue-500/30 blur-xl"
             />
-            <div className="relative w-full h-full p-2.5 rounded-full bg-white border-2 border-amber-400 shadow-xl flex items-center justify-center overflow-hidden">
+            {/* Rotating Decorative Gold Dash Ring */}
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 40, ease: 'linear' }}
+              className="absolute -inset-2.5 rounded-full border border-dashed border-amber-400/40 pointer-events-none"
+            />
+            {/* White Polished Emblem Shield */}
+            <div className="relative w-full h-full p-2.5 sm:p-3 rounded-full bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-2xl shadow-amber-500/20 flex items-center justify-center overflow-hidden ring-4 ring-amber-400/20">
               <img
                 src={logoImage?.src || logoImage}
                 alt="ተክለ ሳዊሮስ ሰንበት ት/ቤት አርማ"
-                className="w-full h-full object-contain rounded-full transform group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-contain rounded-full transform group-hover:scale-108 transition-transform duration-500"
               />
             </div>
           </motion.div>
 
-          <FadeIn delay={0.2} className="space-y-3">
-            <span className="inline-flex items-center gap-2 bg-blue-50 text-[#1657b8] border border-blue-200 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full shadow-sm tracking-wide uppercase">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
-            </span>
+          {/* Title & Parish Information */}
+          <FadeIn delay={0.15} className="space-y-4">
+            {/* Church Parish Pill Badge */}
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-slate-800 dark:via-slate-850 dark:to-slate-800 text-slate-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-500/30 text-xs sm:text-sm font-extrabold px-4 sm:px-5 py-2 rounded-full shadow-sm tracking-wide">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping shrink-0" />
+              <span className="truncate max-w-[90vw]">
+                ⛪ የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
+              </span>
+            </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-[#1657b8]">
+            {/* Main Sacred Heading */}
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.15] text-transparent bg-clip-text bg-gradient-to-r from-[#0d3b82] via-[#1657b8] to-[#0a2e66] dark:from-white dark:via-blue-200 dark:to-amber-200 drop-shadow-xs">
               ተክለ ሳዊሮስ ሰንበት ት/ቤት
             </h1>
 
-            <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
-              የሕፃናት፣ የወጣቶችና የጎልማሶች መንፈሳዊ ትምህርት ማዕከል — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።
-            </p>
+            {/* Subtitle & Motto */}
+            <div className="max-w-3xl mx-auto space-y-1.5">
+              <p className="text-base sm:text-xl font-bold text-slate-700 dark:text-slate-200">
+                የሕፃናት፣ የወጣቶችና የጎልማሶች መንፈሳዊ ትምህርት ማዕከል
+              </p>
+              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium italic">
+                «በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።»
+              </p>
+            </div>
           </FadeIn>
 
-          {/* Hero Actions */}
-          <FadeIn delay={0.35} className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3.5">
+          {/* Action CTAs */}
+          <FadeIn delay={0.25} className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3.5 sm:gap-4">
             {/* Register button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowRegOptions(true)}
-              className="w-full sm:w-auto bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white px-8 py-3.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all text-base cursor-pointer"
+              className="w-full sm:w-auto bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] active:opacity-90 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 transition-all text-base flex items-center justify-center gap-2 cursor-pointer border border-blue-400/30"
             >
-              ይመዝገቡ (Register Now) ➔
+              <span>ይመዝገቡ (Register Now)</span>
+              <span className="text-amber-300 font-black text-lg">➔</span>
             </motion.button>
 
             {/* Distance Education Direct Link */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
               <Link
                 href="/distance-education"
-                className="w-full sm:w-auto bg-[var(--brand-gold)] hover:bg-[#dfa500] text-slate-950 px-7 py-3.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all text-base flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-gradient-to-r from-[#f5b700] via-[#fab005] to-[#e69900] hover:brightness-105 text-slate-950 px-8 py-4 rounded-2xl font-black shadow-lg shadow-amber-400/25 hover:shadow-xl hover:shadow-amber-400/35 transition-all text-base flex items-center justify-center gap-2 border border-amber-300"
               >
-                <span>🌐 የርቀት ትምህርት (Distance Ed)</span>
+                <span>🌐</span>
+                <span>የርቀት ትምህርት (Distance Ed)</span>
               </Link>
             </motion.div>
 
             {/* Login button */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+            <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
               <Link
                 href="/login"
-                className="w-full sm:w-auto bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 px-7 py-3.5 rounded-xl font-bold shadow-sm transition-all text-base text-center block"
+                className="w-full sm:w-auto bg-white/90 dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-7 py-4 rounded-2xl font-extrabold shadow-sm hover:shadow-md transition-all text-base text-center flex items-center justify-center gap-2"
               >
-                ይግቡ (Sign In) 🔐
+                <span>ይግቡ (Sign In)</span>
+                <span>🔐</span>
               </Link>
             </motion.div>
           </FadeIn>
+
+          {/* Quick Highlight Feature Pills */}
+          <FadeIn delay={0.35}>
+            <div className="pt-4 flex flex-wrap justify-center items-center gap-3 sm:gap-6 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                <span className="text-base">🏛️</span>
+                <span>መደበኛ ትምህርት (Grades 7–12)</span>
+              </div>
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                <span className="text-base">🌐</span>
+                <span>የተሟላ የርቀት ትምህርት (Online LMS)</span>
+              </div>
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                <span className="text-base">📜</span>
+                <span>ይፋዊ የምስክር ወረቀት (Certified)</span>
+              </div>
+            </div>
+          </FadeIn>
+
         </div>
       </section>
 

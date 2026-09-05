@@ -83,19 +83,19 @@ const PublicLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 selection:bg-[var(--brand-gold)] selection:text-slate-950 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 selection:bg-[var(--brand-gold)] selection:text-slate-950 font-sans transition-colors duration-200">
       {/* 🌟 1. SLIDING BIBLE VERSE & PROMOTION TICKER */}
       <div
-        className="relative z-50 bg-blue-50/90 border-b border-blue-100 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
+        className="relative z-50 bg-gradient-to-r from-blue-900 via-[#1657b8] to-blue-950 text-white text-xs sm:text-sm transition-all duration-500 overflow-hidden border-b border-amber-400/30 shadow-xs"
         onMouseEnter={() => setIsTickerPaused(true)}
         onMouseLeave={() => setIsTickerPaused(false)}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-3 flex-1 overflow-hidden">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 bg-blue-100 text-[#1657b8] border-blue-200">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black border shrink-0 bg-amber-400 text-slate-950 border-amber-300 shadow-xs">
               {tickerItems[currentTickerIndex].type}
             </span>
-            <p className="truncate sm:whitespace-normal text-slate-700 font-medium tracking-wide">
+            <p className="truncate sm:whitespace-normal text-blue-50 font-medium tracking-wide text-xs sm:text-sm">
               {tickerItems[currentTickerIndex].text}
             </p>
           </div>
@@ -106,7 +106,7 @@ const PublicLayout = ({ children }) => {
               <button
                 key={idx}
                 onClick={() => setCurrentTickerIndex(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${currentTickerIndex === idx ? 'w-5 bg-[#1657b8]' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                className={`h-1.5 rounded-full transition-all duration-300 ${currentTickerIndex === idx ? 'w-5 bg-amber-400 shadow-xs' : 'w-1.5 bg-white/40 hover:bg-white/70'
                   }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
@@ -116,45 +116,45 @@ const PublicLayout = ({ children }) => {
       </div>
 
       {/* 🌟 2. HEADER / NAVIGATION BAR */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200 text-slate-800 shadow-sm transition-all">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-white shadow-sm transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
+          <div className="flex items-center justify-between h-18 sm:h-20 lg:h-22">
             {/* Logo & Brand Name */}
             <Link
               href="/"
-              className="flex items-center space-x-2 sm:space-x-4 space-x-reverse group focus:outline-none transition-all duration-300"
+              className="flex items-center space-x-3 sm:space-x-3.5 space-x-reverse group focus:outline-none transition-all duration-300"
             >
               {/* Logo Container with Enhanced Styling */}
               <div className="relative flex items-center justify-center flex-shrink-0">
-                <div className="relative p-1 sm:p-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover:border-[#1657b8] transition-all duration-300">
+                <div className="relative p-1 rounded-2xl bg-white dark:bg-slate-800 border border-amber-400/80 shadow-md group-hover:border-[#1657b8] group-hover:shadow-lg transition-all duration-300">
                   <img
                     src={ChurchLogo?.src || ChurchLogo}
                     alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
-                    className="h-12 sm:h-16 lg:h-18 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+                    className="h-11 sm:h-13 lg:h-14 w-auto object-contain group-hover:scale-105 transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Church Name and Subtitle */}
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-extrabold text-base sm:text-lg lg:text-xl tracking-tight text-[#1657b8] leading-tight group-hover:text-[#124796] transition-colors duration-300 truncate">
+                <span className="font-black text-base sm:text-lg lg:text-xl tracking-tight text-[#1657b8] dark:text-blue-400 leading-tight group-hover:text-[#124796] dark:group-hover:text-blue-300 transition-colors duration-300 truncate">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[10px] sm:text-[11px] lg:text-xs text-amber-600 font-bold tracking-wider uppercase mt-0.5 truncate">
-                  ሰንበት ትምህርት ቤት
+                <span className="text-[10px] sm:text-[11px] lg:text-xs text-amber-600 dark:text-amber-400 font-extrabold tracking-wider uppercase mt-0.5 truncate flex items-center gap-1">
+                  <span>ሰንበት ትምህርት ቤት</span>
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-1.5 space-x-reverse text-sm font-medium">
+            <nav className="hidden lg:flex items-center space-x-1.5 space-x-reverse text-sm font-semibold">
               {primaryNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   href={link.to}
                   className={`px-3.5 py-2 rounded-xl transition-all duration-200 relative ${pathname === link.to
-                    ? 'bg-blue-50 text-[#1657b8] font-bold border border-blue-200'
-                    : 'text-slate-600 hover:text-[#1657b8] hover:bg-slate-100'
+                    ? 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-[#1657b8] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   <span>{link.label}</span>
@@ -166,9 +166,9 @@ const PublicLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
-                  className={`flex items-center space-x-2 space-x-reverse px-3.5 py-2 rounded-xl transition-all duration-200 focus:outline-none ${registrationLinks.some((item) => item.to === pathname)
-                    ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200'
-                    : 'text-slate-600 hover:text-[#1657b8] hover:bg-slate-100'
+                  className={`flex items-center space-x-2 space-x-reverse px-3.5 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer ${registrationLinks.some((item) => item.to === pathname)
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-[#1657b8] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   <span className="relative flex h-2 w-2">
@@ -177,7 +177,7 @@ const PublicLayout = ({ children }) => {
                   </span>
                   <span>ምዝገባና አገልግሎት</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isRegDropdownOpen ? 'rotate-180 text-[#1657b8]' : 'text-slate-400'
+                    className={`w-4 h-4 transition-transform duration-200 ${isRegDropdownOpen ? 'rotate-180 text-[#1657b8] dark:text-amber-400' : 'text-slate-400'
                       }`}
                     fill="none"
                     stroke="currentColor"
@@ -189,12 +189,12 @@ const PublicLayout = ({ children }) => {
 
                 {/* Dropdown Menu Popup */}
                 {isRegDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#1657b8] uppercase tracking-wider">
+                  <div className="absolute right-0 mt-2.5 w-76 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <span className="text-xs font-black text-[#1657b8] dark:text-blue-400 uppercase tracking-wider">
                         የተማሪዎች አገልግሎት
                       </span>
-                      <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
+                      <span className="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-300/40">
                         2017 ዓ.ም
                       </span>
                     </div>
@@ -204,16 +204,16 @@ const PublicLayout = ({ children }) => {
                         <Link
                           key={item.to}
                           href={item.to}
-                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${pathname === item.to
-                            ? 'bg-blue-50 text-[#1657b8] font-bold border-l-3 border-[#1657b8]'
-                            : 'text-slate-700 hover:bg-slate-50 hover:text-[#1657b8]'
+                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group ${pathname === item.to
+                            ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 font-bold border-l-3 border-[#1657b8]'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1657b8] dark:hover:text-blue-400'
                             }`}
                         >
-                          <span className="text-lg p-1.5 rounded-lg bg-slate-100 group-hover:scale-105 transition-transform">
+                          <span className="text-base p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-108 transition-transform shadow-2xs">
                             {item.icon}
                           </span>
-                          <span className="flex-1">{item.label}</span>
-                          <span className="text-slate-400 group-hover:text-[#1657b8] transition-colors">→</span>
+                          <span className="flex-1 text-xs sm:text-sm">{item.label}</span>
+                          <span className="text-slate-400 group-hover:text-[#1657b8] dark:group-hover:text-amber-400 transition-colors">→</span>
                         </Link>
                       ))}
                     </div>
@@ -224,14 +224,12 @@ const PublicLayout = ({ children }) => {
 
             {/* Desktop Actions (ThemeToggle + Login) */}
             <div className="hidden lg:flex items-center space-x-3 space-x-reverse">
-              <ThemeToggle className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200" />
+              <ThemeToggle className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700" />
               <Link
                 href="/login"
-                className="px-5 py-2.5 rounded-xl bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold text-sm shadow-sm flex items-center space-x-2 space-x-reverse transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] active:opacity-90 text-white font-black text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2 space-x-reverse border border-blue-400/20"
               >
-                <svg className="w-4 h-4 text-[var(--brand-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
+                <span className="text-base">🔐</span>
                 <span>ይግቡ</span>
               </Link>
             </div>
@@ -321,7 +319,7 @@ const PublicLayout = ({ children }) => {
       </main>
 
       {/* 🌟 4. PRE-FOOTER PROMOTION & CTA BANNER */}
-      <section className="bg-slate-100/70 border-t border-slate-200 py-12">
+      <section className="bg-slate-100/70 dark:bg-slate-900/70   border-t border-slate-200 dark:border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-3 text-center lg:text-left max-w-2xl">

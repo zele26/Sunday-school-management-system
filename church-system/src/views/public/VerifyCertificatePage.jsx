@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { apiFetch } from '../../api/apiClient';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { Award, Search, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { BackButton } from '../../components/ui';
 
 const VerifyCertificatePage = () => {
   const { certNumber } = useParams();
@@ -50,14 +51,16 @@ const VerifyCertificatePage = () => {
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-900 flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
       {/* Header */}
-      <header className="py-5 px-4 text-center border-b border-slate-200/80 bg-white">
+      <header className="py-4 px-4 sm:px-8 border-b border-slate-200/80 bg-white dark:bg-slate-900 flex items-center justify-between max-w-7xl mx-auto w-full">
+        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+
         <Link href="/" className="inline-flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full p-1 border border-amber-400 bg-white shadow-xs">
+          <div className="w-10 h-10 rounded-full p-1 border border-amber-400 bg-white shadow-xs">
             <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <div className="text-left">
-            <h1 className="text-sm md:text-base font-black text-[#1657b8]">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h1>
-            <p className="text-[11px] text-slate-500 font-bold">የምስክር ወረቀት ማረጋገጫ (Certificate Verification Portal)</p>
+          <div className="text-left hidden sm:block">
+            <h1 className="text-sm font-black text-[#1657b8] dark:text-amber-400">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h1>
+            <p className="text-[10px] text-slate-500 font-bold">የምስክር ወረቀት ማረጋገጫ</p>
           </div>
         </Link>
       </header>
