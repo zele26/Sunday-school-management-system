@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { studentSelfRegisterSchema } from '../schemas';
 import EthiopianDatePicker from '../components/ui/EthiopianDatePicker';
+import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
 const ADDIS_ABABA_SUBCITIES = [
   'አዲስ ከተማ (Addis Ketema)',
@@ -32,6 +33,7 @@ const StudentRegister = () => {
     register,
     handleSubmit,
     control,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm({
@@ -132,17 +134,6 @@ const StudentRegister = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ዕድሜ (ከ 14 ዓመት በላይ / Age &gt; 14) *</label>
-            <input
-              type="number"
-              min="15"
-              placeholder="ምሳሌ: 18"
-              {...register('age')}
-              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.age ? 'border-rose-400' : 'border-slate-200'}`}
-            />
-            {errors.age && <p className="text-xs text-rose-500 mt-1">{errors.age.message}</p>}
-          </div>
-          <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የትውልድ ቀን (በኢትዮጵያ ዘመን አቆጣጠር)</label>
             <Controller
               name="dateOfBirth"
@@ -150,11 +141,37 @@ const StudentRegister = () => {
               render={({ field }) => (
                 <EthiopianDatePicker
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(isoDate) => {
+                    field.onChange(isoDate);
+                    if (isoDate) {
+                      const calculatedAge = calculateAgeFromDOB(isoDate);
+                      if (calculatedAge) {
+                        setValue('age', String(calculatedAge), { shouldValidate: true });
+                      }
+                    }
+                  }}
                   name="dateOfBirth"
                 />
               )}
             />
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">ዕድሜ (ከ 14 ዓመት በላይ / Age &gt; 14) *</label>
+              {watch('age') && watch('dateOfBirth') && (
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  በቀኑ የተሰላ: {watch('age')} ዓመት
+                </span>
+              )}
+            </div>
+            <input
+              type="number"
+              min="15"
+              placeholder="ምሳሌ: 18 (የትውልድ ቀን ሲመርጡ ይሰላል)"
+              {...register('age')}
+              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.age ? 'border-rose-400' : 'border-slate-200'}`}
+            />
+            {errors.age && <p className="text-xs text-rose-500 mt-1">{errors.age.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ስልክ ቁጥር *</label>

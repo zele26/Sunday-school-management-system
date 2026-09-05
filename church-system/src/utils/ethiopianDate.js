@@ -123,3 +123,20 @@ export const getDaysInEthiopianMonth = (year, month) => {
   // Ethiopian leap year is when year % 4 === 3
   return y % 4 === 3 ? 6 : 5;
 };
+
+/**
+ * Calculates age in full completed years from a Date of Birth (ISO string or Date object)
+ */
+export const calculateAgeFromDOB = (dateInput) => {
+  if (!dateInput) return '';
+  const dob = typeof dateInput === 'string' || typeof dateInput === 'number' ? new Date(dateInput) : dateInput;
+  if (isNaN(dob.getTime())) return '';
+
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : 0;
+};

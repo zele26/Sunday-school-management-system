@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { distanceRegistrationSchema } from '../schemas';
 import { EthiopianDatePicker } from '../components/ui';
+import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
 const RegisterDistanceContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form', 'success'
@@ -17,6 +18,8 @@ const RegisterDistanceContent = () => {
     register,
     handleSubmit,
     control,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(distanceRegistrationSchema),
@@ -359,22 +362,6 @@ const RegisterDistanceContent = () => {
                 </select>
               </div>
 
-              {/* ዕድሜ (Age) */}
-              <div>
-                <label className={labelClass}>
-                  ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
-                </label>
-                <input
-                  type="number"
-                  placeholder="ምሳሌ፡ 18"
-                  min="15"
-                  max="120"
-                  {...register('age')}
-                  className={`${inputClass} ${errors.age ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.age && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.age.message}</p>}
-              </div>
-
               {/* Ethiopian Calendar Date of Birth */}
               <div className="md:col-span-2">
                 <Controller
@@ -383,12 +370,43 @@ const RegisterDistanceContent = () => {
                   render={({ field }) => (
                     <EthiopianDatePicker
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(isoDate) => {
+                        field.onChange(isoDate);
+                        if (isoDate) {
+                          const calculatedAge = calculateAgeFromDOB(isoDate);
+                          if (calculatedAge) {
+                            setValue('age', String(calculatedAge), { shouldValidate: true });
+                          }
+                        }
+                      }}
                       label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
                       error={errors.dateOfBirth?.message}
                     />
                   )}
                 />
+              </div>
+
+              {/* ዕድሜ (Age) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 ml-1">
+                  <label className="text-sm font-semibold text-slate-700">
+                    ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
+                  </label>
+                  {watch('age') && watch('dateOfBirth') && (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-in fade-in">
+                      በቀኑ የተሰላ፡ {watch('age')} ዓመት
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  placeholder="ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)"
+                  min="15"
+                  max="120"
+                  {...register('age')}
+                  className={`${inputClass} ${errors.age ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                />
+                {errors.age && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.age.message}</p>}
               </div>
 
               <div>
@@ -476,83 +494,6 @@ const RegisterDistanceContent = () => {
                   type="text"
                   placeholder="ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት"
                   {...register('address')}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Emergency Info */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">👨‍👩‍👧</div>
-              <h2 className="text-lg font-bold text-slate-800">የአደጋ ጊዜ ተጠሪ መረጃ (Emergency Info)</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className={labelClass}>ስም (First Name) <span className="text-rose-500">*</span></label>
-                <input
-                  type="text"
-                  placeholder="ስም"
-                  {...register('emergencyFirstName')}
-                  className={`${inputClass} ${errors.emergencyFirstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.emergencyFirstName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyFirstName.message}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>የአባት ስም (Father Name)</label>
-                <input
-                  type="text"
-                  placeholder="የአባት ስም"
-                  {...register('emergencyMiddleName')}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>የአያት ስም (Grandfather Name)</label>
-                <input
-                  type="text"
-                  placeholder="የአያት ስም"
-                  {...register('emergencyLastName')}
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>ዝምድና (Relationship) <span className="text-rose-500">*</span></label>
-                <select {...register('relationship')} className={inputClass}>
-                  <option value="Father">አባት (Father)</option>
-                  <option value="Mother">እናት (Mother)</option>
-                  <option value="Brother">ወንድም (Brother)</option>
-                  <option value="Sister">እህት (Sister)</option>
-                  <option value="Relative">ዘመድ (Relative)</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>ስልክ (Phone) <span className="text-rose-500">*</span></label>
-                <input
-                  type="tel"
-                  placeholder="09XXXXXXXX"
-                  {...register('emergencyPhone')}
-                  className={`${inputClass} ${errors.emergencyPhone ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.emergencyPhone && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyPhone.message}</p>}
-              </div>
-              <div>
-                <label className={labelClass}>ኢሜይል (Email)</label>
-                <input
-                  type="email"
-                  placeholder="email@example.com"
-                  {...register('emergencyEmail')}
-                  className={`${inputClass} ${errors.emergencyEmail ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.emergencyEmail && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyEmail.message}</p>}
-              </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>አድራሻ (Address)</label>
-                <input
-                  type="text"
-                  placeholder="አድራሻ"
-                  {...register('emergencyAddress')}
                   className={inputClass}
                 />
               </div>

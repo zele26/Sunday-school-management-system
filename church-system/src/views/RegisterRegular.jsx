@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { regularRegistrationSchema } from '../schemas';
 import { EthiopianDatePicker } from '../components/ui';
+import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
 const RegisterRegularContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form'
@@ -16,6 +17,8 @@ const RegisterRegularContent = () => {
     register,
     handleSubmit,
     control,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(regularRegistrationSchema),
@@ -351,22 +354,6 @@ const RegisterRegularContent = () => {
                 </select>
               </div>
 
-              {/* ዕድሜ (Age) */}
-              <div>
-                <label className={labelClass}>
-                  ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
-                </label>
-                <input
-                  type="number"
-                  placeholder="ምሳሌ፡ 18"
-                  min="15"
-                  max="120"
-                  {...register('age')}
-                  className={`${inputClass} ${errors.age ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.age && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.age.message}</p>}
-              </div>
-
               {/* Ethiopian Calendar Date of Birth */}
               <div className="md:col-span-2">
                 <Controller
@@ -375,12 +362,43 @@ const RegisterRegularContent = () => {
                   render={({ field }) => (
                     <EthiopianDatePicker
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(isoDate) => {
+                        field.onChange(isoDate);
+                        if (isoDate) {
+                          const calculatedAge = calculateAgeFromDOB(isoDate);
+                          if (calculatedAge) {
+                            setValue('age', String(calculatedAge), { shouldValidate: true });
+                          }
+                        }
+                      }}
                       label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
                       error={errors.dateOfBirth?.message}
                     />
                   )}
                 />
+              </div>
+
+              {/* ዕድሜ (Age) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 ml-1">
+                  <label className="text-sm font-semibold text-slate-700">
+                    ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
+                  </label>
+                  {watch('age') && watch('dateOfBirth') && (
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-in fade-in">
+                      በቀኑ የተሰላ፡ {watch('age')} ዓመት
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  placeholder="ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)"
+                  min="15"
+                  max="120"
+                  {...register('age')}
+                  className={`${inputClass} ${errors.age ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                />
+                {errors.age && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.age.message}</p>}
               </div>
 
               <div>
