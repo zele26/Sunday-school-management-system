@@ -1,6 +1,6 @@
-// src/features/teacher/TeacherAttendance.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const TeacherAttendance = () => {
   const [records, setRecords] = useState([]);
@@ -97,7 +97,7 @@ const TeacherAttendance = () => {
                 <tr key={r._id} className="hover:bg-slate-50">
                   <td className="py-2 px-2">{r.student?.firstName} {r.student?.lastName}</td>
                   <td className="py-2 px-2">{r.course?.name || 'N/A'}</td>
-                  <td className="py-2 px-2">{new Date(r.date).toLocaleDateString()}</td>
+                  <td className="py-2 px-2">{formatEthiopianDate(r.date)}</td>
                 </tr>
               ))}
             </tbody>

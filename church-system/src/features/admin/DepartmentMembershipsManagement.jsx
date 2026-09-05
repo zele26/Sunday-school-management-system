@@ -18,6 +18,7 @@ import {
   useDepartments,
   usePersons,
 } from '../../hooks/queries/useDepartments';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const DepartmentMembershipsManagement = () => {
   const [form, setForm] = useState({
@@ -97,7 +98,7 @@ const DepartmentMembershipsManagement = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Start Date" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {getValue() ? new Date(getValue()).toLocaleDateString() : '-'}
+            {getValue() ? formatEthiopianDate(getValue()) : '-'}
           </span>
         ),
       },

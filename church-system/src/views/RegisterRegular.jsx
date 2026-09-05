@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { regularRegistrationSchema } from '../schemas';
+import { EthiopianDatePicker } from '../components/ui';
 
 const RegisterRegularContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form'
@@ -13,6 +15,7 @@ const RegisterRegularContent = () => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(regularRegistrationSchema),
@@ -23,12 +26,18 @@ const RegisterRegularContent = () => {
       educationLevel: '',
       profession: '',
       gender: 'Male',
+      age: '',
       dateOfBirth: '',
       phone: '',
       grade: 'Grade 7',
+      shift: 'weekend',
+      subcity: '',
+      woreda: '',
+      kebele: '',
       address: '',
       email: '',
       password: '',
+      confirmPassword: '',
       studentType: 'regular',
       emergencyFirstName: '',
       emergencyMiddleName: '',
@@ -72,16 +81,22 @@ const RegisterRegularContent = () => {
     }
   };
 
-  const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-700 text-sm placeholder:text-slate-400";
+  const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1657b8]/20 focus:border-[#1657b8] transition-all text-slate-700 text-sm placeholder:text-slate-400";
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
 
   // ---------- INFO STEP ----------
   if (step === 'info') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center p-4 font-sans">
-        <div className="max-w-2xl w-full bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-blue-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.98 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-2xl w-full bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-blue-100"
+        >
           <div className="text-center mb-8">
-            <span className="inline-block bg-blue-100 text-blue-700 font-bold px-4 py-1.5 rounded-full text-xs tracking-wider mb-4">
+            <span className="inline-block bg-blue-100 text-[#1657b8] font-bold px-4 py-1.5 rounded-full text-xs tracking-wider mb-4">
               ተክለሳዊሮስ ሰንበት ትምህርት ቤት
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
@@ -92,11 +107,11 @@ const RegisterRegularContent = () => {
 
           <div className="space-y-6 text-left">
             <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-              <h2 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+              <h2 className="font-bold text-[#1657b8] mb-2 flex items-center gap-2">
                 <span className="text-xl">📘</span> ለምን ይመዘገባሉ?
               </h2>
               <p className="text-sm text-slate-700 leading-relaxed">
-                የመደበኛ ትምህርት በክፍል ደረጃ የሚሰጥ ሲሆን ተማሪዎች በአካል ተገኝተው ይማራሉ። ለመግባት መመዝገብ ግዴታ ነው።
+                የመደበኛ ትምህርት በክፍል ደረጃ የሚሰጥ ሲሆን ተማሪዎች በሳምንቱ መጨረሻ (የቀን) ወይም በሳምንት ቀናት (የማታ) በአካል ተገኝተው ይማራሉ። ለመግባት መመዝገብ ግዴታ ነው።
               </p>
             </div>
 
@@ -106,6 +121,7 @@ const RegisterRegularContent = () => {
               </h2>
               <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
                 <li>ከታች ያለውን ቅጽ ይሙሉ።</li>
+                <li>ዕድሜ፣ የመማሪያ ፈረቃ (የቀን ወይም የማታ) እና የመኖሪያ አድራሻ ይምረጡ።</li>
                 <li>የ10 አሃዝ ስልክ ቁጥር እና ፓስዎርድ ያስገቡ።</li>
                 <li>የአደጋ ጊዜ ተጠሪ ስልክ ቁጥርም ግዴታ ነው።</li>
                 <li>ከተመዘገቡ በኋላ ማረጋገጫ ይጠብቁ።</li>
@@ -113,7 +129,7 @@ const RegisterRegularContent = () => {
             </div>
 
             <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-              <h2 className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+              <h2 className="font-bold text-[#1657b8] mb-2 flex items-center gap-2">
                 <span className="text-xl">🎯</span> ምን ያገኛሉ?
               </h2>
               <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
@@ -131,13 +147,15 @@ const RegisterRegularContent = () => {
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setStep('form')}
-            className="mt-8 w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-4 rounded-2xl font-bold text-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
+            className="mt-8 w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
             ወደ ምዝገባ ቀጥል (Proceed to Registration)
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     );
   }
@@ -146,12 +164,22 @@ const RegisterRegularContent = () => {
   if (success) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center p-4 font-sans">
-        <div className="max-w-lg w-full bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-emerald-100 text-center animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+          className="max-w-lg w-full bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-emerald-100 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.15 }}
+            className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
+          >
             <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
             </svg>
-          </div>
+          </motion.div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">ምዝገባ ተቀባይነት አግኝቷል</h2>
           <p className="text-slate-500 mb-6">እባክዎ የሚቀጥሉትን ደረጃዎች ይከተሉ</p>
 
@@ -194,17 +222,19 @@ const RegisterRegularContent = () => {
             </div>
           </div>
 
-          <Link
-            href="/login"
-            className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-center"
-          >
-            ወደ መግቢያ ይሂዱ (Go to Login)
-          </Link>
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+            <Link
+              href="/login"
+              className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-center"
+            >
+              ወደ መግቢያ ይሂዱ (Go to Login)
+            </Link>
+          </motion.div>
 
           <p className="text-xs text-slate-400 mt-4">
             ሁኔታዎን ማየት ይፈልጋሉ? <Link href="/check-status" className="text-[#1657b8] font-bold underline">ሁኔታዎን ያረጋግጡ</Link>
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -212,9 +242,14 @@ const RegisterRegularContent = () => {
   // ---------- FORM STEP ----------
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <span className="inline-block bg-blue-100 text-blue-700 font-bold px-4 py-1.5 rounded-full text-xs tracking-wider mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="max-w-3xl mx-auto"
+      >
+        <div className="text-center mb-10">
+          <span className="inline-block bg-blue-100 text-[#1657b8] font-bold px-4 py-1.5 rounded-full text-xs tracking-wider mb-4">
             ተክለሳዊሮስ ሰንበት ትምህርት ቤት
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
@@ -224,19 +259,28 @@ const RegisterRegularContent = () => {
         </div>
 
         {serverError && (
-          <div className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 rounded-r-xl shadow-sm flex items-center gap-3 animate-in slide-in-from-top-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 rounded-r-xl shadow-sm flex items-center gap-3"
+          >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="text-sm font-medium">{serverError}</span>
-          </div>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Personal Info */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md"
+          >
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">👤</div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1657b8] flex items-center justify-center text-lg font-bold">👤</div>
               <h2 className="text-lg font-bold text-slate-800">የግል መረጃ (Personal Info)</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -306,10 +350,39 @@ const RegisterRegularContent = () => {
                   <option value="Female">ሴት</option>
                 </select>
               </div>
+
+              {/* ዕድሜ (Age) */}
               <div>
-                <label className={labelClass}>የትውልድ ዘመን</label>
-                <input type="date" {...register('dateOfBirth')} className={inputClass} />
+                <label className={labelClass}>
+                  ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
+                </label>
+                <input
+                  type="number"
+                  placeholder="ምሳሌ፡ 18"
+                  min="15"
+                  max="120"
+                  {...register('age')}
+                  className={`${inputClass} ${errors.age ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                />
+                {errors.age && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.age.message}</p>}
               </div>
+
+              {/* Ethiopian Calendar Date of Birth */}
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <EthiopianDatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
+                      error={errors.dateOfBirth?.message}
+                    />
+                  )}
+                />
+              </div>
+
               <div>
                 <label className={labelClass}>ስልክ ቁጥር (10 አሃዝ) <span className="text-rose-500">*</span></label>
                 <input
@@ -330,6 +403,7 @@ const RegisterRegularContent = () => {
                 />
                 {errors.email && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.email.message}</p>}
               </div>
+
               <div>
                 <label className={labelClass}>የሚገቡበት ክፍል <span className="text-rose-500">*</span></label>
                 <select
@@ -349,11 +423,72 @@ const RegisterRegularContent = () => {
                 </select>
                 {errors.grade && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.grade.message}</p>}
               </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>መኖሪያ አድራሻ</label>
+
+              {/* Study Shift (የመማሪያ ፈረቃ) */}
+              <div>
+                <label className={labelClass}>የመማሪያ ፈረቃ (Study Shift) <span className="text-rose-500">*</span></label>
+                <select
+                  {...register('shift')}
+                  className={`${inputClass} font-semibold`}
+                >
+                  <option value="weekend">የቀን (ቅዳሜ እና እሑድ) - Weekend</option>
+                  <option value="night">የማታ - Night</option>
+                </select>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Residential Address Information (የመኖሪያ አድራሻ) */}
+          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
+            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">📍</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800">የመኖሪያ አድራሻ መረጃ (Address Info)</h2>
+                <p className="text-xs text-slate-400">ክፍለ ከተማ፣ ወረዳ እና ቀበሌ</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div>
+                <label className={labelClass}>ክፍለ ከተማ (Subcity)</label>
+                <select {...register('subcity')} className={inputClass}>
+                  <option value="">ክፍለ ከተማ ይምረጡ</option>
+                  <option value="ቦሌ (Bole)">ቦሌ (Bole)</option>
+                  <option value="አራዳ (Arada)">አራዳ (Arada)</option>
+                  <option value="ቂርቆስ (Kirkos)">ቂርቆስ (Kirkos)</option>
+                  <option value="ልደታ (Lideta)">ልደታ (Lideta)</option>
+                  <option value="የካ (Yeka)">የካ (Yeka)</option>
+                  <option value="ኮልፌ ቀራኒዮ (Kolfe Keranio)">ኮልፌ ቀራኒዮ (Kolfe Keranio)</option>
+                  <option value="አቃቂ ቃሊቲ (Akaki Kality)">አቃቂ ቃሊቲ (Akaki Kality)</option>
+                  <option value="ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)">ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)</option>
+                  <option value="ጉለሌ (Gulele)">ጉለሌ (Gulele)</option>
+                  <option value="አዲስ ከተማ (Addis Ketema)">አዲስ ከተማ (Addis Ketema)</option>
+                  <option value="ለሚ ኩራ (Lemi Kura)">ለሚ ኩራ (Lemi Kura)</option>
+                  <option value="ከአዲስ አበባ ውጪ (Outside AA)">ከአዲስ አበባ ውጪ (Outside AA)</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>ወረዳ (Woreda)</label>
                 <input
                   type="text"
-                  placeholder="የክፍለ ከተማ፣ ወረዳ እና የቤት ቁጥር መረጃ"
+                  placeholder="ወረዳ (ምሳሌ፡ 03)"
+                  {...register('woreda')}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>ቀበሌ / የቤት ቁጥር (Kebele / House No)</label>
+                <input
+                  type="text"
+                  placeholder="ቀበሌ / የቤት ቁጥር"
+                  {...register('kebele')}
+                  className={inputClass}
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <label className={labelClass}>ተጨማሪ አድራሻ (Additional Address Details)</label>
+                <input
+                  type="text"
+                  placeholder="የሰፈር ስም ወይም ልዩ ምልክት"
                   {...register('address')}
                   className={inputClass}
                 />
@@ -445,15 +580,27 @@ const RegisterRegularContent = () => {
               <h2 className="text-lg font-bold text-slate-800">የመግቢያ መረጃ (Login Info)</h2>
             </div>
             <div className="space-y-5">
-              <div>
-                <label className={labelClass}>የምስጢር ቃል (ፓስዎርድ) <span className="text-rose-500">*</span></label>
-                <input
-                  type="password"
-                  placeholder="ቢያንስ 6 ፊደላት/ቁጥሮች"
-                  {...register('password')}
-                  className={`${inputClass} ${errors.password ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
-                {errors.password && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.password.message}</p>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className={labelClass}>የምስጢር ቃል (ፓስዎርድ) <span className="text-rose-500">*</span></label>
+                  <input
+                    type="password"
+                    placeholder="ቢያንስ 6 ፊደላት/ቁጥሮች"
+                    {...register('password')}
+                    className={`${inputClass} ${errors.password ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                  />
+                  {errors.password && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.password.message}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>የይለፍ ቃል ማረጋገጫ (Confirm Password) <span className="text-rose-500">*</span></label>
+                  <input
+                    type="password"
+                    placeholder="የይለፍ ቃሉን በድጋሚ ያስገቡ"
+                    {...register('confirmPassword')}
+                    className={`${inputClass} ${errors.confirmPassword ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                  />
+                  {errors.confirmPassword && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.confirmPassword.message}</p>}
+                </div>
               </div>
               <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100/60 flex items-start gap-3">
                 <span className="text-xl">📌</span>
@@ -485,7 +632,7 @@ const RegisterRegularContent = () => {
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };

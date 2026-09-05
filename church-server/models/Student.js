@@ -15,6 +15,11 @@ const studentSchema = new mongoose.Schema({
   profession: { type: String, default: '' },
   gender: { type: String, enum: ['Male', 'Female'], default: 'Male' },
   dob: { type: String, default: '' },
+  age: { type: Number, default: null },
+  subcity: { type: String, default: '' },      // ክፍለ ከተማ
+  woreda: { type: String, default: '' },       // ወረዳ
+  kebele: { type: String, default: '' },       // ቀበሌ / የቤት ቁጥር
+  shift: { type: String, default: '' },        // የቀን (weekend) ወይም የማታ (night)
   address: { type: String, default: '' },
   grade: { type: String, required: true },
   batch: { type: String, default: null },          // for distance students

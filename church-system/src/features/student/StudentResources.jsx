@@ -42,6 +42,7 @@
 // church-system/src/features/student/StudentResources.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const StudentResources = () => {
   const [resources, setResources] = useState([]);
@@ -112,7 +113,7 @@ const StudentResources = () => {
                     )}
                   </div>
                   <p className="text-xs text-gray-400 mt-2">
-                    Posted: {new Date(r.uploadDate).toLocaleDateString()}
+                    Posted: {formatEthiopianDate(r.uploadDate)}
                   </p>
                 </div>
               </div>

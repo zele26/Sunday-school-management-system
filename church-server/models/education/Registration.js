@@ -10,6 +10,11 @@ const registrationSchema = new mongoose.Schema({
   profession: { type: String, required: true },
   gender: { type: String, enum: ['Male', 'Female'], default: 'Male' },
   dateOfBirth: { type: String },
+  age: { type: Number, default: null },
+  subcity: { type: String, default: '' },      // ክፍለ ከተማ
+  woreda: { type: String, default: '' },       // ወረዳ
+  kebele: { type: String, default: '' },       // ቀበሌ / የቤት ቁጥር
+  shift: { type: String, enum: ['weekend', 'night', 'day', ''], default: 'weekend' }, // የቀን (weekend) ወይም የማታ (night)
   phone: { type: String, required: true },
   grade: { type: String, required: true },
   batch: { type: String, default: null },      // for distance students

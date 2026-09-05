@@ -1,8 +1,12 @@
 // src/features/student/StudentProfileModule.jsx
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 
 const StudentProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -77,8 +81,8 @@ const StudentProfile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center font-sans">
         <div className="text-center text-slate-600">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-sm">Loading your profile...</p>
+          <div className="w-8 h-8 border-4 border-[#1657b8] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-sm font-medium">የተማሪ መረጃ በመጫን ላይ ነው...</p>
         </div>
       </div>
     );
@@ -86,17 +90,17 @@ const StudentProfile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center font-sans">
-        <div className="p-8 text-center text-red-600 bg-white rounded-3xl shadow-xl border border-red-100">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center font-sans p-4">
+        <div className="p-8 text-center text-red-600 bg-white rounded-3xl shadow-xl border border-red-100 max-w-md w-full">
           <p className="font-semibold">⚠️ {error}</p>
           <button
             onClick={() => {
               useAuthStore.getState().logout();
               window.location.href = '/login';
             }}
-            className="text-blue-600 underline text-sm mt-2"
+            className="text-[#1657b8] hover:underline text-sm mt-3 inline-block font-bold"
           >
-            Go to Login
+            ወደ መግቢያ ገጽ ተመለስ (Go to Login)
           </button>
         </div>
       </div>
@@ -106,7 +110,7 @@ const StudentProfile = () => {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 flex items-center justify-center font-sans">
-        <p className="text-slate-500">No profile data found.</p>
+        <p className="text-slate-500">ምንም መረጃ አልተገኘም።</p>
       </div>
     );
   }
@@ -127,28 +131,29 @@ const StudentProfile = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header Card */}
-        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8 text-white relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-300/20 rounded-full blur-2xl"></div>
-            <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{fullName}</h2>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${studentType === 'distance' ? 'bg-yellow-400 text-slate-900' : 'bg-emerald-400 text-emerald-950'
-                    }`}>
-                    {studentType}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold">
-                    {studentType === 'distance' ? `Batch: ${batch}` : `Grade: ${batch}`}
-                  </span>
+        <FadeIn direction="down" duration={0.4}>
+          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-[#1657b8] via-[#124796] to-[#0d3269] p-6 sm:p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">{fullName}</h2>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${studentType === 'distance' ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-emerald-950'
+                      }`}>
+                      {studentType === 'distance' ? '🌐 የርቀት ተማሪ (Distance)' : '🏛️ መደበኛ ተማሪ (Regular)'}
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-sm">
+                      {studentType === 'distance' ? `Batch: ${batch}` : `Grade: ${batch}`}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs text-blue-100 uppercase tracking-wider font-semibold">የተማሪ መለያ ቁጥር (ID)</p>
+                  <p className="text-lg font-mono font-black bg-white/10 px-3 py-1 rounded-xl inline-block mt-0.5 border border-white/20">{profile.studentId || 'N/A'}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-blue-100 uppercase tracking-wider">School ID</p>
-                <p className="text-lg font-mono font-bold bg-white/10 px-3 py-1 rounded-lg">{profile.studentId || 'N/A'}</p>
-              </div>
             </div>
-          </div>
           <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* QR Code */}
             <div className="flex flex-col items-center justify-center bg-blue-50/50 rounded-2xl p-4 border border-blue-100">
@@ -181,7 +186,7 @@ const StudentProfile = () => {
               </div>
               <div className="flex justify-between border-b border-slate-100 pb-1">
                 <span className="font-medium text-slate-500">Date of Birth</span>
-                <span className="font-semibold text-slate-800">{profile.dob || '-'}</span>
+                <span className="font-semibold text-slate-800">{formatEthiopianDate(profile.dob)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-slate-500">Address</span>
@@ -190,154 +195,190 @@ const StudentProfile = () => {
             </div>
           </div>
         </div>
+      </FadeIn>
 
         {/* Personal Information Card */}
-        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">👤</span>
-            Personal Information
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">First Name</span>
-              <span className="font-semibold text-slate-800">{profile.firstName || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Middle Name</span>
-              <span className="font-semibold text-slate-800">{profile.middleName || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Last Name</span>
-              <span className="font-semibold text-slate-800">{profile.lastName || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Education Level</span>
-              <span className="font-semibold text-slate-800">{profile.educationLevel || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Profession</span>
-              <span className="font-semibold text-slate-800">{profile.profession || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
-              <span className="font-semibold text-slate-800">{profile.studentPhone || profile.contactPhone || profile.phone || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Email</span>
-              <span className="font-semibold text-slate-800">{profile.userId?.email || profile.email || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Teacher</span>
-              <span className="font-semibold text-slate-800">
-                {profile.teacher ? (profile.teacher.fullName || profile.teacher.email) : '-'}
-              </span>
+        <FadeIn delay={0.1}>
+          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 text-[#1657b8] flex items-center justify-center font-bold">👤</span>
+              የግል መረጃ (Personal Information)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">First Name</span>
+                <span className="font-semibold text-slate-800">{profile.firstName || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Middle Name</span>
+                <span className="font-semibold text-slate-800">{profile.middleName || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Last Name</span>
+                <span className="font-semibold text-slate-800">{profile.lastName || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">ዕድሜ (Age)</span>
+                <span className="font-semibold text-slate-800">{profile.age || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Education Level</span>
+                <span className="font-semibold text-slate-800">{profile.educationLevel || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Profession</span>
+                <span className="font-semibold text-slate-800">{profile.profession || '-'}</span>
+              </div>
+              {studentType === 'regular' && (
+                <div>
+                  <span className="font-medium text-slate-500 block mb-0.5">የመማሪያ ፈረቃ (Shift)</span>
+                  <span className="font-semibold text-[#1657b8]">
+                    {profile.shift === 'night' ? 'የማታ (Night)' : 'የቀን (Weekend)'}
+                  </span>
+                </div>
+              )}
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
+                <span className="font-semibold text-slate-800 font-mono">{profile.studentPhone || profile.contactPhone || profile.phone || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Email</span>
+                <span className="font-semibold text-slate-800">{profile.userId?.email || profile.email || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">ክፍለ ከተማ (Subcity)</span>
+                <span className="font-semibold text-slate-800">{profile.subcity || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">ወረዳ (Woreda)</span>
+                <span className="font-semibold text-slate-800">{profile.woreda || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">ቀበሌ / የቤት ቁጥር (Kebele)</span>
+                <span className="font-semibold text-slate-800">{profile.kebele || '-'}</span>
+              </div>
+              <div className="sm:col-span-2">
+                <span className="font-medium text-slate-500 block mb-0.5">ሙሉ አድራሻ (Address)</span>
+                <span className="font-semibold text-slate-800">{profile.address || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Teacher</span>
+                <span className="font-semibold text-slate-800">
+                  {profile.teacher ? (profile.teacher.fullName || profile.teacher.email) : '-'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
 
         {/* Emergency Contact Card */}
-        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📞</span>
-            Emergency Contact
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Name</span>
-              <span className="font-semibold text-slate-800">{emergencyName || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Relationship</span>
-              <span className="font-semibold text-slate-800">{profile.relationship || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
-              <span className="font-semibold text-slate-800">{emergencyPhone || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 block mb-0.5">Email</span>
-              <span className="font-semibold text-slate-800">{emergencyEmail || '-'}</span>
+        <FadeIn delay={0.15}>
+          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📞</span>
+              Emergency Contact
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Name</span>
+                <span className="font-semibold text-slate-800">{emergencyName || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Relationship</span>
+                <span className="font-semibold text-slate-800">{profile.relationship || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
+                <span className="font-semibold text-slate-800">{emergencyPhone || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 block mb-0.5">Email</span>
+                <span className="font-semibold text-slate-800">{emergencyEmail || '-'}</span>
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
 
         {/* Enrolled Courses */}
-        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">📚</span>
-            Enrolled Courses
-          </h3>
-          {courses.length === 0 ? (
-            <p className="text-sm text-slate-400">You are not enrolled in any courses yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {courses.map(course => (
-                <li key={course._id} className="bg-slate-50 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
-                  <div>
-                    <span className="font-semibold text-slate-700">{course.name}</span>
-                    {course.grade && <span className="text-slate-500 ml-2">({course.grade})</span>}
-                    {course.schedule && <span className="text-slate-500 ml-2">— {course.schedule}</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <FadeIn delay={0.2}>
+          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">📚</span>
+              Enrolled Courses
+            </h3>
+            {courses.length === 0 ? (
+              <p className="text-sm text-slate-400">You are not enrolled in any courses yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {courses.map(course => (
+                  <li key={course._id} className="bg-slate-50 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+                    <div>
+                      <span className="font-semibold text-slate-700">{course.name}</span>
+                      {course.grade && <span className="text-slate-500 ml-2">({course.grade})</span>}
+                      {course.schedule && <span className="text-slate-500 ml-2">— {course.schedule}</span>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </FadeIn>
 
         {/* Attendance History */}
-        <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📅</span>
-            Attendance History
-          </h3>
-          {attendance.length === 0 ? (
-            <p className="text-sm text-slate-400">No attendance records found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b text-xs uppercase text-slate-400">
-                    <th className="py-2 px-2">Date</th>
-                    <th className="py-2 px-2">Check-in</th>
-                    <th className="py-2 px-2">Course</th>
-                    <th className="py-2 px-2">Teacher</th>
-                    <th className="py-2 px-2">Grade</th>
-                    <th className="py-2 px-2">Status</th>
-                    <th className="py-2 px-2">Acad. Year</th>
-                    <th className="py-2 px-2">Semester</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {attendance.map(record => {
-                    const dateObj = new Date(record.date);
-                    const checkIn = record.checkInTime
-                      ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                      : '-';
-                    return (
-                      <tr key={record._id} className="hover:bg-slate-50">
-                        <td className="py-2 px-2">{dateObj.toLocaleDateString()}</td>
-                        <td className="py-2 px-2">{checkIn}</td>
-                        <td className="py-2 px-2">{record.courseName || 'General'}</td>
-                        <td className="py-2 px-2">{record.teacherName || 'N/A'}</td>
-                        <td className="py-2 px-2">{record.grade || '-'}</td>
-                        <td className="py-2 px-2">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${record.status === 'Present' ? 'bg-emerald-100 text-emerald-700' :
-                              record.status === 'Late' ? 'bg-amber-100 text-amber-700' :
-                                'bg-rose-100 text-rose-700'
-                            }`}>
-                            {record.status}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2">{record.academicYear || '-'}</td>
-                        <td className="py-2 px-2">{record.semester || '-'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <FadeIn delay={0.25}>
+          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📅</span>
+              Attendance History
+            </h3>
+            {attendance.length === 0 ? (
+              <p className="text-sm text-slate-400">No attendance records found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b text-xs uppercase text-slate-400">
+                      <th className="py-2 px-2">Date</th>
+                      <th className="py-2 px-2">Check-in</th>
+                      <th className="py-2 px-2">Course</th>
+                      <th className="py-2 px-2">Teacher</th>
+                      <th className="py-2 px-2">Grade</th>
+                      <th className="py-2 px-2">Status</th>
+                      <th className="py-2 px-2">Acad. Year</th>
+                      <th className="py-2 px-2">Semester</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {attendance.map(record => {
+                      const checkIn = record.checkInTime
+                        ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : '-';
+                      return (
+                        <tr key={record._id} className="hover:bg-slate-50">
+                          <td className="py-2 px-2 font-medium">{formatEthiopianDate(record.date)}</td>
+                          <td className="py-2 px-2">{checkIn}</td>
+                          <td className="py-2 px-2">{record.courseName || 'General'}</td>
+                          <td className="py-2 px-2">{record.teacherName || 'N/A'}</td>
+                          <td className="py-2 px-2">{record.grade || '-'}</td>
+                          <td className="py-2 px-2">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${record.status === 'Present' ? 'bg-emerald-100 text-emerald-700' :
+                                record.status === 'Late' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-rose-100 text-rose-700'
+                              }`}>
+                              {record.status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-2">{record.academicYear || '-'}</td>
+                          <td className="py-2 px-2">{record.semester || '-'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </FadeIn>
       </div>
     </div>
   );

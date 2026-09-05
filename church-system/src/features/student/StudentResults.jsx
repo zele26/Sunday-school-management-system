@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../../api/apiClient';
 import { Link } from 'react-router-dom';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const StudentResults = () => {
   const [results, setResults] = useState([]);
@@ -29,7 +30,7 @@ const StudentResults = () => {
             <Link key={r._id} to={`/dashboard/results/${r._id}`} className="bg-white p-4 rounded-xl shadow border hover:shadow-md transition flex justify-between items-center">
               <div>
                 <p className="font-semibold">{r.quiz?.title || 'N/A'}</p>
-                <p className="text-xs text-slate-500">{new Date(r.submittedAt).toLocaleDateString()}</p>
+                <p className="text-xs text-slate-500">{formatEthiopianDate(r.submittedAt)}</p>
               </div>
               <span className="text-lg font-bold text-indigo-600">{r.totalScore}</span>
             </Link>

@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
+import { EthiopianDatePicker } from '../../components/ui/EthiopianDatePicker';
 import { toast } from '../../utils/toast';
 
 const EditStudent = () => {
@@ -23,6 +24,11 @@ const EditStudent = () => {
     lastName: '',
     phone: '',
     grade: '',
+    age: '',
+    shift: 'weekend',
+    subcity: '',
+    woreda: '',
+    kebele: '',
     address: '',
     studentType: 'regular',
     emergencyFirstName: '',
@@ -48,6 +54,11 @@ const EditStudent = () => {
             lastName: s.lastName || '',
             phone: s.studentPhone || '',
             grade: s.grade || '',
+            age: s.age || '',
+            shift: s.shift || 'weekend',
+            subcity: s.subcity || '',
+            woreda: s.woreda || '',
+            kebele: s.kebele || '',
             address: s.address || '',
             studentType: s.studentType || 'regular',
             emergencyFirstName: s.emergencyFirstName || s.parentName || '',
@@ -77,6 +88,11 @@ const EditStudent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.age && Number(form.age) <= 14) {
+      toast.error('የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be greater than 14)');
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
@@ -84,6 +100,11 @@ const EditStudent = () => {
       middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
       grade: form.grade,
+      age: form.age ? Number(form.age) : undefined,
+      shift: form.shift,
+      subcity: form.subcity.trim(),
+      woreda: form.woreda.trim(),
+      kebele: form.kebele.trim(),
       address: form.address.trim(),
       studentPhone: form.phone.trim(),
       studentType: form.studentType,
@@ -163,8 +184,8 @@ const EditStudent = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የትውልድ ቀን</label>
-              <Input type="date" name="dob" value={form.dob} onChange={handleChange} />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (Age) (&gt; 14)</label>
+              <Input type="number" name="age" min="15" max="120" placeholder="ምሳሌ፡ 18" value={form.age} onChange={handleChange} />
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍል (Grade)</label>
@@ -183,14 +204,69 @@ const EditStudent = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Ethiopian Calendar Date of Birth */}
+          <div className="pt-1">
+            <EthiopianDatePicker
+              value={form.dob}
+              onChange={(iso) => setForm({ ...form, dob: iso })}
+              label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
+            />
+          </div>
+
+          {form.studentType === 'regular' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ (Study Shift)</label>
+                <Select name="shift" value={form.shift} onChange={handleChange}>
+                  <option value="weekend">የቀን (ቅዳሜ እና እሑድ) - Weekend</option>
+                  <option value="night">የማታ - Night</option>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ</label>
+                <Input icon={Phone} name="phone" value={form.phone} onChange={handleChange} />
+              </div>
+            </div>
+          )}
+
+          {form.studentType === 'distance' && (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ</label>
               <Input icon={Phone} name="phone" value={form.phone} onChange={handleChange} />
             </div>
+          )}
+
+          {/* Subcity, Woreda, Kebele & Address */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">አድራሻ</label>
-              <Input icon={MapPin} name="address" value={form.address} onChange={handleChange} />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍለ ከተማ (Subcity)</label>
+              <Select name="subcity" value={form.subcity} onChange={handleChange}>
+                <option value="">ይምረጡ (Select)</option>
+                <option value="ቦሌ (Bole)">ቦሌ (Bole)</option>
+                <option value="አራዳ (Arada)">አራዳ (Arada)</option>
+                <option value="ቂርቆስ (Kirkos)">ቂርቆስ (Kirkos)</option>
+                <option value="ልደታ (Lideta)">ልደታ (Lideta)</option>
+                <option value="የካ (Yeka)">የካ (Yeka)</option>
+                <option value="ኮልፌ ቀራኒዮ (Kolfe Keranio)">ኮልፌ ቀራኒዮ (Kolfe Keranio)</option>
+                <option value="አቃቂ ቃሊቲ (Akaki Kality)">አቃቂ ቃሊቲ (Akaki Kality)</option>
+                <option value="ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)">ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)</option>
+                <option value="ጉለሌ (Gulele)">ጉለሌ (Gulele)</option>
+                <option value="አዲስ ከተማ (Addis Ketema)">አዲስ ከተማ (Addis Ketema)</option>
+                <option value="ለሚ ኩራ (Lemi Kura)">ለሚ ኩራ (Lemi Kura)</option>
+                <option value="ከአዲስ አበባ ውጪ (Outside AA)">ከአዲስ አበባ ውጪ (Outside AA)</option>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ወረዳ (Woreda)</label>
+              <Input name="woreda" placeholder="ምሳሌ፡ 03" value={form.woreda} onChange={handleChange} />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ቀበሌ / የቤት ቁጥር (Kebele)</label>
+              <Input name="kebele" placeholder="ቀበሌ / የቤት ቁጥር" value={form.kebele} onChange={handleChange} />
+            </div>
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ተጨማሪ አድራሻ (Address Details)</label>
+              <Input icon={MapPin} name="address" placeholder="የሰፈር ስም ወይም ልዩ ምልክት" value={form.address} onChange={handleChange} />
             </div>
           </div>
         </Card>

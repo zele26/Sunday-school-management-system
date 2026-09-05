@@ -1,6 +1,7 @@
 // src/features/teacher/TeacherResources.jsx
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api/apiClient';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const TeacherResources = () => {
   const [resources, setResources] = useState([]);
@@ -435,7 +436,7 @@ const TeacherResources = () => {
                       )}
                     </div>
                     <p className="text-xs text-slate-400">
-                      Uploaded: {new Date(r.uploadDate).toLocaleDateString()}
+                      Uploaded: {formatEthiopianDate(r.uploadDate)}
                     </p>
                   </div>
                   <div className="flex gap-2 ml-auto md:ml-0">

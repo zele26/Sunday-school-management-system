@@ -25,7 +25,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
   try {
     const {
       fullName, firstName, middleName, lastName, educationLevel, profession,
-      gender, dateOfBirth, phone, grade, address,
+      gender, dateOfBirth, age, subcity, woreda, kebele, shift, phone, grade, address,
       // New emergency fields
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
@@ -49,12 +49,25 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const normalizedEducationLevel = (educationLevel || '').toString().trim();
     const normalizedProfession = (profession || '').toString().trim();
     const normalizedFullName = [normalizedFirstName, normalizedMiddleName, normalizedLastName].filter(Boolean).join(' ').trim();
+    const parsedAge = age ? Number(age) : null;
+    const normalizedSubcity = (subcity || '').toString().trim();
+    const normalizedWoreda = (woreda || '').toString().trim();
+    const normalizedKebele = (kebele || '').toString().trim();
+    const normalizedShift = (shift || (studentType === 'regular' ? 'weekend' : '')).toString().trim();
 
     // Basic required fields
     if (!normalizedFullName || !normalizedEducationLevel || !normalizedProfession || !grade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
         message: 'First name, middle name, last name, education level, profession, grade, phone, password, and student type are required.',
+      });
+    }
+
+    // Validate age: must be provided and greater than 14
+    if (!parsedAge || isNaN(parsedAge) || parsedAge <= 14) {
+      return res.status(400).json({
+        success: false,
+        message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Student age must be greater than 14)',
       });
     }
 
@@ -120,6 +133,11 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       profession: normalizedProfession,
       gender: gender || 'Male',
       dateOfBirth: dateOfBirth || '',
+      age: parsedAge,
+      subcity: normalizedSubcity,
+      woreda: normalizedWoreda,
+      kebele: normalizedKebele,
+      shift: normalizedShift,
       phone,
       grade: finalGrade,
       batch,

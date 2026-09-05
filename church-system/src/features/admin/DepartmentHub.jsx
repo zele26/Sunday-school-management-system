@@ -8,6 +8,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const DepartmentHub = () => {
   const { id } = useParams();
@@ -165,7 +166,7 @@ const DepartmentHub = () => {
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">
-                      {m.startDate ? new Date(m.startDate).toLocaleDateString() : '—'}
+                      {m.startDate ? formatEthiopianDate(m.startDate) : '—'}
                     </td>
                   </tr>
                 ))}

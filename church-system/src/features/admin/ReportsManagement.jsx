@@ -22,6 +22,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { Input } from '../../components/ui/Input';
 import { toast } from '../../utils/toast';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 // ─── helpers to download CSV ────────────────────────────────────────
 const downloadCSV = (csvString, filename) => {
@@ -45,7 +46,7 @@ const generateCSV = (data, reportType) => {
       });
       csv += '\n\nAttendance History\nDate,Course';
       (attendanceHistory || []).forEach(h => {
-        csv += `\n${new Date(h.date).toLocaleDateString()},"${h.courseName || ''}"`;
+        csv += `\n${formatEthiopianDate(h.date)},"${h.courseName || ''}"`;
       });
       return csv;
     }
@@ -82,7 +83,7 @@ const generateCSV = (data, reportType) => {
     }
     case 'date': {
       const { date, records } = data;
-      let csv = `Attendance for ${new Date(date).toLocaleDateString()}\n\nStudent,Grade,Course,Time\n`;
+      let csv = `Attendance for ${formatEthiopianDate(date)}\n\nStudent,Grade,Course,Time\n`;
       (records || []).forEach(r => {
         csv += `"${r.studentName || ''}",${r.grade || ''},"${r.courseName || ''}",${new Date(r.time).toLocaleTimeString()}\n`;
       });
@@ -268,7 +269,7 @@ const ReportsManagement = () => {
               <tbody className="divide-y divide-subtle">
                 {(attendanceHistory || []).map((h) => (
                   <tr key={h._id} className="hover:bg-surface-page/50">
-                    <td className="py-2.5 px-3 font-medium text-main">{new Date(h.date).toLocaleDateString()}</td>
+                    <td className="py-2.5 px-3 font-medium text-main">{formatEthiopianDate(h.date)}</td>
                     <td className="py-2.5 px-3">{h.courseName}</td>
                   </tr>
                 ))}
@@ -424,7 +425,7 @@ const ReportsManagement = () => {
     return (
       <Card className="p-6 space-y-4">
         <h3 className="text-lg font-bold text-main flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-brand-primary" /> Attendance for {new Date(date).toLocaleDateString()}
+          <Calendar className="w-5 h-5 text-brand-primary" /> Attendance for {formatEthiopianDate(date)}
         </h3>
 
         <div className="overflow-x-auto">

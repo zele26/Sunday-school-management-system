@@ -300,6 +300,7 @@ const { Parser } = require('json2csv');
 const qrcode = require('qrcode');
 const crypto = require('crypto');
 const { protect, authorize } = require('../../middleware/auth'); // ✅ Added auth
+const { formatEthiopianDate } = require('../../utils/ethiopianDate');
 
 // ---------- Create Student ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
@@ -307,6 +308,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     const {
       firstName, middleName, lastName, dob, grade, address, contactPhone,
       email, password,
+      age, subcity, woreda, kebele, shift,
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
     } = req.body;
@@ -338,6 +340,11 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       middleName: middleName || '',
       lastName,
       dob: dob || '',
+      age: age ? Number(age) : undefined,
+      subcity: subcity || '',
+      woreda: woreda || '',
+      kebele: kebele || '',
+      shift: shift || '',
       grade: grade || '',
       address: address || '',
       regYear: new Date().getFullYear().toString(),
@@ -484,11 +491,16 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       'First Name': s.firstName || '',
       'Middle Name': s.middleName || '',
       'Last Name': s.lastName || '',
+      'Age': s.age || '',
       'Gender': s.gender || 'Male',
+      'Subcity': s.subcity || '',
+      'Woreda': s.woreda || '',
+      'Kebele': s.kebele || '',
+      'Shift': s.shift === 'night' ? 'የማታ (Night)' : (s.shift === 'weekend' ? 'የቀን (Weekend)' : (s.shift || '')),
       'Education Level': s.educationLevel || '',
       'Profession': s.profession || '',
       'Grade': s.grade || '',
-      'Date of Birth': s.dob || '',
+      'Date of Birth': s.dob ? formatEthiopianDate(s.dob) : '',
       'Address': s.address || '',
       'Student Phone': s.studentPhone || '',
       'Email (login)': s.userId?.email || s.email || '',
@@ -502,7 +514,7 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       'Emergency Phone': s.emergencyPhone || s.contactPhone || s.parentPhone || '',
       'Emergency Email': s.emergencyEmail || s.contactEmail || s.parentEmail || '',
       'Emergency Address': s.emergencyAddress || s.contactAddress || '',
-      'Registration Date': s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : '',
+      'Registration Date': s.registrationDate ? formatEthiopianDate(s.registrationDate) : '',
     }));
 
     const fields = Object.keys(csvData[0] || {});
@@ -645,7 +657,6 @@ router.put('/:id/add-course', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- Get Single Student by ID ----------
-// ✅ Added missing route
 router.get('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const student = await Student.findById(req.params.id)
@@ -670,6 +681,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     const {
       firstName, middleName, lastName, dob, grade, address, studentPhone, contactPhone,
       educationLevel, profession, gender, studentType,
+      age, subcity, woreda, kebele, shift,
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
       contactEmail, contactAddress
@@ -684,6 +696,11 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (middleName !== undefined) student.middleName = middleName;
     if (lastName !== undefined) student.lastName = lastName;
     if (dob !== undefined) student.dob = dob;
+    if (age !== undefined) student.age = age ? Number(age) : undefined;
+    if (subcity !== undefined) student.subcity = subcity;
+    if (woreda !== undefined) student.woreda = woreda;
+    if (kebele !== undefined) student.kebele = kebele;
+    if (shift !== undefined) student.shift = shift;
     if (grade !== undefined) student.grade = grade;
     if (address !== undefined) student.address = address;
     if (educationLevel !== undefined) student.educationLevel = educationLevel;

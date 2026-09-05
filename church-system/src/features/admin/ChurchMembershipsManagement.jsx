@@ -16,6 +16,7 @@ import {
   useChurchMemberships,
   useAssignChurchMembership,
 } from '../../hooks/queries/usePeople';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const ChurchMembershipsManagement = () => {
   const [personId, setPersonId] = useState('');
@@ -101,7 +102,7 @@ const ChurchMembershipsManagement = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Assigned Date" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {getValue() ? new Date(getValue()).toLocaleDateString() : '-'}
+            {getValue() ? formatEthiopianDate(getValue()) : '-'}
           </span>
         ),
       },

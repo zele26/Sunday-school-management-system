@@ -50,6 +50,49 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+// ---------- Update My Profile ----------
+router.put('/profile', async (req, res) => {
+  try {
+    const {
+      firstName, middleName, lastName, dob, age,
+      subcity, woreda, kebele, shift, address,
+      educationLevel, profession, gender,
+      emergencyFirstName, emergencyMiddleName, emergencyLastName,
+      relationship, emergencyPhone, emergencyEmail, emergencyAddress
+    } = req.body;
+
+    const student = await Student.findById(req.student._id);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+
+    if (firstName !== undefined) student.firstName = firstName;
+    if (middleName !== undefined) student.middleName = middleName;
+    if (lastName !== undefined) student.lastName = lastName;
+    if (dob !== undefined) student.dob = dob;
+    if (age !== undefined) student.age = age ? Number(age) : undefined;
+    if (subcity !== undefined) student.subcity = subcity;
+    if (woreda !== undefined) student.woreda = woreda;
+    if (kebele !== undefined) student.kebele = kebele;
+    if (shift !== undefined) student.shift = shift;
+    if (address !== undefined) student.address = address;
+    if (educationLevel !== undefined) student.educationLevel = educationLevel;
+    if (profession !== undefined) student.profession = profession;
+    if (gender !== undefined) student.gender = gender;
+
+    if (emergencyFirstName !== undefined) student.emergencyFirstName = emergencyFirstName;
+    if (emergencyMiddleName !== undefined) student.emergencyMiddleName = emergencyMiddleName;
+    if (emergencyLastName !== undefined) student.emergencyLastName = emergencyLastName;
+    if (relationship !== undefined) student.relationship = relationship;
+    if (emergencyPhone !== undefined) student.emergencyPhone = emergencyPhone;
+    if (emergencyEmail !== undefined) student.emergencyEmail = emergencyEmail;
+    if (emergencyAddress !== undefined) student.emergencyAddress = emergencyAddress;
+
+    await student.save();
+    res.json({ success: true, message: 'Profile updated successfully', student });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ---------- My Attendance ----------
 router.get('/attendance', async (req, res) => {
   try {

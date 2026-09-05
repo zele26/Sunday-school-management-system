@@ -11,6 +11,7 @@ import {
   DataTableColumnHeader,
 } from '../../components/ui';
 import { useAcademicYears } from '../../hooks/queries/useAcademic';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const AcademicYearsManagement = () => {
   const [viewMode, setViewMode] = useState('grid');
@@ -28,7 +29,7 @@ const AcademicYearsManagement = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Start Date" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-600 dark:text-slate-300">
-            {getValue() ? new Date(getValue()).toLocaleDateString() : '—'}
+            {getValue() ? formatEthiopianDate(getValue()) : '—'}
           </span>
         ),
       },
@@ -37,7 +38,7 @@ const AcademicYearsManagement = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="End Date" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-600 dark:text-slate-300">
-            {getValue() ? new Date(getValue()).toLocaleDateString() : '—'}
+            {getValue() ? formatEthiopianDate(getValue()) : '—'}
           </span>
         ),
       },
@@ -120,8 +121,8 @@ const AcademicYearsManagement = () => {
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">{year.name}</h3>
               <p className="text-xs text-slate-400 mt-1">
-                {year.startDate ? new Date(year.startDate).toLocaleDateString() : '—'} -{' '}
-                {year.endDate ? new Date(year.endDate).toLocaleDateString() : '—'}
+                {year.startDate ? formatEthiopianDate(year.startDate) : '—'} -{' '}
+                {year.endDate ? formatEthiopianDate(year.endDate) : '—'}
               </p>
             </Card>
           ))}

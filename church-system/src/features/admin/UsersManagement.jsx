@@ -43,6 +43,7 @@ import {
 } from '../../hooks/queries/useUsers';
 import { useDepartments } from '../../hooks/queries/useDepartments';
 import { userEditModalSchema } from '../../schemas';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const UsersManagement = () => {
   // Query parameters & pagination
@@ -599,9 +600,9 @@ const UsersManagement = () => {
                                   {item.role}
                                 </Badge>
                                 <span className="text-[11px] font-semibold text-slate-400">
-                                  {new Date(item.startDate).toLocaleDateString()}{' '}
+                                  {formatEthiopianDate(item.startDate)}{' '}
                                   {item.endDate
-                                    ? `— ${new Date(item.endDate).toLocaleDateString()}`
+                                    ? `— ${formatEthiopianDate(item.endDate)}`
                                     : '— Present'}
                                 </span>
                               </div>
@@ -690,9 +691,9 @@ const UsersManagement = () => {
                           </p>
                           <p>
                             <span className="font-semibold">ምዝገባ ቀን: </span>
-                            {new Date(
+                            {formatEthiopianDate(
                               journeyData.teacher.registrationDate || journeyData.teacher.createdAt
-                            ).toLocaleDateString()}
+                            )}
                           </p>
                         </div>
                       ) : (

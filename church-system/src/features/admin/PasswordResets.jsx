@@ -16,6 +16,7 @@ import {
   useApprovePasswordReset,
   useRejectPasswordReset,
 } from '../../hooks/queries/usePasswordResets';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const PasswordResets = () => {
   const [selectedReq, setSelectedReq] = useState(null);
@@ -87,7 +88,7 @@ const PasswordResets = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {new Date(getValue()).toLocaleDateString()}
+            {formatEthiopianDate(getValue())}
           </span>
         ),
       },
@@ -169,7 +170,7 @@ const PasswordResets = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="Processed Date" />,
         cell: ({ row }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {new Date(row.original.updatedAt || row.original.createdAt).toLocaleDateString()}
+            {formatEthiopianDate(row.original.updatedAt || row.original.createdAt)}
           </span>
         ),
       },

@@ -26,8 +26,11 @@
 // export default Classes;
 
 
+'use client';
+
 import React from 'react';
 import { BookOpen, GraduationCap, Clock, Sparkles } from 'lucide-react';
+import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 
 const classList = [
   { grade: 'Grade 7', age: '12-13', description: 'የመጀመሪያ ደረጃ የመጽሐፍ ቅዱስ ትምህርት' },
@@ -44,69 +47,75 @@ const Classes = () => {
       <div className="max-w-5xl mx-auto space-y-10">
         
         {/* Hero Section */}
-        <section className="bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-slate-200/80 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50/80 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
-          <div className="absolute bottom-0 left-0 w-60 h-60 bg-amber-50/60 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12" />
+        <FadeIn direction="down" duration={0.5}>
+          <section className="bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-slate-200/80 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50/80 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16" />
+            <div className="absolute bottom-0 left-0 w-60 h-60 bg-amber-50/60 rounded-full blur-2xl pointer-events-none -ml-12 -mb-12" />
 
-          <div className="relative z-10 max-w-2xl space-y-3">
-            <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-900 border border-amber-400/30 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              የትምህርት መርሃ-ግብር
-            </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900">
-              ክፍሎቻችን
-            </h1>
-            <p className="text-slate-600 text-base sm:text-lg font-normal leading-relaxed">
-              በየደረጃው ያሉ ተማሪዎች የመጽሐፍ ቅዱስ ዕውቀትና መንፈሳዊ ብስለት እንዲያገኙ በጥንቃቄ የተዘጋጁ የትምህርት ክፍሎች።
-            </p>
-          </div>
-        </section>
+            <div className="relative z-10 max-w-2xl space-y-3">
+              <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-900 border border-amber-400/30 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                የትምህርት መርሃ-ግብር
+              </span>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900">
+                ክፍሎቻችን
+              </h1>
+              <p className="text-slate-600 text-base sm:text-lg font-normal leading-relaxed">
+                በየደረጃው ያሉ ተማሪዎች የመጽሐፍ ቅዱስ ዕውቀትና መንፈሳዊ ብስለት እንዲያገኙ በጥንቃቄ የተዘጋጁ የትምህርት ክፍሎች።
+              </p>
+            </div>
+          </section>
+        </FadeIn>
 
         {/* Classes Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <StaggerContainer staggerChildren={0.1} className="grid md:grid-cols-2 gap-6">
           {classList.map((c) => (
-            <div 
-              key={c.grade} 
-              className="bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-5">
-                  <div className="w-12 h-12 bg-blue-50 text-[#1657b8] rounded-2xl flex items-center justify-center group-hover:bg-[#1657b8] group-hover:text-white transition-colors duration-300 border border-blue-100 shadow-sm">
-                    <GraduationCap className="w-6 h-6" />
+            <StaggerItem key={c.grade}>
+              <MotionCard 
+                hoverY={-6}
+                className="h-full bg-white p-7 rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 bg-blue-50 text-[#1657b8] rounded-2xl flex items-center justify-center group-hover:bg-[#1657b8] group-hover:text-white transition-colors duration-300 border border-blue-100 shadow-sm">
+                      <GraduationCap className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-bold px-3.5 py-1 bg-amber-400/15 text-amber-900 rounded-full border border-amber-400/30">
+                      ዕድሜ {c.age}
+                    </span>
                   </div>
-                  <span className="text-xs font-bold px-3.5 py-1 bg-amber-400/15 text-amber-900 rounded-full border border-amber-400/30">
-                    ዕድሜ {c.age}
-                  </span>
+
+                  <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-[#1657b8] transition-colors">
+                    {c.grade}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {c.description}
+                  </p>
                 </div>
 
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2 group-hover:text-[#1657b8] transition-colors">
-                  {c.grade}
-                </h3>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  {c.description}
-                </p>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#1657b8]">
-                <span className="flex items-center gap-1.5 text-slate-500">
-                  <Clock className="w-3.5 h-3.5" />
-                  የጥናት ክፍለ ጊዜ
-                </span>
-                <span>በየሳምንቱ እሑድ →</span>
-              </div>
-            </div>
+                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#1657b8]">
+                  <span className="flex items-center gap-1.5 text-slate-500">
+                    <Clock className="w-3.5 h-3.5" />
+                    የጥናት ክፍለ ጊዜ
+                  </span>
+                  <span>በየሳምንቱ እሑድ →</span>
+                </div>
+              </MotionCard>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
 
         {/* Additional Info Box */}
-        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 text-center space-y-2 shadow-sm">
-          <h3 className="text-lg font-black text-slate-900">
-            የትምህርት አሰጣጥ ስርዓታችን
-          </h3>
-          <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            ትምህርቱ በንድፈ-ሀሳብ ብቻ ሳይወሰን በተግባራዊ ክርስቲያናዊ ህይወት፣ በመዝሙር እና በነፃ ውይይት የተደገፈ ነው።
-          </p>
-        </section>
+        <FadeIn delay={0.25}>
+          <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 text-center space-y-2 shadow-sm">
+            <h3 className="text-lg font-black text-slate-900">
+              የትምህርት አሰጣጥ ስርዓታችን
+            </h3>
+            <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              ትምህርቱ በንድፈ-ሀሳብ ብቻ ሳይወሰን በተግባራዊ ክርስቲያናዊ ህይወት፣ በመዝሙር እና በነፃ ውይይት የተደገፈ ነው።
+            </p>
+          </section>
+        </FadeIn>
 
       </div>
     </div>

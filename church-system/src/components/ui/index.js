@@ -9,3 +9,4 @@ export * from './ThemeProvider';
 export * from './ThemeToggle';
 export * from './DataTable';
 export * from './Form';
+export * from './EthiopianDatePicker';

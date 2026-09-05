@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Users,
   CheckCircle2,
@@ -23,6 +24,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Badge } from '../../components/ui/Badge';
+import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 
 const quickAccessLinks = [
   { path: '/admin/users', label: 'ተጠቃሚዎች (Users)', icon: Users, count: '142' },
@@ -106,44 +108,52 @@ const AdminOverviewContent = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-8">
       {/* Page Header */}
-      <PageHeader
-        title="የአስተዳዳሪ ማዕከል (Admin Overview)"
-        subtitle="የተክለሳዊሮስ ሰንበት ትምህርት ቤት አጠቃላይ የሲስተም ሁኔታና ፈጣን መቆጣጠሪያ"
-        icon={TrendingUp}
-        badge={<Badge variant="gold" size="sm"><Sparkles className="w-3 h-3" /> ንቁ ሲስተም</Badge>}
-      />
+      <FadeIn direction="down" duration={0.35}>
+        <PageHeader
+          title="የአስተዳዳሪ ማዕከል (Admin Overview)"
+          subtitle="የተክለሳዊሮስ ሰንበት ትምህርት ቤት አጠቃላይ የሲስተም ሁኔታና ፈጣን መቆጣጠሪያ"
+          icon={TrendingUp}
+          badge={<Badge variant="gold" size="sm"><Sparkles className="w-3 h-3" /> ንቁ ሲስተም</Badge>}
+        />
+      </FadeIn>
 
-      {/* Top Stat Cards Section using Central Card & Badge Components */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Top Stat Cards Section with Staggered Entrance */}
+      <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <Card
-              key={idx}
-              variant={stat.variant === 'gold' ? 'gold' : 'elevated'}
-              padding="sm"
-              className="relative group transition-all duration-200"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 dark:bg-blue-500/20 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <Badge variant={stat.variant === 'gold' ? 'pending' : 'neutral'} size="sm">
-                  {stat.badge}
-                </Badge>
-              </div>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {stat.value}
-              </p>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider truncate">
-                {stat.label}
-              </p>
-            </Card>
+            <StaggerItem key={idx}>
+              <MotionCard
+                hoverY={-5}
+                className="h-full"
+              >
+                <Card
+                  variant={stat.variant === 'gold' ? 'gold' : 'elevated'}
+                  padding="sm"
+                  className="relative group transition-all duration-200 h-full"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 dark:bg-blue-500/20 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <Badge variant={stat.variant === 'gold' ? 'pending' : 'neutral'} size="sm">
+                      {stat.badge}
+                    </Badge>
+                  </div>
+                  <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider truncate">
+                    {stat.label}
+                  </p>
+                </Card>
+              </MotionCard>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerContainer>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Quick Access Grid */}
@@ -155,35 +165,38 @@ const AdminOverviewContent = () => {
             <span className="text-xs text-slate-400">12 ሞጁሎች</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {quickAccessLinks.map((item) => {
               const Icon = item.icon;
               return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/50 dark:hover:border-blue-500/50 transition-all duration-200 text-left w-full focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:bg-[var(--brand-primary)] group-hover:text-white dark:group-hover:bg-blue-600 transition-colors duration-200">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-[var(--brand-primary)] dark:group-hover:text-blue-400 transition-colors truncate">
-                      {item.label}
-                    </span>
-                    <span className="block text-xs text-slate-400 mt-0.5">
-                      ክፈትና አስተዳድር
-                    </span>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[var(--brand-primary)] dark:group-hover:text-blue-400 transform group-hover:translate-x-1 transition-all shrink-0" />
-                </button>
+                <StaggerItem key={item.path}>
+                  <motion.button
+                    whileHover={{ scale: 1.015, x: 2 }}
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => navigate(item.path)}
+                    className="group flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/50 dark:hover:border-blue-500/50 transition-all duration-200 text-left w-full focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 cursor-pointer"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:bg-[var(--brand-primary)] group-hover:text-white dark:group-hover:bg-blue-600 transition-colors duration-200">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-[var(--brand-primary)] dark:group-hover:text-blue-400 transition-colors truncate">
+                        {item.label}
+                      </span>
+                      <span className="block text-xs text-slate-400 mt-0.5">
+                        ክፈትና አስተዳድር
+                      </span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[var(--brand-primary)] dark:group-hover:text-blue-400 transform group-hover:translate-x-1 transition-all shrink-0" />
+                  </motion.button>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         </div>
 
         {/* Recent Activity Timeline */}
-        <div className="xl:col-span-1 space-y-4">
+        <FadeIn delay={0.2} className="xl:col-span-1 space-y-4">
           <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
             የቅርብ ጊዜ እንቅስቃሴዎች (Activities)
           </h3>
@@ -217,7 +230,7 @@ const AdminOverviewContent = () => {
               </div>
             </div>
           </Card>
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

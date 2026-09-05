@@ -24,6 +24,7 @@ import {
 import { useAttendanceReport } from '../../hooks/queries/useAttendance';
 import { useCourses } from '../../hooks/queries/useCourses';
 import { useTeachers } from '../../hooks/queries/useTeachers';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const GRADE_OPTIONS = [
   { value: 'Grade 7', label: '7ኛ ክፍል (Grade 7)' },
@@ -59,7 +60,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
     'ክፍል (Grade)',
     'ኮርስ (Course)',
     'መምህር (Teacher)',
-    'ቀን (Date)',
+    'ቀን (Date - Ethiopian)',
     'የመግቢያ ሰዓት (Check-in Time)',
     'ሁኔታ (Status)',
     'የትምህርት ዘመን (Academic Year)',
@@ -73,7 +74,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
         `"${r.grade || ''}"`,
         `"${r.courseName || ''}"`,
         `"${r.teacherName || ''}"`,
-        `"${new Date(r.date).toLocaleDateString()}"`,
+        `"${formatEthiopianDate(r.date)}"`,
         `"${r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}"`,
         `"${r.status || ''}"`,
         `"${r.academicYear || ''}"`,
@@ -133,7 +134,7 @@ const AttendanceReports = () => {
       {
         accessorKey: 'date',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
-        cell: ({ getValue }) => <span>{new Date(getValue()).toLocaleDateString()}</span>,
+        cell: ({ getValue }) => <span className="font-medium">{formatEthiopianDate(getValue())}</span>,
       },
       {
         accessorKey: 'checkInTime',
