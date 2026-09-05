@@ -131,7 +131,7 @@ const ChangePassword = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 active:opacity-90 text-white py-3 rounded-xl font-semibold shadow-md shadow-indigo-500/20 transition-colors disabled:opacity-50 disabled:pointer-events-none mt-2 cursor-pointer"
+          className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:pointer-events-none mt-2 cursor-pointer"
         >
           {isSubmitting ? 'በመቀየር ላይ…' : 'ፓስዎርድ ቀይር'}
         </button>

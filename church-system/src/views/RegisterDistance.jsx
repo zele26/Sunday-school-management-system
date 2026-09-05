@@ -151,7 +151,7 @@ const RegisterDistanceContent = () => {
 
           <button
             onClick={() => setStep('form')}
-            className="mt-8 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:opacity-90 text-white py-4 rounded-2xl font-bold text-lg shadow-md shadow-blue-500/30 transition-colors duration-150 cursor-pointer"
+            className="mt-8 w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-4 rounded-2xl font-bold text-lg shadow-sm hover:shadow-md transition-all cursor-pointer"
           >
             ወደ ምዝገባ ቀጥል (Proceed to Registration)
           </button>
@@ -219,13 +219,13 @@ const RegisterDistanceContent = () => {
 
           <Link
             href="/continue-registration"
-            className="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/30 transition-colors duration-150 text-center"
+            className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-center"
           >
             ደረሰኝ ለመላክ ይቀጥሉ (Continue Registration)
           </Link>
 
           <p className="text-xs text-slate-400 mt-4">
-            ቀድሞውኑ ከፍለዋል? <Link href="/check-status" className="text-blue-600 underline">ሁኔታዎን ያረጋግጡ</Link>
+            ቀድሞውኑ ከፍለዋል? <Link href="/check-status" className="text-[#1657b8] font-bold underline">ሁኔታዎን ያረጋግጡ</Link>
           </p>
         </div>
       </div>
@@ -482,7 +482,7 @@ const RegisterDistanceContent = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full text-white py-4 rounded-2xl font-bold text-lg shadow-md transition-colors duration-150 flex items-center justify-center gap-3 cursor-pointer active:opacity-90 ${isSubmitting ? 'bg-blue-400 cursor-not-allowed shadow-none' : 'bg-blue-600 hover:bg-blue-500'
+              className={`w-full text-white py-4 rounded-2xl font-bold text-lg shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-3 cursor-pointer active:opacity-90 ${isSubmitting ? 'bg-blue-400 cursor-not-allowed shadow-none' : 'bg-[#1657b8] hover:bg-[#124796]'
                 }`}
             >
               {isSubmitting ? (

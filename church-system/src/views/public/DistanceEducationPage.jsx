@@ -75,43 +75,40 @@ const DistanceEducationPage = () => {
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-800 selection:bg-amber-400 selection:text-slate-950">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 text-white overflow-hidden py-20 lg:py-28 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:20px_20px]"></div>
-
-        {/* Glow Spheres */}
-        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-10 -right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <section className="relative bg-white border-b border-slate-200/80 overflow-hidden py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/80 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-50/60 rounded-full blur-2xl pointer-events-none -ml-24 -mb-24"></div>
 
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 text-xs font-bold uppercase tracking-wider">
               <span>🌐 ኦፊሴላዊ የርቀት ትምህርት መድረክ</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-slate-900">
               የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500">
+              <span className="text-[#1657b8]">
                 የርቀት ሃይማኖታዊ ትምህርት
               </span>
             </h1>
 
-            <p className="text-blue-100/90 text-base sm:text-lg max-w-2xl leading-relaxed">
+            <p className="text-slate-600 text-base sm:text-lg max-w-2xl leading-relaxed">
               ባሉበት ሆነው የመጽሐፍ ቅዱስን፣ የነገረ መለኮትን፣ የቤተክርስቲያን ታሪክን እና ሥርዓትን በሊቃውንት መምህራን የተዘጋጁ የበለጸጉ የትምህርት ሞጁሎችን በዘመናዊ የኦንላይን ፖርታል ይማሩ።
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
               <Link
                 href="/register-distance"
-                className="px-8 py-4 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-md shadow-amber-500/25 transition-colors duration-150 text-base flex items-center gap-2.5"
+                className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2.5"
               >
                 <span>አሁኑኑ ይመዝገቡ (Enroll Now)</span>
                 <span className="text-lg">➔</span>
               </Link>
               <Link
                 href="/login"
-                className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-2xl backdrop-blur-md transition-all text-base flex items-center gap-2"
+                className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2"
               >
                 <span>ወደ መማሪያ ፖርታል (Student Portal)</span>
                 <span>🔐</span>
@@ -119,36 +116,36 @@ const DistanceEducationPage = () => {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-white/10 text-center lg:text-left">
+            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 text-center lg:text-left">
               <div>
-                <p className="text-2xl font-black text-amber-400">4 ባቾች</p>
-                <p className="text-xs text-blue-200">የተሟላ ሥርዓተ ትምህርት</p>
+                <p className="text-2xl font-black text-[#1657b8]">4 ባቾች</p>
+                <p className="text-xs text-slate-500">የተሟላ ሥርዓተ ትምህርት</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-amber-400">100%</p>
-                <p className="text-xs text-blue-200">በራስ ምቹ ሰዓት የሚጠና</p>
+                <p className="text-2xl font-black text-amber-600">100%</p>
+                <p className="text-xs text-slate-500">በራስ ምቹ ሰዓት የሚጠና</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-amber-400">ዲጂታል</p>
-                <p className="text-xs text-blue-200">ኦፊሴላዊ የምስክር ወረቀት</p>
+                <p className="text-2xl font-black text-[#1657b8]">ዲጂታል</p>
+                <p className="text-xs text-slate-500">ኦፊሴላዊ የምስክር ወረቀት</p>
               </div>
             </div>
           </div>
 
           {/* Right Visual Card */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="bg-gradient-to-b from-white/15 to-white/5 backdrop-blur-2xl p-8 rounded-3xl border border-white/20 shadow-2xl space-y-6 w-full max-w-md relative">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-6 w-full max-w-md relative">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center text-2xl font-black shadow-md">
+                  <div className="w-12 h-12 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center text-2xl font-black shadow-sm">
                     ⛪
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-white text-base">ደብረ ሳዊሮስ ሰንበት ት/ቤት</h3>
-                    <p className="text-xs text-blue-200">Distance Education Center</p>
+                    <h3 className="font-extrabold text-slate-900 text-base">ደብረ ሳዊሮስ ሰንበት ት/ቤት</h3>
+                    <p className="text-xs text-slate-500 font-medium">Distance Education Center</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/15 text-amber-900 border border-amber-400/30">
                   ክፍት ነው
                 </span>
               </div>
@@ -161,11 +158,11 @@ const DistanceEducationPage = () => {
                   { icon: '📝', title: 'የኦንላይን ፈተናዎችና ምዘናዎች', desc: 'ቀጥታ ውጤትና የማረጋገጫ ግብረ-መልስ' },
                   { icon: '👨‍🏫', title: 'የመምህራን ቀጥታ ክትትል', desc: 'ጥያቄና መልስ እንዲሁም መንፈሳዊ ምክር' },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
-                    <span className="text-2xl p-1 bg-white/10 rounded-xl">{item.icon}</span>
+                  <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/50 transition-colors border border-slate-100">
+                    <span className="text-2xl p-1 bg-white rounded-xl shadow-xs">{item.icon}</span>
                     <div>
-                      <h4 className="font-bold text-sm text-white">{item.title}</h4>
-                      <p className="text-xs text-blue-200/80">{item.desc}</p>
+                      <h4 className="font-bold text-sm text-slate-900">{item.title}</h4>
+                      <p className="text-xs text-slate-500">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -174,7 +171,7 @@ const DistanceEducationPage = () => {
               <div className="pt-2">
                 <Link
                   href="/register-distance"
-                  className="w-full py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl transition-colors text-center text-sm shadow-md block"
+                  className="w-full py-3.5 bg-[#1657b8] hover:bg-[#124796] text-white font-bold rounded-2xl transition-colors text-center text-sm shadow-sm block"
                 >
                   የተማሪነት ምዝገባ ጀምር ➔
                 </Link>
@@ -187,7 +184,7 @@ const DistanceEducationPage = () => {
       {/* How It Works Section */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="px-3.5 py-1 bg-blue-100 text-blue-700 font-bold rounded-full text-xs uppercase tracking-wider">
+          <span className="px-3.5 py-1 bg-blue-50 text-[#1657b8] border border-blue-100 font-bold rounded-full text-xs uppercase tracking-wider">
             የትምህርት ጉዞዎ
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -205,35 +202,35 @@ const DistanceEducationPage = () => {
               title: 'በኦንላይን ይመዝገቡ',
               desc: 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር (TKD ID) ያግኙ።',
               icon: '✍️',
-              color: 'from-blue-600 to-indigo-600',
+              color: 'bg-blue-50 text-[#1657b8] border-blue-100',
             },
             {
               step: '02',
               title: 'ሞጁሎችን ያግኙ',
               desc: 'ወደ ተማሪ ፖርታል በመግባት የድምፅ ትምህርቶችን፣ ቪዲዮዎችን እና የንባብ ማቴሪያሎችን በምቹ ሰዓት ያንብቡ።',
               icon: '📚',
-              color: 'from-indigo-600 to-purple-600',
+              color: 'bg-amber-50 text-amber-700 border-amber-100',
             },
             {
               step: '03',
               title: 'ፈተናዎችን ይውሰዱ',
               desc: 'በየሳምንቱና በየምዕራፉ የሚሰጡ ፈተናዎችንና የቤት ሥራዎችን በፖርታሉ በቀላሉ ሰርተው ያስገቡ።',
               icon: '📝',
-              color: 'from-purple-600 to-pink-600',
+              color: 'bg-blue-50 text-[#1657b8] border-blue-100',
             },
             {
               step: '04',
               title: 'ይመረቁና ይሰርተፊኬት ይውሰዱ',
               desc: 'የባችዎን ትምህርት ሲያጠናቅቁ በደብሩ የታተመ ኦፊሴላዊ የዲፕሎማ የምስክር ወረቀት ይቀበሉ።',
               icon: '🎓',
-              color: 'from-amber-500 to-yellow-500',
+              color: 'bg-amber-50 text-amber-700 border-amber-100',
             },
           ].map((item, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/40 transition-all space-y-4 relative overflow-hidden group"
+              className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm transition-all space-y-4 relative overflow-hidden group hover:shadow-md hover:border-blue-200"
             >
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-r ${item.color} text-white flex items-center justify-center text-2xl shadow-lg`}>
+              <div className={`w-12 h-12 rounded-2xl ${item.color} border flex items-center justify-center text-2xl shadow-xs`}>
                 {item.icon}
               </div>
               <span className="text-4xl font-black text-slate-100 absolute top-4 right-4 pointer-events-none group-hover:text-amber-100 transition-colors">
@@ -247,29 +244,29 @@ const DistanceEducationPage = () => {
       </section>
 
       {/* Curriculum & Batches Section */}
-      <section className="py-20 bg-slate-900 text-white relative overflow-hidden">
+      <section className="py-20 bg-white border-y border-slate-200/80 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="px-3.5 py-1 bg-amber-400/20 text-amber-300 font-bold rounded-full text-xs uppercase tracking-wider border border-amber-400/30">
+            <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
               ሥርዓተ ትምህርት (Curriculum)
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
               የ4 ዓመታት የጥናት መርሃ ግብር
             </h2>
-            <p className="text-slate-400 text-sm sm:text-base">
+            <p className="text-slate-500 text-sm sm:text-base">
               ከመሠረታዊ እስከ ጥልቅ የነገረ መለኮትና የቤተክርስቲያን ቀኖና ጥናቶች የተዋቀረ።
             </p>
           </div>
 
           {/* Batch Selector Pills */}
-          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-800/80 backdrop-blur-md rounded-2xl max-w-3xl mx-auto border border-slate-700">
+          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-100 rounded-2xl max-w-3xl mx-auto border border-slate-200">
             {batchesData.map((b, idx) => (
               <button
                 key={idx}
                 onClick={() => setSelectedBatch(idx)}
                 className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs font-bold transition-all text-center ${selectedBatch === idx
-                    ? 'bg-amber-400 text-slate-950 shadow-lg font-black'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                    ? 'bg-[#1657b8] text-white shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white'
                   }`}
               >
                 {b.batch}
@@ -278,25 +275,25 @@ const DistanceEducationPage = () => {
           </div>
 
           {/* Active Batch Showcase Card */}
-          <div className="bg-slate-800/90 border border-slate-700 rounded-3xl p-8 shadow-2xl max-w-4xl mx-auto space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700 pb-6">
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-sm max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6">
               <div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase">
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/15 text-amber-900 border border-amber-400/30 uppercase">
                   {batchesData[selectedBatch].badge}
                 </span>
-                <h3 className="text-2xl font-extrabold text-white mt-2">
+                <h3 className="text-2xl font-extrabold text-slate-900 mt-2">
                   {batchesData[selectedBatch].title}
                 </h3>
               </div>
               <Link
                 href="/register-distance"
-                className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs shadow-md transition-colors"
+                className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs shadow-sm transition-colors"
               >
                 ይመዝገቡ ➔
               </Link>
             </div>
 
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed">
               {batchesData[selectedBatch].description}
             </p>
 
@@ -305,16 +302,16 @@ const DistanceEducationPage = () => {
               {batchesData[selectedBatch].courses.map((course, cIdx) => (
                 <div
                   key={cIdx}
-                  className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 flex items-center justify-between hover:border-amber-400/50 transition-colors"
+                  className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:border-blue-300 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl p-2 bg-slate-800 rounded-xl">{course.icon}</span>
+                    <span className="text-2xl p-2 bg-white rounded-xl shadow-xs">{course.icon}</span>
                     <div>
-                      <h4 className="font-bold text-sm text-white">{course.name}</h4>
-                      <p className="text-xs text-slate-400">{course.hours}</p>
+                      <h4 className="font-bold text-sm text-slate-900">{course.name}</h4>
+                      <p className="text-xs text-slate-500">{course.hours}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-amber-400 font-semibold">የተሟላ ሞጁል</span>
+                  <span className="text-xs text-[#1657b8] font-bold">የተሟላ ሞጁል</span>
                 </div>
               ))}
             </div>
@@ -325,7 +322,7 @@ const DistanceEducationPage = () => {
       {/* FAQ Section */}
       <section className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
-          <span className="px-3.5 py-1 bg-amber-100 text-amber-800 font-bold rounded-full text-xs uppercase tracking-wider">
+          <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
             ተደጋጋሚ ጥያቄዎች (FAQs)
           </span>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -359,24 +356,24 @@ const DistanceEducationPage = () => {
       </section>
 
       {/* Final CTA Banner */}
-      <section className="py-16 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-950 text-white text-center px-4 sm:px-6">
+      <section className="py-16 bg-white border-t border-slate-200/80 text-center px-4 sm:px-6">
         <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
             የመንፈሳዊ እውቀት ጉዞዎን ዛሬውኑ ይጀምሩ!
           </h2>
-          <p className="text-blue-100/90 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
             በዓለም ዙሪያ የሚገኙ በሺዎች የሚቆጠሩ ኦርቶዶክሳውያን ተማሪዎችን ይቀላቀሉ።
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-2">
             <Link
               href="/register-distance"
-              className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-md shadow-amber-400/20 transition-colors duration-150 text-base"
+              className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
             >
               አሁኑኑ ይመዝገቡ (Register for Distance) ➔
             </Link>
             <Link
               href="/login"
-              className="px-8 py-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-2xl transition-colors text-base"
+              className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
             >
               የተማሪ መግቢያ (Student Login)
             </Link>

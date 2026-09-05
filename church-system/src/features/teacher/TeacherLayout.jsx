@@ -45,9 +45,9 @@ const TeacherLayout = ({ children, onLogout }) => {
   return (
     <div className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] font-sans flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-lg border-b border-amber-400/20 sticky top-0 z-20">
+      <header className="bg-[#1657b8] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-sm border-b border-amber-400/30 sticky top-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-md flex-shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-sm flex-shrink-0">
             <img src={ChurchLogo?.src || ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
           </div>
           <div>
@@ -73,7 +73,7 @@ const TeacherLayout = ({ children, onLogout }) => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 flex-1 w-full">
         {/* Banner Card */}
-        <div className="bg-gradient-to-r from-[#0f4c9c] via-blue-700 to-indigo-900 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-[#1657b8] via-[#124796] to-[#0d3269] rounded-3xl p-6 md:p-8 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="relative z-10 space-y-2">
             <Badge variant="gold" size="sm">
               <Sparkles className="w-3 h-3" />

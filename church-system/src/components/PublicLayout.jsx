@@ -83,21 +83,19 @@ const PublicLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--brand-blue-dark)] text-white selection:bg-[var(--brand-yellow)] selection:text-[var(--brand-blue-dark)] font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 selection:bg-[var(--brand-gold)] selection:text-slate-950 font-sans">
       {/* 🌟 1. SLIDING BIBLE VERSE & PROMOTION TICKER */}
       <div
-        className="relative z-50 bg-[var(--brand-blue)] border-b border-white/10 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
+        className="relative z-50 bg-blue-50/90 border-b border-blue-100 text-xs sm:text-sm transition-all duration-500 overflow-hidden"
         onMouseEnter={() => setIsTickerPaused(true)}
         onMouseLeave={() => setIsTickerPaused(false)}
       >
-        <div className={`absolute inset-0 bg-gradient-to-r ${tickerItems[currentTickerIndex].bg} transition-all duration-700 pointer-events-none`} />
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-3 flex-1 overflow-hidden">
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 shadow-sm transition-colors duration-500 ${tickerItems[currentTickerIndex].badgeColor}`}>
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 bg-blue-100 text-[#1657b8] border-blue-200">
               {tickerItems[currentTickerIndex].type}
             </span>
-            <p className="truncate sm:whitespace-normal text-slate-200 font-medium tracking-wide">
+            <p className="truncate sm:whitespace-normal text-slate-700 font-medium tracking-wide">
               {tickerItems[currentTickerIndex].text}
             </p>
           </div>
@@ -108,9 +106,8 @@ const PublicLayout = ({ children }) => {
               <button
                 key={idx}
                 onClick={() => setCurrentTickerIndex(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  currentTickerIndex === idx ? 'w-5 bg-emerald-400' : 'w-1.5 bg-slate-600 hover:bg-slate-400'
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${currentTickerIndex === idx ? 'w-5 bg-[#1657b8]' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
@@ -119,7 +116,7 @@ const PublicLayout = ({ children }) => {
       </div>
 
       {/* 🌟 2. HEADER / NAVIGATION BAR */}
-      <header className="sticky top-0 z-40 bg-[var(--brand-blue)]/95 backdrop-blur-xl border-b border-white/10 text-white shadow-2xl shadow-blue-950/40 transition-all">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200 text-slate-800 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
             {/* Logo & Brand Name */}
@@ -129,22 +126,21 @@ const PublicLayout = ({ children }) => {
             >
               {/* Logo Container with Enhanced Styling */}
               <div className="relative flex items-center justify-center flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-yellow)]/40 via-blue-400/20 to-[var(--brand-yellow)]/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 scale-105"></div>
-                <div className="relative p-1 sm:p-2 rounded-2xl bg-white/5 border-2 border-white/20 backdrop-blur-sm group-hover:border-[var(--brand-yellow)]/60 group-hover:bg-white/10 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:shadow-[var(--brand-yellow)]/20">
+                <div className="relative p-1 sm:p-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm group-hover:border-[#1657b8] transition-all duration-300">
                   <img
                     src={ChurchLogo?.src || ChurchLogo}
                     alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
-                    className="h-12 sm:h-16 lg:h-20 w-auto drop-shadow-lg group-hover:drop-shadow-2xl group-hover:scale-105 transition-all duration-300"
+                    className="h-12 sm:h-16 lg:h-18 w-auto object-contain group-hover:scale-105 transition-all duration-300"
                   />
                 </div>
               </div>
 
               {/* Church Name and Subtitle */}
               <div className="flex flex-col justify-center min-w-0">
-                <span className="font-extrabold text-sm sm:text-lg lg:text-2xl tracking-tight text-white leading-tight group-hover:text-[var(--brand-yellow)] transition-colors duration-300 truncate">
+                <span className="font-extrabold text-base sm:text-lg lg:text-xl tracking-tight text-[#1657b8] leading-tight group-hover:text-[#124796] transition-colors duration-300 truncate">
                   ተክለሳዊሮስ
                 </span>
-                <span className="text-[9px] sm:text-[10px] lg:text-xs text-[var(--brand-yellow)] font-bold tracking-wider uppercase mt-0 sm:mt-0.5 group-hover:text-white transition-colors duration-300 truncate">
+                <span className="text-[10px] sm:text-[11px] lg:text-xs text-amber-600 font-bold tracking-wider uppercase mt-0.5 truncate">
                   ሰንበት ትምህርት ቤት
                 </span>
               </div>
@@ -156,16 +152,12 @@ const PublicLayout = ({ children }) => {
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`px-4 py-2.5 rounded-xl transition-all duration-200 relative group ${
-                    pathname === link.to
-                      ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-400 font-bold border border-emerald-500/20 shadow-inner'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }`}
+                  className={`px-3.5 py-2 rounded-xl transition-all duration-200 relative ${pathname === link.to
+                    ? 'bg-blue-50 text-[#1657b8] font-bold border border-blue-200'
+                    : 'text-slate-600 hover:text-[#1657b8] hover:bg-slate-100'
+                    }`}
                 >
                   <span>{link.label}</span>
-                  {pathname === link.to && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-emerald-400 rounded-full" />
-                  )}
                 </Link>
               ))}
 
@@ -174,21 +166,19 @@ const PublicLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
-                  className={`flex items-center space-x-2 space-x-reverse px-4 py-2.5 rounded-xl transition-all duration-200 focus:outline-none ${
-                    registrationLinks.some((item) => item.to === pathname)
-                      ? 'bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/30 shadow-inner'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }`}
+                  className={`flex items-center space-x-2 space-x-reverse px-3.5 py-2 rounded-xl transition-all duration-200 focus:outline-none ${registrationLinks.some((item) => item.to === pathname)
+                    ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200'
+                    : 'text-slate-600 hover:text-[#1657b8] hover:bg-slate-100'
+                    }`}
                 >
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
                   <span>ምዝገባና አገልግሎት</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isRegDropdownOpen ? 'rotate-180 text-emerald-400' : 'text-slate-400'
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-200 ${isRegDropdownOpen ? 'rotate-180 text-[#1657b8]' : 'text-slate-400'
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -199,12 +189,12 @@ const PublicLayout = ({ children }) => {
 
                 {/* Dropdown Menu Popup */}
                 {isRegDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl border border-slate-700/80 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="px-4 py-2 border-b border-slate-800/80 flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
+                  <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="px-4 py-2 border-b border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#1657b8] uppercase tracking-wider">
                         የተማሪዎች አገልግሎት
                       </span>
-                      <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">
+                      <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">
                         2017 ዓ.ም
                       </span>
                     </div>
@@ -214,17 +204,16 @@ const PublicLayout = ({ children }) => {
                         <Link
                           key={item.to}
                           href={item.to}
-                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${
-                            pathname === item.to
-                              ? 'bg-gradient-to-r from-emerald-500/20 to-transparent text-emerald-300 font-semibold border-l-2 border-emerald-400 shadow-sm'
-                              : 'text-slate-300 hover:bg-slate-800/80 hover:text-white hover:translate-x-1'
-                          }`}
+                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group ${pathname === item.to
+                            ? 'bg-blue-50 text-[#1657b8] font-bold border-l-3 border-[#1657b8]'
+                            : 'text-slate-700 hover:bg-slate-50 hover:text-[#1657b8]'
+                            }`}
                         >
-                          <span className="text-lg p-1.5 rounded-lg bg-slate-800/60 group-hover:scale-110 transition-transform">
+                          <span className="text-lg p-1.5 rounded-lg bg-slate-100 group-hover:scale-105 transition-transform">
                             {item.icon}
                           </span>
                           <span className="flex-1">{item.label}</span>
-                          <span className="text-slate-600 group-hover:text-emerald-400 transition-colors">→</span>
+                          <span className="text-slate-400 group-hover:text-[#1657b8] transition-colors">→</span>
                         </Link>
                       ))}
                     </div>
@@ -235,28 +224,25 @@ const PublicLayout = ({ children }) => {
 
             {/* Desktop Actions (ThemeToggle + Login) */}
             <div className="hidden lg:flex items-center space-x-3 space-x-reverse">
-              <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20" />
+              <ThemeToggle className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200" />
               <Link
                 href="/login"
-                className="relative group overflow-hidden rounded-xl p-px font-semibold text-sm focus:outline-none"
+                className="px-5 py-2.5 rounded-xl bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold text-sm shadow-sm flex items-center space-x-2 space-x-reverse transition-colors"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-[var(--brand-blue)] via-blue-600 to-[var(--brand-yellow)] group-hover:opacity-90 transition-opacity duration-300 animate-pulse" />
-                <div className="relative px-5 py-2.5 rounded-[11px] bg-[var(--brand-blue-dark)] group-hover:bg-opacity-0 transition-all duration-300 flex items-center space-x-2 space-x-reverse text-white">
-                  <svg className="w-4 h-4 text-[var(--brand-yellow)] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                  <span>ይግቡ</span>
-                </div>
+                <svg className="w-4 h-4 text-[var(--brand-gold)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                <span>ይግቡ</span>
               </Link>
             </div>
 
             {/* Mobile Menu Actions */}
             <div className="lg:hidden flex items-center gap-2">
-              <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20" />
+              <ThemeToggle className="bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200" />
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2.5 rounded-xl text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 focus:outline-none transition-all duration-200"
+                className="p-2.5 rounded-xl text-slate-700 hover:text-[#1657b8] bg-slate-100 hover:bg-slate-200 border border-slate-200 focus:outline-none transition-all duration-200"
                 aria-label="Toggle Navigation"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,21 +259,20 @@ const PublicLayout = ({ children }) => {
 
         {/* Mobile Navigation Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-slate-900/95 backdrop-blur-2xl border-b border-slate-800 px-4 pt-3 pb-6 space-y-5 animate-in slide-in-from-top duration-300">
+          <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 space-y-5 animate-in slide-in-from-top duration-300">
             {/* Primary Nav Links */}
-            <div className="space-y-1.5 border-b border-slate-800/80 pb-4">
-              <span className="px-3 text-[11px] font-bold text-emerald-400/80 uppercase tracking-wider">
+            <div className="space-y-1.5 border-b border-slate-100 pb-4">
+              <span className="px-3 text-[11px] font-bold text-[#1657b8] uppercase tracking-wider">
                 ዋና ገጾች
               </span>
               {primaryNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    pathname === link.to
-                      ? 'bg-gradient-to-r from-emerald-500/20 to-transparent text-emerald-400 font-bold border-l-4 border-emerald-400'
-                      : 'text-slate-200 hover:bg-slate-800/60 hover:text-white'
-                  }`}
+                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all ${pathname === link.to
+                    ? 'bg-blue-50 text-[#1657b8] font-bold border-l-4 border-[#1657b8]'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-[#1657b8]'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -295,21 +280,20 @@ const PublicLayout = ({ children }) => {
             </div>
 
             {/* Registration Services Links */}
-            <div className="space-y-1.5 border-b border-slate-800/80 pb-4">
-              <span className="px-3 text-[11px] font-bold text-amber-400/80 uppercase tracking-wider">
+            <div className="space-y-1.5 border-b border-slate-100 pb-4">
+              <span className="px-3 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
                 ምዝገባና አገልግሎቶች
               </span>
               {registrationLinks.map((item) => (
                 <Link
                   key={item.to}
                   href={item.to}
-                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    pathname === item.to
-                      ? 'bg-gradient-to-r from-amber-500/20 to-transparent text-amber-300 font-bold border-l-4 border-amber-400'
-                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                  }`}
+                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all ${pathname === item.to
+                    ? 'bg-amber-50 text-amber-900 font-bold border-l-4 border-amber-500'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-[#1657b8]'
+                    }`}
                 >
-                  <span className="text-xl bg-slate-800/80 p-1.5 rounded-lg">{item.icon}</span>
+                  <span className="text-xl bg-slate-100 p-1.5 rounded-lg">{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -319,7 +303,7 @@ const PublicLayout = ({ children }) => {
             <div className="pt-2">
               <Link
                 href="/login"
-                className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-900/40 flex items-center justify-center space-x-2.5 space-x-reverse text-base transition-all duration-300"
+                className="w-full bg-[#1657b8] hover:bg-[#124796] text-white font-bold py-3.5 rounded-xl shadow-sm flex items-center justify-center space-x-2.5 space-x-reverse text-base transition-all duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -333,28 +317,21 @@ const PublicLayout = ({ children }) => {
 
       {/* 🌟 3. MAIN CONTENT AREA */}
       <main className="flex-1 relative">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[var(--brand-yellow)]/10 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl pointer-events-none -z-10" />
         {children}
       </main>
 
       {/* 🌟 4. PRE-FOOTER PROMOTION & CTA BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[var(--brand-blue-dark)] via-[var(--brand-blue)] to-blue-950 border-t border-white/10 py-12">
-        <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px] opacity-10 pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="bg-gradient-to-r from-slate-900 via-slate-800/90 to-slate-900 border border-slate-700/60 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-emerald-950/30 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden group">
-            <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700 pointer-events-none" />
-            <div className="absolute -left-10 -top-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      <section className="bg-slate-100/70 border-t border-slate-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-3 text-center lg:text-left max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-yellow)]/20 border border-[var(--brand-yellow)]/40 text-[var(--brand-yellow)] text-xs font-semibold">
-                <span>✨ የእግዚአብሔር ቃል ለትውልድ</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+                <span>✨ በመጀመሪያ ቃል ነበረል</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-snug">
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight leading-snug">
                 ልጅዎን በሰንበት ትምህርት ቤት መንፈሳዊ ዕውቀት ያሳድጉ!
               </h3>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+              <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                 የተክለሳዊሮስ ሰንበት ትምህርት ቤት የ 2017 ዓ.ም የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።
               </p>
             </div>
@@ -362,13 +339,13 @@ const PublicLayout = ({ children }) => {
             <div className="flex flex-col sm:flex-row gap-3.5 shrink-0 w-full sm:w-auto">
               <Link
                 href="/register-regular"
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:opacity-90 text-slate-950 font-bold text-sm shadow-md shadow-emerald-500/20 text-center transition-colors duration-150"
+                className="px-6 py-3.5 rounded-xl bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold text-sm shadow-sm text-center transition-colors"
               >
                 የመደበኛ ምዝገባ ➔
               </Link>
               <Link
                 href="/register-distance"
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 active:opacity-90 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/20 text-center transition-colors duration-150"
+                className="px-6 py-3.5 rounded-xl bg-[var(--brand-gold)] hover:bg-[#dfa500] active:opacity-90 text-slate-950 font-bold text-sm shadow-sm text-center transition-colors"
               >
                 የርቀት ምዝገባ ➔
               </Link>
@@ -378,92 +355,83 @@ const PublicLayout = ({ children }) => {
       </section>
 
       {/* 🌟 5. FOOTER SECTION */}
-      <footer className="bg-slate-950 text-slate-400 border-t border-slate-800/80 pt-16 pb-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+      <footer className="bg-white text-slate-600 border-t border-slate-200 pt-14 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Column 1: Brand Info */}
-            <div className="md:col-span-2 space-y-4">
+            <div className="md:col-span-2 space-y-3">
               <div className="flex items-center space-x-3 space-x-reverse">
-                <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue)] flex items-center justify-center p-1 border border-amber-400/40 shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1 border border-slate-200 shadow-sm">
                   <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-lg text-white">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
-                  <span className="text-[10px] text-amber-400 font-semibold tracking-wider uppercase">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት</span>
+                  <span className="font-extrabold text-base text-[#1657b8]">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
+                  <span className="text-[10px] text-amber-600 font-bold uppercase">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት</span>
                 </div>
               </div>
-              <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
+              <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
                 የሕፃናትና ወጣቶች መንፈሳዊ ትምህርት ማዕከል — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።
               </p>
             </div>
 
             {/* Column 2: Quick Links */}
-            <div className="space-y-3.5">
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 border-l-2 border-emerald-500 pl-2.5">
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-[#1657b8] uppercase tracking-wider">
                 ፈጣን ማውጫ
               </h4>
-              <ul className="space-y-2.5 text-sm">
+              <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/about" className="hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-emerald-400 transition-colors">✦</span>
-                    <span>ስለኛ</span>
+                  <Link href="/about" className="hover:text-[#1657b8] transition-colors">
+                    ስለኛ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/distance-education" className="hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-emerald-400 transition-colors">✦</span>
-                    <span>የርቀት ትምህርት (LMS)</span>
+                  <Link href="/distance-education" className="hover:text-[#1657b8] transition-colors">
+                    የርቀት ትምህርት (LMS)
                   </Link>
                 </li>
                 <li>
-                  <Link href="/classes" className="hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-emerald-400 transition-colors">✦</span>
-                    <span>ክፍሎችና መርሃግብራት</span>
+                  <Link href="/classes" className="hover:text-[#1657b8] transition-colors">
+                    ክፍሎችና መርሃግብራት
                   </Link>
                 </li>
                 <li>
-                  <Link href="/announcements" className="hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-emerald-400 transition-colors">✦</span>
-                    <span>ማስታወቂያዎች</span>
+                  <Link href="/announcements" className="hover:text-[#1657b8] transition-colors">
+                    ማስታወቂያዎች
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-emerald-400 transition-colors">✦</span>
-                    <span>ያግኙን</span>
+                  <Link href="/contact" className="hover:text-[#1657b8] transition-colors">
+                    ያግኙን
                   </Link>
                 </li>
               </ul>
             </div>
 
             {/* Column 3: Registration Links */}
-            <div className="space-y-3.5">
-              <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 border-l-2 border-amber-500 pl-2.5">
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-amber-700 uppercase tracking-wider">
                 ምዝገባና ክትትል
               </h4>
-              <ul className="space-y-2.5 text-sm">
+              <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/register-regular" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-amber-400 transition-colors">→</span>
-                    <span>የመደበኛ ተማሪ ምዝገባ</span>
+                  <Link href="/register-regular" className="hover:text-amber-700 transition-colors">
+                    የመደበኛ ተማሪ ምዝገባ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/register-distance" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-amber-400 transition-colors">→</span>
-                    <span>የርቀት ተማሪ ምዝገባ</span>
+                  <Link href="/register-distance" className="hover:text-amber-700 transition-colors">
+                    የርቀት ተማሪ ምዝገባ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/continue-registration" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-amber-400 transition-colors">→</span>
-                    <span>ምዝገባዎን ይቀጥሉ</span>
+                  <Link href="/continue-registration" className="hover:text-amber-700 transition-colors">
+                    ምዝገባዎን ይቀጥሉ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/check-status" className="hover:text-amber-400 transition-colors flex items-center gap-2 group">
-                    <span className="text-xs text-slate-600 group-hover:text-amber-400 transition-colors">→</span>
-                    <span>ሁኔታ አረጋግጥ</span>
+                  <Link href="/check-status" className="hover:text-amber-700 transition-colors">
+                    ሁኔታ አረጋግጥ
                   </Link>
                 </li>
               </ul>
@@ -471,13 +439,12 @@ const PublicLayout = ({ children }) => {
           </div>
 
           {/* Copyright Sub-footer */}
-          <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-            <p className="flex items-center gap-1.5 text-center sm:text-left">
-              <span>© {new Date().getFullYear()} ተክለሳዊሮስ ሰንበት ትምህርት ቤት።</span>
-              <span className="hidden sm:inline">መብቱ በሕግ የተጠበቀ ነው።</span>
+          <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
+            <p>
+              © {new Date().getFullYear()} ተክለሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
             </p>
-            <div className="flex items-center gap-4 text-slate-400">
-              <span className="hover:text-slate-300 transition-colors cursor-default">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት ሰንበት ት/ቤት</span>
+            <div>
+              <span className="text-slate-500">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት ሰንበት ት/ቤት</span>
             </div>
           </div>
         </div>

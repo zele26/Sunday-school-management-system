@@ -137,16 +137,15 @@ const AdminLayout = ({ children, onLogout }) => {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051533] via-[#08214d] to-[#040f24] text-white border-r border-white/10 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-[#124796] via-[#0e3b7d] to-[#08224d] text-white border-r border-blue-900/40 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-lg ${
           isMobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         {/* Sidebar Header with Official Church Logo */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0 bg-black/20">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0 bg-black/10">
           <div className="flex items-center gap-3">
             <div className="relative w-11 h-11 flex-shrink-0">
-              <div className="absolute inset-0 rounded-full bg-[var(--brand-gold)] blur-sm opacity-60"></div>
-              <div className="relative w-full h-full p-1 rounded-full bg-white border border-amber-400 flex items-center justify-center overflow-hidden shadow-md">
+              <div className="relative w-full h-full p-1 rounded-full bg-white border border-amber-400 flex items-center justify-center overflow-hidden shadow-sm">
                 <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
               </div>
             </div>
@@ -158,14 +157,14 @@ const AdminLayout = ({ children, onLogout }) => {
                     ? 'Dept Admin Portal'
                     : 'Admin Portal'}
               </span>
-              <div className="text-[11px] text-[var(--brand-gold)] font-bold truncate">
+              <div className="text-[11px] text-amber-300 font-bold truncate">
                 ተክለ ሳዊሮስ ሰንበት ት/ቤት
               </div>
             </div>
           </div>
           <button
             onClick={() => setIsMobileSidebarOpen(false)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white lg:hidden"
+            className="p-1 rounded-lg text-slate-300 hover:text-white lg:hidden"
           >
             <X className="w-5 h-5" />
           </button>
@@ -173,15 +172,15 @@ const AdminLayout = ({ children, onLogout }) => {
 
         {/* Super Admin Module Filter Switcher */}
         {isSuperAdmin && (
-          <div className="px-3 pt-3 pb-1 shrink-0 border-b border-white/5">
-            <div className="bg-black/30 p-1 rounded-xl flex gap-1 text-[11px] font-semibold border border-white/5">
+          <div className="px-3 pt-3 pb-1 shrink-0 border-b border-white/10">
+            <div className="bg-black/20 p-1 rounded-xl flex gap-1 text-[11px] font-semibold border border-white/5">
               <button
                 type="button"
                 onClick={() => setActiveScope('ALL')}
                 className={`flex-1 py-1 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${
                   activeScope === 'ALL'
-                    ? 'bg-[var(--brand-gold)] text-slate-950 shadow-sm font-black'
-                    : 'text-blue-200 hover:text-white'
+                    ? 'bg-amber-400 text-slate-950 shadow-sm font-black'
+                    : 'text-blue-100 hover:text-white'
                 }`}
               >
                 <Layers className="w-3 h-3" />
@@ -192,8 +191,8 @@ const AdminLayout = ({ children, onLogout }) => {
                 onClick={() => setActiveScope('EDUCATION')}
                 className={`flex-1 py-1 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${
                   activeScope === 'EDUCATION'
-                    ? 'bg-[var(--brand-gold)] text-slate-950 shadow-sm font-black'
-                    : 'text-blue-200 hover:text-white'
+                    ? 'bg-amber-400 text-slate-950 shadow-sm font-black'
+                    : 'text-blue-100 hover:text-white'
                 }`}
               >
                 <GraduationCap className="w-3 h-3" />
@@ -204,8 +203,8 @@ const AdminLayout = ({ children, onLogout }) => {
                 onClick={() => setActiveScope('CORE')}
                 className={`flex-1 py-1 rounded-lg transition-all text-center flex items-center justify-center gap-1 ${
                   activeScope === 'CORE'
-                    ? 'bg-[var(--brand-gold)] text-slate-950 shadow-sm font-black'
-                    : 'text-blue-200 hover:text-white'
+                    ? 'bg-amber-400 text-slate-950 shadow-sm font-black'
+                    : 'text-blue-100 hover:text-white'
                 }`}
               >
                 <Church className="w-3 h-3" />
@@ -219,7 +218,7 @@ const AdminLayout = ({ children, onLogout }) => {
         <div className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar space-y-6">
           {visibleSections.map((section) => (
             <div key={section.id}>
-              <p className="px-3 text-[11px] font-bold text-[var(--brand-gold)]/90 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <p className="px-3 text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <span>{section.title}</span>
               </p>
               <div className="space-y-1">
@@ -233,12 +232,12 @@ const AdminLayout = ({ children, onLogout }) => {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                           isActive
-                            ? 'bg-[var(--brand-gold)]/20 text-[var(--brand-gold)] shadow-sm border border-[var(--brand-gold)]/30 font-bold backdrop-blur-sm'
-                            : 'text-blue-100 hover:bg-white/10 hover:text-white border border-transparent'
+                            ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
+                            : 'text-blue-50 hover:bg-white/10 hover:text-white border border-transparent'
                         }`
                       }
                     >
-                      <Icon className="w-4 h-4 shrink-0 text-amber-300" />
+                      <Icon className="w-4 h-4 shrink-0" />
                       <span className="truncate">{item.label}</span>
                     </NavLink>
                   );
@@ -249,14 +248,14 @@ const AdminLayout = ({ children, onLogout }) => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-white/10 bg-black/20 shrink-0 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] text-blue-200 font-medium">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+        <div className="p-3 border-t border-white/10 bg-black/10 shrink-0 flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-[11px] text-blue-100 font-medium">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>{user?.role === 'superadmin' ? 'Full Control' : 'Scoped Access'}</span>
           </div>
           <button
             onClick={handleLogout}
-            className="text-[11px] text-rose-300 hover:text-rose-100 font-semibold flex items-center gap-1 transition-colors"
+            className="text-[11px] text-rose-200 hover:text-white font-semibold flex items-center gap-1 transition-colors cursor-pointer"
           >
             <span>Logout</span>
             <LogOut className="w-3.5 h-3.5" />

@@ -148,7 +148,7 @@ const CheckStatusContent = () => {
           {isApproved && (
             <Link
               href="/login"
-              className="block w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-md shadow-emerald-500/30 transition-colors duration-150 mb-4 text-center"
+              className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all mb-4 text-center"
             >
               ወደ ሲስተሙ ይግቡ (Login)
             </Link>
@@ -157,7 +157,7 @@ const CheckStatusContent = () => {
           {result.studentType === 'distance' && result.status === 'Pending Payment' && (
             <Link
               href="/continue-registration"
-              className="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/30 transition-colors duration-150 mb-4 text-center"
+              className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all mb-4 text-center"
             >
               ምዝገባዎን ይቀጥሉ (Continue Registration)
             </Link>
@@ -180,7 +180,7 @@ const CheckStatusContent = () => {
       <div className="max-w-md w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-blue-500/30">
+          <div className="w-16 h-16 bg-blue-50 border border-blue-100 text-[#1657b8] rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
             🔍
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
@@ -246,7 +246,7 @@ const CheckStatusContent = () => {
               <button
                 type="submit"
                 disabled={loading || !phone || !password}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none"
+                className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:shadow-none cursor-pointer"
               >
                 {loading ? (
                   <>

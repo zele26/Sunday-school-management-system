@@ -3,23 +3,23 @@
 :root {
   color-scheme: light;
   
-  /* Brand Primary (Church Royal Blue) */
-  --brand-primary: #0f4c9c;
-  --brand-primary-hover: #0d3e80;
-  --brand-primary-dark: #08214d;
-  --brand-primary-navy: #051533;
-  --brand-primary-light: #2563eb;
+  /* ChurchLogo.png Brand Primary (Royal Blue) */
+  --brand-primary: #1657b8;
+  --brand-primary-hover: #124796;
+  --brand-primary-dark: #0d3269;
+  --brand-primary-navy: #081d3d;
+  --brand-primary-light: #3b82f6;
   --brand-primary-soft: #eff6ff;
 
-  /* Brand Accent (Church Gold) */
-  --brand-gold: #ffcc00;
-  --brand-gold-hover: #e6b800;
-  --brand-gold-warm: #f59e0b;
-  --brand-gold-dark: #d97706;
-  --brand-gold-light: #fef9c3;
-  --brand-gold-soft: rgba(255, 204, 0, 0.15);
+  /* ChurchLogo.png Brand Accent (Church Gold / Yellow) */
+  --brand-gold: #f5b700;
+  --brand-gold-hover: #dfa500;
+  --brand-gold-warm: #d97706;
+  --brand-gold-dark: #b45309;
+  --brand-gold-light: #fffbeb;
+  --brand-gold-soft: rgba(245, 183, 0, 0.14);
 
-  /* Surfaces & Backgrounds */
+  /* Clean Light Surfaces & Backgrounds */
   --surface-page: #f8fafc;
   --surface-card: #ffffff;
   --surface-card-subtle: #f1f5f9;
@@ -34,17 +34,17 @@
   /* Borders & Dividers */
   --border-subtle: #e2e8f0;
   --border-default: #cbd5e1;
-  --border-focus: #0f4c9c;
+  --border-focus: #1657b8;
 
-  /* Status Colors */
+  /* Status Colors (Clean & Professional) */
   --status-success: #10b981;
-  --status-success-soft: #d1fae5;
+  --status-success-soft: #ecfdf5;
   --status-warning: #f59e0b;
-  --status-warning-soft: #fef3c7;
+  --status-warning-soft: #fffbeb;
   --status-danger: #ef4444;
-  --status-danger-soft: #fee2e2;
-  --status-info: #0284c7;
-  --status-info-soft: #e0f2fe;
+  --status-danger-soft: #fef2f2;
+  --status-info: #1657b8;
+  --status-info-soft: #eff6ff;
 
   /* Backward compatibility tokens */
   --church-blue-primary: var(--brand-primary);
@@ -59,10 +59,10 @@
 .dark {
   color-scheme: dark;
 
-  --surface-page: #051533;
-  --surface-card: #08214d;
-  --surface-card-subtle: #0c2b64;
-  --surface-header: #051533;
+  --surface-page: #081d3d;
+  --surface-card: #0d2752;
+  --surface-card-subtle: #12346b;
+  --surface-header: #081d3d;
 
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
@@ -71,7 +71,7 @@
 
   --border-subtle: rgba(255, 255, 255, 0.1);
   --border-default: rgba(255, 255, 255, 0.18);
-  --border-focus: #ffcc00;
+  --border-focus: #f5b700;
 }
 
 body {

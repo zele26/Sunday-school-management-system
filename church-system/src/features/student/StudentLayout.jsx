@@ -40,9 +40,9 @@ const StudentLayout = ({ children, onLogout }) => {
   return (
     <div className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] font-sans flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
-      <header className="bg-gradient-to-r from-[#051533] via-[#08214d] to-[#051533] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-lg border-b border-amber-400/20 sticky top-0 z-20">
+      <header className="bg-[#1657b8] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-sm border-b border-amber-400/30 sticky top-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-md flex-shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-sm flex-shrink-0">
             <img src={ChurchLogo?.src || ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
           </div>
           <div>
@@ -68,7 +68,7 @@ const StudentLayout = ({ children, onLogout }) => {
       {/* Main Container */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 flex-1 w-full">
         {/* Banner Card */}
-        <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-indigo-900/20 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-[#1657b8] via-[#124796] to-[#0d3269] rounded-3xl p-6 md:p-8 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="relative z-10 space-y-2">
             <Badge variant="gold" size="sm">
               <Sparkles className="w-3 h-3" />
@@ -78,23 +78,23 @@ const StudentLayout = ({ children, onLogout }) => {
               ሰላም፣ {studentName}! 👋
             </h2>
             {studentId && (
-              <div className="flex items-center gap-2 text-xs font-mono text-indigo-200 mt-1">
-                <span className="opacity-70">ID:</span>
-                <span className="font-bold tracking-widest bg-white/20 px-2 py-0.5 rounded-lg border border-white/20">{studentId}</span>
+              <div className="flex items-center gap-2 text-xs font-mono text-amber-200 mt-1">
+                <span className="opacity-80 font-semibold">ID:</span>
+                <span className="font-black tracking-widest bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/20">{studentId}</span>
               </div>
             )}
-            <p className="text-indigo-100 text-xs sm:text-sm max-w-lg leading-relaxed">
+            <p className="text-blue-100 text-xs sm:text-sm max-w-lg leading-relaxed">
               የሰንበት ትምህርት ቤት ትምህርቶችዎን፣ የመገኘት መዝገብዎን እና የቅርብ ጊዜ ማስታወቂያዎችን እዚህ ይከታተሉ።
             </p>
           </div>
 
-          <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-2xl flex-shrink-0">
+          <div className="relative z-10 w-16 h-16 sm:w-20 sm:h-20 bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-md flex-shrink-0">
             🎓
           </div>
 
           {/* Background Decorative Circles */}
           <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div className="absolute left-1/2 -top-10 w-32 h-32 bg-blue-400/20 rounded-full blur-xl pointer-events-none"></div>
+          <div className="absolute left-1/2 -top-10 w-32 h-32 bg-amber-400/20 rounded-full blur-xl pointer-events-none"></div>
         </div>
 
         {/* Navigation Tabs */}
@@ -107,7 +107,7 @@ const StudentLayout = ({ children, onLogout }) => {
               className={({ isActive }) =>
                 `px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 ${
                   isActive
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                    ? 'bg-[#1657b8] text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-slate-800'
                 }`
               }

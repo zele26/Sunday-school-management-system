@@ -64,13 +64,7 @@ const StudentOverview = () => {
   return (
     <div className="space-y-6">
       {/* Dynamic Profile & Batch Header Card */}
-      <div
-        className={`p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden ${
-          isDistance
-            ? 'bg-gradient-to-r from-[#051533] via-[#08214d] to-[#0f4c9c]'
-            : 'bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900'
-        }`}
-      >
+      <div className="p-6 sm:p-8 rounded-3xl text-white shadow-md relative overflow-hidden bg-gradient-to-r from-[#1657b8] via-[#124796] to-[#0d3269]">
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -90,7 +84,7 @@ const StudentOverview = () => {
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               እንኳን ደህና መጡ፣ {profile?.firstName || 'ተማሪ'}!
             </h2>
-            <p className="text-xs sm:text-sm text-amber-200/90 max-w-xl">
+            <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
               በራስዎ ምቹ ሰዓት የነገረ መለኮት፣ የብሉይና የሐዲስ ኪዳን ጥናቶችን፣ የቪዲዮ ትምህርቶችንና ፈተናዎችን በቅደም ተከተል ይከታተሉ።
             </p>
           </div>
@@ -99,7 +93,7 @@ const StudentOverview = () => {
             {distanceCourses.length > 0 && (
               <Link
                 to={`/student/distance-classroom/${distanceCourses[0]._id}`}
-                className="px-5 py-3 bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 font-black rounded-2xl text-center text-xs shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-center text-xs shadow-md transition-all flex items-center justify-center gap-2"
               >
                 <span>🚀</span>
                 <span>ትምህርቱን ቀጥል (Continue Learning)</span>
@@ -113,13 +107,13 @@ const StudentOverview = () => {
 
       {/* Earned Certificates Banner (If any) */}
       {certificates.length > 0 ? (
-        <div className="p-5 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10 border-2 border-amber-400/60 rounded-3xl flex items-center justify-between gap-4 flex-wrap shadow-md">
+        <div className="p-5 bg-amber-50/80 border border-amber-300/80 rounded-3xl flex items-center justify-between gap-4 flex-wrap shadow-xs">
           <div className="flex items-center gap-3">
-            <span className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-2xl shadow-md">
+            <span className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-2xl shadow-xs font-black">
               📜
             </span>
             <div>
-              <h4 className="font-extrabold text-sm text-slate-900">
+              <h4 className="font-black text-sm text-slate-900">
                 የተመረቁበት ይፋዊ የምስክር ወረቀት (Official Graduation Certificate)
               </h4>
               <p className="text-xs text-slate-600">
@@ -130,7 +124,7 @@ const StudentOverview = () => {
 
           <button
             onClick={() => setActiveCertModal(certificates[0])}
-            className="px-5 py-2.5 bg-[#0f4c9c] text-white rounded-xl text-xs font-bold hover:bg-[#08214d] transition-all shadow-md flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-[#1657b8] text-white rounded-xl text-xs font-bold hover:bg-[#124796] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <span>👁️</span>
             <span>የምስክር ወረቀቱን ይመልከቱ / አትሙ (View & Print)</span>
