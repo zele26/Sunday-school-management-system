@@ -69,6 +69,7 @@ const PublicLayout = ({ children }) => {
 
   const primaryNavLinks = [
     { to: '/about', label: 'ስለኛ' },
+    { to: '/gallery', label: 'ፎቶዎች' },
     { to: '/distance-education', label: 'የርቀት ትምህርት (Distance Ed)' },
     { to: '/classes', label: 'ክፍሎች' },
     { to: '/announcements', label: 'ማስታወቂያዎች' },
@@ -386,6 +387,11 @@ const PublicLayout = ({ children }) => {
                 <li>
                   <Link href="/about" className="hover:text-[#1657b8] transition-colors">
                     ስለኛ
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/gallery" className="hover:text-[#1657b8] transition-colors">
+                    የፎቶ ማህደር (Gallery)
                   </Link>
                 </li>
                 <li>

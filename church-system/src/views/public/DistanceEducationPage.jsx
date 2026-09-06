@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, FeatureCard, Badge } from '../../components/ui';
 
 const batchesData = [
@@ -312,6 +313,83 @@ const DistanceEducationPage = () => {
               ))}
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* 🌟 STUDENT LIFE & GRADUATION SHOWCASE */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
+            የተማሪዎች ገጽታና ምርቃት
+          </span>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            የሰንበት ትምህርት ቤት ሕይወት በምስል
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
+            ትምህርታቸውን ያጠናቀቁ ተማሪዎች የምስክር ወረቀት አሰጣጥና የመንፈሳዊ መድረክ ትዕይንቶች
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm group">
+            <div className="relative aspect-16/10 w-full overflow-hidden">
+              <Image
+                src="/church-photos/photo12.png"
+                alt="የምርቃት ሥነ-ሥርዓት"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                🎓 ይፋዊ የምርቃት ሥነ-ሥርዓት
+              </span>
+            </div>
+            <div className="p-5 space-y-1.5">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">የዲፕሎማ የምስክር ወረቀት አሰጣጥ</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                የ 4 ዓመታት የርቀትና የመደበኛ ትምህርታቸውን ላጠናቀቁ ተማሪዎች በደብሩ አስተዳደር የሚሰጥ ይፋዊ ሰርተፊኬት።
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm group">
+            <div className="relative aspect-16/10 w-full overflow-hidden">
+              <Image
+                src="/church-photos/photo6.png"
+                alt="የመንፈሳዊ መጻሕፍትና ትምህርት"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                📚 ጥራት ያላቸው ሞጁሎች
+              </span>
+            </div>
+            <div className="p-5 space-y-1.5">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">የተሟሉ የትምህርት ማስታወሻዎች</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                በሊቃውንተ ቤተክርስቲያን የተዘጋጁ ጥልቀት ያላቸው የፒዲኤፍ፣ የድምፅና የቪዲዮ ትምህርቶች።
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm group">
+            <div className="relative aspect-16/10 w-full overflow-hidden">
+              <Image
+                src="/church-photos/photo16.png"
+                alt="የአባቶች ቡራኬ"
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                ✝️ የአባቶች ቡራኬና መመሪያ
+              </span>
+            </div>
+            <div className="p-5 space-y-1.5">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">ቀጣይነት ያለው መንፈሳዊ ምክር</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                በቀጥታ ከአገልጋይ አባቶችና መምህራን ጋር የሚደረግ የጥያቄና መልስ እንዲሁም የመንፈሳዊ ህይወት መመሪያ።
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

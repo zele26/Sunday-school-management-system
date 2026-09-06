@@ -14,6 +14,7 @@ import {
   AccordionContent,
   Badge,
 } from '../../components/ui';
+import { ChurchGallery } from '../../components/shared/ChurchGallery';
 
 const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
@@ -256,7 +257,26 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 🌟 4. FAQ ACCORDION SECTION */}
+      {/* 🌟 4. CHURCH PHOTO SHOWCASE GALLERY */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <ChurchGallery
+          limit={8}
+          showFilters={true}
+          title="የሰንበት ትምህርት ቤታችን ገጽታዎች በፎቶ"
+          subtitle="የደብረ ፀሐይ ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ተክለ ሳዊሮስ ሰንበት ት/ቤት መንፈሳዊ ጉባኤዎች፣ የዝማሬ መርሃ ግብሮችና የበዓላት ትዕይንት"
+        />
+        <div className="mt-8 text-center">
+          <Link
+            href="/gallery"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            <span>ሁሉንም 16 ፎቶዎች በሙሉ ማህደር ይመልከቱ (View Full Gallery)</span>
+            <span>➔</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* 🌟 5. FAQ ACCORDION SECTION */}
       <section className="py-16 max-w-4xl mx-auto px-4 sm:px-6">
         <FadeIn className="text-center mb-10 space-y-2">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800">
