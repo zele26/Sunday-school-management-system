@@ -1,8 +1,9 @@
 'use client';
 
-// src/pages/Register.jsx
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import bgImage from '../assets/Lidetachurch.jpg';
 import { API_BASE_URL } from '../api/apiClient';
 import { Card } from '../components/ui';
 
