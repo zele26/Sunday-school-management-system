@@ -3,8 +3,8 @@
 // src/pages/Register.jsx
 import React, { useState } from 'react';
 import Link from 'next/link';
-import bgImage from '../assets/Lidetachurch.jpg';
 import { API_BASE_URL } from '../api/apiClient';
+import { Card } from '../components/ui';
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
@@ -132,21 +132,29 @@ const Register = () => {
   };
 
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center p-4 bg-cover bg-center fixed inset-0 font-sans overflow-y-auto"
-      style={{ backgroundImage: `url(${bgImage?.src || bgImage})` }}
-    >
-      <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 fixed inset-0 font-sans overflow-y-auto">
+      {/* Background Image */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <Image
+          src={bgImage}
+          alt="Lideta Church Backdrop"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center transform scale-105"
+        />
+        <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm" />
+      </div>
 
-      <div className="max-w-3xl w-full bg-slate-900/85 text-white rounded-3xl shadow-2xl p-6 sm:p-10 relative z-10 border border-slate-700/50 backdrop-blur-md my-auto max-h-[90vh] overflow-y-auto">
+      <Card variant="glass" padding="none" className="max-w-3xl w-full bg-slate-900/85 text-white rounded-3xl shadow-2xl p-6 sm:p-10 relative z-10 border border-slate-700/50 backdrop-blur-md my-auto max-h-[90vh] overflow-y-auto">
         <div className="mb-6 border-b border-slate-800 pb-4 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-white">አዲስ መምህር መመዝገቢያ (Teacher Registration)</h2>
             <p className="text-xs text-slate-400 mt-1">ለመምህራን ብቻ (Teachers only)</p>
           </div>
-          <a href="/login" className="text-xs text-indigo-400 hover:underline">
+          <Link href="/login" className="text-xs text-indigo-400 hover:underline font-bold">
             ← ወደ መግቢያ ተመለስ
-          </a>
+          </Link>
         </div>
 
         {error && (
@@ -209,10 +217,10 @@ const Register = () => {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
-          አካውንት አለዎት? <Link href="/login" className="text-indigo-400 hover:underline">ይግቡ</Link>
+        <p className="mt-4 text-center text-xs text-slate-400">
+          አካውንት አለዎት? <Link href="/login" className="text-indigo-400 hover:underline font-bold">ይግቡ</Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 };

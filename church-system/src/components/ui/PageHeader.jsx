@@ -3,6 +3,18 @@
 import React from 'react';
 import { cn } from './utils';
 
+const renderHeaderIcon = (icon, className = 'w-6 h-6') => {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) {
+    return icon;
+  }
+  if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null)) {
+    const IconComponent = icon;
+    return <IconComponent className={className} />;
+  }
+  return <span className="text-xl">{icon}</span>;
+};
+
 export function PageHeader({
   title,
   subtitle,
@@ -22,7 +34,7 @@ export function PageHeader({
       <div className="flex items-start sm:items-center gap-3.5">
         {Icon && (
           <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--brand-primary)]/10 dark:bg-blue-500/20 text-[var(--brand-primary)] dark:text-blue-400 shrink-0 shadow-inner">
-            <Icon className="w-6 h-6" />
+            {renderHeaderIcon(Icon, 'w-6 h-6')}
           </div>
         )}
         <div>

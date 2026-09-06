@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 import { API_BASE_URL } from '../api/apiClient';
-import { BackButton } from '../components/ui';
+import { BackButton, Card } from '../components/ui';
 
 const ContinueRegistrationContent = () => {
   const [phone, setPhone] = useState('');
@@ -138,8 +138,8 @@ const ContinueRegistrationContent = () => {
     }
   };
 
-  const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-700 text-sm placeholder:text-slate-400";
-  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
+  const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100 text-sm placeholder:text-slate-400";
+  const labelClass = "block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1";
 
   if (submitted) {
     return (
@@ -148,7 +148,7 @@ const ContinueRegistrationContent = () => {
           <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
         </header>
 
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl border border-emerald-100 dark:border-slate-800 text-center animate-in zoom-in-95 duration-500 my-auto">
+        <Card variant="elevated" padding="lg" className="max-w-md w-full text-center animate-in zoom-in-95 duration-500 my-auto border-emerald-100 dark:border-emerald-900/50">
           <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
             <svg className="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
@@ -178,7 +178,7 @@ const ContinueRegistrationContent = () => {
               የምዝገባ ሁኔታ አረጋግጥ (Check Status)
             </Link>
           </div>
-        </div>
+        </Card>
 
         <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
           ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
@@ -205,7 +205,7 @@ const ContinueRegistrationContent = () => {
             <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm">የርቀት ተማሪዎች ክፍያ ማጠናቀቂያ</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800">
+          <Card variant="elevated" padding="lg">
             {error && (
               <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border-l-4 border-rose-500 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-r-xl">
                 {error}
@@ -247,7 +247,7 @@ const ContinueRegistrationContent = () => {
                 </button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
 
         <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -271,8 +271,7 @@ const ContinueRegistrationContent = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm">ክፍያዎን በማረጋገጥ ምዝገባዎን ያጠናቅቁ</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800">
-          
+        <Card variant="default" padding="lg">
           {/* User Detail Banner */}
           <div className="flex flex-wrap gap-4 items-center justify-between bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 mb-8">
             <div>
@@ -286,9 +285,9 @@ const ContinueRegistrationContent = () => {
             <div className="w-full h-px bg-slate-200 dark:bg-slate-700 my-1 sm:hidden"></div>
             <div>
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                registration.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' :
-                registration.status === 'Pending Verification' ? 'bg-amber-100 text-amber-700' :
-                'bg-blue-100 text-blue-700'
+                registration.status === 'Approved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                registration.status === 'Pending Verification' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300' :
+                'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
               }`}>
                 <span className={`w-2 h-2 rounded-full ${
                   registration.status === 'Approved' ? 'bg-emerald-500' :
@@ -300,45 +299,44 @@ const ContinueRegistrationContent = () => {
             </div>
           </div>
 
-
           {/* Alert Messages */}
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-sm font-medium rounded-r-xl">
+            <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border-l-4 border-rose-500 text-rose-700 dark:text-rose-300 text-sm font-medium rounded-r-xl">
               {error}
             </div>
           )}
           {message && (
-            <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm font-medium rounded-r-xl">
+            <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 border-l-4 border-emerald-500 text-emerald-700 dark:text-emerald-300 text-sm font-medium rounded-r-xl">
               {message}
             </div>
           )}
 
           {/* State: Pending Payment Form */}
           {registration.status === 'Pending Payment' && (
-            <div className="space-y-8 border-t border-slate-100 pt-6">
+            <div className="space-y-8 border-t border-slate-100 dark:border-slate-800 pt-6">
               
               {/* Payment Instructions */}
               {paymentInfo && (
-                <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100 relative overflow-hidden">
+                <div className="bg-blue-50/50 dark:bg-blue-950/30 rounded-2xl p-5 border border-blue-100 dark:border-blue-900/50 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <h3 className="font-bold text-blue-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-bold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
                     <span className="text-xl">💰</span> የክፍያ መረጃ
                   </h3>
-                  <div className="space-y-2 text-sm text-slate-700 mb-4">
-                    <div className="flex justify-between border-b border-blue-100/50 pb-2">
+                  <div className="space-y-2 text-sm text-slate-700 dark:text-slate-300 mb-4">
+                    <div className="flex justify-between border-b border-blue-100/50 dark:border-blue-900/30 pb-2">
                       <span>የክፍያ መጠን:</span>
                       <span className="font-semibold">{paymentInfo.contributionAmount} ብር</span>
                     </div>
-                    <div className="flex justify-between border-b border-blue-100/50 pb-2">
+                    <div className="flex justify-between border-b border-blue-100/50 dark:border-blue-900/30 pb-2">
                       <span>የትምህርት ቁሳቁስ:</span>
                       <span className="font-semibold">{paymentInfo.resourceFee} ብር</span>
                     </div>
                     <div className="flex justify-between pt-1">
                       <span className="font-bold">ጠቅላላ:</span>
-                      <span className="font-black text-blue-700 text-lg">{paymentInfo.totalAmount} ብር</span>
+                      <span className="font-black text-blue-700 dark:text-blue-400 text-lg">{paymentInfo.totalAmount} ብር</span>
                     </div>
                   </div>
-                  <p className="text-xs text-blue-800/80 leading-relaxed bg-white/60 p-3 rounded-lg">
+                  <p className="text-xs text-blue-800/80 dark:text-blue-300 leading-relaxed bg-white/60 dark:bg-slate-900/60 p-3 rounded-lg">
                     {paymentInfo.instructions}
                   </p>
                 </div>
@@ -357,19 +355,19 @@ const ContinueRegistrationContent = () => {
                   />
                 </div>
                 
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 border-dashed">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 border-dashed">
                   <label className={labelClass}>የክፍያ ደረሰኝ (ምስል ወይም PDF) <span className="text-rose-500">*</span></label>
                   <div className="mt-2 flex flex-col sm:flex-row items-center gap-3">
                     <input
                       type="file"
                       accept="image/*,application/pdf"
                       onChange={(e) => setReceiptFile(e.target.files[0])}
-                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+                      className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-950/60 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 transition-all cursor-pointer"
                     />
                     <button
                       onClick={handleFileUpload}
                       disabled={uploading || !receiptFile}
-                      className="w-full sm:w-auto whitespace-nowrap bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-md"
+                      className="w-full sm:w-auto whitespace-nowrap bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-md cursor-pointer"
                     >
                       {uploading ? (
                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -377,7 +375,7 @@ const ContinueRegistrationContent = () => {
                     </button>
                   </div>
                   {receiptUrl && (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg font-medium">
+                    <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-2 rounded-lg font-medium">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                       ደረሰኝ ተልኳል
                     </div>
@@ -386,7 +384,7 @@ const ContinueRegistrationContent = () => {
 
                 <div className="pt-4">
                   <button
-                    onClick={handleSubmitReceipt}
+                    onClick={handleFinalSubmit}
                     disabled={isSubmitting || !receiptUrl}
                     className="w-full bg-emerald-600 hover:bg-emerald-500 active:opacity-90 text-white py-4 rounded-xl font-bold text-lg shadow-md shadow-emerald-600/20 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer"
                   >
@@ -399,10 +397,10 @@ const ContinueRegistrationContent = () => {
 
           {/* State: Pending Verification */}
           {registration.status === 'Pending Verification' && (
-            <div className="mt-8 bg-amber-50 rounded-2xl p-6 border border-amber-100 text-center">
+            <div className="mt-8 bg-amber-50 dark:bg-amber-950/40 rounded-2xl p-6 border border-amber-100 dark:border-amber-900/50 text-center">
               <div className="text-4xl mb-3">⏳</div>
-              <h3 className="text-lg font-bold text-amber-900 mb-2">ማረጋገጫ በመጠበቅ ላይ</h3>
-              <p className="text-amber-800 text-sm leading-relaxed max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-2">ማረጋገጫ በመጠበቅ ላይ</h3>
+              <p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed max-w-md mx-auto">
                 ደረሰኝዎ ደርሶናል። በትምህርት ቤቱ አስተዳደር ታይቶ ማረጋገጫ እስኪሰጥዎ ድረስ እባክዎ በትዕግስት ይጠብቁ።
               </p>
             </div>
@@ -410,10 +408,10 @@ const ContinueRegistrationContent = () => {
 
           {/* State: Approved */}
           {registration.status === 'Approved' && (
-            <div className="mt-8 bg-emerald-50 rounded-2xl p-6 border border-emerald-100 text-center">
+            <div className="mt-8 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl p-6 border border-emerald-100 dark:border-emerald-900/50 text-center">
               <div className="text-4xl mb-3">🎉</div>
-              <h3 className="text-lg font-bold text-emerald-900 mb-2">ምዝገባዎ ጸድቋል!</h3>
-              <p className="text-emerald-800 text-sm mb-6">
+              <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-200 mb-2">ምዝገባዎ ጸድቋል!</h3>
+              <p className="text-emerald-800 dark:text-emerald-300 text-sm mb-6">
                 ወደ ሲስተሙ በመግባት ትምህርትዎን መጀመር ይችላሉ።
               </p>
               <Link href="/login" className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-md transition-all">
@@ -421,8 +419,7 @@ const ContinueRegistrationContent = () => {
               </Link>
             </div>
           )}
-          
-        </div>
+        </Card>
       </div>
     </div>
   );

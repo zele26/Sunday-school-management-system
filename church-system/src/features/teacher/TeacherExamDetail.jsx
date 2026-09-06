@@ -1,7 +1,11 @@
 // src/features/teacher/TeacherExamDetail.jsx
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { HelpCircle, ArrowLeft, Plus, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
+import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from '../../components/ui';
 
 const TeacherExamDetail = () => {
   const { quizId } = useParams();
@@ -18,11 +22,7 @@ const TeacherExamDetail = () => {
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchQuiz();
-  }, [quizId]);
-
-  const fetchQuiz = async () => {
+  const fetchQuiz = React.useCallback(async () => {
     try {
       const res = await apiFetch(`/api/quizzes/${quizId}`);
       if (res.ok) {
@@ -30,9 +30,15 @@ const TeacherExamDetail = () => {
         setQuiz(data.quiz);
         setQuestions(data.questions);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error('Quiz fetch error:', err);
+    }
     setLoading(false);
-  };
+  }, [quizId]);
+
+  useEffect(() => {
+    fetchQuiz();
+  }, [fetchQuiz]);
 
   const handleAddOrUpdate = async (e) => {
     e.preventDefault();
@@ -71,71 +77,163 @@ const TeacherExamDetail = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this question?')) return;
+    if (!window.confirm('ይህን ጥያቄ መሰረዝ ይፈልጋሉ? (Delete this question?)')) return;
     await apiFetch(`/api/quizzes/${quizId}/questions/${id}`, { method: 'DELETE' });
     fetchQuiz();
   };
 
-  if (loading) return <div className="py-8 text-center">Loading exam details...</div>;
-  if (!quiz) return <div className="py-8 text-center text-red-500">Exam not found</div>;
+  if (loading) return <div className="py-12 text-center text-slate-400 font-semibold text-sm">የፈተና ዝርዝር በመጫን ላይ...</div>;
+  if (!quiz) return <div className="py-12 text-center text-rose-500 font-semibold text-sm">ፈተናው አልተገኘም (Exam not found)</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">{quiz.title}</h2>
-          <p className="text-sm text-slate-500">{quiz.quizType} – {quiz.course?.name}</p>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{quiz.title}</h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{quiz.quizType} • {quiz.course?.name}</p>
         </div>
-        <Link to="/teacher/exams" className="text-blue-600 underline">Back to Exams</Link>
+        <Link to="/teacher/exams" className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--brand-primary)] hover:underline">
+          <ArrowLeft className="w-4 h-4" />
+          <span>ወደ ፈተናዎች ተመለስ (Back to Exams)</span>
+        </Link>
       </div>
 
-      {message && <div className="p-2 bg-slate-100 rounded-xl text-sm">{message}</div>}
+      {message && (
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-800 dark:text-amber-200 text-xs font-semibold">
+          {message}
+        </div>
+      )}
 
-      {/* Question form */}
-      <form onSubmit={handleAddOrUpdate} className="bg-white p-4 rounded-xl shadow space-y-3">
-        <h3 className="font-semibold">{editingId ? 'Edit Question' : 'Add Question'}</h3>
-        <select value={form.type} onChange={e => setForm({...form, type: e.target.value})} className="w-full p-2 border rounded-xl">
-          <option value="Multiple Choice">Multiple Choice</option>
-          <option value="True/False">True/False</option>
-          <option value="Short Answer">Short Answer</option>
-          <option value="Essay">Essay</option>
-        </select>
-        <textarea placeholder="Question text" value={form.text} onChange={e => setForm({...form, text: e.target.value})} className="w-full p-2 border rounded-xl" required />
-        {form.type === 'Multiple Choice' && (
-          <div className="space-y-1">
-            {form.options.map((opt, i) => (
-              <input key={i} type="text" placeholder={`Option ${i+1}`} value={opt} onChange={e => {
-                const newOpts = [...form.options];
-                newOpts[i] = e.target.value;
-                setForm({...form, options: newOpts});
-              }} className="w-full p-2 border rounded-xl" />
-            ))}
+      {/* Question Form */}
+      <Card variant="default" padding="lg">
+        <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Plus className="w-4 h-4 text-[var(--brand-primary)]" />
+            <span>{editingId ? 'ጥያቄ አርትዕ (Edit Question)' : 'አዲስ ጥያቄ ጨምር (Add Question)'}</span>
+          </CardTitle>
+        </CardHeader>
+
+        <form onSubmit={handleAddOrUpdate} className="space-y-4">
+          <select
+            value={form.type}
+            onChange={e => setForm({...form, type: e.target.value})}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="Multiple Choice">ምርጫ (Multiple Choice)</option>
+            <option value="True/False">እውነት/ሐሰት (True/False)</option>
+            <option value="Short Answer">አጭር መልስ (Short Answer)</option>
+            <option value="Essay">ድርሰት/ማብራሪያ (Essay)</option>
+          </select>
+
+          <textarea
+            placeholder="የጥያቄው ጽሑፍ (Question text)"
+            value={form.text}
+            onChange={e => setForm({...form, text: e.target.value})}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            rows={3}
+            required
+          />
+
+          {form.type === 'Multiple Choice' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {form.options.map((opt, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  placeholder={`ምርጫ ${String.fromCharCode(65 + i)} (Option ${i+1})`}
+                  value={opt}
+                  onChange={e => {
+                    const newOpts = [...form.options];
+                    newOpts[i] = e.target.value;
+                    setForm({...form, options: newOpts});
+                  }}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              placeholder="ትክክለኛ መልስ (Correct Answer)"
+              value={form.correctAnswer}
+              onChange={e => setForm({...form, correctAnswer: e.target.value})}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+            <input
+              type="number"
+              placeholder="ነጥብ (Points)"
+              value={form.points}
+              onChange={e => setForm({...form, points: parseInt(e.target.value) || 1})}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
-        )}
-        <input type="text" placeholder="Correct Answer" value={form.correctAnswer} onChange={e => setForm({...form, correctAnswer: e.target.value})} className="w-full p-2 border rounded-xl" />
-        <input type="number" placeholder="Points" value={form.points} onChange={e => setForm({...form, points: parseInt(e.target.value)})} className="w-full p-2 border rounded-xl" />
-        <button type="submit" className="w-full bg-indigo-600 text-white p-2 rounded-xl">
-          {editingId ? 'Update Question' : 'Add Question'}
-        </button>
-        {editingId && <button type="button" onClick={() => { setEditingId(null); setForm({ type: 'Multiple Choice', text: '', options: ['', '', '', ''], correctAnswer: '', points: 1 }); }} className="w-full mt-1 bg-slate-200 p-2 rounded-xl">Cancel Edit</button>}
-      </form>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Button type="submit" size="sm" className="font-bold">
+              {editingId ? 'ጥያቄውን አዘምን (Update Question)' : 'ጥያቄውን ጨምር (Add Question)'}
+            </Button>
+            {editingId && (
+              <Button
+                type="button"
+                variant="neutral"
+                size="sm"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm({ type: 'Multiple Choice', text: '', options: ['', '', '', ''], correctAnswer: '', points: 1 });
+                }}
+              >
+                ይቅር (Cancel)
+              </Button>
+            )}
+          </div>
+        </form>
+      </Card>
 
       {/* Questions list */}
       <div className="space-y-3">
-        <h3 className="font-semibold">Questions ({questions.length})</h3>
-        {questions.map((q, idx) => (
-          <div key={q._id} className="bg-white p-3 rounded-xl shadow border flex justify-between items-start">
-            <div className="flex-1">
-              <p className="font-medium">{idx+1}. {q.text}</p>
-              <p className="text-xs text-slate-500">Type: {q.type} | Answer: {q.correctAnswer} | Points: {q.points}</p>
-              {q.options.length > 0 && <p className="text-xs text-slate-400">Options: {q.options.join(', ')}</p>}
-            </div>
-            <div className="flex gap-2 ml-4">
-              <button onClick={() => startEdit(q)} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Edit</button>
-              <button onClick={() => handleDelete(q._id)} className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">Delete</button>
-            </div>
-          </div>
-        ))}
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-amber-500" />
+            <span>የተመዘገቡ ጥያቄዎች ({questions.length})</span>
+          </h3>
+        </div>
+
+        {questions.length === 0 ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-6 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-200/80 dark:border-slate-700">
+            ምንም የተመዘገበ ጥያቄ የለም (No questions added yet)
+          </p>
+        ) : (
+          questions.map((q, idx) => (
+            <Card key={q._id} variant="default" padding="sm" className="flex justify-between items-start">
+              <div className="flex-1 space-y-1">
+                <p className="font-bold text-slate-900 dark:text-white text-sm">{idx + 1}. {q.text}</p>
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <Badge variant="subtle" size="sm">{q.type}</Badge>
+                  <span className="text-slate-500 dark:text-slate-400">መልስ፡ <strong className="text-emerald-600 dark:text-emerald-400">{q.correctAnswer}</strong></span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-slate-500 dark:text-slate-400">{q.points} ነጥብ</span>
+                </div>
+                {q.options?.length > 0 && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+                    ምርጫዎች፡ {q.options.join(', ')}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2 ml-4">
+                <Button size="xs" variant="neutral" onClick={() => startEdit(q)} className="flex items-center gap-1">
+                  <Edit2 className="w-3 h-3" />
+                  <span>አርትዕ</span>
+                </Button>
+                <Button size="xs" variant="destructive" onClick={() => handleDelete(q._id)} className="flex items-center gap-1">
+                  <Trash2 className="w-3 h-3" />
+                  <span>ሰርዝ</span>
+                </Button>
+              </div>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/apiClient';
 import { changePasswordSchema } from '../schemas';
-import { BackButton } from '../components/ui';
+import { BackButton, Card } from '../components/ui';
 
 const ChangePassword = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -47,7 +47,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-8 bg-white/90 dark:bg-slate-900 backdrop-blur-xl rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 transition-all space-y-6">
+    <Card variant="glass" padding="lg" className="max-w-md mx-auto mt-12 transition-all space-y-6 font-sans">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
         <div className="flex items-center gap-3">
           <span className="p-2.5 bg-blue-50 dark:bg-slate-800 text-[#1657b8] dark:text-amber-400 rounded-2xl shadow-sm">
@@ -149,7 +149,7 @@ const ChangePassword = () => {
           </Link>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 

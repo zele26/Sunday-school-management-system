@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -146,7 +147,7 @@ const AdminLayout = ({ children, onLogout }) => {
           <div className="flex items-center gap-3">
             <div className="relative w-11 h-11 flex-shrink-0">
               <div className="relative w-full h-full p-1 rounded-full bg-white border border-amber-400 flex items-center justify-center overflow-hidden shadow-sm">
-                <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
+                <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
               </div>
             </div>
             <div className="min-w-0">

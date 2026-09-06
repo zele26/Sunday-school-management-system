@@ -7,6 +7,7 @@ import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
+import { Card, Badge } from '../../components/ui';
 
 const StudentProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -128,11 +129,11 @@ const StudentProfile = () => {
   const registrationNumber = profile.registrationNumber || 'N/A';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/70 via-white to-amber-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header Card */}
         <FadeIn direction="down" duration={0.4}>
-          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 overflow-hidden">
+          <Card variant="default" padding="none" className="overflow-hidden">
             <div className="bg-gradient-to-r from-[#1657b8] via-[#124796] to-[#0d3269] p-6 sm:p-8 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
               <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -154,222 +155,226 @@ const StudentProfile = () => {
                 </div>
               </div>
             </div>
-          <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* QR Code */}
-            <div className="flex flex-col items-center justify-center bg-blue-50/50 rounded-2xl p-4 border border-blue-100">
-              {profile.qrCode ? (
-                <>
-                  <div className="bg-white p-2 rounded-xl shadow-md border border-blue-100">
-                    <QRCodeSVG value={profile.qrCode} size={140} />
+            <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-slate-900">
+              {/* QR Code */}
+              <div className="flex flex-col items-center justify-center bg-blue-50/50 dark:bg-slate-800/50 rounded-2xl p-4 border border-blue-100 dark:border-slate-800">
+                {profile.qrCode ? (
+                  <>
+                    <div className="bg-white p-2 rounded-xl shadow-md border border-blue-100 dark:border-slate-700">
+                      <QRCodeSVG value={profile.qrCode} size={140} />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">የተማሪው QR ኮድ (Your QR Code)</p>
+                  </>
+                ) : (
+                  <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-amber-700 dark:text-amber-300 text-sm">
+                    QR code not generated. Ask an admin to generate one.
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">Your QR Code</p>
-                </>
-              ) : (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-700 text-sm">
-                  QR code not generated. Ask an admin to generate one.
+                )}
+              </div>
+              {/* Quick Info */}
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Application No.</span>
+                  <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{registrationNumber}</span>
                 </div>
-              )}
-            </div>
-            {/* Quick Info */}
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between border-b border-slate-100 pb-1">
-                <span className="font-medium text-slate-500">Application No.</span>
-                <span className="font-mono font-bold text-slate-700">{registrationNumber}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-1">
-                <span className="font-medium text-slate-500">Full Name</span>
-                <span className="font-semibold text-slate-800">{fullName}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-1">
-                <span className="font-medium text-slate-500">Gender</span>
-                <span className="font-semibold text-slate-800">{profile.gender || '-'}</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-100 pb-1">
-                <span className="font-medium text-slate-500">Date of Birth</span>
-                <span className="font-semibold text-slate-800">{formatEthiopianDate(profile.dob)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium text-slate-500">Address</span>
-                <span className="font-semibold text-slate-800 text-right">{profile.address || '-'}</span>
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Full Name</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{fullName}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Gender</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.gender || '-'}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Date of Birth</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{formatEthiopianDate(profile.dob)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium text-slate-500 dark:text-slate-400">Address</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{profile.address || '-'}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </FadeIn>
+          </Card>
+        </FadeIn>
 
         {/* Personal Information Card */}
         <FadeIn delay={0.1}>
-          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-blue-100 text-[#1657b8] flex items-center justify-center font-bold">👤</span>
+          <Card variant="default" padding="lg">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold">👤</span>
               የግል መረጃ (Personal Information)
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">First Name</span>
-                <span className="font-semibold text-slate-800">{profile.firstName || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">First Name</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.firstName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Middle Name</span>
-                <span className="font-semibold text-slate-800">{profile.middleName || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Middle Name</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.middleName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Last Name</span>
-                <span className="font-semibold text-slate-800">{profile.lastName || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Last Name</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.lastName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">ዕድሜ (Age)</span>
-                <span className="font-semibold text-slate-800">{profile.age || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ዕድሜ (Age)</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.age || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Education Level</span>
-                <span className="font-semibold text-slate-800">{profile.educationLevel || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Education Level</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.educationLevel || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Profession</span>
-                <span className="font-semibold text-slate-800">{profile.profession || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Profession</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.profession || '-'}</span>
               </div>
               {studentType === 'regular' && (
                 <div>
-                  <span className="font-medium text-slate-500 block mb-0.5">የመማሪያ ፈረቃ (Shift)</span>
-                  <span className="font-semibold text-[#1657b8]">
+                  <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የመማሪያ ፈረቃ (Shift)</span>
+                  <span className="font-semibold text-[#1657b8] dark:text-amber-400">
                     {profile.shift === 'night' ? 'የማታ (Night)' : 'የቀን (Weekend)'}
                   </span>
                 </div>
               )}
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
-                <span className="font-semibold text-slate-800 font-mono">{profile.studentPhone || profile.contactPhone || profile.phone || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Phone</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">{profile.studentPhone || profile.contactPhone || profile.phone || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Email</span>
-                <span className="font-semibold text-slate-800">{profile.userId?.email || profile.email || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Email</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.userId?.email || profile.email || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">ክፍለ ከተማ (Subcity)</span>
-                <span className="font-semibold text-slate-800">{profile.subcity || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ክፍለ ከተማ (Subcity)</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.subcity || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">ወረዳ (Woreda)</span>
-                <span className="font-semibold text-slate-800">{profile.woreda || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ወረዳ (Woreda)</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.woreda || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">ቀበሌ / የቤት ቁጥር (Kebele)</span>
-                <span className="font-semibold text-slate-800">{profile.kebele || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ቀበሌ / የቤት ቁጥር (Kebele)</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.kebele || '-'}</span>
               </div>
               <div className="sm:col-span-2">
-                <span className="font-medium text-slate-500 block mb-0.5">ሙሉ አድራሻ (Address)</span>
-                <span className="font-semibold text-slate-800">{profile.address || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ሙሉ አድራሻ (Address)</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.address || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Teacher</span>
-                <span className="font-semibold text-slate-800">
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Teacher</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {profile.teacher ? (profile.teacher.fullName || profile.teacher.email) : '-'}
                 </span>
               </div>
             </div>
-          </div>
+          </Card>
         </FadeIn>
 
         {/* Emergency Contact Card */}
         <FadeIn delay={0.15}>
-          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📞</span>
+          <Card variant="default" padding="lg">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center">📞</span>
               Emergency Contact
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Name</span>
-                <span className="font-semibold text-slate-800">{emergencyName || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Name</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Relationship</span>
-                <span className="font-semibold text-slate-800">{profile.relationship || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Relationship</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.relationship || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Phone</span>
-                <span className="font-semibold text-slate-800">{emergencyPhone || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Phone</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyPhone || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 block mb-0.5">Email</span>
-                <span className="font-semibold text-slate-800">{emergencyEmail || '-'}</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Email</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyEmail || '-'}</span>
               </div>
             </div>
-          </div>
+          </Card>
         </FadeIn>
 
         {/* Enrolled Courses */}
         <FadeIn delay={0.2}>
-          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">📚</span>
+          <Card variant="default" padding="lg">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">📚</span>
               Enrolled Courses
             </h3>
             {courses.length === 0 ? (
-              <p className="text-sm text-slate-400">You are not enrolled in any courses yet.</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 py-3 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
+                You are not enrolled in any courses yet.
+              </p>
             ) : (
               <ul className="space-y-2">
                 {courses.map(course => (
-                  <li key={course._id} className="bg-slate-50 rounded-xl px-4 py-3 text-sm flex items-center justify-between">
+                  <li key={course._id} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4 py-3 text-sm flex items-center justify-between border border-slate-100 dark:border-slate-800">
                     <div>
-                      <span className="font-semibold text-slate-700">{course.name}</span>
-                      {course.grade && <span className="text-slate-500 ml-2">({course.grade})</span>}
-                      {course.schedule && <span className="text-slate-500 ml-2">— {course.schedule}</span>}
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{course.name}</span>
+                      {course.grade && <span className="text-slate-500 dark:text-slate-400 ml-2">({course.grade})</span>}
+                      {course.schedule && <span className="text-slate-500 dark:text-slate-400 ml-2">— {course.schedule}</span>}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         </FadeIn>
 
         {/* Attendance History */}
         <FadeIn delay={0.25}>
-          <div className="bg-white rounded-3xl shadow-lg border border-blue-100 p-6 sm:p-8">
-            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <span className="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-700 flex items-center justify-center">📅</span>
+          <Card variant="default" padding="lg">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center">📅</span>
               Attendance History
             </h3>
             {attendance.length === 0 ? (
-              <p className="text-sm text-slate-400">No attendance records found.</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 py-3 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
+                No attendance records found.
+              </p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
-                    <tr className="border-b text-xs uppercase text-slate-400">
-                      <th className="py-2 px-2">Date</th>
-                      <th className="py-2 px-2">Check-in</th>
-                      <th className="py-2 px-2">Course</th>
-                      <th className="py-2 px-2">Teacher</th>
-                      <th className="py-2 px-2">Grade</th>
-                      <th className="py-2 px-2">Status</th>
-                      <th className="py-2 px-2">Acad. Year</th>
-                      <th className="py-2 px-2">Semester</th>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-xs uppercase text-slate-400 bg-slate-50 dark:bg-slate-800/50">
+                      <th className="py-2.5 px-3 font-bold">Date</th>
+                      <th className="py-2.5 px-3 font-bold">Check-in</th>
+                      <th className="py-2.5 px-3 font-bold">Course</th>
+                      <th className="py-2.5 px-3 font-bold">Teacher</th>
+                      <th className="py-2.5 px-3 font-bold">Grade</th>
+                      <th className="py-2.5 px-3 font-bold">Status</th>
+                      <th className="py-2.5 px-3 font-bold">Acad. Year</th>
+                      <th className="py-2.5 px-3 font-bold">Semester</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {attendance.map(record => {
                       const checkIn = record.checkInTime
                         ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : '-';
                       return (
-                        <tr key={record._id} className="hover:bg-slate-50">
-                          <td className="py-2 px-2 font-medium">{formatEthiopianDate(record.date)}</td>
-                          <td className="py-2 px-2">{checkIn}</td>
-                          <td className="py-2 px-2">{record.courseName || 'General'}</td>
-                          <td className="py-2 px-2">{record.teacherName || 'N/A'}</td>
-                          <td className="py-2 px-2">{record.grade || '-'}</td>
-                          <td className="py-2 px-2">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${record.status === 'Present' ? 'bg-emerald-100 text-emerald-700' :
-                                record.status === 'Late' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-rose-100 text-rose-700'
-                              }`}>
+                        <tr key={record._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 text-slate-700 dark:text-slate-300">
+                          <td className="py-2.5 px-3 font-medium">{formatEthiopianDate(record.date)}</td>
+                          <td className="py-2.5 px-3 font-mono text-xs">{checkIn}</td>
+                          <td className="py-2.5 px-3">{record.courseName || 'General'}</td>
+                          <td className="py-2.5 px-3">{record.teacherName || 'N/A'}</td>
+                          <td className="py-2.5 px-3">{record.grade || '-'}</td>
+                          <td className="py-2.5 px-3">
+                            <Badge
+                              variant={record.status === 'Present' ? 'success' : record.status === 'Late' ? 'warning' : 'destructive'}
+                              size="sm"
+                            >
                               {record.status}
-                            </span>
+                            </Badge>
                           </td>
-                          <td className="py-2 px-2">{record.academicYear || '-'}</td>
-                          <td className="py-2 px-2">{record.semester || '-'}</td>
+                          <td className="py-2.5 px-3 font-mono text-xs">{record.academicYear || '-'}</td>
+                          <td className="py-2.5 px-3">{record.semester || '-'}</td>
                         </tr>
                       );
                     })}
@@ -377,7 +382,7 @@ const StudentProfile = () => {
                 </table>
               </div>
             )}
-          </div>
+          </Card>
         </FadeIn>
       </div>
     </div>

@@ -1,17 +1,26 @@
 // src/features/teacher/TeacherGrading.jsx
+'use client';
+
 import React from 'react';
+import { Award } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui';
 
 const TeacherGrading = () => {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-      <div className="border-b border-slate-100 pb-4">
-        <h2 className="text-xl font-bold text-slate-800">ውጤት መስጫ (Grading Center)</h2>
-        <p className="text-xs text-slate-500 mt-1">የተማሪዎችን ፈተና እና የቤት ሥራ ውጤቶች ያስገቡ።</p>
-      </div>
-      <div className="py-8 text-center text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
-        ለውጤት አሰጣጥ የተላከ የቤት ሥራ የለም።
-      </div>
-    </div>
+    <Card variant="default" padding="lg" className="space-y-6">
+      <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+        <CardTitle className="flex items-center gap-2">
+          <Award className="w-5 h-5 text-[var(--brand-primary)]" />
+          <span>ውጤት መስጫ (Grading Center)</span>
+        </CardTitle>
+        <CardDescription>የተማሪዎችን ፈተና እና የቤት ሥራ ውጤቶች ያስገቡ።</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-sm bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+          ለውጤት አሰጣጥ የተላከ የቤት ሥራ የለም።
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

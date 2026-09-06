@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../api/apiClient';
-import { BackButton } from '../components/ui';
+import { BackButton, Card } from '../components/ui';
 
 // Helper: translate raw status + studentType into a clear Amharic message
 const getStatusMessage = (status, studentType) => {
@@ -74,10 +74,6 @@ const CheckStatusContent = () => {
     setError('');
   };
 
-  const inputClass =
-    "w-full pl-11 pr-4 py-3.5 rounded-2xl border border-slate-200 bg-white/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-slate-700 text-sm placeholder:text-slate-400 shadow-sm";
-  const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
-
   // ───────────────────────── RESULT VIEW ─────────────────────────
   if (result) {
     const isApproved = result.status === 'Approved';
@@ -89,7 +85,7 @@ const CheckStatusContent = () => {
           <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
         </header>
 
-        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 text-center animate-in zoom-in-95 duration-500 my-auto">
+        <Card variant="default" padding="lg" className="max-w-md w-full text-center animate-in zoom-in-95 duration-500 my-auto">
           {/* Status Icon */}
           <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner ${
             isApproved ? 'bg-emerald-100 text-emerald-600' :
@@ -173,7 +169,7 @@ const CheckStatusContent = () => {
           >
             ← ሌላ ለማረጋገጥ ይመለሱ (Check Another)
           </button>
-        </div>
+        </Card>
 
         <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
           ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
@@ -202,7 +198,7 @@ const CheckStatusContent = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800">
+        <Card variant="default" padding="lg">
           {error && (
             <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border-l-4 border-rose-500 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-r-xl flex items-center gap-3 animate-in slide-in-from-top-2">
               <span className="text-base shrink-0">⚠️</span>
@@ -272,7 +268,7 @@ const CheckStatusContent = () => {
               </button>
             </div>
           </form>
-        </div>
+        </Card>
 
         <p className="text-center text-xs text-slate-400 mt-6">
           ትክክለኛውን ስልክ ቁጥር እና ፓስዎርድ ማስገባትዎን ያረጋግጡ።
@@ -286,4 +282,5 @@ const CheckStatusContent = () => {
   );
 };
 
-export default CheckStatusContent;
+export default CheckStatusContent;
+

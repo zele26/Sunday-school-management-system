@@ -18,3 +18,4 @@ export * from './accordion';
 export * from './tooltip';
 export * from './sonner';
 export * from './BackButton';
+export * from './AppImage';

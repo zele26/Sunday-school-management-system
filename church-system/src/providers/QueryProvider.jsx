@@ -1,3 +1,4 @@
+/* global process */
 'use client';
 
 import React, { useState } from 'react';
@@ -25,7 +26,7 @@ export function QueryProvider({ children }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === 'development' && (
+      {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
       )}
     </QueryClientProvider>

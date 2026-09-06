@@ -1,6 +1,10 @@
 // src/features/teacher/TeacherAttendanceSummary.jsx
+'use client';
+
 import React, { useState, useEffect } from 'react';
+import { CalendarCheck, BookOpen } from 'lucide-react';
 import { API_BASE_URL } from '../../api/apiClient';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '../../components/ui';
 
 const TeacherAttendanceSummary = () => {
   const [courses, setCourses] = useState([]);
@@ -42,7 +46,6 @@ const TeacherAttendanceSummary = () => {
         const courseSummary = data.find(s => s.courseId === courseId);
         setSummary(courseSummary || null);
       } else {
-        // If all courses, just take the first one or handle array – for simplicity, we'll show the first course's summary if no selection
         setSummary(data.length ? data[0] : null);
       }
     } catch (err) {
@@ -63,60 +66,70 @@ const TeacherAttendanceSummary = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-      <h2 className="text-xl font-bold text-slate-800">Attendance Summary</h2>
+    <Card variant="default" padding="lg" className="space-y-6">
+      <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
+        <CardTitle className="flex items-center gap-2">
+          <CalendarCheck className="w-5 h-5 text-[var(--brand-primary)]" />
+          <span>የመገኘት ማጠቃለያ (Attendance Summary)</span>
+        </CardTitle>
+      </CardHeader>
 
-      {/* Course Selector */}
-      <div className="max-w-xs">
-        <label className="text-xs text-slate-500 block mb-1">Select Course</label>
-        <select
-          value={selectedCourse}
-          onChange={handleCourseChange}
-          className="w-full p-2 border rounded-xl text-sm"
-        >
-          <option value="">-- Choose a course --</option>
-          {courses.map(c => (
-            <option key={c._id} value={c._id}>{c.name}</option>
-          ))}
-        </select>
-      </div>
-
-      {loading && <div className="py-4 text-center text-slate-400">Loading summary...</div>}
-
-      {!loading && summary && summary.students.length === 0 && (
-        <p className="text-slate-500">No students enrolled in this course.</p>
-      )}
-
-      {!loading && summary && summary.students.length > 0 && (
-        <div>
-          <h3 className="font-semibold text-slate-700 mb-3">
-            {summary.courseName}
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b text-xs uppercase text-slate-400">
-                  <th className="py-2 px-2">Student</th>
-                  <th className="py-2 px-2">Attendance</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {summary.students.map(s => (
-                  <tr key={s.studentId} className="hover:bg-slate-50">
-                    <td className="py-2 px-2 font-medium">{s.studentName}</td>
-                    <td className="py-2 px-2">
-                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                        {s.attended}/{s.totalClasses}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <CardContent className="space-y-6 p-0">
+        {/* Course Selector */}
+        <div className="max-w-xs">
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">ኮርስ ይምረጡ (Select Course)</label>
+          <select
+            value={selectedCourse}
+            onChange={handleCourseChange}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">-- ኮርስ ይምረጡ --</option>
+            {courses.map(c => (
+              <option key={c._id} value={c._id}>{c.name}</option>
+            ))}
+          </select>
         </div>
-      )}
-    </div>
+
+        {loading && <div className="py-6 text-center text-slate-400 text-sm">ማጠቃለያውን በመጫን ላይ...</div>}
+
+        {!loading && summary && summary.students.length === 0 && (
+          <p className="text-slate-500 dark:text-slate-400 text-sm py-4 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
+            በዚህ ኮርስ የተመዘገበ ተማሪ የለም (No students enrolled in this course)
+          </p>
+        )}
+
+        {!loading && summary && summary.students.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+              <BookOpen className="w-4 h-4 text-amber-500" />
+              <span>{summary.courseName}</span>
+            </h3>
+            <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-xs uppercase text-slate-400 bg-slate-50 dark:bg-slate-800/50">
+                    <th className="py-3 px-4 font-bold">የተማሪ ስም (Student)</th>
+                    <th className="py-3 px-4 font-bold text-right">የመገኘት ምጣኔ (Attendance)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {summary.students.map(s => (
+                    <tr key={s.studentId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                      <td className="py-3 px-4 font-medium text-slate-800 dark:text-slate-200">{s.studentName}</td>
+                      <td className="py-3 px-4 text-right">
+                        <Badge variant="subtle" size="sm">
+                          {s.attended}/{s.totalClasses} ቀን
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

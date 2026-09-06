@@ -1,6 +1,7 @@
 // src/features/teacher/TeacherClasses.jsx
 import React, { useState, useEffect } from 'react';
-import { apiFetch, API_BASE_URL } from '../../api/apiClient';
+import { API_BASE_URL } from '../../api/apiClient';
+import { Card, CardHeader, CardTitle, CardContent, Badge } from '../../components/ui';
 
 const TeacherClasses = () => {
   const [classes, setClasses] = useState([]);
@@ -27,35 +28,36 @@ const TeacherClasses = () => {
   }, []);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+    <Card variant="default" padding="lg" className="space-y-6 font-sans">
+      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">የተመደቡ ክፍሎች (My Assigned Classes)</h2>
-          <p className="text-xs text-slate-500 mt-1">የሚያስተምሯቸውን ክፍሎች እና ተማሪዎችን ይመልከቱ።</p>
+          <CardTitle>የተመደቡ ክፍሎች (My Assigned Classes)</CardTitle>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">የሚያስተምሯቸውን ክፍሎች እና ተማሪዎችን ይመልከቱ።</p>
         </div>
+        <Badge variant="gold" size="sm">{classes.length} ክፍሎች</Badge>
       </div>
 
       {loading ? (
         <div className="py-8 text-center text-slate-400 text-sm">በመጫን ላይ ነው...</div>
       ) : classes.length === 0 ? (
-        <div className="py-8 text-center text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+        <div className="py-12 text-center text-slate-400 text-sm bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
           ምንም የተመደቡ ክፍሎች አልተገኙም።
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {classes.map((cls) => (
-            <div key={cls._id || cls.id} className="p-4 border border-slate-200 rounded-xl hover:shadow-sm transition">
-              <h3 className="font-bold text-slate-800">{cls.className || cls.name}</h3>
-              <p className="text-xs text-slate-500 mt-1">ተማሪዎች: {cls.studentCount || 0}</p>
-              <button className="mt-4 text-xs font-semibold text-blue-600 hover:underline">
+            <Card key={cls._id || cls.id} variant="default" padding="md" className="hover:border-amber-400 transition-colors">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">{cls.className || cls.name}</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ተማሪዎች: {cls.studentCount || 0}</p>
+              <button className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
                 የተማሪዎች ዝርዝር ይመልከቱ →
               </button>
-            </div>
+            </Card>
           ))}
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 
-export default TeacherClasses;
+export default TeacherClasses;

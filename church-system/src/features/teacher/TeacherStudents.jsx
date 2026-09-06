@@ -6,6 +6,7 @@ import {
   DataTable,
   DataTableColumnHeader,
   Badge,
+  Card,
 } from '../../components/ui';
 import { useMyStudents } from '../../hooks/queries/useTeacherPortal';
 
@@ -46,7 +47,7 @@ const TeacherStudents = () => {
   );
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-4">
+    <Card variant="default" padding="lg" className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <Users className="w-5 h-5 text-[var(--brand-primary)]" />
@@ -62,7 +63,7 @@ const TeacherStudents = () => {
         emptyMessage="ምንም የተመደበ ተማሪ የለም (No students assigned to you yet)"
         emptyIcon={Users}
       />
-    </div>
+    </Card>
   );
 };
 

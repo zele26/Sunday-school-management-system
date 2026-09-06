@@ -3,6 +3,7 @@
 // src/pages/Login.jsx
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -140,10 +141,12 @@ const Login = () => {
       {/* 🌟 1. Luminous & Eye-Catching Ethiopian Orthodox Church Atmosphere */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
         {/* Soft, bright Lideta Church photograph backdrop with gentle aura */}
-        <img
-          src={churchBg?.src || churchBg}
+        <Image
+          src={churchBg}
           alt="Lideta Church"
-          className="w-full h-full object-cover object-center filter blur-[2px] scale-105 opacity-25 dark:opacity-15 brightness-[1.08] contrast-[1.02] dark:brightness-[0.45] transition-all duration-700"
+          fill
+          priority
+          className="object-cover object-center filter blur-[2px] scale-105 opacity-25 dark:opacity-15 brightness-[1.08] contrast-[1.02] dark:brightness-[0.45] transition-all duration-700 pointer-events-none"
         />
 
         {/* Luminous Light Veil with Royal Blue & Gold Warmth */}
@@ -210,10 +213,14 @@ const Login = () => {
                   className="absolute -inset-2 rounded-full border border-dashed border-amber-300/50 pointer-events-none"
                 />
                 <div className="relative w-full h-full p-2.5 rounded-full bg-white border-2 border-amber-400 shadow-2xl flex items-center justify-center overflow-hidden ring-4 ring-amber-400/30">
-                  <img
-                    src={logoImage?.src || logoImage}
+                  <Image
+                    src={logoImage}
                     alt="የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት አርማ"
+                    width={144}
+                    height={144}
+                    priority
                     className="w-full h-full object-contain rounded-full transform group-hover:scale-108 transition-transform duration-500"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                 </div>
               </div>
@@ -389,4 +396,3 @@ const Login = () => {
 };
 
 export default Login;
-

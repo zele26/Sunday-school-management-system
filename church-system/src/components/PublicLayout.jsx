@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import ChurchLogo from '../assets/ChurchLogo.png';
 import { ThemeToggle } from './ui/ThemeToggle';
@@ -127,10 +128,14 @@ const PublicLayout = ({ children }) => {
               {/* Logo Container with Enhanced Styling */}
               <div className="relative flex items-center justify-center flex-shrink-0">
                 <div className="relative p-1 rounded-2xl bg-white dark:bg-slate-800 border border-amber-400/80 shadow-md group-hover:border-[#1657b8] group-hover:shadow-lg transition-all duration-300">
-                  <img
-                    src={ChurchLogo?.src || ChurchLogo}
+                  <Image
+                    src={ChurchLogo}
                     alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
+                    width={56}
+                    height={56}
+                    priority
                     className="h-11 sm:h-13 lg:h-14 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                 </div>
               </div>
@@ -359,8 +364,8 @@ const PublicLayout = ({ children }) => {
             {/* Column 1: Brand Info */}
             <div className="md:col-span-2 space-y-3">
               <div className="flex items-center space-x-3 space-x-reverse">
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1 border border-slate-200 shadow-sm">
-                  <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1 border border-slate-200 shadow-sm overflow-hidden">
+                  <Image src={ChurchLogo} alt="Logo" width={40} height={40} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-extrabold text-base text-[#1657b8]">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>

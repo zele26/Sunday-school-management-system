@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserCheck,
@@ -385,18 +386,21 @@ const RegistrationsManagement = () => {
                         {selectedRegistration.receiptUrl ? (
                           <div>
                             {isImageUrl(selectedRegistration.receiptUrl) ? (
-                              <a href={selectedRegistration.receiptUrl} target="_blank" rel="noreferrer">
-                                <img
+                              <a href={selectedRegistration.receiptUrl} target="_blank" rel="noopener noreferrer">
+                                <Image
                                   src={selectedRegistration.receiptUrl}
                                   alt="Receipt"
-                                  className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:opacity-90 transition-opacity"
+                                  width={384}
+                                  height={260}
+                                  unoptimized
+                                  className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:opacity-90 transition-opacity object-contain"
                                 />
                               </a>
                             ) : (
                               <a
                                 href={selectedRegistration.receiptUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="text-[var(--brand-primary)] hover:underline text-xs font-bold inline-flex items-center gap-1"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" /> Open Attachment Document

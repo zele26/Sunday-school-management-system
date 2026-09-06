@@ -1,12 +1,19 @@
 'use client';
 
-// src/pages/public/Home.jsx
+// src/views/public/Home.jsx
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import logoImage from '../../assets/ChurchLogo.png';
+import ChurchLogo from '../../assets/ChurchLogo.png';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard, AnimatedModal } from '../../components/motion';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+  Badge,
+} from '../../components/ui';
 
 const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
@@ -25,7 +32,6 @@ const Home = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] border border-blue-400/10 rounded-full pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto text-center space-y-8">
-
           {/* Centered Church Logo with Radiant Golden Halo & Floating Motion */}
           <motion.div
             initial={{ scale: 0.85, opacity: 0, y: 15 }}
@@ -47,10 +53,14 @@ const Home = () => {
             />
             {/* White Polished Emblem Shield */}
             <div className="relative w-full h-full p-2.5 sm:p-3 rounded-full bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-2xl shadow-amber-500/20 flex items-center justify-center overflow-hidden ring-4 ring-amber-400/20">
-              <img
-                src={logoImage?.src || logoImage}
+              <Image
+                src={ChurchLogo}
                 alt="ተክለ ሳዊሮስ ሰንበት ት/ቤት አርማ"
+                width={176}
+                height={176}
+                priority
                 className="w-full h-full object-contain rounded-full transform group-hover:scale-108 transition-transform duration-500"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </div>
           </motion.div>
@@ -73,7 +83,7 @@ const Home = () => {
             {/* Subtitle & Motto */}
             <div className="max-w-3xl mx-auto space-y-1.5">
               <p className="text-base sm:text-xl font-bold text-slate-700 dark:text-slate-200">
-                የሕፃናት፣ የወጣቶችና የጎልማሶች መንፈሳዊ ትምህርት ማዕከል
+                የሕፃናት፣ የወጣቶችና የአዋቂዎች መንፈሳዊ ትምህርት ማዕከል
               </p>
               <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium italic">
                 «በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።»
@@ -109,7 +119,7 @@ const Home = () => {
             <motion.div whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
               <Link
                 href="/login"
-                className="w-full sm:w-auto bg-white/90 dark:bg-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-7 py-4 rounded-2xl font-extrabold shadow-sm hover:shadow-md transition-all text-base text-center flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white px-7 py-4 rounded-2xl font-extrabold shadow-sm hover:shadow-md transition-all text-base text-center flex items-center justify-center gap-2"
               >
                 <span>ይግቡ (Sign In)</span>
                 <span>🔐</span>
@@ -134,7 +144,6 @@ const Home = () => {
               </div>
             </div>
           </FadeIn>
-
         </div>
       </section>
 
@@ -143,15 +152,15 @@ const Home = () => {
         <StaggerContainer className="grid md:grid-cols-3 gap-6">
           {/* Vision */}
           <StaggerItem>
-            <MotionCard className="h-full bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 transition-all text-center group">
-              <div className="w-14 h-14 bg-blue-50 text-[#1657b8] rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[#1657b8] group-hover:text-white transition-all">
+            <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 dark:hover:border-blue-500/40 transition-all text-center group">
+              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[#1657b8] group-hover:text-white transition-all">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">ራዕያችን</h3>
-              <p className="text-slate-600 leading-relaxed text-sm">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">ራዕያችን</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                 ማኅበረሰቡን በእግዚአብሔር ቃልና በኦርቶዶክሳዊት ተዋሕዶ ቤተ ክርስቲያን ስርዓት ማነጽ።
               </p>
             </MotionCard>
@@ -159,14 +168,14 @@ const Home = () => {
 
           {/* Mission */}
           <StaggerItem>
-            <MotionCard className="h-full bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-amber-400/40 transition-all text-center group">
-              <div className="w-14 h-14 bg-amber-50 text-amber-700 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[var(--brand-gold)] group-hover:text-slate-950 transition-all">
+            <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-400/40 transition-all text-center group">
+              <div className="w-14 h-14 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[var(--brand-gold)] group-hover:text-slate-950 transition-all">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">ተልዕኳችን</h3>
-              <p className="text-slate-600 leading-relaxed text-sm">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">ተልዕኳችን</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                 ለሁሉም የዕድሜ ክልል ጥራት ያለውና ተደራሽ የሆነ የሰንበት ትምህርት አገልግሎት መስጠት።
               </p>
             </MotionCard>
@@ -174,14 +183,14 @@ const Home = () => {
 
           {/* Values */}
           <StaggerItem>
-            <MotionCard className="h-full bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 transition-all text-center group">
-              <div className="w-14 h-14 bg-blue-50 text-[#1657b8] rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[#1657b8] group-hover:text-white transition-all">
+            <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 dark:hover:border-blue-500/40 transition-all text-center group">
+              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[#1657b8] group-hover:text-white transition-all">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2 tracking-tight">እሴቶቻችን</h3>
-              <p className="text-slate-600 leading-relaxed text-sm">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">እሴቶቻችን</h3>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                 እምነት፣ ፍቅር፣ አንድነት፣ ትህትና እና ታማኝነት።
               </p>
             </MotionCard>
@@ -190,42 +199,56 @@ const Home = () => {
       </section>
 
       {/* 🌟 3. WHY CHOOSE US SECTION */}
-      <section className="bg-slate-100/70 py-16 border-t border-slate-200">
+      <section className="bg-slate-100/70 dark:bg-slate-900/50 py-16 border-t border-slate-200 dark:border-slate-800">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <FadeIn>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1657b8] mb-3 tracking-tight">ለምን እኛን ይመርጣሉ?</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto mb-10 text-sm sm:text-base">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1657b8] dark:text-blue-400 mb-3 tracking-tight">
+              ለምን እኛን ይመርጣሉ?
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 text-sm sm:text-base">
               በሰንበት ትምህርት ቤታችን ህፃናትና ወጣቶች በመንፈሳዊ ዕውቀትና በበጎ ምግባር ታንፀው እንዲያድጉ ምቹ ሁኔታዎችን አመቻችተናል።
             </p>
           </FadeIn>
 
-          <StaggerContainer className="grid sm:grid-cols-2 md:grid-cols-3 gap-5 text-right">
+          <StaggerContainer className="grid md:grid-cols-3 gap-6 text-left">
             <StaggerItem>
-              <MotionCard className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1657b8] flex items-center justify-center font-bold text-base shrink-0 border border-blue-200">✓</div>
+              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold text-base shrink-0 border border-blue-200 dark:border-blue-800">
+                  ✓
+                </div>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-base mb-1">ተሞክሮ ያላቸው መምህራን</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">በመንፈሳዊ ትምህርት የዳበረ ልምድ ባላቸው መምህራን የሚሰጥ ትምህርት።</p>
+                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">ተሞክሮ ያላቸው መምህራን</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    በመንፈሳዊ ትምህርት የዳበረ ልምድ ባላቸው መምህራን የሚሰጥ ትምህርት።
+                  </p>
                 </div>
               </MotionCard>
             </StaggerItem>
 
             <StaggerItem>
-              <MotionCard className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-base shrink-0 border border-amber-200">✓</div>
+              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-base shrink-0 border border-amber-200 dark:border-amber-800">
+                  ✓
+                </div>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-base mb-1">የተለያዩ የዕድሜ ክፍሎች</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">ከህፃናት እስከ ወጣቶች ለሁሉም ተስማሚ የሆኑ የትምህርት መርሃ ግብሮች።</p>
+                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">የተለያዩ የዕድሜ ክፍሎች</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    ከህፃናት እስከ ወጣቶች ለሁሉም ተስማሚ የሆኑ የትምህርት መርሃ ግብሮች።
+                  </p>
                 </div>
               </MotionCard>
             </StaggerItem>
 
             <StaggerItem>
-              <MotionCard className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1657b8] flex items-center justify-center font-bold text-base shrink-0 border border-blue-200">✓</div>
+              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold text-base shrink-0 border border-blue-200 dark:border-blue-800">
+                  ✓
+                </div>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-base mb-1">መንፈሳዊና ማህበራዊ እንቅስቃሴዎች</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">መዝሙር፣ ጉዞዎችና ማህበራዊ አገልግሎቶች።</p>
+                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">መንፈሳዊና ማህበራዊ እንቅስቃሴዎች</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    መዝሙር፣ ጉዞዎችና ማህበራዊ አገልግሎቶች።
+                  </p>
                 </div>
               </MotionCard>
             </StaggerItem>
@@ -236,19 +259,19 @@ const Home = () => {
       {/* 🌟 4. FAQ ACCORDION SECTION */}
       <section className="py-16 max-w-4xl mx-auto px-4 sm:px-6">
         <FadeIn className="text-center mb-10 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800">
             ተደጋግመው የሚጠየቁ ጥያቄዎች (FAQ)
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             ስለ ሰንበት ት/ቤቱ አጠቃላይ መረጃዎች
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
             ስለ ምዝገባ፣ የትምህርት ክፍሎችና የርቀት ትምህርት በተደጋጋሚ የሚነሱ ጥያቄዎችና ምላሾች
           </p>
         </FadeIn>
 
         <FadeIn delay={0.1}>
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger>የመደበኛ እና የርቀት ትምህርት ልዩነቱ ምንድን ነው?</AccordionTrigger>
@@ -288,17 +311,17 @@ const Home = () => {
         onClose={() => setShowRegOptions(false)}
         className="max-w-sm w-full p-7 text-center space-y-4"
       >
-        <div className="w-12 h-12 bg-blue-50 text-[#1657b8] rounded-xl flex items-center justify-center mx-auto border border-blue-200">
+        <div className="w-12 h-12 bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-800">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
           </svg>
         </div>
 
         <div className="space-y-1">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
             ምዝገባ አይነት ይምረጡ
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Regular (መደበኛ) ወይም Distance (ርቀት) ተማሪ ምዝገባ ይምረጡ
           </p>
         </div>
@@ -327,7 +350,7 @@ const Home = () => {
 
         <button
           onClick={() => setShowRegOptions(false)}
-          className="mt-1 text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors uppercase tracking-wider block mx-auto py-1 cursor-pointer"
+          className="mt-1 text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors uppercase tracking-wider block mx-auto py-1 cursor-pointer"
         >
           ሰርዝ
         </button>
@@ -337,4 +360,3 @@ const Home = () => {
 };
 
 export default Home;
-

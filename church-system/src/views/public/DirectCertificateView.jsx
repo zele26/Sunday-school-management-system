@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '../../api/apiClient';
 import VerifiableCertificate from '../../components/VerifiableCertificate';
+import { Card } from '../../components/ui';
 
 const DirectCertificateView = () => {
   const { certNumber } = useParams();
@@ -46,14 +47,14 @@ const DirectCertificateView = () => {
   if (error || !cert) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white p-6">
-        <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl text-center max-w-md space-y-4 shadow-2xl">
+        <Card variant="default" padding="lg" className="text-center max-w-md space-y-4">
           <span className="text-4xl">⚠️</span>
           <h2 className="text-lg font-bold text-rose-400">የምስክር ወረቀት አልተገኘም</h2>
           <p className="text-xs text-slate-300">የተጠየቀው የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም ወይም ተሰርዟል።</p>
-          <Link href="/" className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-bold text-white transition-colors">
+          <Link href="/" className="inline-block px-5 py-2.5 bg-[#1657b8] hover:bg-[#124796] rounded-2xl text-xs font-bold text-white transition-colors">
             ወደ ዋና ገጽ (Home)
           </Link>
-        </div>
+        </Card>
       </div>
     );
   }

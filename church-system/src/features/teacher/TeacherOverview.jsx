@@ -1,6 +1,10 @@
 // src/features/teacher/TeacherOverview.jsx
 import React, { useState, useEffect } from 'react';
-import { apiFetch, API_BASE_URL } from '../../api/apiClient';
+import Link from 'next/link';
+import { API_BASE_URL } from '../../api/apiClient';
+import { Card, CardHeader, CardTitle, CardContent, ActionCard } from '../../components/ui';
+import { StatCard } from '../../components/shared/StatCard';
+import { BookOpen, Users, FileText, CheckSquare, Send, BarChart2 } from 'lucide-react';
 
 const TeacherOverview = () => {
   const [stats, setStats] = useState({ classes: 0, students: 0, assignments: 0, pendingExams: 0 });
@@ -26,54 +30,71 @@ const TeacherOverview = () => {
     fetchStats();
   }, []);
 
+  const statsList = [
+    { label: 'የተመደቡ ክፍሎች', value: loading ? '...' : stats.classes, icon: BookOpen },
+    { label: 'ተማሪዎች', value: loading ? '...' : stats.students, icon: Users },
+    { label: 'የቤት ሥራዎች', value: loading ? '...' : stats.assignments, icon: FileText },
+    { label: 'የሚጠበቁ ፈተናዎች', value: loading ? '...' : stats.pendingExams, icon: CheckSquare, variant: 'gold' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'የተመደቡ ክፍሎች', value: stats.classes },
-          { label: 'ተማሪዎች', value: stats.students },
-          { label: 'የቤት ሥራዎች', value: stats.assignments },
-          { label: 'የሚጠበቁ ፈተናዎች', value: stats.pendingExams },
-        ].map((card, idx) => (
-          <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-            <p className="text-xs text-slate-500 font-medium">{card.label}</p>
-            <p className="text-3xl font-black text-slate-800 mt-2">{loading ? '...' : card.value}</p>
-          </div>
-        ))}
-      </div>
+      <StatCard stats={statsList} gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" />
 
       {/* Activities & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-          <h3 className="font-bold text-slate-800">የቅርብ ጊዜ የክፍል እንቅስቃሴዎች</h3>
-          <ul className="text-xs text-slate-600 space-y-2 list-disc list-inside">
-            <li>ለክፍል 1ሀ አዲስ የትምህርት እቅድ ተዘጋጅቷል።</li>
-            <li>ለወላጆች የማስታወቂያ መረጃ ተልኳል።</li>
-            <li>የተማሪዎች ውጤት ተገምግሞ አዲስ የመማሪያ ማስታወሻ ተጭኗል።</li>
-          </ul>
-        </div>
+        <Card variant="default" padding="lg">
+          <CardHeader>
+            <CardTitle>የቅርብ ጊዜ የክፍል እንቅስቃሴዎች</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ul className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 space-y-2.5 list-disc list-inside">
+              <li>ለክፍል 1ሀ አዲስ የትምህርት እቅድ ተዘጋጅቷል።</li>
+              <li>ለወላጆች የማስታወቂያ መረጃ ተልኳል።</li>
+              <li>የተማሪዎች ውጤት ተገምግሞ አዲስ የመማሪያ ማስታወሻ ተጭኗል።</li>
+            </ul>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 className="font-bold text-slate-800">ፈጣን ተግባራት</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <button className="bg-blue-600 text-white text-xs font-bold py-3 rounded-xl hover:bg-blue-700 transition">
-              ትምህርት ወይም ፈተና ያዘጋጁ
-            </button>
-            <button className="bg-emerald-600 text-white text-xs font-bold py-3 rounded-xl hover:bg-emerald-700 transition">
-              የተማሪዎች ሥራዎችን ይገምግሙ
-            </button>
-            <button className="bg-purple-600 text-white text-xs font-bold py-3 rounded-xl hover:bg-purple-700 transition">
-              ማስታወቂያ ይላኩ
-            </button>
-            <button className="bg-orange-600 text-white text-xs font-bold py-3 rounded-xl hover:bg-orange-700 transition">
-              ሪፖርት ያውጡ
-            </button>
-          </div>
-        </div>
+        <Card variant="default" padding="lg">
+          <CardHeader>
+            <CardTitle>ፈጣን ተግባራት</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link href="/teacher/exams" className="block">
+              <ActionCard
+                icon={FileText}
+                title="ትምህርት/ፈተና"
+                description="አዲስ ይፍጠሩ"
+              />
+            </Link>
+            <Link href="/teacher/results" className="block">
+              <ActionCard
+                icon={CheckSquare}
+                title="ሥራዎችን መገምገም"
+                description="ውጤት መዝግብ"
+              />
+            </Link>
+            <Link href="/teacher/communication" className="block">
+              <ActionCard
+                icon={Send}
+                title="ማስታወቂያ"
+                description="መልእክት ላክ"
+              />
+            </Link>
+            <Link href="/teacher/reports" className="block">
+              <ActionCard
+                icon={BarChart2}
+                title="ሪፖርት"
+                description="ስታቲስቲክስ አውጣ"
+              />
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
-export default TeacherOverview;
+export default TeacherOverview;

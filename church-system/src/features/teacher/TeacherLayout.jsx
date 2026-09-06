@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -47,8 +48,8 @@ const TeacherLayout = ({ children, onLogout }) => {
       {/* Top Navbar */}
       <header className="bg-[#1657b8] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-sm border-b border-amber-400/30 sticky top-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-sm flex-shrink-0">
-            <img src={ChurchLogo?.src || ChurchLogo} alt="Church Logo" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white p-1 border border-amber-400 flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+            <Image src={ChurchLogo} alt="Church Logo" width={44} height={44} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
           </div>
           <div>
             <h1 className="text-sm sm:text-base font-extrabold tracking-wide text-white">

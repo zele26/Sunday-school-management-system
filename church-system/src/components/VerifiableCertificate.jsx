@@ -1,7 +1,7 @@
 'use client';
 
-// src/components/VerifiableCertificate.jsx
 import React from 'react';
+import Image from 'next/image';
 import ChurchLogo from '../assets/ChurchLogo.png';
 import ChurchLeftImg from '../assets/Lidetachurch.jpg';
 import ChurchRightImg from '../assets/Lidetachurch2.jpg';
@@ -36,10 +36,9 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
     <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto animate-in fade-in">
       <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[96vh] overflow-y-auto shadow-2xl border border-amber-300 flex flex-col my-auto print:m-0 print:p-0 print:border-none print:shadow-none print:max-w-none print:rounded-none">
         
-        {/* Action Header (Hidden during print) */}
         <div className="px-6 py-4 bg-gradient-to-r from-[#051533] to-[#08214d] text-white flex justify-between items-center print:hidden rounded-t-3xl border-b border-amber-500/30">
           <div className="flex items-center gap-3">
-            <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,204,0,0.6)]" />
+            <Image src={ChurchLogo} alt="Logo" width={32} height={32} className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,204,0,0.6)]" style={{ width: 'auto', height: 'auto' }} />
             <div>
               <h3 className="font-extrabold text-sm text-white">ይፋዊ የሰንበት ት/ቤት የምስክር ወረቀት</h3>
               <p className="text-[10px] text-amber-300">Official Ethiopian Orthodox Sunday School Diploma</p>
@@ -80,10 +79,13 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               {/* Left Church Photo (Kidist Lideta) */}
               <div className="col-span-3 flex justify-start">
                 <div className="p-1 bg-white border-2 border-amber-500/60 rounded-2xl shadow-md overflow-hidden">
-                  <img
-                    src={ChurchLeftImg?.src || ChurchLeftImg}
+                  <Image
+                    src={ChurchLeftImg}
                     alt="ቅድስት ልደታ ለማርያም"
+                    width={112}
+                    height={80}
                     className="w-20 h-16 sm:w-28 sm:h-20 object-cover rounded-xl"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                   <p className="text-[8px] text-center font-bold text-amber-900 mt-0.5">ቅድስት ልደታ ለማርያም</p>
                 </div>
@@ -95,10 +97,13 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                   በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን
                 </p>
                 <div className="flex justify-center my-1">
-                  <img
-                    src={ChurchLogo?.src || ChurchLogo}
+                  <Image
+                    src={ChurchLogo}
                     alt="Church Seal"
+                    width={64}
+                    height={64}
                     className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-[0_0_10px_rgba(255,204,0,0.7)]"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                 </div>
                 <h2 className="text-xs sm:text-sm md:text-base font-black text-[#0f4c9c] font-serif leading-tight">
@@ -112,10 +117,13 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               {/* Right Church Photo (Debre Medhanit Medhanealem) */}
               <div className="col-span-3 flex justify-end">
                 <div className="p-1 bg-white border-2 border-amber-500/60 rounded-2xl shadow-md overflow-hidden">
-                  <img
-                    src={ChurchRightImg?.src || ChurchRightImg}
+                  <Image
+                    src={ChurchRightImg}
                     alt="መድኃኔዓለም ቤተክርስቲያን"
+                    width={112}
+                    height={80}
                     className="w-20 h-16 sm:w-28 sm:h-20 object-cover rounded-xl"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                   <p className="text-[8px] text-center font-bold text-amber-900 mt-0.5">ደብረ መድኃኒት መድኃኔዓለም</p>
                 </div>
@@ -202,9 +210,12 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               <div className="flex flex-col items-center justify-center space-y-1">
                 <span className="text-[10px] font-serif font-bold text-amber-900">የማኅተም ቦታ (Seal)</span>
                 {certificate.qrCodeUrl && (
-                  <img
+                  <Image
                     src={certificate.qrCodeUrl}
                     alt="QR Verification"
+                    width={64}
+                    height={64}
+                    unoptimized
                     className="w-14 h-14 sm:w-16 sm:h-16 border border-amber-400 rounded-lg p-1 bg-white shadow-xs"
                   />
                 )}

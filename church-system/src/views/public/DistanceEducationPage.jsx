@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Card, FeatureCard, Badge } from '../../components/ui';
 
 const batchesData = [
   {
@@ -75,26 +76,26 @@ const DistanceEducationPage = () => {
   const [openFaq, setOpenFaq] = useState(null);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-800 selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950">
       {/* Hero Section */}
-      <section className="relative bg-white border-b border-slate-200/80 overflow-hidden py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/80 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-50/60 rounded-full blur-2xl pointer-events-none -ml-24 -mb-24"></div>
+      <section className="relative bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 overflow-hidden py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/80 dark:bg-blue-950/20 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-amber-50/60 dark:bg-amber-950/20 rounded-full blur-2xl pointer-events-none -ml-24 -mb-24"></div>
 
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
               <span>🌐 ኦፊሴላዊ የርቀት ትምህርት መድረክ</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-slate-900">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-slate-900 dark:text-white">
               የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ <br />
-              <span className="text-[#1657b8]">
+              <span className="text-[#1657b8] dark:text-blue-400">
                 የርቀት ሃይማኖታዊ ትምህርት
               </span>
             </h1>
 
-            <p className="text-slate-600 text-base sm:text-lg max-w-2xl leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-2xl leading-relaxed">
               ባሉበት ሆነው የመጽሐፍ ቅዱስን፣ የነገረ መለኮትን፣ የቤተክርስቲያን ታሪክን እና ሥርዓትን በሊቃውንት መምህራን የተዘጋጁ የበለጸጉ የትምህርት ሞጁሎችን በዘመናዊ የኦንላይን ፖርታል ይማሩ።
             </p>
 
@@ -116,38 +117,38 @@ const DistanceEducationPage = () => {
             </div>
 
             {/* Trust Badges */}
-            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 text-center lg:text-left">
+            <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 dark:border-slate-800 text-center lg:text-left">
               <div>
-                <p className="text-2xl font-black text-[#1657b8]">4 ባቾች</p>
-                <p className="text-xs text-slate-500">የተሟላ ሥርዓተ ትምህርት</p>
+                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">4 ባቾች</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">የተሟላ ሥርዓተ ትምህርት</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-amber-600">100%</p>
-                <p className="text-xs text-slate-500">በራስ ምቹ ሰዓት የሚጠና</p>
+                <p className="text-2xl font-black text-amber-600 dark:text-amber-400">100%</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">በራስ ምቹ ሰዓት የሚጠና</p>
               </div>
               <div>
-                <p className="text-2xl font-black text-[#1657b8]">ዲጂታል</p>
-                <p className="text-xs text-slate-500">ኦፊሴላዊ የምስክር ወረቀት</p>
+                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">ዲጂታል</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">ኦፊሴላዊ የምስክር ወረቀት</p>
               </div>
             </div>
           </div>
 
           {/* Right Visual Card */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-6 w-full max-w-md relative">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <Card variant="default" padding="lg" className="space-y-6 w-full max-w-md relative">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-amber-400 text-slate-950 rounded-2xl flex items-center justify-center text-2xl font-black shadow-sm">
                     ⛪
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-base">ደብረ ሳዊሮስ ሰንበት ት/ቤት</h3>
-                    <p className="text-xs text-slate-500 font-medium">Distance Education Center</p>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">ደብረ ሳዊሮስ ሰንበት ት/ቤት</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Distance Education Center</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/15 text-amber-900 border border-amber-400/30">
+                <Badge variant="gold" size="sm">
                   ክፍት ነው
-                </span>
+                </Badge>
               </div>
 
               {/* Feature Highlights List */}
@@ -158,11 +159,11 @@ const DistanceEducationPage = () => {
                   { icon: '📝', title: 'የኦንላይን ፈተናዎችና ምዘናዎች', desc: 'ቀጥታ ውጤትና የማረጋገጫ ግብረ-መልስ' },
                   { icon: '👨‍🏫', title: 'የመምህራን ቀጥታ ክትትል', desc: 'ጥያቄና መልስ እንዲሁም መንፈሳዊ ምክር' },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/50 transition-colors border border-slate-100">
-                    <span className="text-2xl p-1 bg-white rounded-xl shadow-xs">{item.icon}</span>
+                  <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800">
+                    <span className="text-2xl p-1 bg-white dark:bg-slate-700 rounded-xl shadow-xs">{item.icon}</span>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900">{item.title}</h4>
-                      <p className="text-xs text-slate-500">{item.desc}</p>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{item.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -176,7 +177,7 @@ const DistanceEducationPage = () => {
                   የተማሪነት ምዝገባ ጀምር ➔
                 </Link>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -184,13 +185,13 @@ const DistanceEducationPage = () => {
       {/* How It Works Section */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="px-3.5 py-1 bg-blue-50 text-[#1657b8] border border-blue-100 font-bold rounded-full text-xs uppercase tracking-wider">
+          <span className="px-3.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-[#1657b8] dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 font-bold rounded-full text-xs uppercase tracking-wider">
             የትምህርት ጉዞዎ
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             የርቀት ትምህርቱ እንዴት ይሰራል?
           </h2>
-          <p className="text-slate-500 text-sm sm:text-base">
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
             ቀላል እና ግልጽ በሆነ የ4 ደረጃዎች ሂደት ኦርቶዶክሳዊ እውቀትዎን ያሳድጉ።
           </p>
         </div>
@@ -202,71 +203,66 @@ const DistanceEducationPage = () => {
               title: 'በኦንላይን ይመዝገቡ',
               desc: 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር (TKD ID) ያግኙ።',
               icon: '✍️',
-              color: 'bg-blue-50 text-[#1657b8] border-blue-100',
+              iconBg: 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
             },
             {
               step: '02',
               title: 'ሞጁሎችን ያግኙ',
               desc: 'ወደ ተማሪ ፖርታል በመግባት የድምፅ ትምህርቶችን፣ ቪዲዮዎችን እና የንባብ ማቴሪያሎችን በምቹ ሰዓት ያንብቡ።',
               icon: '📚',
-              color: 'bg-amber-50 text-amber-700 border-amber-100',
+              iconBg: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
             },
             {
               step: '03',
               title: 'ፈተናዎችን ይውሰዱ',
               desc: 'በየሳምንቱና በየምዕራፉ የሚሰጡ ፈተናዎችንና የቤት ሥራዎችን በፖርታሉ በቀላሉ ሰርተው ያስገቡ።',
               icon: '📝',
-              color: 'bg-blue-50 text-[#1657b8] border-blue-100',
+              iconBg: 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
             },
             {
               step: '04',
               title: 'ይመረቁና ይሰርተፊኬት ይውሰዱ',
               desc: 'የባችዎን ትምህርት ሲያጠናቅቁ በደብሩ የታተመ ኦፊሴላዊ የዲፕሎማ የምስክር ወረቀት ይቀበሉ።',
               icon: '🎓',
-              color: 'bg-amber-50 text-amber-700 border-amber-100',
+              iconBg: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
             },
           ].map((item, idx) => (
-            <div
+            <FeatureCard
               key={idx}
-              className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm transition-all space-y-4 relative overflow-hidden group hover:shadow-md hover:border-blue-200"
-            >
-              <div className={`w-12 h-12 rounded-2xl ${item.color} border flex items-center justify-center text-2xl shadow-xs`}>
-                {item.icon}
-              </div>
-              <span className="text-4xl font-black text-slate-100 absolute top-4 right-4 pointer-events-none group-hover:text-amber-100 transition-colors">
-                {item.step}
-              </span>
-              <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-              <p className="text-slate-500 text-xs leading-relaxed">{item.desc}</p>
-            </div>
+              step={item.step}
+              icon={item.icon}
+              iconBg={item.iconBg}
+              title={item.title}
+              description={item.desc}
+            />
           ))}
         </div>
       </section>
 
       {/* Curriculum & Batches Section */}
-      <section className="py-20 bg-white border-y border-slate-200/80 relative overflow-hidden">
+      <section className="py-20 bg-white dark:bg-slate-900 border-y border-slate-200/80 dark:border-slate-800 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
+            <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
               ሥርዓተ ትምህርት (Curriculum)
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               የ4 ዓመታት የጥናት መርሃ ግብር
             </h2>
-            <p className="text-slate-500 text-sm sm:text-base">
+            <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
               ከመሠረታዊ እስከ ጥልቅ የነገረ መለኮትና የቤተክርስቲያን ቀኖና ጥናቶች የተዋቀረ።
             </p>
           </div>
 
           {/* Batch Selector Pills */}
-          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-100 rounded-2xl max-w-3xl mx-auto border border-slate-200">
+          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl max-w-3xl mx-auto border border-slate-200 dark:border-slate-700">
             {batchesData.map((b, idx) => (
               <button
                 key={idx}
                 onClick={() => setSelectedBatch(idx)}
                 className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs font-bold transition-all text-center ${selectedBatch === idx
                     ? 'bg-[#1657b8] text-white shadow-sm font-black'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
                   }`}
               >
                 {b.batch}
@@ -275,13 +271,13 @@ const DistanceEducationPage = () => {
           </div>
 
           {/* Active Batch Showcase Card */}
-          <div className="bg-white border border-slate-200/80 rounded-3xl p-8 shadow-sm max-w-4xl mx-auto space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6">
+          <Card variant="default" padding="lg" className="max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
               <div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-400/15 text-amber-900 border border-amber-400/30 uppercase">
+                <Badge variant="gold" size="sm">
                   {batchesData[selectedBatch].badge}
-                </span>
-                <h3 className="text-2xl font-extrabold text-slate-900 mt-2">
+                </Badge>
+                <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-2">
                   {batchesData[selectedBatch].title}
                 </h3>
               </div>
@@ -293,7 +289,7 @@ const DistanceEducationPage = () => {
               </Link>
             </div>
 
-            <p className="text-slate-600 text-sm leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
               {batchesData[selectedBatch].description}
             </p>
 
@@ -302,43 +298,45 @@ const DistanceEducationPage = () => {
               {batchesData[selectedBatch].courses.map((course, cIdx) => (
                 <div
                   key={cIdx}
-                  className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between hover:border-blue-300 transition-colors"
+                  className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl p-2 bg-white rounded-xl shadow-xs">{course.icon}</span>
+                    <span className="text-2xl p-2 bg-white dark:bg-slate-700 rounded-xl shadow-xs">{course.icon}</span>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900">{course.name}</h4>
-                      <p className="text-xs text-slate-500">{course.hours}</p>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{course.name}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{course.hours}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-[#1657b8] font-bold">የተሟላ ሞጁል</span>
+                  <span className="text-xs text-[#1657b8] dark:text-blue-400 font-bold">የተሟላ ሞጁል</span>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       </section>
 
       {/* FAQ Section */}
       <section className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
-          <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
+          <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
             ተደጋጋሚ ጥያቄዎች (FAQs)
           </span>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             ስለ ርቀት ትምህርቱ የተለመዱ ጥያቄዎች
           </h2>
         </div>
 
         <div className="space-y-4">
           {faqs.map((faq, fIdx) => (
-            <div
+            <Card
               key={fIdx}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all"
+              variant="default"
+              padding="none"
+              className="overflow-hidden"
             >
               <button
                 onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
-                className="w-full p-5 text-left font-bold text-slate-900 flex justify-between items-center hover:bg-slate-50 transition-colors text-sm sm:text-base"
+                className="w-full p-5 text-left font-bold text-slate-900 dark:text-white flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm sm:text-base"
               >
                 <span>{faq.q}</span>
                 <span className="text-xl text-slate-400 ml-4">
@@ -346,22 +344,22 @@ const DistanceEducationPage = () => {
                 </span>
               </button>
               {openFaq === fIdx && (
-                <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3 bg-slate-50/50">
+                <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3 bg-slate-50/50 dark:bg-slate-800/30">
                   {faq.a}
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       </section>
 
       {/* Final CTA Banner */}
-      <section className="py-16 bg-white border-t border-slate-200/80 text-center px-4 sm:px-6">
+      <section className="py-16 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-center px-4 sm:px-6">
         <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
             የመንፈሳዊ እውቀት ጉዞዎን ዛሬውኑ ይጀምሩ!
           </h2>
-          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
             በዓለም ዙሪያ የሚገኙ በሺዎች የሚቆጠሩ ኦርቶዶክሳውያን ተማሪዎችን ይቀላቀሉ።
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-2">
@@ -385,3 +383,4 @@ const DistanceEducationPage = () => {
 };
 
 export default DistanceEducationPage;
+

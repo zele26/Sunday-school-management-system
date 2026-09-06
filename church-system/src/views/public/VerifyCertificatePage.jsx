@@ -1,6 +1,7 @@
 // src/pages/public/VerifyCertificatePage.jsx
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { apiFetch } from '../../api/apiClient';
 import ChurchLogo from '../../assets/ChurchLogo.png';
@@ -55,8 +56,8 @@ const VerifyCertificatePage = () => {
         <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
 
         <Link href="/" className="inline-flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full p-1 border border-amber-400 bg-white shadow-xs">
-            <img src={ChurchLogo?.src || ChurchLogo} alt="Logo" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded-full p-1 border border-amber-400 bg-white shadow-xs overflow-hidden flex items-center justify-center">
+            <Image src={ChurchLogo} alt="Logo" width={40} height={40} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
           </div>
           <div className="text-left hidden sm:block">
             <h1 className="text-sm font-black text-[#1657b8] dark:text-amber-400">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h1>

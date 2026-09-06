@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,10 +57,12 @@ export default function ForgotPassword() {
     <div className="min-h-screen w-full flex flex-col justify-between items-center p-4 sm:p-6 bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] font-sans selection:bg-[var(--brand-gold)] selection:text-slate-950 relative overflow-x-hidden">
       {/* Background Church Atmosphere */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
-        <img
-          src={bgImage?.src || bgImage}
+        <Image
+          src={bgImage}
           alt="Lideta Church"
-          className="w-full h-full object-cover object-center filter blur-[2px] scale-105 opacity-25 dark:opacity-15 brightness-[1.08] dark:brightness-[0.45]"
+          fill
+          priority
+          className="object-cover object-center filter blur-[2px] scale-105 opacity-25 dark:opacity-15 brightness-[1.08] dark:brightness-[0.45]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-amber-50/70 dark:from-[#050c1a]/95 dark:via-[#09152b]/92 dark:to-[#030710]/95" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[450px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400/25 via-yellow-200/20 to-transparent rounded-full blur-3xl" />
