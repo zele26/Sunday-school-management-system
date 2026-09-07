@@ -406,7 +406,7 @@ const CheckStatusContent = () => {
 
                 <div className="space-y-2">
                   <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block">
-                    የማህደረ ስብሐት ቅድስት ልደታ ለማርያም
+                    ደብረ ሰላም ቅዱስ እስጢፋኖስ
                   </span>
                   <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
                     ተክለ ሳዊሮስ ሰንበት ት/ቤት
@@ -436,7 +436,7 @@ const CheckStatusContent = () => {
 
               {/* Scripture Verse Footer */}
               <div className="text-xs text-amber-200/90 font-semibold italic border-t border-white/15 pt-3 w-full relative z-10">
-                «እግዚአብሔርን በመፍራት የሚሄድ ሰው ምስጉን ነው»
+                «ልጅን በሚሄድበት መንገድ ምራው፤ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳ. ፳፪፥፮)
               </div>
             </div>
 
@@ -589,7 +589,7 @@ const CheckStatusContent = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-        ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የማህደረ ስብሐት ቅድስት ልደታ ለማርያም
+        ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
       </footer>
     </div>
   );

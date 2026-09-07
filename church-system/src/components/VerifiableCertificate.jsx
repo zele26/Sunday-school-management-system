@@ -107,10 +107,10 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                   />
                 </div>
                 <h2 className="text-xs sm:text-sm md:text-base font-black text-[#0f4c9c] font-serif leading-tight">
-                  ደብረ ፀሐይ ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም
+                  ደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን
                 </h2>
                 <h3 className="text-xs sm:text-sm font-black text-amber-700 font-serif">
-                  ቤ/ክ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+                  ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
                 </h3>
               </div>
 
@@ -125,7 +125,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                     className="w-20 h-16 sm:w-28 sm:h-20 object-cover rounded-xl"
                     style={{ width: 'auto', height: 'auto' }}
                   />
-                  <p className="text-[8px] text-center font-bold text-amber-900 mt-0.5">ደብረ መድኃኒት መድኃኔዓለም</p>
+                  <p className="text-[8px] text-center font-bold text-amber-900 mt-0.5">ደብረ ሰላም ቅዱስ እስጢፋኖስ</p>
                 </div>
               </div>
             </div>
@@ -157,7 +157,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               </div>
 
               <p className="text-slate-800 font-serif text-justify pt-0.5">
-                በማኅበረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተ ክርስቲያን የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት በርቀት ትምህርት የሚሰጡትን ፲፫ (13) አጠቃላይ ኮርሶች፡-
+                በደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተ ክርስቲያን የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት በርቀት ትምህርት የሚሰጡትን አጠቃላይ ኮርሶች፡-
               </p>
 
               {/* Two-Column 13 Standalone Courses with Liturgical Bullets */}

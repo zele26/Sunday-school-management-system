@@ -11,7 +11,7 @@ export function GalleryPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         <ChurchGallery
           title="የተክለ ሳዊሮስ ሰንበት ት/ቤት የፎቶ ማህደር"
-          subtitle="የደብረ ፀሐይ ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን የሰንበት ትምህርት ቤት መንፈሳዊ እንቅስቃሴዎች፣ የበዓላት ድባብና የአገልግሎት ገጽታዎች"
+          subtitle="የደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት መንፈሳዊ እንቅስቃሴዎች፣ የበዓላት ድባብና የአገልግሎት ገጽታዎች"
           showFilters={true}
         />
       </div>

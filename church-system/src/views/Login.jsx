@@ -227,7 +227,7 @@ const Login = () => {
 
               <div className="space-y-2.5">
                 <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block">
-                  የማህደረ ስብሐት ቅድስት ልደታ ለማርያም
+                  ደብረ ሰላም ቅዱስ እስጢፋኖስ
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
                   ተክለ ሳዊሮስ ሰንበት ት/ቤት
@@ -248,7 +248,7 @@ const Login = () => {
 
             {/* Scripture Verse Footer */}
             <div className="text-xs text-amber-200/90 font-semibold italic border-t border-white/15 pt-3 w-full relative z-10">
-              «ሕፃኑንም በሚሄድበት መንገድ ምራው...»
+              «ልጅን በሚሄድበት መንገድ ምራው፤ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳ. ፳፪፥፮)
             </div>
           </div>
 
@@ -385,7 +385,7 @@ const Login = () => {
       {/* 🌟 4. Sacred Church Parish Footer */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 space-y-1 select-none">
         <div className="flex flex-wrap items-center justify-center gap-2 text-[#1657b8] dark:text-amber-400 font-bold">
-          <span>⛪ የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን</span>
+          <span>⛪ ደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን</span>
         </div>
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
           ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን (EOTC)

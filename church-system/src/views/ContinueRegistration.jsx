@@ -205,7 +205,7 @@ const ContinueRegistrationContent = () => {
         </motion.div>
 
         <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-          ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የማህደረ ስብሐት ቅድስት ልደታ ለማርያም
+          ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
         </footer>
       </div>
     );
@@ -296,7 +296,7 @@ const ContinueRegistrationContent = () => {
               </div>
 
               <div className="text-xs text-amber-200/90 font-semibold italic border-t border-white/15 pt-3 w-full relative z-10">
-                «ሕፃኑንም በሚሄድበት መንገድ ምራው»
+                «ልጅን በሚሄድበት መንገድ ምራው፤ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳ. ፳፪፥፮)
               </div>
             </div>
 
@@ -432,7 +432,7 @@ const ContinueRegistrationContent = () => {
         </main>
 
         <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-          ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የማህደረ ስብሐት ቅድስት ልደታ ለማርያም
+          ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
         </footer>
       </div>
     );
