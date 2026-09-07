@@ -16,4 +16,8 @@ const quizSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
+// Indexes for course quizzes and LMS testing
+quizSchema.index({ course: 1, published: 1 });
+quizSchema.index({ createdBy: 1 });
+
 module.exports = mongoose.models.Quiz || mongoose.model('Quiz', quizSchema);

@@ -11,6 +11,11 @@ const submissionSchema = new mongoose.Schema({
   feedback: { type: String },
   status: { type: String, enum: ['Submitted', 'Graded', 'Late'], default: 'Submitted' },
   gradedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-});
+}, { timestamps: true });
+
+// Prevent duplicate assignment submissions & optimize teacher grading queue
+submissionSchema.index({ assignment: 1, student: 1 }, { unique: true });
+submissionSchema.index({ student: 1, submittedAt: -1 });
+submissionSchema.index({ assignment: 1, status: 1 });
 
 module.exports = mongoose.models.Submission || mongoose.model('Submission', submissionSchema);

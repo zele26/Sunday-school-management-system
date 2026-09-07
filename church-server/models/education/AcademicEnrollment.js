@@ -15,4 +15,9 @@ const academicEnrollmentSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
 }, { timestamps: true });
 
+// Prevent duplicate annual enrollments & optimize class rosters
+academicEnrollmentSchema.index({ studentProfileId: 1, academicYearId: 1, programId: 1 }, { unique: true });
+academicEnrollmentSchema.index({ programId: 1, gradeId: 1, status: 1 });
+academicEnrollmentSchema.index({ academicYearId: 1, status: 1 });
+
 module.exports = mongoose.models.AcademicEnrollment || mongoose.model('AcademicEnrollment', academicEnrollmentSchema);

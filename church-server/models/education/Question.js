@@ -14,4 +14,7 @@ const questionSchema = new mongoose.Schema({
   order: { type: Number, default: 0 },
 }, { timestamps: true });
 
+// Index for fast test loading & ordered question rendering
+questionSchema.index({ quiz: 1, order: 1 });
+
 module.exports = mongoose.models.Question || mongoose.model('Question', questionSchema);

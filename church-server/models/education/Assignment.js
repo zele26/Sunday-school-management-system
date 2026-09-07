@@ -11,4 +11,8 @@ const assignmentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Indexes for course assignments and deadlines
+assignmentSchema.index({ course: 1, dueDate: 1 });
+assignmentSchema.index({ createdBy: 1 });
+
 module.exports = mongoose.models.Assignment || mongoose.model('Assignment', assignmentSchema);

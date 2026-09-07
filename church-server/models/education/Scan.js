@@ -9,4 +9,9 @@ const scanSchema = new mongoose.Schema({
   status: { type: String, default: 'Present' },
 }, { timestamps: true });
 
+// Indexes for QR scanner history & daily student presence
+scanSchema.index({ date: 1, studentId: 1 });
+scanSchema.index({ studentId: 1, createdAt: -1 });
+scanSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.models.Scan || mongoose.model('Scan', scanSchema);

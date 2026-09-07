@@ -51,8 +51,31 @@ const registrationSchema = new mongoose.Schema({
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   reviewedAt: { type: Date },
   rejectionReason: { type: String },
-  studentId: { type: String },
-  createdAt: { type: Date, default: Date.now },
+  studentId: { type: String, trim: true },
+}, {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      delete ret.password;
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: { virtuals: true },
 });
+
+// Virtual for Ethiopian full name
+registrationSchema.virtual('displayName').get(function () {
+  return this.fullName || [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');
+});
+
+// Indexes for registration approval workflow & search
+registrationSchema.index({ status: 1, createdAt: -1 });
+registrationSchema.index({ phone: 1 });
+registrationSchema.index({ studentType: 1, status: 1 });
+registrationSchema.index({ grade: 1, studentType: 1 });
+registrationSchema.index({ batch: 1 }, { sparse: true });
+registrationSchema.index({ studentId: 1 }, { sparse: true });
 
 module.exports = mongoose.models.Registration || mongoose.model('Registration', registrationSchema);

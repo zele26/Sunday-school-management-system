@@ -13,5 +13,6 @@ const departmentMembershipSchema = new mongoose.Schema({
 
 // Ensure one person can have multiple memberships in same department with different IDs
 departmentMembershipSchema.index({ personId: 1, departmentId: 1, departmentMemberId: 1 });
+departmentMembershipSchema.index({ departmentId: 1, status: 1 });
 
 module.exports = mongoose.models.DepartmentMembership || mongoose.model('DepartmentMembership', departmentMembershipSchema);

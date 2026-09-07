@@ -100,10 +100,34 @@ const userSchema = new mongoose.Schema(
     emergencyPersonName: { type: String, trim: true },
     emergencyPhone: { type: String, trim: true },
     // Password reset
-    resetPasswordToken: { type: String },
+    resetPasswordToken: { type: String, index: true },
     resetPasswordExpires: { type: Date },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: { virtuals: true },
+  }
 );
+
+// High-performance query indexes
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ personId: 1 }, { sparse: true });
+userSchema.index({ departmentId: 1 }, { sparse: true });
+userSchema.index({ studentProfileId: 1 }, { sparse: true });
+userSchema.index({ teacherProfileId: 1 }, { sparse: true });
+
+// Virtual for checking superadmin/admin capability
+userSchema.virtual('isAdmin').get(function () {
+  return this.role === 'superadmin' || this.role === 'admin';
+});
 
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);

@@ -10,4 +10,9 @@ const messageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Indexes for inbox / thread performance
+messageSchema.index({ recipient: 1, read: 1, createdAt: -1 });
+messageSchema.index({ sender: 1, createdAt: -1 });
+messageSchema.index({ student: 1 }, { sparse: true });
+
 module.exports = mongoose.models.Message || mongoose.model('Message', messageSchema);

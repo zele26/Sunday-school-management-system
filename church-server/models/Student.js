@@ -50,15 +50,39 @@ const studentSchema = new mongoose.Schema({
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EducationCourse' }],
   qrCode: { type: String, unique: true, sparse: true },
   studentType: { type: String, enum: ['regular', 'distance'], default: 'regular' },
-}, { collection: 'students' });
+}, {
+  collection: 'students',
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: { virtuals: true },
+});
 
-// ✅ Auto-generate studentId before saving if not provided
+// ✅ Collision-safe Auto-generate studentId before saving if not provided
 studentSchema.pre('save', async function() {
   if (!this.studentId) {
     const year = new Date().getFullYear();
     const count = await mongoose.model('Student').countDocuments({});
-    this.studentId = `STU-${year}-${String(count + 1).padStart(4, '0')}`;
+    const randomSuffix = Math.floor(100 + Math.random() * 900);
+    this.studentId = `STU-${year}-${String(count + 1).padStart(4, '0')}-${randomSuffix}`;
   }
 });
+
+// Virtual for Ethiopian three-part full name
+studentSchema.virtual('fullName').get(function () {
+  return [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');
+});
+
+// Indexes for high-performance student lookups & filters
+studentSchema.index({ grade: 1, studentType: 1 });
+studentSchema.index({ studentType: 1 });
+studentSchema.index({ batch: 1 }, { sparse: true });
+studentSchema.index({ studentPhone: 1 }, { sparse: true });
+studentSchema.index({ teacher: 1 }, { sparse: true });
 
 module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);

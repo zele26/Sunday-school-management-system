@@ -68,10 +68,9 @@ const PublicLayout = ({ children }) => {
   }, []);
 
   const primaryNavLinks = [
-    { to: '/about', label: 'ስለኛ' },
-    { to: '/gallery', label: 'ፎቶዎች' },
-    { to: '/distance-education', label: 'የርቀት ትምህርት (Distance Ed)' },
-    { to: '/classes', label: 'ክፍሎች' },
+    { to: '/about', label: 'ስለ እኛ' },
+    { to: '/classes', label: 'የትምህርት ክፍሎች' },
+    { to: '/distance-education', label: 'የርቀት ትምህርት' },
     { to: '/announcements', label: 'ማስታወቂያዎች' },
     { to: '/contact', label: 'ያግኙን' },
   ];
@@ -386,7 +385,7 @@ const PublicLayout = ({ children }) => {
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/about" className="hover:text-[#1657b8] transition-colors">
-                    ስለኛ
+                    ስለ እኛ
                   </Link>
                 </li>
                 <li>

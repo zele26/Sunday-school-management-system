@@ -8,4 +8,7 @@ const churchMembershipSchema = new mongoose.Schema({
   notes: { type: String, default: '' },
 }, { timestamps: true });
 
+// Church membership active query index
+churchMembershipSchema.index({ status: 1 });
+
 module.exports = mongoose.models.ChurchMembership || mongoose.model('ChurchMembership', churchMembershipSchema);

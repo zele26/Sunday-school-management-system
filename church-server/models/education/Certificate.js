@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+// Sub-schema for Completed Courses on Certificate
+const completedCourseSubSchema = new mongoose.Schema({
+  courseName: { type: String, trim: true },
+  code: { type: String, trim: true },
+  mark: { type: Number, min: 0, max: 100 },
+  grade: { type: String, trim: true },
+}, { _id: false });
+
+// Sub-schema for Authorized Signatories
+const signatorySubSchema = new mongoose.Schema({
+  title: { type: String, default: 'የሰንበት ት/ቤት ሰብሳቢ', trim: true },
+  name: { type: String, default: 'ሊቀ ማእምራን', trim: true },
+  signatureUrl: { type: String, trim: true },
+}, { _id: false });
+
 const certificateSchema = new mongoose.Schema({
   certificateNumber: { 
     type: String, 
@@ -18,39 +33,36 @@ const certificateSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
-  studentName: { type: String, required: true },
-  studentNameAmharic: { type: String },
-  studentNumber: { type: String, required: true },
+  studentName: { type: String, required: true, trim: true },
+  studentNameAmharic: { type: String, trim: true },
+  studentNumber: { type: String, required: true, trim: true },
   
   // Academic Program Details
   program: { 
     type: String, 
-    default: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን የርቀት ነገረ መለኮትና የመጽሐፍ ቅዱስ ጥናት መርሃ ግብር' 
+    default: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን የርቀት ነገረ መለኮትና የመጽሐፍ ቅዱስ ጥናት መርሃ ግብር',
+    trim: true,
   },
   programEnglish: {
     type: String,
-    default: 'Ethiopian Orthodox Tewahedo Church Distance Theological & Biblical Studies Program'
+    default: 'Ethiopian Orthodox Tewahedo Church Distance Theological & Biblical Studies Program',
+    trim: true,
   },
-  batch: { type: String, required: true },
-  academicYear: { type: String, required: true },
+  batch: { type: String, required: true, trim: true },
+  academicYear: { type: String, required: true, trim: true },
   
   // Academic Record Summary
-  completedCourses: [{
-    courseName: { type: String },
-    code: { type: String },
-    mark: { type: Number },
-    grade: { type: String }
-  }],
-  averageScore: { type: Number, default: 0 },
-  honors: { type: String, default: 'በማዕረግ ተመርቋል (With Distinction)' },
+  completedCourses: [completedCourseSubSchema],
+  averageScore: { type: Number, default: 0, min: 0, max: 100 },
+  honors: { type: String, default: 'በማዕረግ ተመርቋል (With Distinction)', trim: true },
   
   // Dates & Issuance
-  issueDateEthiopian: { type: String, required: true },
+  issueDateEthiopian: { type: String, required: true, trim: true },
   issueDateGregorian: { type: Date, default: Date.now },
   
   // Verification Security
-  verificationHash: { type: String, required: true },
-  qrCodeUrl: { type: String },
+  verificationHash: { type: String, required: true, trim: true },
+  qrCodeUrl: { type: String, trim: true },
   status: { 
     type: String, 
     enum: ['Valid', 'Revoked', 'Pending'], 
@@ -58,12 +70,24 @@ const certificateSchema = new mongoose.Schema({
   },
   
   // Authorized Signatories
-  signatories: [{
-    title: { type: String, default: 'የሰንበት ት/ቤት ሰብሳቢ' },
-    name: { type: String, default: 'ሊቀ ማእምራን' },
-    signatureUrl: { type: String }
-  }],
-  churchSealUrl: { type: String },
-}, { timestamps: true });
+  signatories: [signatorySubSchema],
+  churchSealUrl: { type: String, trim: true },
+}, { 
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      delete ret.__v;
+      return ret;
+    },
+  },
+  toObject: { virtuals: true },
+});
+
+// Security and Verification Indexes
+certificateSchema.index({ verificationHash: 1 }, { unique: true });
+certificateSchema.index({ studentId: 1, batch: 1 });
+certificateSchema.index({ userId: 1 });
+certificateSchema.index({ status: 1 });
 
 module.exports = mongoose.models.Certificate || mongoose.model('Certificate', certificateSchema);

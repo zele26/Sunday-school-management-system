@@ -60,4 +60,9 @@ attendanceSchema.index(
   { unique: true, partialFilterExpression: { course: null } }
 );
 
+// Indexes for teacher roll call & attendance reports
+attendanceSchema.index({ course: 1, date: 1 }, { sparse: true });
+attendanceSchema.index({ grade: 1, date: 1 });
+attendanceSchema.index({ teacher: 1, date: 1 }, { sparse: true });
+
 module.exports = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);

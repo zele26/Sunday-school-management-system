@@ -23,6 +23,11 @@ const passwordResetRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for admin request queues and user lookups
+passwordResetRequestSchema.index({ status: 1, createdAt: -1 });
+passwordResetRequestSchema.index({ identifier: 1 });
+passwordResetRequestSchema.index({ user: 1 });
+
 module.exports =
   mongoose.models.PasswordResetRequest ||
   mongoose.model('PasswordResetRequest', passwordResetRequestSchema);

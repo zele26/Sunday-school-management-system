@@ -16,4 +16,10 @@ const announcementSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+// Indexes for feed and target filtering
+announcementSchema.index({ createdAt: -1 });
+announcementSchema.index({ targetType: 1, targetGrade: 1, createdAt: -1 });
+announcementSchema.index({ targetCourse: 1 }, { sparse: true });
+announcementSchema.index({ targetStudent: 1 }, { sparse: true });
+
 module.exports = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema);

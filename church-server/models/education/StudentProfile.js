@@ -7,4 +7,8 @@ const studentProfileSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'inactive', 'graduated', 'suspended'], default: 'active' },
 }, { timestamps: true });
 
+// Core student lookup indexes
+studentProfileSchema.index({ personId: 1 });
+studentProfileSchema.index({ status: 1 });
+
 module.exports = mongoose.models.StudentProfile || mongoose.model('StudentProfile', studentProfileSchema);

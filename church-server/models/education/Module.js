@@ -39,4 +39,8 @@ const moduleSchema = new mongoose.Schema({
   estimatedHours: { type: Number, default: 2 },
 }, { timestamps: true });
 
+// Indexes for LMS module sequencing & publishing
+moduleSchema.index({ courseId: 1, order: 1 });
+moduleSchema.index({ courseId: 1, status: 1 });
+
 module.exports = mongoose.models.Module || mongoose.model('Module', moduleSchema);

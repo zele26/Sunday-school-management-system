@@ -11,4 +11,8 @@ const teacherProfileSchema = new mongoose.Schema({
   legacyTeacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', default: null },
 }, { timestamps: true });
 
+// Core teacher lookup indexes
+teacherProfileSchema.index({ personId: 1 });
+teacherProfileSchema.index({ status: 1 });
+
 module.exports = mongoose.models.TeacherProfile || mongoose.model('TeacherProfile', teacherProfileSchema);

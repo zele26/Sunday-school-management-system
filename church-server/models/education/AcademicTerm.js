@@ -8,4 +8,7 @@ const academicTermSchema = new mongoose.Schema({
   endDate: { type: Date },
 }, { timestamps: true });
 
+// Index for term sorting and academic year linkage
+academicTermSchema.index({ academicYearId: 1, sequence: 1 });
+
 module.exports = mongoose.models.AcademicTerm || mongoose.model('AcademicTerm', academicTermSchema);

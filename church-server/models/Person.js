@@ -13,8 +13,9 @@ const personSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });
 
-// Indexes for duplicate prevention
+// Indexes for duplicate prevention and name search
 personSchema.index({ phone: 1 }, { unique: true, sparse: true });
 personSchema.index({ email: 1 }, { unique: true, sparse: true });
+personSchema.index({ firstName: 1, lastName: 1 });
 
 module.exports = mongoose.models.Person || mongoose.model('Person', personSchema);

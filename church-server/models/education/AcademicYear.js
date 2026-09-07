@@ -7,4 +7,7 @@ const academicYearSchema = new mongoose.Schema({
   status: { type: String, enum: ['active', 'inactive', 'completed'], default: 'active' },
 }, { timestamps: true });
 
+// Index for active academic year lookup
+academicYearSchema.index({ status: 1 });
+
 module.exports = mongoose.models.AcademicYear || mongoose.model('AcademicYear', academicYearSchema);

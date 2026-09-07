@@ -28,4 +28,9 @@ const resourceSchema = new mongoose.Schema({
   uploadDate: { type: Date, default: Date.now },
 }, { timestamps: true });
 
+// Indexes for resource library and course materials
+resourceSchema.index({ course: 1, status: 1, visibility: 1 });
+resourceSchema.index({ grade: 1, status: 1 });
+resourceSchema.index({ uploadedBy: 1 });
+
 module.exports = mongoose.models.Resource || mongoose.model('Resource', resourceSchema);

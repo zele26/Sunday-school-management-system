@@ -46,4 +46,11 @@ const lessonSchema = new mongoose.Schema({
   status: { type: String, enum: ['Draft', 'Published', 'Archived'], default: 'Published' },
 }, { timestamps: true });
 
+// Indexes for curriculum sequencing, module lessons, and content display
+lessonSchema.index({ course: 1, moduleId: 1, order: 1 });
+lessonSchema.index({ moduleId: 1, order: 1 });
+lessonSchema.index({ course: 1, status: 1 });
+lessonSchema.index({ quizId: 1 }, { sparse: true });
+lessonSchema.index({ assignmentId: 1 }, { sparse: true });
+
 module.exports = mongoose.models.Lesson || mongoose.model('Lesson', lessonSchema);
