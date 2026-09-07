@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import ChurchLogo from '../assets/ChurchLogo.png';
 import { ThemeToggle } from './ui/ThemeToggle';
+import { useRegistrationStatus } from '../hooks/queries';
 
 // Inspirational Bible verses & Church Announcements for the sliding ticker
 const tickerItems = [
@@ -37,6 +38,13 @@ const PublicLayout = ({ children }) => {
   const [isRegDropdownOpen, setIsRegDropdownOpen] = useState(false);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const [isTickerPaused, setIsTickerPaused] = useState(false);
+
+  const { data: regStatus } = useRegistrationStatus();
+  const isMasterOpen = regStatus?.isRegistrationOpen !== false;
+  const isRegularOpen = isMasterOpen && regStatus?.isRegularOpen !== false;
+  const isDistanceOpen = isMasterOpen && regStatus?.isDistanceOpen !== false;
+  const isAnyOpen = isRegularOpen || isDistanceOpen;
+  const academicYear = regStatus?.academicYear || '2017 ዓ.ም';
 
   const pathname = usePathname();
   const dropdownRef = useRef(null);
@@ -342,26 +350,53 @@ const PublicLayout = ({ children }) => {
                 ልጅዎን በሰንበት ትምህርት ቤት መንፈሳዊ ዕውቀት ያሳድጉ!
               </h3>
               <p className="text-blue-100 text-sm sm:text-base leading-relaxed max-w-xl">
-                የተክለሳዊሮስ ሰንበት ትምህርት ቤት የ2017 ዓ.ም የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።
+                {isAnyOpen
+                  ? `የተክለሳዊሮስ ሰንበት ትምህርት ቤት የ${academicYear} የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።`
+                  : (regStatus?.generalClosedMessage || 'የተክለሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች ምዝገባ ለጊዜው ተጠናቋል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።')}
               </p>
             </div>
 
             {/* Right Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3.5 shrink-0 w-full sm:w-auto relative z-10">
-              <Link
-                href="/register-regular"
-                className="px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 active:scale-95 text-[#1657b8] font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>የመደበኛ ምዝገባ</span>
-                <span>➔</span>
-              </Link>
-              <Link
-                href="/register-distance"
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>የርቀት ምዝገባ</span>
-                <span>➔</span>
-              </Link>
+              {isAnyOpen ? (
+                <>
+                  {isRegularOpen ? (
+                    <Link
+                      href="/register-regular"
+                      className="px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 active:scale-95 text-[#1657b8] font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>የመደበኛ ምዝገባ</span>
+                      <span>➔</span>
+                    </Link>
+                  ) : (
+                    <div className="px-5 py-3.5 rounded-xl bg-white/20 text-white/70 font-bold text-sm text-center border border-white/20">
+                      መደበኛ (ተዘግቷል)
+                    </div>
+                  )}
+
+                  {isDistanceOpen ? (
+                    <Link
+                      href="/register-distance"
+                      className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>የርቀት ምዝገባ</span>
+                      <span>➔</span>
+                    </Link>
+                  ) : (
+                    <div className="px-5 py-3.5 rounded-xl bg-white/20 text-white/70 font-bold text-sm text-center border border-white/20">
+                      ርቀት (ተዘግቷል)
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link
+                  href="/check-status"
+                  className="px-7 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>የምዝገባ ሁኔታ ያረጋግጡ (Check Status)</span>
+                  <span>➔</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

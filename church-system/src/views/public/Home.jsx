@@ -15,9 +15,17 @@ import {
   Badge,
 } from '../../components/ui';
 import { ChurchGallery } from '../../components/shared/ChurchGallery';
+import { useRegistrationStatus } from '../../hooks/queries';
 
 const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
+  const { data: regStatus } = useRegistrationStatus();
+
+  const isMasterOpen = regStatus?.isRegistrationOpen !== false;
+  const isRegularOpen = isMasterOpen && regStatus?.isRegularOpen !== false;
+  const isDistanceOpen = isMasterOpen && regStatus?.isDistanceOpen !== false;
+  const isAnyOpen = isRegularOpen || isDistanceOpen;
+  const academicYear = regStatus?.academicYear || '2017 ዓ.ም';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 selection:bg-[var(--brand-gold)] selection:text-slate-950 overflow-x-hidden">
@@ -35,47 +43,41 @@ const Home = () => {
             className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto flex items-center justify-center cursor-pointer group"
           >
             {/* White Polished Emblem Shield with crisp, elegant border and soft shadow */}
-            <div className="relative w-full h-full p-2 sm:p-2.5 rounded-full bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-xl shadow-slate-200/80 dark:shadow-slate-950/60 flex items-center justify-center overflow-hidden ring-4 ring-amber-400/15">
+            <div className="relative w-full h-full rounded-full p-2 bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-xl ring-4 ring-amber-400/15 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
               <Image
                 src={ChurchLogo}
-                alt="ተክለ ሳዊሮስ ሰንበት ት/ቤት አርማ"
+                alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
                 width={160}
                 height={160}
                 priority
-                className="w-full h-full object-contain rounded-full transform group-hover:scale-105 transition-transform duration-500"
-                style={{ width: 'auto', height: 'auto' }}
+                className="w-full h-full object-contain filter drop-shadow-sm"
               />
             </div>
           </motion.div>
 
-          {/* Title, Parish Badge, Subtitle & Motto Group */}
-          <FadeIn delay={0.1} className="space-y-3 sm:space-y-3.5 max-w-3xl mx-auto">
-            {/* Church Parish Pill Badge */}
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-slate-800 dark:via-slate-850 dark:to-slate-800 text-slate-800 dark:text-amber-300 border border-amber-300/80 dark:border-amber-500/30 text-xs sm:text-sm font-extrabold px-4 sm:px-5 py-1.5 rounded-full shadow-2xs tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
-              <span className="truncate max-w-[90vw]">
-                ⛪ የማህደረ ስብሐት ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
-              </span>
+          {/* Mottos & Church Identity */}
+          <FadeIn delay={0.1} className="space-y-3.5">
+            {/* Spiritual Quote Pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/80 text-[#1657b8] dark:text-blue-300 text-xs sm:text-sm font-semibold tracking-wide shadow-2xs">
+              <span>✨</span>
+              <span>«ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።»</span>
+              <span className="font-bold text-amber-700 dark:text-amber-400">(ምሳ. ፳፪፥፮)</span>
             </div>
 
-            {/* Main Sacred Heading */}
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.12] text-[#0d3b82] dark:text-white">
-              ተክለ ሳዊሮስ ሰንበት ት/ቤት
-            </h1>
-
-            {/* Subtitle & Distinct Motto */}
-            <div className="space-y-2 pt-0.5">
-              <p className="text-base sm:text-lg md:text-xl font-semibold text-slate-700 dark:text-slate-200">
-                የሕፃናት፣ የወጣቶችና የአዋቂዎች መንፈሳዊ ትምህርት ማዕከል
-              </p>
-              
-              {/* Distinguished Motto in dignified quote pill */}
-              <div className="pt-0.5">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/80 text-[#1657b8] dark:text-blue-300 text-xs sm:text-sm font-bold tracking-wide italic">
-                  «በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።»
-                </span>
-              </div>
+            {/* Main Heading */}
+            <div className="space-y-1.5">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight sm:leading-tight">
+                ደብረ ሰላም ቅዱስ እስጢፋኖስ
+              </h1>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#1657b8] dark:text-blue-400 tracking-normal">
+                ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+              </h2>
             </div>
+
+            {/* Clear Subtitle */}
+            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+              የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ሃይማኖት ትምህርት፣ የነገረ መለኮት፣ የመጽሐፍ ቅዱስ ጥናት እና የቤተክርስቲያን ሥርዓት መማሪያ ይፋዊ የትምህርት ፖርታል
+            </p>
           </FadeIn>
 
           {/* Action CTAs (Primary Register vs Secondary Distance Ed) */}
@@ -85,9 +87,13 @@ const Home = () => {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowRegOptions(true)}
-              className="w-full sm:w-auto flex-1 bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] active:opacity-90 text-white px-7 py-3.5 rounded-2xl font-black shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 transition-all text-base flex items-center justify-center gap-2 cursor-pointer border border-blue-400/30"
+              className={`w-full sm:w-auto flex-1 px-7 py-3.5 rounded-2xl font-black shadow-lg transition-all text-base flex items-center justify-center gap-2 cursor-pointer border ${
+                isAnyOpen
+                  ? 'bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 border-blue-400/30'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-100 shadow-slate-900/25 border-slate-700'
+              }`}
             >
-              <span>ይመዝገቡ (Register Now)</span>
+              <span>{isAnyOpen ? 'ይመዝገቡ (Register Now)' : 'የምዝገባ መረጃ (Registration Info)'}</span>
               <span className="text-amber-300 font-black text-lg">➔</span>
             </motion.button>
 
@@ -117,155 +123,85 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">ራዕያችን</h3>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                ማኅበረሰቡን በእግዚአብሔር ቃልና በኦርቶዶክሳዊት ተዋሕዶ ቤተ ክርስቲያን ስርዓት ማነጽ።
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ራዕይ (Vision)</h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                በኦርቶዶክሳዊት ተዋሕዶ ሃይማኖቱ የጸና፣ በምግባሩ የቀና፣ መንፈሳዊና ዘመናዊ ዕውቀትን አቀናጅቶ ለሀገርና ለቤተክርስቲያን የሚጠቅም ትውልድ ማፍራት።
               </p>
             </MotionCard>
           </StaggerItem>
 
           {/* Mission */}
           <StaggerItem>
-            <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-400/40 transition-all text-center group">
-              <div className="w-14 h-14 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[var(--brand-gold)] group-hover:text-slate-950 transition-all">
+            <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 dark:hover:border-blue-500/40 transition-all text-center group">
+              <div className="w-14 h-14 bg-amber-50 dark:bg-amber-950/50 text-[var(--brand-gold)] rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[var(--brand-gold)] group-hover:text-slate-950 transition-all">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">ተልዕኳችን</h3>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                ለሁሉም የዕድሜ ክልል ጥራት ያለውና ተደራሽ የሆነ የሰንበት ትምህርት አገልግሎት መስጠት።
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ተልዕኮ (Mission)</h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                ጥራት ያለው ሃይማኖታዊ ትምህርት በዘመናዊ ቴክኖሎጂ ታግዞ ማዳረስ፤ ወጣቶችንና ሕፃናትን በሥርዓተ ቤተክርስቲያን አሳድጎ ለመንፈሳዊ አገልግሎት ማዘጋጀት።
               </p>
             </MotionCard>
           </StaggerItem>
 
-          {/* Values */}
+          {/* Core Values */}
           <StaggerItem>
             <MotionCard className="h-full bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1657b8]/40 dark:hover:border-blue-500/40 transition-all text-center group">
-              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-[#1657b8] group-hover:text-white transition-all">
+              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mx-auto mb-5 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 tracking-tight">እሴቶቻችን</h3>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                እምነት፣ ፍቅር፣ አንድነት፣ ትህትና እና ታማኝነት።
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">እሴቶች (Core Values)</h3>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                ተዋሕዶ ሃይማኖት፣ ቅድስና፣ ትጋት፣ ፍቅር፣ ታማኝነት፣ ወንድማማችነት እና ለቤተክርስቲያን ትውፊት ጥብቅ ተገዢነት።
               </p>
             </MotionCard>
           </StaggerItem>
         </StaggerContainer>
       </section>
 
-      {/* 🌟 3. WHY CHOOSE US SECTION */}
-      <section className="bg-slate-100/70 dark:bg-slate-900/50 py-16 border-t border-slate-200 dark:border-slate-800">
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <FadeIn>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1657b8] dark:text-blue-400 mb-3 tracking-tight">
-              ለምን እኛን ይመርጣሉ?
+      {/* 🌟 3. CHURCH PHOTO GALLERY SECTION */}
+      <section className="py-16 bg-slate-100/50 dark:bg-slate-900/40 border-y border-slate-200/80 dark:border-slate-800">
+        <div className="max-w-6xl mx-auto px-4">
+          <ChurchGallery maxItems={8} showViewAll={true} />
+        </div>
+      </section>
+
+      {/* 🌟 4. FAQ / FREQUENTLY ASKED QUESTIONS */}
+      <section className="py-20 max-w-4xl mx-auto px-4">
+        <FadeIn>
+          <div className="text-center space-y-3 mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1657b8] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3.5 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
+              ጥያቄና መልስ
+            </span>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white">
+              ተደጋግመው የሚጠየቁ ጥያቄዎች (FAQ)
             </h2>
-            <p className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-10 text-sm sm:text-base">
-              በሰንበት ትምህርት ቤታችን ህፃናትና ወጣቶች በመንፈሳዊ ዕውቀትና በበጎ ምግባር ታንፀው እንዲያድጉ ምቹ ሁኔታዎችን አመቻችተናል።
+            <p className="text-slate-600 dark:text-slate-400 text-sm max-w-lg mx-auto">
+              ስለ ሰንበት ትምህርት ቤታችን የምዝገባና የትምህርት አሰጣጥ ሂደት አጫጭር ማብራሪያዎች
             </p>
-          </FadeIn>
+          </div>
 
-          <StaggerContainer className="grid md:grid-cols-3 gap-6 text-left">
-            <StaggerItem>
-              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold text-base shrink-0 border border-blue-200 dark:border-blue-800">
-                  ✓
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">ተሞክሮ ያላቸው መምህራን</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    በመንፈሳዊ ትምህርት የዳበረ ልምድ ባላቸው መምህራን የሚሰጥ ትምህርት።
-                  </p>
-                </div>
-              </MotionCard>
-            </StaggerItem>
-
-            <StaggerItem>
-              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-base shrink-0 border border-amber-200 dark:border-amber-800">
-                  ✓
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">የተለያዩ የዕድሜ ክፍሎች</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    ከህፃናት እስከ ወጣቶች ለሁሉም ተስማሚ የሆኑ የትምህርት መርሃ ግብሮች።
-                  </p>
-                </div>
-              </MotionCard>
-            </StaggerItem>
-
-            <StaggerItem>
-              <MotionCard className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-start space-x-3.5 space-x-reverse">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold text-base shrink-0 border border-blue-200 dark:border-blue-800">
-                  ✓
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-white text-base mb-1">መንፈሳዊና ማህበራዊ እንቅስቃሴዎች</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    መዝሙር፣ ጉዞዎችና ማህበራዊ አገልግሎቶች።
-                  </p>
-                </div>
-              </MotionCard>
-            </StaggerItem>
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* 🌟 4. CHURCH PHOTO SHOWCASE GALLERY */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <ChurchGallery
-          limit={8}
-          showFilters={true}
-          title="የሰንበት ትምህርት ቤታችን ገጽታዎች በፎቶ"
-          subtitle="የደብረ ፀሐይ ቅድስት ልደታ ለማርያምና ደብረ መድኃኒት መድኃኔዓለም ተክለ ሳዊሮስ ሰንበት ት/ቤት መንፈሳዊ ጉባኤዎች፣ የዝማሬ መርሃ ግብሮችና የበዓላት ትዕይንት"
-        />
-        <div className="mt-8 text-center">
-          <Link
-            href="/gallery"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
-          >
-            <span>ሁሉንም 16 ፎቶዎች በሙሉ ማህደር ይመልከቱ (View Full Gallery)</span>
-            <span>➔</span>
-          </Link>
-        </div>
-      </section>
-
-      {/* 🌟 5. FAQ ACCORDION SECTION */}
-      <section className="py-16 max-w-4xl mx-auto px-4 sm:px-6">
-        <FadeIn className="text-center mb-10 space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-800">
-            ተደጋግመው የሚጠየቁ ጥያቄዎች (FAQ)
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            ስለ ሰንበት ት/ቤቱ አጠቃላይ መረጃዎች
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-            ስለ ምዝገባ፣ የትምህርት ክፍሎችና የርቀት ትምህርት በተደጋጋሚ የሚነሱ ጥያቄዎችና ምላሾች
-          </p>
-        </FadeIn>
-
-        <FadeIn delay={0.1}>
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>የመደበኛ እና የርቀት ትምህርት ልዩነቱ ምንድን ነው?</AccordionTrigger>
+                <AccordionTrigger>የመደበኛና የርቀት ትምህርት ልዩነቱ ምንድን ነው?</AccordionTrigger>
                 <AccordionContent>
-                  መደበኛ ትምህርት በሳምንቱ መጨረሻ (ቅዳሜና እሑድ) ወይም በማታ በቤተክርስቲያኑ ቅጥር ግቢ በአካል ተገኝቶ የሚማሩት ሲሆን፣ የርቀት ትምህርት ደግሞ በየትኛውም ቦታና ሰዓት በቪዲዮ፣ በንባብና በኦንላይን ፈተናዎች የሚከታተሉት መርሃ ግብር ነው።
+                  የመደበኛ ትምህርት በቤተክርስቲያን ቅጥር ግቢ በአካል በክፍል ውስጥ ቅዳሜና እሑድ ወይም በማታ የሚሰጥ ሲሆን፤ የርቀት ትምህርት ደግሞ በየትኛውም ቦታ ሆነው በድረ-ገጻችን ፖርታል በቪዲዮና በንባብ የሚማሩበት ዘመናዊ የኦንላይን መርሃ ግብር ነው።
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>የምዝገባ ዕድሜ ገደብ ስንት ነው?</AccordionTrigger>
+                <AccordionTrigger>የምዝገባ መስፈርቶች ምንድናቸው?</AccordionTrigger>
                 <AccordionContent>
-                  ለተማሪዎች የምዝገባ ዝቅተኛው ዕድሜ ከ 14 ዓመት በላይ (15 ዓመትና ከዚያ በላይ) መሆን ይኖርበታል፤ እንዲሁም የትውልድ ቀናቸውን በኢትዮጵያ የቀን አቆጣጠር መመዝገብ ይችላሉ።
+                  ዕድሜያቸው ከ 14 ዓመት በላይ የሆነ ማንኛውም የኦርቶዶክስ ተዋሕዶ አማኝ መመዝገብ ይችላል። ለመደበኛ ተማሪዎች ከ7ኛ እስከ 12ኛ ክፍል ባሉት ደረጃዎች መመደብ ሲቻል፣ ለርቀት ተማሪዎች ደግሞ ደረጃ በደረጃ የሚጠናቀቁ የኮርስ ሞጁሎች ተዘጋጅተዋል።
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>የርቀት ትምህርት ምስክር ወረቀት (Certificate) ይሰጣል?</AccordionTrigger>
+                <AccordionTrigger>የትምህርት ማስረጃ (ሰርተፊኬት) ይሰጣል?</AccordionTrigger>
                 <AccordionContent>
                   አዎ፤ ሁሉንም አስፈላጊ ኮርሶች እና ምዘናዎች 100% አጠናቅቀው ሲያልፉ በሲስተሙ በቀጥታ በQR ኮድ የሚረጋገጥ ዲጂታልና የታተመ ይፋዊ የዲፕሎማ ምስክር ወረቀት ይሰጣል።
                 </AccordionContent>
@@ -313,7 +249,7 @@ const Home = () => {
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/80">
               <span>✨</span>
-              <span>2017 ዓ.ም አዲስ የተማሪዎች ምዝገባ</span>
+              <span>{academicYear} የተማሪዎች ምዝገባ</span>
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               የምዝገባ ዓይነት ይምረጡ
@@ -324,94 +260,157 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Master Closed Alert Banner (if overall registration is closed) */}
+        {!isAnyOpen && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-300 text-xs leading-relaxed text-center font-bold">
+            📢 {regStatus?.generalClosedMessage || 'የተማሪዎች ምዝገባ ለጊዜው ተዘግቷል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።'}
+          </div>
+        )}
+
         {/* Interactive Option Cards */}
         <div className="space-y-3.5 text-left pt-1">
           {/* Option 1: Regular In-Person */}
-          <motion.div whileHover={{ scale: 1.01, y: -2 }} whileTap={{ scale: 0.99 }}>
-            <Link
-              href="/register-regular"
-              onClick={() => setShowRegOptions(false)}
-              className="group block p-4 sm:p-5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/90 dark:bg-slate-800/60 dark:hover:bg-blue-950/40 border-2 border-slate-200/80 hover:border-[#1657b8] dark:border-slate-700 dark:hover:border-blue-500 transition-all shadow-xs hover:shadow-md cursor-pointer"
-            >
-              <div className="flex items-start gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-[#1657b8] dark:text-blue-300 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  🏛️
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-[#1657b8] dark:group-hover:text-blue-400 transition-colors">
-                      መደበኛ ተማሪ (Regular)
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 shrink-0">
-                      በአካል
-                    </span>
+          <motion.div whileHover={isRegularOpen ? { scale: 1.01, y: -2 } : {}} whileTap={isRegularOpen ? { scale: 0.99 } : {}}>
+            {isRegularOpen ? (
+              <Link
+                href="/register-regular"
+                onClick={() => setShowRegOptions(false)}
+                className="group block p-4 sm:p-5 rounded-2xl bg-slate-50/80 hover:bg-blue-50/90 dark:bg-slate-800/60 dark:hover:bg-blue-950/40 border-2 border-slate-200/80 hover:border-[#1657b8] dark:border-slate-700 dark:hover:border-blue-500 transition-all shadow-xs hover:shadow-md cursor-pointer"
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-[#1657b8] dark:text-blue-300 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    🏛️
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                    ቅዳሜና እሑድ ወይም በማታ በደብሩ ቅጥር ግቢ የሚሰጥ መደበኛ መንፈሳዊ ትምህርት
-                  </p>
-                  
-                  {/* Feature chips */}
-                  <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                      ✓ ከ7ኛ - 12ኛ ክፍል
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                      ✓ የክፍል ውስጥ ውይይት
-                    </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-[#1657b8] dark:group-hover:text-blue-400 transition-colors">
+                        መደበኛ ተማሪ (Regular)
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 shrink-0 border border-emerald-300/60">
+                        🟢 ክፍት ነው
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                      ቅዳሜና እሑድ ወይም በማታ በደብሩ ቅጥር ግቢ የሚሰጥ መደበኛ መንፈሳዊ ትምህርት
+                    </p>
+                    
+                    {/* Feature chips */}
+                    <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                        ✓ ከ7ኛ - 12ኛ ክፍል
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                        ✓ የክፍል ውስጥ ውይይት
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Action Button inside card */}
-              <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-black text-[#1657b8] dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
-                <span>በመደበኛ ፕሮግራም ይመዝገቡ</span>
-                <span className="text-base">➔</span>
+                {/* Action Button inside card */}
+                <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-black text-[#1657b8] dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
+                  <span>በመደበኛ ፕሮግራም ይመዝገቡ</span>
+                  <span className="text-base">➔</span>
+                </div>
+              </Link>
+            ) : (
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/40 border-2 border-slate-200 dark:border-slate-700/60 opacity-80 cursor-not-allowed">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-400 flex items-center justify-center text-2xl shrink-0">
+                    🏛️
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-slate-500 dark:text-slate-400">
+                        መደበኛ ተማሪ (Regular)
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 shrink-0 border border-rose-300/60">
+                        🔴 ለጊዜው ተዘግቷል
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      {regStatus?.regularClosedMessage || 'የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs font-bold text-slate-400">
+                  <span>ምዝገባ ተዘግቷል (Registration Closed)</span>
+                  <span>🔒</span>
+                </div>
               </div>
-            </Link>
+            )}
           </motion.div>
 
           {/* Option 2: Distance Online */}
-          <motion.div whileHover={{ scale: 1.01, y: -2 }} whileTap={{ scale: 0.99 }}>
-            <Link
-              href="/register-distance"
-              onClick={() => setShowRegOptions(false)}
-              className="group block p-4 sm:p-5 rounded-2xl bg-slate-50/80 hover:bg-amber-50/90 dark:bg-slate-800/60 dark:hover:bg-amber-950/40 border-2 border-slate-200/80 hover:border-amber-400 dark:border-slate-700 dark:hover:border-amber-500 transition-all shadow-xs hover:shadow-md cursor-pointer"
-            >
-              <div className="flex items-start gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                  🌐
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
-                      የርቀት ተማሪ (Distance)
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-300 shrink-0">
-                      ኦንላይን LMS
-                    </span>
+          <motion.div whileHover={isDistanceOpen ? { scale: 1.01, y: -2 } : {}} whileTap={isDistanceOpen ? { scale: 0.99 } : {}}>
+            {isDistanceOpen ? (
+              <Link
+                href="/register-distance"
+                onClick={() => setShowRegOptions(false)}
+                className="group block p-4 sm:p-5 rounded-2xl bg-slate-50/80 hover:bg-amber-50/90 dark:bg-slate-800/60 dark:hover:bg-amber-950/40 border-2 border-slate-200/80 hover:border-amber-400 dark:border-slate-700 dark:hover:border-amber-500 transition-all shadow-xs hover:shadow-md cursor-pointer"
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                    🌐
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                    በየትኛውም ቦታና ሰዓት በቪዲዮ፣ በድምጽና በንባብ በኦንላይን ፖርታል የሚማሩበት
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                        የርቀት ተማሪ (Distance)
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 shrink-0 border border-emerald-300/60">
+                        🟢 ክፍት ነው
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                      በየትኛውም ቦታና ሰዓት በቪዲዮ፣ በድምጽና በንባብ በኦንላይን ፖርታል የሚማሩበት
+                    </p>
 
-                  {/* Feature chips */}
-                  <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                      ✓ በራስዎ ምቹ ሰዓት
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
-                      ✓ ዲጂታል ሰርተፊኬት
-                    </span>
+                    {/* Feature chips */}
+                    <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                        ✓ በራስዎ ምቹ ሰዓት
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                        ✓ ዲጂታል ሰርተፊኬት
+                      </span>
+                    </div>
                   </div>
+                </div>
+
+                {/* Action Button inside card */}
+                <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-black text-amber-800 dark:text-amber-300 group-hover:translate-x-0.5 transition-transform">
+                  <span>በርቀት ትምህርት ይመዝገቡ</span>
+                  <span className="text-base">➔</span>
+                </div>
+              </Link>
+            ) : (
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-100/70 dark:bg-slate-800/40 border-2 border-slate-200 dark:border-slate-700/60 opacity-80 cursor-not-allowed">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-400 flex items-center justify-center text-2xl shrink-0">
+                    🌐
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold text-slate-500 dark:text-slate-400">
+                        የርቀት ተማሪ (Distance)
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 shrink-0 border border-rose-300/60">
+                        🔴 ለጊዜው ተዘግቷል
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                      {regStatus?.distanceClosedMessage || 'የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs font-bold text-slate-400">
+                  <span>ምዝገባ ተዘግቷል (Registration Closed)</span>
+                  <span>🔒</span>
                 </div>
               </div>
-
-              {/* Action Button inside card */}
-              <div className="mt-3.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs font-black text-amber-800 dark:text-amber-300 group-hover:translate-x-0.5 transition-transform">
-                <span>በርቀት ትምህርት ይመዝገቡ</span>
-                <span className="text-base">➔</span>
-              </div>
-            </Link>
+            )}
           </motion.div>
         </div>
 

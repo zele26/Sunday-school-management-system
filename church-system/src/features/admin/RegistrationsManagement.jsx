@@ -28,8 +28,11 @@ import {
   useRegistrations,
   useApproveRegistration,
   useRejectRegistration,
-} from '../../hooks/queries/useRegistrations';
+  useAdminRegistrationSettings,
+  useUpdateRegistrationSettings,
+} from '../../hooks/queries';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { Sliders, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
 
 const RegistrationsManagement = () => {
   const [search, setSearch] = useState('');
@@ -37,11 +40,49 @@ const RegistrationsManagement = () => {
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [showConfigModal, setShowConfigModal] = useState(false);
 
   // Queries & Mutations
   const { data: rawRegistrations = [], isLoading, isFetching, refetch } = useRegistrations();
   const approveMutation = useApproveRegistration();
   const rejectMutation = useRejectRegistration();
+
+  // Admin Settings Queries & Mutation
+  const { data: regSettings = {}, isLoading: isSettingsLoading } = useAdminRegistrationSettings();
+  const updateSettingsMutation = useUpdateRegistrationSettings();
+
+  // Settings form state
+  const [formData, setFormData] = useState({
+    academicYear: '',
+    generalClosedMessage: '',
+    regularClosedMessage: '',
+    distanceClosedMessage: '',
+  });
+
+  // Sync settings when loaded
+  React.useEffect(() => {
+    if (regSettings && regSettings.key) {
+      setFormData({
+        academicYear: regSettings.academicYear || '2017 ዓ.ም',
+        generalClosedMessage: regSettings.generalClosedMessage || '',
+        regularClosedMessage: regSettings.regularClosedMessage || '',
+        distanceClosedMessage: regSettings.distanceClosedMessage || '',
+      });
+    }
+  }, [regSettings]);
+
+  const handleToggle = (field, currentValue) => {
+    updateSettingsMutation.mutate({
+      [field]: !currentValue,
+    });
+  };
+
+  const handleSaveConfig = (e) => {
+    e.preventDefault();
+    updateSettingsMutation.mutate(formData, {
+      onSuccess: () => setShowConfigModal(false),
+    });
+  };
 
   // Client-side filtering on data
   const filteredRegistrations = useMemo(() => {
@@ -182,6 +223,117 @@ const RegistrationsManagement = () => {
           </Button>
         }
       />
+
+      {/* 🎛️ REGISTRATION INTAKE CONTROL PANEL */}
+      <Card variant="default" padding="md" className="border-2 border-slate-200/90 dark:border-slate-800 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-[#1657b8] dark:text-blue-300 flex items-center justify-center">
+              <Sliders className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+                <span>የምዝገባ ሁኔታ መቆጣጠሪያ (Intake Status Controls)</span>
+                <Badge variant={regSettings.isRegistrationOpen !== false ? 'approved' : 'rejected'} size="sm">
+                  {regSettings.isRegistrationOpen !== false ? '🟢 ክፍት (Active Intake)' : '🔴 ዝግ (Intake Closed)'}
+                </Badge>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                የአዳዲስ ተማሪዎች የመደበኛ እና የርቀት ምዝገባዎችን በቀጥታ ይክፈቱ ወይም ይዝጉ።
+              </p>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowConfigModal(true)}
+            className="gap-2 shrink-0"
+          >
+            <Sliders className="w-4 h-4" />
+            <span>መልእክቶችን አስተካክል (Edit Notices & Year)</span>
+          </Button>
+        </div>
+
+        {/* Quick Toggles Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+          {/* Toggle 1: Master Switch */}
+          <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+            regSettings.isRegistrationOpen !== false
+              ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60'
+              : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60'
+          }`}>
+            <div>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">አጠቃላይ ምዝገባ (Master)</span>
+              <span className={`text-sm font-black ${
+                regSettings.isRegistrationOpen !== false ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
+              }`}>
+                {regSettings.isRegistrationOpen !== false ? '🟢 ሙሉ በሙሉ ክፍት' : '🔴 ሙሉ በሙሉ ተዘግቷል'}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant={regSettings.isRegistrationOpen !== false ? 'danger' : 'primary'}
+              onClick={() => handleToggle('isRegistrationOpen', regSettings.isRegistrationOpen !== false)}
+              disabled={updateSettingsMutation.isPending}
+            >
+              {regSettings.isRegistrationOpen !== false ? 'ዝጋ (Close)' : 'ክፈት (Open)'}
+            </Button>
+          </div>
+
+          {/* Toggle 2: Regular (In-person) */}
+          <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+            regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false
+              ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/60'
+              : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+          }`}>
+            <div>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🏛️ መደበኛ (Regular - በአካል)</span>
+              <span className={`text-sm font-black ${
+                regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false
+                  ? 'text-[#1657b8] dark:text-blue-400'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                {regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው (Open)' : '🔴 ተዘግቷል (Closed)'}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant={regSettings.isRegularOpen !== false ? 'secondary' : 'primary'}
+              onClick={() => handleToggle('isRegularOpen', regSettings.isRegularOpen !== false)}
+              disabled={updateSettingsMutation.isPending || regSettings.isRegistrationOpen === false}
+            >
+              {regSettings.isRegularOpen !== false ? 'ዝጋ' : 'ክፈት'}
+            </Button>
+          </div>
+
+          {/* Toggle 3: Distance (Online LMS) */}
+          <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+            regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false
+              ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60'
+              : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+          }`}>
+            <div>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🌐 ርቀት (Distance - LMS)</span>
+              <span className={`text-sm font-black ${
+                regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false
+                  ? 'text-amber-800 dark:text-amber-300'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}>
+                {regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው (Open)' : '🔴 ተዘግቷል (Closed)'}
+              </span>
+            </div>
+            <Button
+              size="sm"
+              variant={regSettings.isDistanceOpen !== false ? 'secondary' : 'primary'}
+              onClick={() => handleToggle('isDistanceOpen', regSettings.isDistanceOpen !== false)}
+              disabled={updateSettingsMutation.isPending || regSettings.isRegistrationOpen === false}
+            >
+              {regSettings.isDistanceOpen !== false ? 'ዝጋ' : 'ክፈት'}
+            </Button>
+          </div>
+        </div>
+      </Card>
 
       {/* Filter Row */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -433,6 +585,112 @@ const RegistrationsManagement = () => {
                     <Check className="w-4 h-4 mr-1" /> {approveMutation.isPending ? '...' : 'Approve & Create Account'}
                   </Button>
                 </div>
+              </Card>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ⚙️ Intake Configuration Modal */}
+      <AnimatePresence>
+        {showConfigModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfigModal(false)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative z-10 max-w-lg w-full"
+            >
+              <Card variant="default" padding="none" className="w-full shadow-2xl overflow-hidden">
+                <div className="px-6 py-5 bg-gradient-to-r from-[var(--brand-primary)] to-slate-900 text-white flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">የምዝገባ ማስታወቂያዎችና ዓመተ ምሕረት</h3>
+                    <p className="text-xs text-blue-200">ምዝገባ ሲዘጋ ለተማሪዎች የሚታዩ መልእክቶችን ያዘጋጁ</p>
+                  </div>
+                  <button
+                    onClick={() => setShowConfigModal(false)}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveConfig} className="p-6 space-y-4 bg-white dark:bg-slate-900">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      የትምህርት ዘመን (Academic Intake Year)
+                    </label>
+                    <Input
+                      value={formData.academicYear}
+                      onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
+                      placeholder="e.g., 2017 ዓ.ም"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      አጠቃላይ የምዝገባ መዘጋት መልእክት (General Closed Notice)
+                    </label>
+                    <textarea
+                      value={formData.generalClosedMessage}
+                      onChange={(e) => setFormData({ ...formData, generalClosedMessage: e.target.value })}
+                      rows={2}
+                      className="w-full text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1657b8]"
+                      placeholder="የተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      የመደበኛ ምዝገባ መዘጋት መልእክት (Regular Closed Notice)
+                    </label>
+                    <textarea
+                      value={formData.regularClosedMessage}
+                      onChange={(e) => setFormData({ ...formData, regularClosedMessage: e.target.value })}
+                      rows={2}
+                      className="w-full text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1657b8]"
+                      placeholder="የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      የርቀት ምዝገባ መዘጋት መልእክት (Distance Closed Notice)
+                    </label>
+                    <textarea
+                      value={formData.distanceClosedMessage}
+                      onChange={(e) => setFormData({ ...formData, distanceClosedMessage: e.target.value })}
+                      rows={2}
+                      className="w-full text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1657b8]"
+                      placeholder="የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።..."
+                    />
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowConfigModal(false)}
+                    >
+                      ሰርዝ (Cancel)
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      loading={updateSettingsMutation.isPending}
+                    >
+                      ቅንብሮችን አስቀምጥ (Save Settings)
+                    </Button>
+                  </div>
+                </form>
               </Card>
             </motion.div>
           </div>

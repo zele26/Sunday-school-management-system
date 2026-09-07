@@ -4,11 +4,20 @@ const bcrypt = require('bcryptjs');
 const Registration = require('../models/Registration');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
+const SystemSetting = require('../models/SystemSetting');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const cloudinary = require('../config/cloudinary');
 
 // ---------- HELPERS ----------
+
+const getRegistrationSettings = async () => {
+  let settings = await SystemSetting.findOne({ key: 'registration' });
+  if (!settings) {
+    settings = await SystemSetting.create({ key: 'registration' });
+  }
+  return settings;
+};
 
 const generateRegNumber = async () => {
   const last = await Registration.findOne().sort({ createdAt: -1 });
@@ -19,6 +28,28 @@ const generateRegNumber = async () => {
 const isValidPhone = (phone) => /^\d{10}$/.test(phone);
 
 // ---------- PUBLIC ROUTES ----------
+
+// GET /api/registrations/status – public check whether registration is open/closed
+router.get('/status', async (req, res) => {
+  try {
+    const settings = await getRegistrationSettings();
+    res.json({
+      success: true,
+      data: {
+        isRegistrationOpen: settings.isRegistrationOpen,
+        isRegularOpen: settings.isRegularOpen,
+        isDistanceOpen: settings.isDistanceOpen,
+        academicYear: settings.academicYear,
+        regularClosedMessage: settings.regularClosedMessage,
+        distanceClosedMessage: settings.distanceClosedMessage,
+        generalClosedMessage: settings.generalClosedMessage,
+        updatedAt: settings.updatedAt,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'ቅንብሮችን ማግኘት አልተቻለም', error: err.message });
+  }
+});
 
 // POST /api/registrations – submit registration
 router.post('/', upload.single('receipt'), async (req, res) => {
@@ -33,6 +64,29 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       parentName, parentPhone, parentEmail,
       email, password, studentType,
     } = req.body;
+
+    // 🔒 Enforce Registration Open / Closed Check
+    const settings = await getRegistrationSettings();
+    if (!settings.isRegistrationOpen) {
+      return res.status(403).json({
+        success: false,
+        message: settings.generalClosedMessage || 'የተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
+      });
+    }
+
+    if (studentType === 'regular' && !settings.isRegularOpen) {
+      return res.status(403).json({
+        success: false,
+        message: settings.regularClosedMessage || 'የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
+      });
+    }
+
+    if (studentType === 'distance' && !settings.isDistanceOpen) {
+      return res.status(403).json({
+        success: false,
+        message: settings.distanceClosedMessage || 'የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
+      });
+    }
 
     // Map old parent fields to new emergency fields if new ones are missing
     const finalEmergencyFirstName = (emergencyFirstName || parentName || '').toString().trim();

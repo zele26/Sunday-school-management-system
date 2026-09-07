@@ -4,8 +4,65 @@ const router = express.Router();
 const Registration = require('../../models/Registration');
 const User = require('../../models/User');
 const Student = require('../../models/Student');
+const SystemSetting = require('../../models/SystemSetting');
 const crypto = require('crypto');
 const { protect, authorize } = require('../../middleware/auth');
+
+// ---------- Registration Intake Settings (Open / Close Controls) ----------
+
+// GET /api/admin/registrations/settings
+router.get('/settings', protect, authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    let settings = await SystemSetting.findOne({ key: 'registration' }).populate('updatedBy', 'fullName username email');
+    if (!settings) {
+      settings = await SystemSetting.create({ key: 'registration' });
+    }
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error('Fetch registration settings error:', err);
+    res.status(500).json({ success: false, message: 'Server error while fetching registration settings' });
+  }
+});
+
+// PUT /api/admin/registrations/settings
+router.put('/settings', protect, authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const {
+      isRegistrationOpen,
+      isRegularOpen,
+      isDistanceOpen,
+      academicYear,
+      regularClosedMessage,
+      distanceClosedMessage,
+      generalClosedMessage,
+    } = req.body;
+
+    let settings = await SystemSetting.findOne({ key: 'registration' });
+    if (!settings) {
+      settings = new SystemSetting({ key: 'registration' });
+    }
+
+    if (typeof isRegistrationOpen === 'boolean') settings.isRegistrationOpen = isRegistrationOpen;
+    if (typeof isRegularOpen === 'boolean') settings.isRegularOpen = isRegularOpen;
+    if (typeof isDistanceOpen === 'boolean') settings.isDistanceOpen = isDistanceOpen;
+    if (academicYear !== undefined) settings.academicYear = String(academicYear).trim();
+    if (regularClosedMessage !== undefined) settings.regularClosedMessage = String(regularClosedMessage).trim();
+    if (distanceClosedMessage !== undefined) settings.distanceClosedMessage = String(distanceClosedMessage).trim();
+    if (generalClosedMessage !== undefined) settings.generalClosedMessage = String(generalClosedMessage).trim();
+
+    settings.updatedBy = req.user ? req.user._id : null;
+    await settings.save();
+
+    res.json({
+      success: true,
+      message: 'የምዝገባ ቅንብሮች በተሳካ ሁኔታ ተስተካክለዋል (Registration settings updated successfully)',
+      settings,
+    });
+  } catch (err) {
+    console.error('Update registration settings error:', err);
+    res.status(500).json({ success: false, message: 'Server error while updating registration settings' });
+  }
+});
 
 // ---------- Helper: Ethiopian year (full, e.g., 2018) ----------
 const getEthiopianYear = () => {

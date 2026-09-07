@@ -7,11 +7,17 @@ import { API_BASE_URL } from '../api/apiClient';
 import { regularRegistrationSchema } from '../schemas';
 import { EthiopianDatePicker, BackButton } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
+import { useRegistrationStatus } from '../hooks/queries';
 
 const RegisterRegularContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form'
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(null);
+
+  const { data: regStatus, isLoading: isStatusLoading } = useRegistrationStatus();
+  const isMasterOpen = regStatus?.isRegistrationOpen !== false;
+  const isRegularOpen = isMasterOpen && regStatus?.isRegularOpen !== false;
+  const isDistanceOpen = isMasterOpen && regStatus?.isDistanceOpen !== false;
 
   const {
     register,
@@ -86,6 +92,55 @@ const RegisterRegularContent = () => {
 
   const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1657b8]/20 focus:border-[#1657b8] transition-all text-slate-700 text-sm placeholder:text-slate-400";
   const labelClass = "block text-sm font-semibold text-slate-700 mb-1.5 ml-1";
+
+  // 🔒 REGISTRATION CLOSED SCREEN
+  if (!isStatusLoading && !isRegularOpen) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 flex items-center justify-center font-sans">
+        <div className="max-w-lg w-full bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-10 text-center shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto text-3xl border border-amber-200 dark:border-amber-800">
+            ⏳
+          </div>
+          <div className="space-y-2">
+            <span className="inline-block px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+              ምዝገባ ለጊዜው ተዘግቷል
+            </span>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white">የመደበኛ ተማሪዎች ምዝገባ</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              {regStatus?.regularClosedMessage || regStatus?.generalClosedMessage || 'የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።'}
+            </p>
+          </div>
+
+          <div className="pt-2 space-y-3">
+            {isDistanceOpen && (
+              <Link
+                href="/register-distance"
+                className="w-full bg-[#1657b8] hover:bg-[#124796] active:scale-98 text-white font-bold py-3.5 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>የርቀት ትምህርት ይመዝገቡ (Switch to Distance LMS)</span>
+                <span>➔</span>
+              </Link>
+            )}
+            <Link
+              href="/check-status"
+              className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-98 text-slate-800 dark:text-slate-100 font-bold py-3.5 px-6 rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>የምዝገባ ሁኔታ ያረጋግጡ (Check Status)</span>
+              <span>🔍</span>
+            </Link>
+            <div className="pt-2">
+              <Link
+                href="/"
+                className="inline-block text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:underline"
+              >
+                ← ወደ ዋናው ገጽ ይመለሱ (Back to Home)
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ---------- INFO STEP ----------
   if (step === 'info') {

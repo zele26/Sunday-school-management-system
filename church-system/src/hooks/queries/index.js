@@ -13,3 +13,4 @@ export * from './useResources';
 export * from './usePasswordResets';
 export * from './useTeacherPortal';
 export * from './useStudentPortal';
+export * from './useRegistrationStatus';
