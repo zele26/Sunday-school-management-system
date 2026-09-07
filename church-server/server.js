@@ -404,7 +404,15 @@ async function start() {
     await User.createIndexes();
     console.log('✅ Sparse indexes ensured for User model');
 
-app.listen(PORT, '0.0.0.0', () => {
+    // Auto-seed Saint Paul course & curriculum modules if needed
+    try {
+      const seedSaintPaulCourse = require('./seedSaintPaulCourse');
+      await seedSaintPaulCourse();
+    } catch (seedErr) {
+      console.warn('⚠️ Saint Paul Course seeding note:', seedErr.message);
+    }
+
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📡 API available at http://localhost:${PORT}/api`);
       console.log(`🌐 Health check at http://localhost:${PORT}/api/test`);

@@ -20,12 +20,12 @@ const batchesData = [
     batch: 'Batch 2 (ሁለተኛ ዓመት)',
     title: 'የሐዲስ ኪዳን እና የሥርዓተ ቤተክርስቲያን ጥናት',
     badge: 'መካከለኛ',
-    description: 'የወንጌላት ጥልቅ ትንታኔ፣ የሐዋርያት መልእክታት፣ ምስጢራተ ቤተክርስቲያን እና የቅዳሴ ትርጓሜ የሚዳሰስበት ዙር ነው።',
+    description: 'የወንጌላት ጥልቅ ትንታኔ፣ የቅዱስ ጳውሎስ ሐዋርያዊ አገልግሎትና መልእክታት፣ ምስጢራተ ቤተክርስቲያን እና የቅዳሴ ትርጓሜ የሚዳሰስበት ዙር ነው።',
     courses: [
       { name: 'የሐዲስ ኪዳን ጥናት (New Testament Survey)', hours: '60 ሰዓታት', icon: '📖' },
+      { name: 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ (St. Paul & Apostolic Ministry)', hours: '50 ሰዓታት', icon: '📜' },
       { name: 'ምስጢራተ ቤተክርስቲያን (Sacraments of the Church)', hours: '45 ሰዓታት', icon: '🕯️' },
       { name: 'የቅዳሴና የጸሎት ትርጓሜ (Liturgy & Worship)', hours: '40 ሰዓታት', icon: '⛪' },
-      { name: 'የቤተክርስቲያን ታሪክ II (Church History II)', hours: '35 ሰዓታት', icon: '📜' },
     ],
   },
   {
