@@ -91,12 +91,12 @@ const PublicLayout = ({ children }) => {
         onMouseEnter={() => setIsTickerPaused(true)}
         onMouseLeave={() => setIsTickerPaused(false)}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-3 flex-1 overflow-hidden">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black border shrink-0 bg-amber-400 text-slate-950 border-amber-300 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-3.5 flex-1 overflow-hidden">
+            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-black border shrink-0 bg-amber-400 text-slate-950 border-amber-300 shadow-xs leading-none">
               {tickerItems[currentTickerIndex].type}
             </span>
-            <p className="truncate sm:whitespace-normal text-blue-50 font-medium tracking-wide text-xs sm:text-sm">
+            <p className="truncate sm:whitespace-normal text-blue-50 font-medium tracking-wide text-xs sm:text-sm leading-normal">
               {tickerItems[currentTickerIndex].text}
             </p>
           </div>
@@ -151,13 +151,13 @@ const PublicLayout = ({ children }) => {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center space-x-1.5 space-x-reverse text-sm font-semibold">
+            {/* Desktop Navigation Links (Generous Spacing & Breathable Targets) */}
+            <nav className="hidden lg:flex items-center gap-2.5 xl:gap-4 text-sm font-semibold">
               {primaryNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`px-3.5 py-2 rounded-xl transition-all duration-200 relative ${pathname === link.to
+                  className={`px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 relative whitespace-nowrap ${pathname === link.to
                     ? 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-[#1657b8] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
@@ -171,7 +171,7 @@ const PublicLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
-                  className={`flex items-center space-x-2 space-x-reverse px-3.5 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer ${registrationLinks.some((item) => item.to === pathname)
+                  className={`flex items-center space-x-2 space-x-reverse px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer whitespace-nowrap ${registrationLinks.some((item) => item.to === pathname)
                     ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800 shadow-2xs'
                     : 'text-slate-600 dark:text-slate-300 hover:text-[#1657b8] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
@@ -324,33 +324,43 @@ const PublicLayout = ({ children }) => {
       </main>
 
       {/* 🌟 4. PRE-FOOTER PROMOTION & CTA BANNER */}
-      <section className="bg-slate-100/70 dark:bg-slate-900/70   border-t border-slate-200 dark:border-slate-800 py-12">
+      <section className="bg-slate-100/70 dark:bg-slate-900/70 border-t border-slate-200 dark:border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="space-y-3 text-center lg:text-left max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-                <span>✨ በመጀመሪያ ቃል ነበረል</span>
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-[#1657b8] to-blue-950 rounded-3xl p-7 sm:p-12 shadow-xl border border-blue-700/60 flex flex-col lg:flex-row items-center justify-between gap-8 text-white">
+            {/* Ambient background glows */}
+            <div className="absolute -top-24 -right-24 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Left Content */}
+            <div className="space-y-3.5 text-center lg:text-left max-w-2xl relative z-10">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-black tracking-wide">
+                <span>✨ ዮሐንስ ፩፥፩</span>
+                <span>•</span>
+                <span>«በመጀመሪያ ቃል ነበረ»</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight leading-snug">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-snug">
                 ልጅዎን በሰንበት ትምህርት ቤት መንፈሳዊ ዕውቀት ያሳድጉ!
               </h3>
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                የተክለሳዊሮስ ሰንበት ትምህርት ቤት የ 2017 ዓ.ም የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።
+              <p className="text-blue-100 text-sm sm:text-base leading-relaxed max-w-xl">
+                የተክለሳዊሮስ ሰንበት ትምህርት ቤት የ2017 ዓ.ም የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3.5 shrink-0 w-full sm:w-auto">
+            {/* Right Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3.5 shrink-0 w-full sm:w-auto relative z-10">
               <Link
                 href="/register-regular"
-                className="px-6 py-3.5 rounded-xl bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold text-sm shadow-sm text-center transition-colors"
+                className="px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 active:scale-95 text-[#1657b8] font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                የመደበኛ ምዝገባ ➔
+                <span>የመደበኛ ምዝገባ</span>
+                <span>➔</span>
               </Link>
               <Link
                 href="/register-distance"
-                className="px-6 py-3.5 rounded-xl bg-[var(--brand-gold)] hover:bg-[#dfa500] active:opacity-90 text-slate-950 font-bold text-sm shadow-sm text-center transition-colors"
+                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                የርቀት ምዝገባ ➔
+                <span>የርቀት ምዝገባ</span>
+                <span>➔</span>
               </Link>
             </div>
           </div>
