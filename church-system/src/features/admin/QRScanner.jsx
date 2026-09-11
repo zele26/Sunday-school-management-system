@@ -1,5 +1,6 @@
 'use client';
 
+// src/features/admin/QRScanner.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +33,10 @@ import {
   Moon,
   Globe,
   Building,
+  FlipHorizontal,
+  Zap,
+  Download,
+  Trash2,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -41,9 +46,21 @@ import { Badge } from '../../components/ui/Badge';
 import { toast } from '../../utils/toast';
 
 // ------------------------------------------------------------------
-// Audio feedback generator using Web Audio API
+// Audio & Haptic feedback generator
 // ------------------------------------------------------------------
-const playBeep = (type = 'success', soundEnabled = true) => {
+const playFeedback = (type = 'success', soundEnabled = true) => {
+  // 1. Haptic Vibration (Mobile)
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    if (type === 'success') {
+      navigator.vibrate(80);
+    } else if (type === 'warning') {
+      navigator.vibrate([60, 40, 60]);
+    } else {
+      navigator.vibrate([120, 60, 120]);
+    }
+  }
+
+  // 2. Web Audio Synthesizer
   if (!soundEnabled) return;
   try {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -55,7 +72,7 @@ const playBeep = (type = 'success', soundEnabled = true) => {
     gain.connect(ctx.destination);
 
     if (type === 'success') {
-      // Pleasant high double-beep
+      // Pleasant harmonic double-beep
       osc.type = 'sine';
       osc.frequency.setValueAtTime(880, ctx.currentTime);
       osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.08);
@@ -81,7 +98,7 @@ const playBeep = (type = 'success', soundEnabled = true) => {
       osc.stop(ctx.currentTime + 0.3);
     }
   } catch (e) {
-    // AudioContext blocked by browser policy until gesture
+    // AudioContext blocked until user gesture
   }
 };
 
@@ -90,6 +107,8 @@ const QRScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [facingMode, setFacingMode] = useState('environment'); // 'environment' (back) | 'user' (front)
+  const [torchEnabled, setTorchEnabled] = useState(false);
 
   // Mode & Shift selection (Regular vs Distance, Night vs Weekend)
   const [studentTypeFilter, setStudentTypeFilter] = useState(''); // '' | 'regular' | 'distance'
@@ -114,7 +133,7 @@ const QRScanner = () => {
   const [recentScans, setRecentScans] = useState([]);
   const [lastScannedStudent, setLastScannedStudent] = useState(null);
 
-  // Cooldown refs to prevent duplicate rapid scans (within 3 seconds)
+  // Cooldown refs to prevent duplicate rapid scans
   const html5QrCodeRef = useRef(null);
   const lastScannedRef = useRef('');
   const lastScanTimeRef = useRef(0);
@@ -124,7 +143,7 @@ const QRScanner = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await apiFetch('/api/admin/courses');
+        const res = await apiFetch('/api/courses');
         if (res.ok) {
           const data = await res.json();
           setCourses(Array.isArray(data) ? data : data.courses || []);
@@ -160,7 +179,7 @@ const QRScanner = () => {
       } finally {
         setIsSearching(false);
       }
-    }, 300);
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchTerm, studentTypeFilter, shiftFilter]);
 
@@ -199,6 +218,7 @@ const QRScanner = () => {
           id: data.student?.id || data.student?._id || payload.studentId || 'ID',
           name: data.student?.name || (payload.firstName ? `${payload.firstName} ${payload.lastName}` : 'ተማሪ'),
           grade: data.student?.grade || payload.grade || '',
+          studentId: data.student?.studentId || payload.studentId || '',
           studentType: data.student?.studentType || payload.studentType || 'regular',
           shift: data.student?.shift || payload.shift || '',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -210,10 +230,10 @@ const QRScanner = () => {
         setLastScannedStudent(studentInfo);
 
         if (data.alreadyRecorded) {
-          playBeep('warning', soundEnabled);
+          playFeedback('warning', soundEnabled);
           toast.info(`${studentInfo.name} — ቀደም ሲል ተመዝግቧል`);
         } else {
-          playBeep('success', soundEnabled);
+          playFeedback('success', soundEnabled);
           try {
             confetti({
               particleCount: 35,
@@ -227,13 +247,13 @@ const QRScanner = () => {
         }
 
         // Add to recent feed
-        setRecentScans((prev) => [studentInfo, ...prev.slice(0, 19)]);
+        setRecentScans((prev) => [studentInfo, ...prev.slice(0, 49)]);
       } else {
-        playBeep('error', soundEnabled);
+        playFeedback('error', soundEnabled);
         toast.error(data.message || 'የመገኘት ምዝገባ አልተሳካም');
       }
     } catch (err) {
-      playBeep('error', soundEnabled);
+      playFeedback('error', soundEnabled);
       toast.error('የሰርቨር ግንኙነት ችግር አጋጥሟል');
     }
   };
@@ -242,7 +262,7 @@ const QRScanner = () => {
   const handleScan = useCallback(
     async (decodedText) => {
       const now = Date.now();
-      if (decodedText === lastScannedRef.current && now - lastScanTimeRef.current < 3000) {
+      if (decodedText === lastScannedRef.current && now - lastScanTimeRef.current < 2500) {
         return; // debounce same QR code
       }
       lastScannedRef.current = decodedText;
@@ -254,28 +274,29 @@ const QRScanner = () => {
   );
 
   // Start Camera Scanner
-  const startCamera = async () => {
+  const startCamera = async (overrideFacing) => {
     setCameraError('');
     setIsScanning(true);
+    const useFacing = overrideFacing || facingMode;
 
     try {
       if (!html5QrCodeRef.current) {
         html5QrCodeRef.current = new Html5Qrcode('qr-reader-viewport');
+      } else if (html5QrCodeRef.current.isScanning) {
+        await html5QrCodeRef.current.stop();
       }
 
       await html5QrCodeRef.current.start(
-        { facingMode: 'environment' },
+        { facingMode: useFacing },
         {
-          fps: 15,
+          fps: 20,
           qrbox: { width: 260, height: 260 },
           aspectRatio: 1.0,
         },
         (decodedText) => {
           handleScan(decodedText);
         },
-        () => {
-          // Frame read errors are normal when scanning empty space
-        }
+        () => {}
       );
     } catch (err) {
       console.error('Camera start error:', err);
@@ -285,6 +306,15 @@ const QRScanner = () => {
           ? 'የካሜራ ፈቃድ አልተሰጠም። እባክዎ በብሮውዘርዎ ቅንብሮች ውስጥ የካሜራ ፈቃድ ይስጡ።'
           : 'ካሜራውን መክፈት አልተቻለም። እባክዎ ካሜራው በሌላ መተግበሪያ አለመያዙን ያረጋግጡ።'
       );
+    }
+  };
+
+  // Switch Front / Back Camera
+  const toggleCameraFacing = async () => {
+    const nextFacing = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(nextFacing);
+    if (isScanning) {
+      await startCamera(nextFacing);
     }
   };
 
@@ -305,12 +335,10 @@ const QRScanner = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (html5QrCodeRef.current) {
-        if (html5QrCodeRef.current.isScanning) {
-          html5QrCodeRef.current.stop().catch(() => {}).then(() => {
-            html5QrCodeRef.current?.clear().catch(() => {});
-          });
-        }
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(() => {}).then(() => {
+          html5QrCodeRef.current?.clear().catch(() => {});
+        });
       }
     };
   }, []);
@@ -329,7 +357,7 @@ const QRScanner = () => {
         await handleScan(decodedText);
       }
     } catch (err) {
-      playBeep('error', soundEnabled);
+      playFeedback('error', soundEnabled);
       toast.error('በዚህ ምስል ላይ ትክክለኛ የQR ኮድ አልተገኘም');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -351,6 +379,34 @@ const QRScanner = () => {
     );
     setSearchTerm('');
     setSearchOpen(false);
+  };
+
+  // Export session scans to CSV
+  const handleExportCSV = () => {
+    if (recentScans.length === 0) {
+      toast.info('ምንም የተመዘገበ ተማሪ የለም');
+      return;
+    }
+    const headers = ['ስም', 'መለያ ቁጥር', 'ክፍል', 'ምዝገባ ዓይነት', 'ፈረቃ', 'ሰዓት', 'ሁኔታ'];
+    const rows = recentScans.map((s) => [
+      s.name,
+      s.studentId || '-',
+      s.grade || '-',
+      s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ',
+      s.shift === 'night' ? 'ማታ' : 'ቀን',
+      s.timestamp,
+      s.status === 'Present' ? 'ተገኝቷል' : s.status === 'Late' ? 'አርፍዷል' : s.status,
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `የተገኝነት_ስካን_ሪፖርት_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const presentCount = recentScans.filter((s) => s.status === 'Present').length;
@@ -396,7 +452,7 @@ const QRScanner = () => {
             </select>
           </div>
 
-          {/* 2. Shift Selector (If Regular or All: Weekend vs Night) */}
+          {/* 2. Shift Selector (If Regular: Weekend vs Night) */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               {shiftFilter === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
@@ -505,7 +561,7 @@ const QRScanner = () => {
         <div className="lg:col-span-7 space-y-4">
           <Card variant="default" padding="none" className="bg-slate-950 text-white rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative">
             {/* Viewport Header Bar */}
-            <div className="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-10 relative">
+            <div className="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between z-10 relative flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
@@ -513,37 +569,48 @@ const QRScanner = () => {
                 <span className="text-xs font-bold text-slate-300 ml-2">ፈጣን የQR ኮድ ስካነር</span>
               </div>
 
-              {/* Mode Tabs */}
-              <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl">
-                <button
-                  onClick={() => {
-                    setActiveTab('camera');
-                  }}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeTab === 'camera' ? 'bg-[#1657b8] text-white shadow-xs' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Camera className="w-3.5 h-3.5 inline mr-1" />
-                  ካሜራ
-                </button>
-                <button
-                  onClick={() => {
-                    if (isScanning) stopCamera();
-                    setActiveTab('file');
-                  }}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeTab === 'file' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Upload className="w-3.5 h-3.5 inline mr-1" />
-                  ምስል ጫን
-                </button>
+              {/* Mode & Camera Controls */}
+              <div className="flex items-center gap-1.5">
+                {isScanning && (
+                  <button
+                    type="button"
+                    onClick={toggleCameraFacing}
+                    title="ካሜራ ቀይር (የፊት / የኋላ)"
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                  >
+                    <FlipHorizontal className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl">
+                  <button
+                    onClick={() => setActiveTab('camera')}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      activeTab === 'camera' ? 'bg-[#1657b8] text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5 inline mr-1" />
+                    ካሜራ
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (isScanning) stopCamera();
+                      setActiveTab('file');
+                    }}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      activeTab === 'file' ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Upload className="w-3.5 h-3.5 inline mr-1" />
+                    ምስል ጫን
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Camera Viewport Area */}
             <div className="relative min-h-[380px] sm:min-h-[420px] bg-slate-950 flex flex-col items-center justify-center p-4 overflow-hidden">
-              {/* Hidden DOM mount target for html5-qrcode video */}
+              {/* DOM mount target for html5-qrcode video */}
               <div
                 id="qr-reader-viewport"
                 className={`w-full max-w-[340px] aspect-square rounded-2xl overflow-hidden ${
@@ -589,7 +656,6 @@ const QRScanner = () => {
                     </p>
                   </div>
 
-                  {/* Active filter indication badge */}
                   {(studentTypeFilter || shiftFilter) && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-bold text-amber-300">
                       <span>ዒላማ፦</span>
@@ -607,8 +673,8 @@ const QRScanner = () => {
                   <Button
                     variant="primary"
                     size="lg"
-                    onClick={startCamera}
-                    className="w-full bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 gap-2 border border-blue-400/30"
+                    onClick={() => startCamera()}
+                    className="w-full bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 gap-2 border border-blue-400/30 cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-current text-amber-300" />
                     <span>ካሜራ ጀምር</span>
@@ -660,7 +726,7 @@ const QRScanner = () => {
                   variant="danger"
                   size="sm"
                   onClick={stopCamera}
-                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1.5 rounded-xl text-xs shadow-md"
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1.5 rounded-xl text-xs shadow-md cursor-pointer"
                 >
                   <Square className="w-3.5 h-3.5 fill-current" />
                   <span>ካሜራ አቁም</span>
@@ -834,11 +900,42 @@ const QRScanner = () => {
           {/* Real-time Rolling Attendance Feed */}
           <Card variant="default" padding="md" className="space-y-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-[#1657b8] dark:text-amber-400" />
-                <span>የቅርብ ጊዜ ምዝገባዎች</span>
-              </h3>
-              <Badge variant="neutral" size="sm">{recentScans.length} ተመዝግበዋል</Badge>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  የቅርብ ጊዜ ምዝገባዎች
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {recentScans.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleExportCSV}
+                      title="የተመዘገቡትን በCSV አውርድ"
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span className="hidden sm:inline text-[10px]">አውርድ</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm('የዚህን ክፍለ-ጊዜ ዝርዝር ማጽዳት ይፈልጋሉ?')) {
+                          setRecentScans([]);
+                          setLastScannedStudent(null);
+                        }
+                      }}
+                      title="ዝርዝሩን አጽዳ"
+                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 hover:text-rose-600 text-slate-400 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </>
+                )}
+                <Badge variant="neutral" size="sm">{recentScans.length} ተመዝግበዋል</Badge>
+              </div>
             </div>
 
             {recentScans.length === 0 ? (

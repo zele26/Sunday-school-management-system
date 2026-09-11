@@ -13,13 +13,40 @@ router.use(protect);
 router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { qrCode, courseId, status: forcedStatus } = req.body;
-    if (!qrCode) {
+    if (!qrCode || typeof qrCode !== 'string') {
       return res.status(400).json({ success: false, message: 'QR code data required' });
     }
 
-    const student = await Student.findOne({ qrCode });
+    const trimmedQr = qrCode.trim();
+    let searchId = trimmedQr;
+    try {
+      const parsed = JSON.parse(trimmedQr);
+      if (parsed.studentId) searchId = parsed.studentId;
+      else if (parsed.qrCode) searchId = parsed.qrCode;
+      else if (parsed.id) searchId = parsed.id;
+    } catch (e) {
+      // not JSON, use raw trimmed string
+    }
+
+    const mongoose = require('mongoose');
+    const queryConditions = [
+      { qrCode: trimmedQr },
+      { studentId: searchId },
+      { studentId: trimmedQr },
+      { registrationNumber: searchId },
+      { registrationNumber: trimmedQr },
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(searchId)) {
+      queryConditions.push({ _id: searchId });
+    }
+    if (mongoose.Types.ObjectId.isValid(trimmedQr)) {
+      queryConditions.push({ _id: trimmedQr });
+    }
+
+    const student = await Student.findOne({ $or: queryConditions });
     if (!student) {
-      return res.status(404).json({ success: false, message: 'Invalid QR code. Student not found.' });
+      return res.status(404).json({ success: false, message: 'የተማሪው የQR መለያ አልተገኘም። እባክዎ እንደገና ይሞክሩ።' });
     }
 
     let courseName = '';
@@ -442,68 +469,166 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
   }
 });
 
-// ---------- Bulk attendance ----------
+// ---------- Class Roster with attendance status for a date ----------
+router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
+  try {
+    const { grade, courseId, date, studentType, shift } = req.query;
+    const query = { status: 'approved' };
+
+    if (grade) {
+      query.$or = [{ grade: grade }, { batch: grade }];
+    }
+    if (studentType) {
+      query.studentType = studentType;
+    }
+    if (shift) {
+      query.shift = shift;
+    }
+
+    const students = await Student.find(query)
+      .select('firstName middleName lastName studentId grade batch studentType shift phone qrCode photo')
+      .sort({ firstName: 1, lastName: 1 });
+
+    const attendanceDate = date ? new Date(date) : new Date();
+    attendanceDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(attendanceDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    const attendances = await Attendance.find({
+      student: { $in: students.map(s => s._id) },
+      date: { $gte: attendanceDate, $lt: nextDay },
+      ...(courseId ? { course: courseId } : {}),
+    });
+
+    const attendanceMap = new Map();
+    attendances.forEach(att => {
+      attendanceMap.set(att.student.toString(), att);
+    });
+
+    const roster = students.map(s => {
+      const att = attendanceMap.get(s._id.toString());
+      return {
+        _id: s._id,
+        studentId: s.studentId,
+        fullName: `${s.firstName || ''} ${s.middleName || ''} ${s.lastName || ''}`.trim(),
+        firstName: s.firstName,
+        lastName: s.lastName,
+        grade: s.grade || s.batch || '',
+        studentType: s.studentType || 'regular',
+        shift: s.shift || '',
+        phone: s.phone || '',
+        photo: s.photo || '',
+        attendanceId: att ? att._id : null,
+        status: att ? att.status : null,
+        checkInTime: att ? att.checkInTime : null,
+      };
+    });
+
+    res.json({
+      success: true,
+      totalStudents: students.length,
+      markedCount: attendances.length,
+      roster,
+    });
+  } catch (err) {
+    console.error('Roster fetch error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Bulk attendance (Supports roster submission and itemized statuses) ----------
 router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
   try {
-    const { studentIds, courseId, status, date } = req.body;
+    const { studentIds, records, courseId, status, date } = req.body;
 
-    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
-      return res.status(400).json({ success: false, message: 'Student IDs array is required' });
+    const items = records && Array.isArray(records) && records.length > 0
+      ? records
+      : (studentIds || []).map(id => ({ studentId: id, status: status || 'Present' }));
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'Student records or IDs array is required' });
     }
 
     const attendanceDate = date ? new Date(date) : new Date();
     attendanceDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(attendanceDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    let courseName = '';
+    let teacher = null;
+    let teacherName = '';
+    if (courseId) {
+      const course = await Course.findById(courseId).populate('teacher', 'fullName');
+      if (course) {
+        courseName = course.name;
+        if (course.teacher) {
+          teacher = course.teacher._id;
+          teacherName = course.teacher.fullName;
+        }
+      }
+    }
 
     const results = [];
     const errors = [];
 
-    for (const studentId of studentIds) {
+    for (const item of items) {
+      const targetId = item.studentId || item.id || item._id;
+      const targetStatus = item.status || status || 'Present';
+
       try {
-        const student = await Student.findById(studentId);
+        const student = await Student.findById(targetId);
         if (!student) {
-          errors.push({ studentId, error: 'Student not found' });
+          errors.push({ studentId: targetId, error: 'Student not found' });
           continue;
         }
 
         const existing = await Attendance.findOne({
-          student: studentId,
-          date: attendanceDate,
+          student: student._id,
+          date: { $gte: attendanceDate, $lt: nextDay },
           ...(courseId ? { course: courseId } : {}),
         });
 
         if (existing) {
-          errors.push({ 
-            studentId, 
+          existing.status = targetStatus;
+          existing.updatedBy = req.user._id;
+          await existing.save();
+          results.push({
+            studentId: student._id,
             studentName: `${student.firstName} ${student.lastName}`,
-            error: 'Already recorded' 
+            status: targetStatus,
+            action: 'updated',
           });
-          continue;
+        } else {
+          await Attendance.create({
+            student: student._id,
+            studentName: `${student.firstName} ${student.lastName}`,
+            grade: student.grade || student.batch || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            course: courseId || null,
+            courseName,
+            teacher,
+            teacherName,
+            date: attendanceDate,
+            checkInTime: new Date(),
+            status: targetStatus,
+            recordedBy: req.user._id,
+          });
+          results.push({
+            studentId: student._id,
+            studentName: `${student.firstName} ${student.lastName}`,
+            status: targetStatus,
+            action: 'created',
+          });
         }
-
-        await Attendance.create({
-          student: studentId,
-          studentName: `${student.firstName} ${student.lastName}`,
-          grade: student.grade || '',
-          course: courseId || null,
-          date: attendanceDate,
-          checkInTime: new Date(),
-          status: status || 'Present',
-          recordedBy: req.user._id,
-        });
-
-        results.push({
-          studentId,
-          studentName: `${student.firstName} ${student.lastName}`,
-          status: 'success',
-        });
       } catch (err) {
-        errors.push({ studentId, error: err.message });
+        errors.push({ studentId: targetId, error: err.message });
       }
     }
 
     res.json({
       success: true,
-      message: `Bulk attendance processed: ${results.length} successful, ${errors.length} failed`,
+      message: `ተገኝነት ተመዝግቧል፦ ${results.length} ተማሪዎች በተሳካ ሁኔታ ተመዝግበዋል።`,
       results,
       errors,
     });
@@ -514,3 +639,4 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
 });
 
 module.exports = router;
+
