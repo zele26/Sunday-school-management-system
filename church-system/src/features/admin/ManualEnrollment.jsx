@@ -20,7 +20,7 @@ const ManualEnrollment = () => {
   const [form, setForm] = useState({
     personId: '',
     programCode: 'REG',
-    academicYearName: new Date().getFullYear().toString(),
+    academicYearName: '2017 ዓ.ም',
     gradeName: '',
     studyModeCode: 'REGULAR',
     scheduleCode: 'WEEKEND',
@@ -48,7 +48,14 @@ const ManualEnrollment = () => {
       if (programsRes.ok) setPrograms((await programsRes.json()).programs || []);
       if (studyModesRes.ok) setStudyModes((await studyModesRes.json()).studyModes || []);
       if (schedulesRes.ok) setSchedules((await schedulesRes.json()).schedules || []);
-      if (yearsRes.ok) setAcademicYears((await yearsRes.json()).years || []);
+      if (yearsRes.ok) {
+        const fetchedYears = (await yearsRes.json()).years || [];
+        setAcademicYears(fetchedYears);
+        const active = fetchedYears.find((y) => y.status === 'active') || fetchedYears[0];
+        if (active) {
+          setForm((prev) => ({ ...prev, academicYearName: active.name }));
+        }
+      }
     } catch (err) {
       console.error(err);
     }
@@ -95,14 +102,11 @@ const ManualEnrollment = () => {
       const data = await res.json();
       if (res.ok) {
         toast.success('ተማሪው በተሳካ ሁኔታ ተመዝግቧል! (Enrollment created successfully)');
-        setForm({
+        setForm((prev) => ({
+          ...prev,
           personId: '',
-          programCode: 'REG',
-          academicYearName: new Date().getFullYear().toString(),
           gradeName: '',
-          studyModeCode: 'REGULAR',
-          scheduleCode: 'WEEKEND',
-        });
+        }));
         setPersonSearch('');
       } else {
         toast.error(data.message || 'ምዝገባው አልተሳካም');

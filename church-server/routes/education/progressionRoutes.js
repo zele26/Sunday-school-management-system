@@ -11,8 +11,13 @@ const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
 const { protect, authorize } = require('../../middleware/auth');
 
 const getNextYearName = (currentYearName) => {
-  const current = parseInt(currentYearName) || new Date().getFullYear();
-  return String(current + 1);
+  if (!currentYearName) return '2018 ዓ.ም';
+  const match = String(currentYearName).match(/\d+/);
+  if (match) {
+    const num = parseInt(match[0], 10);
+    return `${num + 1} ዓ.ም`;
+  }
+  return '2018 ዓ.ም';
 };
 
 // GET /api/education/students/:studentProfileId/history – get academic history

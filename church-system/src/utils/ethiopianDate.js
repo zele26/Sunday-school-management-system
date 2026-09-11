@@ -140,3 +140,18 @@ export const calculateAgeFromDOB = (dateInput) => {
   }
   return age >= 0 ? age : 0;
 };
+
+/**
+ * Returns the default standard Ethiopian academic start (Meskerem 1) and end (Pagume 5/6) ISO dates for a given Ethiopian year number.
+ */
+export const getEthiopianAcademicYearDates = (yearNum) => {
+  const y = parseInt(yearNum, 10);
+  if (isNaN(y)) return { startDate: '', endDate: '' };
+  const isLeap = y % 4 === 3;
+  const startG = ethiopicToGregorian(y, 1, 1);
+  const endG = ethiopicToGregorian(y, 13, isLeap ? 6 : 5);
+  return {
+    startDate: startG ? startG.toISOString().split('T')[0] : '',
+    endDate: endG ? endG.toISOString().split('T')[0] : '',
+  };
+};
