@@ -54,12 +54,13 @@ const CheckStatusContent = () => {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/registration/check-status`, {
+      const baseUrl = API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/registrations/check-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone: phone.trim(), password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         setResult(data);
@@ -67,6 +68,7 @@ const CheckStatusContent = () => {
         setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል');
       }
     } catch (err) {
+      console.error('Check status error:', err);
       setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setLoading(false);

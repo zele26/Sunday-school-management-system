@@ -74,26 +74,28 @@ const RegisterDistanceContent = () => {
         grade: 'Batch 1',
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/registrations`, {
+      const baseUrl = API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/registrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
 
       if (res.ok) {
         setResult(resData.registration);
         try {
-          const piRes = await fetch(`${API_BASE_URL}/api/registrations/payment-info`);
-          if (piRes.ok) setPaymentInfo(await piRes.json());
+          const piRes = await fetch(`${baseUrl}/api/registrations/payment-info`);
+          if (piRes.ok) setPaymentInfo(await piRes.json().catch(() => null));
         } catch (piErr) {
           console.warn('Could not fetch payment info:', piErr);
         }
         setStep('success');
       } else {
-        setServerError(resData.message || 'ምዝገባ አልተሳካም');
+        setServerError(resData.message || 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ');
       }
-    } catch {
+    } catch (err) {
+      console.error('Registration error:', err);
       setServerError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     }
   };

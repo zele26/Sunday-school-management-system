@@ -8,21 +8,34 @@ import useAuthStore from '../store/authStore';
 //    - In Next.js with rewrites configured in next.config.mjs, an empty string
 //      routes directly to the same origin and proxies seamlessly to the backend.
 // ------------------------------------------------------------------
-export const API_BASE_URL = (() => {
+export function getApiBaseUrl() {
   const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL;
   if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/+$/, '');
   }
 
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    const { hostname, port } = window.location;
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      port === '3000' ||
+      port === '5173' ||
+      port === '8080'
+    ) {
       return 'http://localhost:5000';
     }
+    // In production with same-origin Next.js rewrites:
+    return '';
   }
 
-  // Default for production (Render)
-  return process.env.BACKEND_API_URL || 'https://church-api-3l2c.onrender.com';
+  return process.env.BACKEND_API_URL || 'http://localhost:5000';
+}
+
+export const API_BASE_URL = (() => {
+  return getApiBaseUrl();
 })();
 
 // In-memory cache for ultra-fast GET responses with TTL

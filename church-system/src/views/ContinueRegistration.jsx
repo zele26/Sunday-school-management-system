@@ -29,10 +29,11 @@ const ContinueRegistrationContent = () => {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/registrations/payment-info`)
-      .then((res) => res.json())
+    const baseUrl = API_BASE_URL || '';
+    fetch(`${baseUrl}/api/registrations/payment-info`)
+      .then((res) => res.json().catch(() => ({})))
       .then((data) => {
-        if (!data.message) setPaymentInfo(data);
+        if (data && !data.message) setPaymentInfo(data);
       })
       .catch((err) => console.warn('Could not fetch payment info:', err));
   }, []);
@@ -44,12 +45,13 @@ const ContinueRegistrationContent = () => {
     setIsLoggingIn(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/registrations/login`, {
+      const baseUrl = API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/registrations/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phone.trim(), password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         if (data.studentType !== 'distance') {
@@ -62,6 +64,7 @@ const ContinueRegistrationContent = () => {
         setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል');
       }
     } catch (err) {
+      console.error('Login error in continue-registration:', err);
       setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setIsLoggingIn(false);
@@ -84,13 +87,20 @@ const ContinueRegistrationContent = () => {
 
     const formData = new FormData();
     formData.append('receipt', file);
+    if (registration?.registrationNumber) {
+      formData.append('registrationNumber', registration.registrationNumber);
+    }
+    if (registration?.phone) {
+      formData.append('phone', registration.phone);
+    }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/registrations/upload-receipt`, {
+      const baseUrl = API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/registrations/upload-receipt`, {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         setReceiptUrl(data.receiptUrl);
@@ -99,6 +109,7 @@ const ContinueRegistrationContent = () => {
         setError(data.message || 'ደረሰኝ መጫን አልተሳካም');
       }
     } catch (err) {
+      console.error('Receipt upload error:', err);
       setError('የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት');
     } finally {
       setUploading(false);
@@ -120,16 +131,18 @@ const ContinueRegistrationContent = () => {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/registrations/submit-payment`, {
+      const baseUrl = API_BASE_URL || '';
+      const res = await fetch(`${baseUrl}/api/registrations/submit-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: registration.phone,
+          registrationNumber: registration.registrationNumber,
           transactionRef: transactionRef.trim(),
           receiptUrl,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
         setSubmitted(true);
@@ -137,6 +150,7 @@ const ContinueRegistrationContent = () => {
         setError(data.message || 'ክፍያ ማረጋገጥ አልተሳካም');
       }
     } catch (err) {
+      console.error('Final submit payment error:', err);
       setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setIsSubmitting(false);

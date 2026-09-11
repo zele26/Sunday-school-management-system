@@ -109,11 +109,21 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const normalizedKebele = (kebele || '').toString().trim();
     const normalizedShift = (shift || (studentType === 'regular' ? 'weekend' : '')).toString().trim();
 
+    // Determine batch and grade
+    let finalGrade = grade;
+    let batch = null;
+    if (studentType === 'distance') {
+      batch = req.body.batch || 'Batch 1';
+      finalGrade = grade || batch;
+    } else if (!finalGrade) {
+      finalGrade = 'Grade 7';
+    }
+
     // Basic required fields
-    if (!normalizedFullName || !normalizedEducationLevel || !normalizedProfession || !grade || !phone || !password || !studentType) {
+    if (!normalizedFullName || !normalizedEducationLevel || !normalizedProfession || !finalGrade || !phone || !password || !studentType) {
       return res.status(400).json({
         success: false,
-        message: 'First name, middle name, last name, education level, profession, grade, phone, password, and student type are required.',
+        message: 'የመጀመሪያ፣ የአባት እና የአያት ስም፣ የትምህርት ደረጃ፣ ሙያ፣ ስልክ ቁጥር እና የይለፍ ቃል ግዴታ ናቸው።',
       });
     }
 
@@ -169,14 +179,6 @@ router.post('/', upload.single('receipt'), async (req, res) => {
 
     const registrationNumber = await generateRegNumber();
 
-    // Determine batch and grade for distance students
-    let finalGrade = grade;
-    let batch = null;
-    if (studentType === 'distance') {
-      batch = 'Batch 1';
-      finalGrade = batch;
-    }
-
     const registration = await Registration.create({
       registrationNumber,
       fullName: normalizedFullName,
@@ -231,19 +233,23 @@ router.post('/', upload.single('receipt'), async (req, res) => {
   }
 });
 
-// POST /api/registrations/login – status check (phone + password)
-router.post('/login', async (req, res) => {
+// POST /api/registrations/login & /api/registrations/check-status – status check
+const handleStatusCheck = async (req, res) => {
   try {
-    const { phone, password } = req.body;
-    if (!phone || !password) return res.status(400).json({ message: 'ስልክ ቁጥር እና ፓስዎርድ ያስፈልጋል' });
+    const { phone, password, registrationNumber } = req.body;
+    if ((!phone && !registrationNumber) || !password) {
+      return res.status(400).json({ success: false, message: 'ስልክ ቁጥር (ወይም የምዝገባ ቁጥር) እና የይለፍ ቃል ያስፈልጋል' });
+    }
 
-    const reg = await Registration.findOne({ phone });
-    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
+    const query = phone ? { phone: phone.trim() } : { registrationNumber: registrationNumber.trim() };
+    const reg = await Registration.findOne(query);
+    if (!reg) return res.status(404).json({ success: false, message: 'ምዝገባ አልተገኘም፤ እባክዎ መረጃዎን ያረጋግጡ' });
 
     const isMatch = await bcrypt.compare(password, reg.password);
-    if (!isMatch) return res.status(401).json({ message: 'የይለፍ ቃል ትክክል አይደለም' });
+    if (!isMatch) return res.status(401).json({ success: false, message: 'የይለፍ ቃል ትክክል አይደለም' });
 
     res.json({
+      success: true,
       registrationNumber: reg.registrationNumber,
       fullName: reg.fullName,
       status: reg.status,
@@ -251,41 +257,104 @@ router.post('/login', async (req, res) => {
       receiptUrl: reg.receiptUrl,
       studentId: reg.status === 'Approved' ? reg.studentId : null,
       batch: reg.batch || null,
+      phone: reg.phone,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
-});
+};
+
+router.post('/login', handleStatusCheck);
+router.post('/check-status', handleStatusCheck);
 
 // GET /api/registrations/payment-info
 router.get('/payment-info', async (req, res) => {
   try {
     const payment = await Payment.findOne({ isActive: true }).sort({ createdAt: -1 });
-    if (!payment) return res.status(404).json({ message: 'የክፍያ መረጃ አልተገኘም' });
+    if (!payment) {
+      return res.json({
+        bankName: 'የኢትዮጵያ ንግድ ባንክ (CBE)',
+        accountNumber: '1000123456789',
+        accountHolder: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት',
+        totalAmount: 1000,
+        contributionAmount: 1000,
+        resourceFee: 0,
+        instructions: 'ክፍያውን በባንክ ወይም በሞባይል ባንኪንግ ከፈጸሙ በኋላ የደረሰኙን ፎቶ ወይም ስክሪንሾት በማያያዝ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ።',
+      });
+    }
     res.json(payment);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// PUT /api/registrations/upload-receipt
-router.put('/upload-receipt', async (req, res) => {
+// POST / PUT /api/registrations/upload-receipt – handles file upload or direct JSON
+const handleUploadReceipt = async (req, res) => {
   try {
-    const { registrationNumber, transactionRef, receiptUrl } = req.body;
-    if (!registrationNumber) return res.status(400).json({ message: 'የምዝገባ ቁጥር ያስፈልጋል' });
+    let receiptUrl = req.body?.receiptUrl || '';
+    if (req.file) {
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
+      receiptUrl = result.secure_url;
+    }
 
-    const reg = await Registration.findOne({ registrationNumber });
-    if (!reg) return res.status(404).json({ message: 'ምዝገባ አልተገኘም' });
-    if (reg.status !== 'Pending Payment') return res.status(400).json({ message: 'ምዝገባው ክፍያ ለመቀበል ዝግጁ አይደለም' });
+    if (!receiptUrl && !req.file) {
+      return res.status(400).json({ success: false, message: 'እባክዎ የደረሰኝ ፎቶ ይጫኑ' });
+    }
 
-    reg.transactionRef = transactionRef || '';
-    reg.receiptUrl = receiptUrl || '';
+    const { registrationNumber, phone, transactionRef } = req.body;
+    if (registrationNumber || phone) {
+      const query = registrationNumber ? { registrationNumber } : { phone };
+      const reg = await Registration.findOne(query);
+      if (reg) {
+        reg.receiptUrl = receiptUrl;
+        if (transactionRef) reg.transactionRef = transactionRef;
+        reg.status = 'Pending Verification';
+        await reg.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል',
+      receiptUrl,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+router.post('/upload-receipt', upload.single('receipt'), handleUploadReceipt);
+router.put('/upload-receipt', upload.single('receipt'), handleUploadReceipt);
+
+// POST /api/registrations/submit-payment
+router.post('/submit-payment', async (req, res) => {
+  try {
+    const { registrationNumber, phone, transactionRef, receiptUrl } = req.body;
+    if (!registrationNumber && !phone) {
+      return res.status(400).json({ success: false, message: 'የምዝገባ ቁጥር ወይም ስልክ ቁጥር ያስፈልጋል' });
+    }
+
+    const query = registrationNumber ? { registrationNumber: registrationNumber.trim() } : { phone: phone.trim() };
+    const reg = await Registration.findOne(query);
+    if (!reg) return res.status(404).json({ success: false, message: 'ምዝገባ አልተገኘም' });
+
+    if (transactionRef) reg.transactionRef = transactionRef.trim();
+    if (receiptUrl) reg.receiptUrl = receiptUrl.trim();
     reg.status = 'Pending Verification';
     await reg.save();
 
-    res.json({ success: true, message: 'ደረሰኝ ተቀባይነት አግኝቷል። በመጠበቅ ላይ' });
+    res.json({
+      success: true,
+      message: 'ክፍያዎ በተሳካ ሁኔታ ተልኳል፤ ማረጋገጫውን በትዕግስት ይጠብቁ።',
+      registration: {
+        registrationNumber: reg.registrationNumber,
+        status: reg.status,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

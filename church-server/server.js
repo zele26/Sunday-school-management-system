@@ -125,7 +125,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // --- MIDDLEWARE ---
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -199,8 +198,8 @@ app.use('/api/student', studentRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/assignments', assignmentRoutes);
-app.use('/api/quizzes', quizRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/registration', registrationRoutes);
 app.use('/api/attendance', attendanceRoutes);
 
 // Temporary migration route (from file, if exists)
