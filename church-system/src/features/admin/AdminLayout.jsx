@@ -278,8 +278,8 @@ const AdminLayout = ({ children, onLogout }) => {
             </button>
 
             <div className="flex items-center gap-2.5">
-              <h1 className="text-base font-extrabold text-slate-800 dark:text-white hidden sm:block">
-                Church Management System
+              <h1 className="text-base font-black text-slate-800 dark:text-white hidden sm:block">
+                ተክለ ሳዊሮስ ሰንበት ት/ቤት
               </h1>
               <Badge variant={user?.role === 'superadmin' ? 'gold' : 'active'} size="sm">
                 {user?.role === 'superadmin' ? '👑 Super Admin' : user?.role || 'Admin'}
