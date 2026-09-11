@@ -28,6 +28,10 @@ import {
   Info,
   Layers,
   ArrowRight,
+  Sun,
+  Moon,
+  Globe,
+  Building,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -87,6 +91,10 @@ const QRScanner = () => {
   const [cameraError, setCameraError] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  // Mode & Shift selection (Regular vs Distance, Night vs Weekend)
+  const [studentTypeFilter, setStudentTypeFilter] = useState(''); // '' | 'regular' | 'distance'
+  const [shiftFilter, setShiftFilter] = useState(''); // '' | 'weekend' | 'night'
+
   // Course selection
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -136,7 +144,14 @@ const QRScanner = () => {
     setIsSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await apiFetch(`/api/admin/students?search=${encodeURIComponent(searchTerm)}&limit=8`);
+        const params = new URLSearchParams({
+          search: searchTerm.trim(),
+          limit: '8',
+        });
+        if (studentTypeFilter) params.append('studentType', studentTypeFilter);
+        if (studentTypeFilter === 'regular' && shiftFilter) params.append('shift', shiftFilter);
+
+        const res = await apiFetch(`/api/admin/students?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.students || []);
@@ -147,7 +162,7 @@ const QRScanner = () => {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, studentTypeFilter, shiftFilter]);
 
   // Determine status based on late detection rules
   const determineStatus = () => {
@@ -171,6 +186,8 @@ const QRScanner = () => {
         body: JSON.stringify({
           ...payload,
           courseId: selectedCourseId || undefined,
+          studentType: studentTypeFilter || undefined,
+          shift: studentTypeFilter === 'regular' ? shiftFilter || undefined : undefined,
           status,
         }),
       });
@@ -182,6 +199,8 @@ const QRScanner = () => {
           id: data.student?.id || data.student?._id || payload.studentId || 'ID',
           name: data.student?.name || (payload.firstName ? `${payload.firstName} ${payload.lastName}` : 'ተማሪ'),
           grade: data.student?.grade || payload.grade || '',
+          studentType: data.student?.studentType || payload.studentType || 'regular',
+          shift: data.student?.shift || payload.shift || '',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
           status: data.alreadyRecorded ? 'Already Checked' : status,
           alreadyRecorded: !!data.alreadyRecorded,
@@ -207,7 +226,7 @@ const QRScanner = () => {
           toast.success(`${studentInfo.name} — ${status === 'Late' ? '🕒 አርፍዶ ተመዝግቧል (Late)' : '✅ ተገኝቷል (Present)'}`);
         }
 
-        // Add to recent feed (prevent duplicates in list)
+        // Add to recent feed
         setRecentScans((prev) => [studentInfo, ...prev.slice(0, 19)]);
       } else {
         playBeep('error', soundEnabled);
@@ -231,7 +250,7 @@ const QRScanner = () => {
 
       await processAttendanceRecord({ qrCode: decodedText }, false);
     },
-    [selectedCourseId, useLateDetection, classStartTime, graceMinutes, soundEnabled]
+    [selectedCourseId, studentTypeFilter, shiftFilter, useLateDetection, classStartTime, graceMinutes, soundEnabled]
   );
 
   // Start Camera Scanner
@@ -325,6 +344,8 @@ const QRScanner = () => {
         firstName: student.firstName,
         lastName: student.lastName,
         grade: student.grade,
+        studentType: student.studentType,
+        shift: student.shift,
       },
       true
     );
@@ -334,7 +355,6 @@ const QRScanner = () => {
 
   const presentCount = recentScans.filter((s) => s.status === 'Present').length;
   const lateCount = recentScans.filter((s) => s.status === 'Late').length;
-  const alreadyCount = recentScans.filter((s) => s.alreadyRecorded).length;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 font-sans">
@@ -353,72 +373,93 @@ const QRScanner = () => {
         }
       />
 
-      {/* 🌟 2. Top Controls & Settings Bar */}
+      {/* 🌟 2. Top Controls & Mode / Shift Settings Bar */}
       <Card variant="default" padding="md" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          {/* Course Selector */}
-          <div className="space-y-1.5 md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* 1. Study Mode Selector (Regular vs Distance) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Building className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
+              <span>የምዝገባ ዓይነት (Mode)</span>
+            </label>
+            <select
+              value={studentTypeFilter}
+              onChange={(e) => {
+                setStudentTypeFilter(e.target.value);
+                if (e.target.value !== 'regular') setShiftFilter('');
+              }}
+              className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
+            >
+              <option value="">🏛️ ሁሉም ተማሪዎች (All Modes)</option>
+              <option value="regular">🏛️ መደበኛ ተማሪዎች (Regular)</option>
+              <option value="distance">🌐 የርቀት ተማሪዎች (Distance)</option>
+            </select>
+          </div>
+
+          {/* 2. Shift Selector (If Regular or All: Weekend vs Night) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              {shiftFilter === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
+              <span>የመማሪያ ፈረቃ (Shift)</span>
+            </label>
+            <select
+              value={shiftFilter}
+              onChange={(e) => setShiftFilter(e.target.value)}
+              disabled={studentTypeFilter === 'distance'}
+              className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">🕒 ሁሉም ፈረቃዎች (All Shifts)</option>
+              <option value="weekend">☀️ የቀን / ቅዳሜና እሁድ (Weekend)</option>
+              <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+            </select>
+          </div>
+
+          {/* 3. Course Selector */}
+          <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
-              <span>የክፍለ ጊዜ / ኮርስ ይምረጡ</span>
+              <span>የክፍለ ጊዜ / ኮርስ</span>
             </label>
-            <div className="relative">
-              <select
-                value={selectedCourseId}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full p-2.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
-              >
-                <option value="">🏛️ አጠቃላይ መገኘት (General Attendance)</option>
-                {courses.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    📖 {c.name} {c.code ? `(${c.code})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(e.target.value)}
+              className="w-full p-2.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
+            >
+              <option value="">🏛️ አጠቃላይ መገኘት (General)</option>
+              {courses.map((c) => (
+                <option key={c._id} value={c._id}>
+                  📖 {c.name} {c.code ? `(${c.code})` : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Late Policy Toggle */}
-          <div className="space-y-1.5 md:col-span-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-              <span>የማርፈጃ ሰዓት መቆጣጠሪያ</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setUseLateDetection(!useLateDetection)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                  useLateDetection
-                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                <span>{useLateDetection ? '✅ ማርፈጃ ነቅቷል (Active)' : '⚪ ማርፈጃ ጠፍቷል'}</span>
-              </button>
-            </div>
-          </div>
+          {/* 4. Sound & Late Toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setUseLateDetection(!useLateDetection)}
+              className={`flex-1 p-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer truncate ${
+                useLateDetection
+                  ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              <span>{useLateDetection ? '🕒 ማርፈጃ ነቅቷል' : '⚪ ማርፈጃ ጠፍቷል'}</span>
+            </button>
 
-          {/* Sound & Mode Controls */}
-          <div className="space-y-1.5 md:col-span-1 flex flex-col justify-end">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5 text-emerald-500" />
-              <span>የድምፅ ግብረ-መልስ (Sound)</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                  soundEnabled
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
-                <span>{soundEnabled ? 'ድምፅ በርቷል (Beep ON)' : 'ድምፅ ጠፍቷል (Muted)'}</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? 'ድምፅ አጥፋ' : 'ድምፅ አብራ'}
+              className={`p-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 ${
+                soundEnabled
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+              }`}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+            </button>
           </div>
         </div>
 
@@ -548,6 +589,15 @@ const QRScanner = () => {
                     </p>
                   </div>
 
+                  {/* Active filter indication badge */}
+                  {(studentTypeFilter || shiftFilter) && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-bold text-amber-300">
+                      <span>ዒላማ፦</span>
+                      <span>{studentTypeFilter === 'distance' ? '🌐 የርቀት' : '🏛️ መደበኛ'}</span>
+                      {shiftFilter && <span>({shiftFilter === 'night' ? '🌙 ማታ' : '☀️ ቅዳሜ/እሁድ'})</span>}
+                    </div>
+                  )}
+
                   {cameraError && (
                     <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs text-left">
                       ⚠️ {cameraError}
@@ -626,7 +676,9 @@ const QRScanner = () => {
                 <Search className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
                 <span>በስም ወይም በመታወቂያ ፈልጎ መመዝገብ (Manual Check-In)</span>
               </span>
-              <span className="text-[10px] text-slate-400">ካሜራ በማይኖርበት ጊዜ</span>
+              <span className="text-[10px] text-slate-400">
+                {studentTypeFilter ? (studentTypeFilter === 'distance' ? 'የርቀት ተማሪዎች ብቻ' : 'መደበኛ ተማሪዎች ብቻ') : 'ሁሉም ተማሪዎች'}
+              </span>
             </label>
             <div className="relative">
               <input
@@ -675,9 +727,13 @@ const QRScanner = () => {
                           <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#1657b8] dark:group-hover:text-amber-400 transition-colors">
                             {s.firstName} {s.lastName}
                           </p>
-                          <p className="text-[11px] text-slate-400">
-                            {s.studentId ? `ID: ${s.studentId}` : s.phone || 'ተማሪ'} • {s.grade || 'ክፍል አልተገለጸም'}
-                          </p>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                            <span>{s.studentId ? `ID: ${s.studentId}` : s.phone || 'ተማሪ'}</span>
+                            <span>•</span>
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">
+                              {s.studentType === 'distance' ? '🌐 የርቀት' : `🏛️ መደበኛ (${s.shift === 'night' ? '🌙 ማታ' : '☀️ ቅዳሜ/እሁድ'})`}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <span className="px-2.5 py-1 rounded-lg bg-[#1657b8] text-white text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
@@ -725,9 +781,15 @@ const QRScanner = () => {
                     <h4 className="text-base font-black text-slate-900 dark:text-white leading-tight">
                       {lastScannedStudent.name}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                      {lastScannedStudent.grade ? `ክፍል: ${lastScannedStudent.grade}` : 'ተማሪ'} • {lastScannedStudent.timestamp}
-                    </p>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                      <span>{lastScannedStudent.grade ? `${lastScannedStudent.grade}` : 'ተማሪ'}</span>
+                      <span>•</span>
+                      <span className="text-amber-700 dark:text-amber-400 font-bold">
+                        {lastScannedStudent.studentType === 'distance'
+                          ? '🌐 የርቀት'
+                          : `🏛️ መደበኛ (${lastScannedStudent.shift === 'night' ? '🌙 ማታ' : '☀️ ቅዳሜ/እሁድ'})`}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -742,7 +804,7 @@ const QRScanner = () => {
 
               <div className="mt-3 pt-3 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
                 <span>ሁኔታ፦ {lastScannedStudent.message}</span>
-                <span className="text-[11px] opacity-75">ተክለ ሳዊሮስ</span>
+                <span className="text-[11px] font-mono opacity-75">{lastScannedStudent.timestamp}</span>
               </div>
             </motion.div>
           ) : (
@@ -774,7 +836,7 @@ const QRScanner = () => {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-[#1657b8] dark:text-amber-400" />
-                <span>የቅርብ ጊዜ ምዝገባዎች (Live Activity)</span>
+                <span>የቅርብ ጊዜ ምዝገባዎች (Live Feed)</span>
               </h3>
               <Badge variant="neutral" size="sm">{recentScans.length} ተመዝግበዋል</Badge>
             </div>
@@ -794,7 +856,9 @@ const QRScanner = () => {
                         }`}
                       />
                       <span className="font-bold text-slate-900 dark:text-white truncate">{scan.name}</span>
-                      {scan.grade && <span className="text-[10px] text-slate-400 hidden sm:inline">({scan.grade})</span>}
+                      <span className="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.2 rounded font-semibold shrink-0">
+                        {scan.studentType === 'distance' ? 'ርቀት' : scan.shift === 'night' ? 'ማታ' : 'ቀን'}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

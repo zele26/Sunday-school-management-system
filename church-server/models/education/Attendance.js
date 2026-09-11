@@ -19,6 +19,15 @@ const attendanceSchema = new mongoose.Schema({
   studentName: { type: String, required: true },
   grade: { type: String },
   courseName: { type: String },
+  studentType: {
+    type: String,
+    enum: ['regular', 'distance', 'Regular', 'Distance'],
+    default: 'regular',
+  },
+  shift: {
+    type: String,
+    default: '',
+  },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -75,6 +75,8 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
         student: student._id,
         studentName: `${student.firstName} ${student.lastName}`,
         grade: student.grade || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
         course: courseId || null,
         courseName,
         teacher,
@@ -94,6 +96,10 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
           student: {
             id: student._id,
             name: `${student.firstName} ${student.lastName}`,
+            grade: student.grade || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            studentId: student.studentId || '',
           },
           alreadyRecorded: true,
         });
@@ -108,6 +114,9 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
         id: student._id,
         name: `${student.firstName} ${student.lastName}`,
         grade: student.grade || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
+        studentId: student.studentId || '',
       },
     });
   } catch (err) {
@@ -146,6 +155,10 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         student: {
           id: student._id,
           name: `${student.firstName} ${student.lastName}`,
+          grade: student.grade || '',
+          studentType: student.studentType || 'regular',
+          shift: student.shift || '',
+          studentId: student.studentId || '',
         },
         alreadyRecorded: true,
       });
@@ -182,6 +195,8 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         student: student._id,
         studentName: `${student.firstName} ${student.lastName}`,
         grade: student.grade || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
         course: courseId || null,
         courseName,
         teacher,
@@ -201,6 +216,10 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
           student: {
             id: student._id,
             name: `${student.firstName} ${student.lastName}`,
+            grade: student.grade || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            studentId: student.studentId || '',
           },
           alreadyRecorded: true,
         });
@@ -215,6 +234,9 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         id: student._id,
         name: `${student.firstName} ${student.lastName}`,
         grade: student.grade || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
+        studentId: student.studentId || '',
       },
     });
   } catch (err) {
@@ -226,7 +248,7 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
 // ---------- Attendance report ----------
 router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
   try {
-    const { startDate, endDate, courseId, grade, status, teacher, studentId } = req.query;
+    const { startDate, endDate, courseId, grade, status, teacher, studentId, studentType, shift } = req.query;
     const query = {};
 
     if (startDate && endDate) {
@@ -237,6 +259,13 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
     if (status) query.status = status;
     if (teacher) query.teacher = teacher;
     if (studentId) query.student = studentId;
+    if (studentType) {
+      query.$or = [
+        { studentType: studentType },
+        { studentType: studentType.toLowerCase() }
+      ];
+    }
+    if (shift) query.shift = shift;
 
     if (req.user.role === 'teacher') {
       const teacherCourses = await Course.find({ teacher: req.user._id }).select('_id');
@@ -245,7 +274,7 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
     }
 
     const attendances = await Attendance.find(query)
-      .populate('student', 'firstName lastName grade')
+      .populate('student', 'firstName lastName grade studentId shift studentType phone')
       .populate('course', 'name')
       .populate('teacher', 'fullName')
       .populate('recordedBy', 'fullName')
@@ -257,6 +286,8 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
       absent: attendances.filter(a => a.status === 'Absent').length,
       late: attendances.filter(a => a.status === 'Late').length,
       excused: attendances.filter(a => a.status === 'Excused').length,
+      regular: attendances.filter(a => (a.studentType || a.student?.studentType) === 'regular').length,
+      distance: attendances.filter(a => (a.studentType || a.student?.studentType) === 'distance').length,
     };
 
     res.json({

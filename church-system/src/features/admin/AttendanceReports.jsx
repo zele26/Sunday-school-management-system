@@ -23,6 +23,10 @@ import {
   QrCode,
   ArrowRight,
   TrendingUp,
+  Building,
+  Globe,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -79,10 +83,38 @@ const getStatusBadge = (status) => {
   }
 };
 
+const getModeBadge = (studentType, shift) => {
+  const isDistance = studentType === 'distance';
+  if (isDistance) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+        <Globe className="w-3 h-3 text-indigo-500" />
+        <span>የርቀት</span>
+      </span>
+    );
+  }
+
+  const isNight = shift === 'night';
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+        <Building className="w-3 h-3 text-[#1657b8]" />
+        <span>መደበኛ</span>
+      </span>
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+        {isNight ? <Moon className="w-2.5 h-2.5 text-indigo-400" /> : <Sun className="w-2.5 h-2.5 text-amber-500" />}
+        <span>{isNight ? 'ማታ' : 'ቀን'}</span>
+      </span>
+    </div>
+  );
+};
+
 const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   if (!rows.length) return;
   const headers = [
     'ተማሪ (Student)',
+    'የምዝገባ ዓይነት (Student Type)',
+    'ፈረቃ (Shift)',
     'ክፍል (Grade)',
     'ኮርስ (Course)',
     'መምህር (Teacher)',
@@ -94,9 +126,14 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   ];
   const csvRows = [headers.join(',')];
   rows.forEach((r) => {
+    const studentType = r.studentType || r.student?.studentType || 'regular';
+    const shift = r.shift || r.student?.shift || (studentType === 'distance' ? '-' : 'weekend');
+
     csvRows.push(
       [
         `"${r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '')}"`,
+        `"${studentType === 'distance' ? 'የርቀት (Distance)' : 'መደበኛ (Regular)'}"`,
+        `"${shift === 'night' ? 'የማታ (Night)' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ (Weekend)' : '-'}"`,
         `"${r.grade || r.student?.grade || ''}"`,
         `"${r.courseName || r.course?.name || 'አጠቃላይ'}"`,
         `"${r.teacherName || r.teacher?.fullName || '—'}"`,
@@ -127,6 +164,8 @@ const AttendanceReports = () => {
     grade: '',
     status: '',
     teacher: '',
+    studentType: '', // '' | 'regular' | 'distance'
+    shift: '',       // '' | 'weekend' | 'night'
     search: '',
   });
 
@@ -135,7 +174,15 @@ const AttendanceReports = () => {
   const { data: records = [], isLoading, isFetching, refetch } = useAttendanceReport(filters);
 
   const handleChange = (e) => {
-    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFilters((prev) => {
+      const next = { ...prev, [name]: value };
+      // If studentType changed to distance, clear shift
+      if (name === 'studentType' && value === 'distance') {
+        next.shift = '';
+      }
+      return next;
+    });
   };
 
   const handleResetFilters = () => {
@@ -146,6 +193,8 @@ const AttendanceReports = () => {
       grade: '',
       status: '',
       teacher: '',
+      studentType: '',
+      shift: '',
       search: '',
     });
   };
@@ -178,23 +227,38 @@ const AttendanceReports = () => {
     }
   };
 
-  // Filter in memory by student name search if query string is active
+  // Filter in memory by search query if term is provided
   const filteredRecords = useMemo(() => {
-    if (!filters.search.trim()) return records;
-    const term = filters.search.toLowerCase();
     return records.filter((r) => {
+      const studentType = r.studentType || r.student?.studentType || 'regular';
+      const shift = r.shift || r.student?.shift || '';
+
+      // Check studentType filter in memory as safeguard
+      if (filters.studentType && studentType.toLowerCase() !== filters.studentType.toLowerCase()) {
+        return false;
+      }
+      // Check shift filter
+      if (filters.studentType === 'regular' && filters.shift && shift.toLowerCase() !== filters.shift.toLowerCase()) {
+        return false;
+      }
+
+      // Check text search
+      if (!filters.search.trim()) return true;
+      const term = filters.search.toLowerCase();
       const studentName = (r.studentName || `${r.student?.firstName || ''} ${r.student?.lastName || ''}`).toLowerCase();
       const studentId = (r.studentId || r.student?.studentId || '').toLowerCase();
       const courseName = (r.courseName || r.course?.name || '').toLowerCase();
       return studentName.includes(term) || studentId.includes(term) || courseName.includes(term);
     });
-  }, [records, filters.search]);
+  }, [records, filters.studentType, filters.shift, filters.search]);
 
   // Statistical calculations
   const totalCount = filteredRecords.length;
   const presentCount = filteredRecords.filter((r) => r.status === 'Present').length;
   const lateCount = filteredRecords.filter((r) => r.status === 'Late').length;
   const absentCount = filteredRecords.filter((r) => r.status === 'Absent').length;
+  const regularCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType || 'regular') === 'regular').length;
+  const distanceCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType) === 'distance').length;
   const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 0;
 
   const columns = useMemo(
@@ -217,6 +281,15 @@ const AttendanceReports = () => {
               </div>
             </div>
           );
+        },
+      },
+      {
+        accessorKey: 'studentType',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነትና ፈረቃ (Mode & Shift)" />,
+        cell: ({ row }) => {
+          const studentType = row.original.studentType || row.original.student?.studentType || 'regular';
+          const shift = row.original.shift || row.original.student?.shift || 'weekend';
+          return getModeBadge(studentType, shift);
         },
       },
       {
@@ -347,7 +420,7 @@ const AttendanceReports = () => {
       </FadeIn>
 
       {/* 🌟 2. Interactive KPI Summary Cards Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
         {/* Total Records */}
         <MotionCard hoverY={-2}>
           <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between h-full">
@@ -364,7 +437,31 @@ const AttendanceReports = () => {
                 {totalCount}
               </p>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                የተመዘገቡ ተማሪዎች
+                አጠቃላይ መዝገቦች
+              </p>
+            </div>
+          </div>
+        </MotionCard>
+
+        {/* Regular vs Distance Breakdown */}
+        <MotionCard hoverY={-2}>
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <Globe className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">
+                ተማሪዎች
+              </span>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  {regularCount} <span className="text-xs text-slate-400 font-normal">መደበኛ</span>
+                </p>
+              </div>
+              <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 truncate">
+                {distanceCount} የርቀት ተማሪዎች
               </p>
             </div>
           </div>
@@ -415,7 +512,7 @@ const AttendanceReports = () => {
         </MotionCard>
 
         {/* Absent */}
-        <MotionCard hoverY={-2}>
+        <MotionCard hoverY={-2} className="col-span-2 sm:col-span-1">
           <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between h-full">
             <div className="flex items-center justify-between mb-2">
               <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
@@ -437,7 +534,7 @@ const AttendanceReports = () => {
         </MotionCard>
       </div>
 
-      {/* 🌟 3. Smart Filter & Search Card */}
+      {/* 🌟 3. Smart Filter & Search Card with Mode & Shift Options */}
       <Card variant="default" padding="md" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
         {/* Quick Date Presets Bar & Instant Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -476,7 +573,7 @@ const AttendanceReports = () => {
             </button>
           </div>
 
-          {/* Search by Student Name or ID */}
+          {/* Search by Student Name, ID, or Course */}
           <div className="relative min-w-[220px]">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -490,12 +587,47 @@ const AttendanceReports = () => {
           </div>
         </div>
 
-        {/* Detailed Filter Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* Start Date */}
+        {/* Detailed Filter Dropdowns (8 filters) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          {/* 1. Student Type (Mode) */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              የመጀመሪያ ቀን (Start Date)
+              የምዝገባ ዓይነት (Mode)
+            </label>
+            <select
+              name="studentType"
+              value={filters.studentType}
+              onChange={handleChange}
+              className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
+            >
+              <option value="">ሁሉም (All Modes)</option>
+              <option value="regular">🏛️ መደበኛ (Regular)</option>
+              <option value="distance">🌐 የርቀት (Distance)</option>
+            </select>
+          </div>
+
+          {/* 2. Shift (If Regular or All: Weekend vs Night) */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
+              ፈረቃ (Shift)
+            </label>
+            <select
+              name="shift"
+              value={filters.shift}
+              onChange={handleChange}
+              disabled={filters.studentType === 'distance'}
+              className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">ሁሉም ፈረቃዎች (All)</option>
+              <option value="weekend">☀️ የቀን / ቅዳሜና እሁድ</option>
+              <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+            </select>
+          </div>
+
+          {/* 3. Start Date */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
+              የመጀመሪያ ቀን
             </label>
             <input
               type="date"
@@ -506,10 +638,10 @@ const AttendanceReports = () => {
             />
           </div>
 
-          {/* End Date */}
+          {/* 4. End Date */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              የማጠቃለያ ቀን (End Date)
+              የማጠቃለያ ቀን
             </label>
             <input
               type="date"
@@ -520,7 +652,7 @@ const AttendanceReports = () => {
             />
           </div>
 
-          {/* Course */}
+          {/* 5. Course */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               ኮርስ (Course)
@@ -531,7 +663,7 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም ኮርሶች (All Courses)</option>
+              <option value="">ሁሉም ኮርሶች (All)</option>
               {courses.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -540,7 +672,7 @@ const AttendanceReports = () => {
             </select>
           </div>
 
-          {/* Grade */}
+          {/* 6. Grade */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               ክፍል (Grade)
@@ -551,7 +683,7 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም ክፍሎች (All Grades)</option>
+              <option value="">ሁሉም ክፍሎች (All)</option>
               {GRADE_OPTIONS.map((g) => (
                 <option key={g.value} value={g.value}>
                   {g.label}
@@ -560,7 +692,7 @@ const AttendanceReports = () => {
             </select>
           </div>
 
-          {/* Status */}
+          {/* 7. Status */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               ሁኔታ (Status)
@@ -578,7 +710,7 @@ const AttendanceReports = () => {
             </select>
           </div>
 
-          {/* Teacher */}
+          {/* 8. Teacher */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               መምህር (Teacher)
