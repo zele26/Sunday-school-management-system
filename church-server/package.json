@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node server.js",
     "seed": "node seedSaintPaulCourse.js",
+    "clean:data": "node scripts/cleanStudentTeacherData.js",
     "test": "echo \"Backend syntax & test check passed\""
   },
   "keywords": [],
