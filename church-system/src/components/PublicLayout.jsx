@@ -345,19 +345,19 @@ const PublicLayout = ({ children }) => {
             <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-400/25 rounded-full blur-3xl pointer-events-none" />
 
             {/* Left Content */}
-            <div className="space-y-3.5 text-center lg:text-left max-w-2xl relative z-10">
+            <div className="space-y-3 text-center lg:text-left max-w-2xl relative z-10">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-black tracking-wide">
                 <span>✨ ዮሐንስ ፩፥፩</span>
                 <span>•</span>
                 <span>«በመጀመሪያ ቃል ነበረ»</span>
               </div>
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-snug">
-                ልጅዎን በሰንበት ትምህርት ቤት መንፈሳዊ ዕውቀት ያሳድጉ!
+                የተሟላ መንፈሳዊ ዕውቀት ለመቅሰም አሁኑኑ ይመዝገቡ!
               </h3>
               <p className="text-blue-100 text-sm sm:text-base leading-relaxed max-w-xl">
                 {isAnyOpen
-                  ? `የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የ${academicYear} የተማሪዎች ምዝገባ በይፋ ተጀምሯል። በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራማችን ተመዝግበው ይማሩ።`
-                  : (regStatus?.generalClosedMessage || 'የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች ምዝገባ ለጊዜው ተጠናቋል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።')}
+                  ? `የ${academicYear} የተማሪዎች ምዝገባ በይፋ ተጀምሯል፤ በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራሞቻችን ተመዝግበው ይማሩ።`
+                  : (regStatus?.generalClosedMessage || 'የተማሪዎች ምዝገባ ለጊዜው ተጠናቋል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።')}
               </p>
             </div>
 
@@ -368,7 +368,7 @@ const PublicLayout = ({ children }) => {
                   {isRegularOpen ? (
                     <Link
                       href="/register-regular"
-                      className="px-6 py-3.5 rounded-xl bg-white hover:bg-blue-50 active:scale-95 text-[#1e3a8a] font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
+                      className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-[#1e3a8a] font-bold text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                     >
                       <span>የመደበኛ ምዝገባ</span>
                       <span>➔</span>
@@ -382,7 +382,7 @@ const PublicLayout = ({ children }) => {
                   {isDistanceOpen ? (
                     <Link
                       href="/register-distance"
-                      className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
+                      className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-sm border border-white/30 backdrop-blur-xs shadow-xs hover:shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                     >
                       <span>የርቀት ምዝገባ</span>
                       <span>➔</span>
@@ -396,7 +396,7 @@ const PublicLayout = ({ children }) => {
               ) : (
                 <Link
                   href="/check-status"
-                  className="px-7 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
+                  className="px-7 py-3.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-[#1e3a8a] font-bold text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                 >
                   <span>የምዝገባ ሁኔታ ያረጋግጡ</span>
                   <span>➔</span>
@@ -407,12 +407,12 @@ const PublicLayout = ({ children }) => {
         </div>
       </section>
 
-      {/* 🌟 5. FOOTER & COMMUNITY CHANNELS */}
+      {/* 🌟 5. STREAMLINED 3-COLUMN FOOTER */}
       <footer className="bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-14 pb-8 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
-            {/* Column 1: Brand Info */}
-            <div className="space-y-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            {/* Column 1: Brand Info & Telegram Channel */}
+            <div className="space-y-4">
               <div className="flex items-center space-x-3 space-x-reverse">
                 <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center p-1 border border-[#1e3a8a]/20 dark:border-blue-500/30 shadow-xs overflow-hidden">
                   <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" />
@@ -439,82 +439,42 @@ const PublicLayout = ({ children }) => {
               </div>
             </div>
 
-            {/* Column 2: Quick Links */}
+            {/* Column 2: Utility & Resources (Non-repetitive) */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#1e3a8a] dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5 text-[#1e3a8a] dark:text-blue-400" />
-                <span>ፈጣን ማውጫ</span>
+                <BookOpen className="w-3.5 h-3.5 text-[#1e3a8a] dark:text-blue-400" />
+                <span>አገልግሎቶችና መመሪያዎች</span>
               </h4>
               <ul className="space-y-2 text-xs sm:text-sm font-medium">
                 <li>
-                  <Link href="/about" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ስለ እኛ
+                  <Link href="/login" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
+                    የተማሪዎች መግቢያ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/gallery" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የፎቶ ማህደር
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/distance-education" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የርቀት ትምህርት መድረክ
+                  <Link href="/check-status" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
+                    የምዝገባ ሁኔታ መከታተያ
                   </Link>
                 </li>
                 <li>
                   <Link href="/classes" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ክፍሎችና መርሃግብራት
+                    ዓመታዊ የትምህርት ካላንደር
                   </Link>
                 </li>
                 <li>
-                  <Link href="/announcements" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ማስታወቂያዎች
+                  <Link href="/about" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
+                    የስርዓተ ትምህርት መመሪያ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ያግኙን
+                  <Link href="/about" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
+                    የመተዳደሪያ ደንብ
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 3: Registration Links */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>ምዝገባና ክትትል</span>
-              </h4>
-              <ul className="space-y-2 text-xs sm:text-sm font-medium">
-                <li>
-                  <Link href="/register-regular" className="hover:text-amber-700 dark:hover:text-amber-300 transition-colors py-1 inline-block">
-                    የመደበኛ ተማሪ ምዝገባ
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/register-distance" className="hover:text-amber-700 dark:hover:text-amber-300 transition-colors py-1 inline-block">
-                    የርቀት ተማሪ ምዝገባ
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/continue-registration" className="hover:text-amber-700 dark:hover:text-amber-300 transition-colors py-1 inline-block">
-                    ምዝገባዎን ይቀጥሉ
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/check-status" className="hover:text-amber-700 dark:hover:text-amber-300 transition-colors py-1 inline-block">
-                    ሁኔታ ያረጋግጡ
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/login" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ወደ አካውንት ይግቡ
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Location & Contacts */}
+            {/* Column 3: Contact & Church Hours */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-rose-500" />
@@ -543,23 +503,18 @@ const PublicLayout = ({ children }) => {
                 <div className="flex items-start gap-2 pt-0.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span className="leading-snug">
-                    የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከ2፡30 - 11፡30
+                    የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከጠዋቱ 2:30 – 11:30
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Copyright Sub-footer */}
-          <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 dark:text-slate-500 gap-3 text-center sm:text-left">
+          {/* Clean One-Line Copyright Bar */}
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 text-center text-xs text-slate-400 dark:text-slate-500">
             <p>
-              © {new Date().getFullYear()} ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
+              © 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
             </p>
-            <div>
-              <span className="text-slate-500 dark:text-slate-400">
-                የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
-              </span>
-            </div>
           </div>
         </div>
       </footer>

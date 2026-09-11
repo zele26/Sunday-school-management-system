@@ -210,7 +210,7 @@ const About = () => {
         <FadeIn delay={0.3}>
           <Card variant="gold" padding="md" className="text-center">
             <p className="text-slate-800 dark:text-slate-200 text-sm font-semibold italic">
-              «ህፃንን በቦታው አሳድገው፤ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» — ምሳሌ 22:6
+              «ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» — (ምሳሌ ፳፪፥፮)
             </p>
           </Card>
         </FadeIn>
