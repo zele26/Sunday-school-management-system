@@ -39,11 +39,11 @@ const TeacherAttendance = () => {
       if (filters.courseId) params.append('courseId', filters.courseId);
 
       const res = await apiFetch(`/api/teacher/attendance?${params}`);
-      if (!res.ok) throw new Error('Failed to fetch attendance');
+      if (!res.ok) throw new Error('የአቴንዳንስ መረጃዎችን ማምጣት አልተቻለም');
       const data = await res.json();
       setRecords(data);
     } catch (err) {
-      setError(err.message || 'Network error');
+      setError(err.message || 'የግንኙነት ስህተት ተከስቷል');
     } finally {
       setLoading(false);
     }
@@ -58,14 +58,14 @@ const TeacherAttendance = () => {
       <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
         <CardTitle className="flex items-center gap-2">
           <ClipboardList className="w-5 h-5 text-[var(--brand-primary)]" />
-          <span>የመገኘት ሪፖርት (Attendance Report)</span>
+          <span>የመገኘት ሪፖርት</span>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6 p-0">
         <div className="flex flex-wrap gap-3 items-end bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700">
           <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">መጀመሪያ ቀን (Start Date)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">መጀመሪያ ቀን</label>
             <input
               type="date"
               name="startDate"
@@ -75,7 +75,7 @@ const TeacherAttendance = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ማብቂያ ቀን (End Date)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ማብቂያ ቀን</label>
             <input
               type="date"
               name="endDate"
@@ -85,28 +85,28 @@ const TeacherAttendance = () => {
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ኮርስ (Course)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ኮርስ</label>
             <select
               name="courseId"
               value={filters.courseId}
               onChange={handleChange}
               className="px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-xl text-sm text-slate-800 dark:text-slate-200"
             >
-              <option value="">ሁሉም ኮርሶች (All Courses)</option>
+              <option value="">ሁሉም ኮርሶች</option>
               {courses.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </div>
           <Button onClick={fetchAttendance} size="sm" className="font-bold h-fit">
-            አጣራ (Filter)
+            አጣራ
           </Button>
         </div>
 
         {error && <div className="py-4 text-center text-rose-500 font-semibold text-sm">❌ {error}</div>}
-        {loading && <div className="py-8 text-center text-slate-400 text-sm">የመገኘት መረጃ በመጫን ላይ...</div>}
+        {loading && <div className="py-8 text-center text-slate-400 text-sm">የመገኘት መረጃ በመጫን ላይ ነው...</div>}
         
         {!loading && !error && records.length === 0 && (
           <p className="text-slate-500 dark:text-slate-400 text-sm py-4 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
-            ምንም የመገኘት መረጃ አልተገኘም (No attendance records found)
+            ምንም የመገኘት መረጃ አልተገኘም።
           </p>
         )}
         
@@ -115,16 +115,16 @@ const TeacherAttendance = () => {
             <table className="w-full text-left border-collapse text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 text-xs uppercase text-slate-400 bg-slate-50 dark:bg-slate-800/50">
-                  <th className="py-3 px-4 font-bold">የተማሪ ስም (Student)</th>
-                  <th className="py-3 px-4 font-bold">ኮርስ (Course)</th>
-                  <th className="py-3 px-4 font-bold">ቀን (Date)</th>
+                  <th className="py-3 px-4 font-bold">የተማሪ ስም</th>
+                  <th className="py-3 px-4 font-bold">ኮርስ</th>
+                  <th className="py-3 px-4 font-bold">ቀን</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                 {records.map(r => (
                   <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                     <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">{r.student?.firstName} {r.student?.lastName}</td>
-                    <td className="py-3 px-4">{r.course?.name || 'N/A'}</td>
+                    <td className="py-3 px-4">{r.course?.name || '-'}</td>
                     <td className="py-3 px-4 font-mono text-xs">{formatEthiopianDate(r.date)}</td>
                   </tr>
                 ))}

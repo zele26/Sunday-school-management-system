@@ -29,18 +29,18 @@ const TeacherLayout = ({ children, onLogout }) => {
   const teacherName = user?.fullName || 'መምህር';
 
   const navItems = [
-    { label: 'አጠቃላይ እይታ (Overview)', path: '/teacher', icon: <LayoutDashboard className="w-4 h-4 text-blue-500" />, end: true },
-    { label: 'የርቀት ትምህርት (Distance LMS)', path: '/teacher/distance-hub', icon: <Globe className="w-4 h-4 text-sky-500" /> },
-    { label: 'የእኔ ተማሪዎች (My Students)', path: '/teacher/students', icon: <Users className="w-4 h-4 text-emerald-500" /> },
-    { label: 'የእኔ ኮርሶች (My Courses)', path: '/teacher/courses', icon: <BookOpen className="w-4 h-4 text-amber-500" /> },
-    { label: 'ይዘት እና ፈተናዎች (Lessons)', path: '/teacher/content', icon: <FileText className="w-4 h-4 text-indigo-500" /> },
-    { label: 'ውጤት መስጫ (Grading)', path: '/teacher/grading', icon: <Award className="w-4 h-4 text-yellow-500" /> },
-    { label: 'ግንኙነት (Communication)', path: '/teacher/communication', icon: <MessageSquare className="w-4 h-4 text-teal-500" /> },
-    { label: 'መገኘት (Attendance)', path: '/teacher/attendance', icon: <CalendarCheck className="w-4 h-4 text-rose-500" /> },
-    { label: 'ሪፖርቶች (Reports)', path: '/teacher/reports', icon: <BarChart3 className="w-4 h-4 text-purple-500" /> },
-    { label: 'ማጣቀሻዎች (Resources)', path: '/teacher/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
-    { label: 'ፈተናዎች (Exams)', path: '/teacher/exams', icon: <GraduationCap className="w-4 h-4 text-blue-600" /> },
-    { label: 'የይለፍ ቃል (Password)', path: '/change-password', icon: <Key className="w-4 h-4 text-slate-500" /> },
+    { label: 'አጠቃላይ እይታ', path: '/teacher', icon: <LayoutDashboard className="w-4 h-4 text-blue-500" />, end: true },
+    { label: 'የርቀት ትምህርት', path: '/teacher/distance-hub', icon: <Globe className="w-4 h-4 text-sky-500" /> },
+    { label: 'የእኔ ተማሪዎች', path: '/teacher/students', icon: <Users className="w-4 h-4 text-emerald-500" /> },
+    { label: 'የእኔ ትምህርቶች', path: '/teacher/courses', icon: <BookOpen className="w-4 h-4 text-amber-500" /> },
+    { label: 'ይዘት እና ፈተናዎች', path: '/teacher/content', icon: <FileText className="w-4 h-4 text-indigo-500" /> },
+    { label: 'ውጤት መስጫ', path: '/teacher/grading', icon: <Award className="w-4 h-4 text-yellow-500" /> },
+    { label: 'ግንኙነት', path: '/teacher/communication', icon: <MessageSquare className="w-4 h-4 text-teal-500" /> },
+    { label: 'መገኘት', path: '/teacher/attendance', icon: <CalendarCheck className="w-4 h-4 text-rose-500" /> },
+    { label: 'ሪፖርቶች', path: '/teacher/reports', icon: <BarChart3 className="w-4 h-4 text-purple-500" /> },
+    { label: 'ማጣቀሻዎች', path: '/teacher/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
+    { label: 'ፈተናዎች', path: '/teacher/exams', icon: <GraduationCap className="w-4 h-4 text-blue-600" /> },
+    { label: 'የይለፍ ቃል', path: '/change-password', icon: <Key className="w-4 h-4 text-slate-500" /> },
   ];
 
   return (
@@ -55,7 +55,7 @@ const TeacherLayout = ({ children, onLogout }) => {
             <h1 className="text-sm sm:text-base font-extrabold tracking-wide text-white">
               ተክለ ሳዊሮስ ሰንበት ት/ቤት
             </h1>
-            <p className="text-[10px] text-[var(--brand-gold)] font-bold uppercase tracking-wider">የመምህራን መድረክ (Teacher Portal)</p>
+            <p className="text-[10px] text-[var(--brand-gold)] font-bold uppercase tracking-wider">የመምህራን መድረክ</p>
           </div>
         </div>
 
@@ -65,7 +65,7 @@ const TeacherLayout = ({ children, onLogout }) => {
             onClick={onLogout}
             className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm"
           >
-            <span>Logout</span>
+            <span>ውጣ</span>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>

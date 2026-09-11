@@ -128,7 +128,7 @@ const Contact = () => {
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">ኢሜይል</label>
                   <input 
                     type="email" 
-                    placeholder="example@mail.com" 
+                    placeholder="የኢሜይል አድራሻ (አማራጭ)" 
                     className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1657b8]/20 focus:border-[#1657b8] transition-all text-sm"
                   />
                 </div>

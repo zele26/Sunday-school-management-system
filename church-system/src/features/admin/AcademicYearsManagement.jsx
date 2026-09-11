@@ -206,7 +206,7 @@ const AcademicYearsManagement = () => {
     () => [
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ዘመን (Academic Year)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ዘመን" />,
         cell: ({ row }) => {
           const year = row.original;
           const isActive = year.status === 'active';
@@ -241,7 +241,7 @@ const AcademicYearsManagement = () => {
       },
       {
         accessorKey: 'startDate',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="የመጀመሪያ ቀን (Start Date)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የመጀመሪያ ቀን" />,
         cell: ({ getValue }) => (
           <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
             {getValue() ? formatEthiopianDate(getValue()) : '—'}
@@ -250,7 +250,7 @@ const AcademicYearsManagement = () => {
       },
       {
         accessorKey: 'endDate',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="የማብቂያ ቀን (End Date)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የማብቂያ ቀን" />,
         cell: ({ getValue }) => (
           <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
             {getValue() ? formatEthiopianDate(getValue()) : '—'}
@@ -269,18 +269,18 @@ const AcademicYearsManagement = () => {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ (Status)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => {
           const val = getValue();
-          if (val === 'active') return <Badge variant="approved" size="sm">ንቁ (Active)</Badge>;
-          if (val === 'completed') return <Badge variant="blue" size="sm">የተጠናቀቀ (Completed)</Badge>;
-          if (val === 'archived') return <Badge variant="rose" size="sm">በማህደር (Archived)</Badge>;
-          return <Badge variant="neutral" size="sm">ቀጣይ (Inactive)</Badge>;
+          if (val === 'active') return <Badge variant="approved" size="sm">ንቁ</Badge>;
+          if (val === 'completed') return <Badge variant="blue" size="sm">የተጠናቀቀ</Badge>;
+          if (val === 'archived') return <Badge variant="rose" size="sm">በማህደር</Badge>;
+          return <Badge variant="neutral" size="sm">ቀጣይ</Badge>;
         },
       },
       {
         id: 'actions',
-        header: () => <span className="text-right block">ተግባራት (Actions)</span>,
+        header: () => <span className="text-right block">ተግባራት</span>,
         cell: ({ row }) => {
           const year = row.original;
           const isActive = year.status === 'active';
@@ -303,7 +303,7 @@ const AcademicYearsManagement = () => {
                 size="xs"
                 onClick={() => handleOpenEditModal(year)}
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white p-1.5"
-                title="አስተካክል (Edit)"
+                title="አስተካክል"
               >
                 <Edit3 className="w-3.5 h-3.5" />
               </Button>
@@ -312,7 +312,7 @@ const AcademicYearsManagement = () => {
                 size="xs"
                 onClick={() => handleOpenDeleteModal(year)}
                 className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 p-1.5"
-                title="ሰርዝ (Delete)"
+                title="ሰርዝ"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
@@ -328,7 +328,7 @@ const AcademicYearsManagement = () => {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* 1. Page Header */}
       <PageHeader
-        title="የትምህርት ዘመናት (Academic Years - ዓ.ም.)"
+        title="የትምህርት ዘመናት"
         subtitle="የሰንበት ትምህርት ቤቱን የኢትዮጵያ የቀን አቆጣጠር የትምህርት ዘመናት፣ የጊዜ ገደቦች እና ንቁ ሁኔታዎችን ያስተዳድሩ"
         icon={Calendar}
         badge={<Badge variant="gold" size="sm">{years.length} የትምህርት ዘመናት</Badge>}
@@ -344,7 +344,7 @@ const AcademicYearsManagement = () => {
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span>ካርድ (Grid)</span>
+                <span>ካርድ</span>
               </button>
               <button
                 onClick={() => setViewMode('table')}
@@ -355,7 +355,7 @@ const AcademicYearsManagement = () => {
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
-                <span>ሰንጠረዥ (Table)</span>
+                <span>ሰንጠረዥ</span>
               </button>
             </div>
 
@@ -394,7 +394,7 @@ const AcademicYearsManagement = () => {
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                አሁን የሚሠራበት ንቁ የትምህርት ዘመን (Current Active)
+                አሁን የሚሠራበት ንቁ የትምህርት ዘመን
               </span>
               <Sparkles className="w-5 h-5 text-amber-300" />
             </div>
@@ -481,7 +481,7 @@ const AcademicYearsManagement = () => {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="በትምህርት ዘመን ስም ፈልግ (e.g. 2017)..."
+            placeholder="በትምህርት ዘመን ስም ፈልግ (ለምሳሌ፡ 2017)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1657b8]/20 focus:border-[#1657b8]"
@@ -490,11 +490,11 @@ const AcademicYearsManagement = () => {
 
         <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
           {[
-            { key: 'ALL', label: 'ሁሉም (All)' },
-            { key: 'active', label: 'ንቁ (Active)' },
-            { key: 'inactive', label: 'ቀጣይ (Inactive)' },
-            { key: 'completed', label: 'የተጠናቀቀ (Completed)' },
-            { key: 'archived', label: 'በማህደር (Archived)' },
+            { key: 'ALL', label: 'ሁሉም' },
+            { key: 'active', label: 'ንቁ' },
+            { key: 'inactive', label: 'ቀጣይ' },
+            { key: 'completed', label: 'የተጠናቀቀ' },
+            { key: 'archived', label: 'በማህደር' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -517,7 +517,7 @@ const AcademicYearsManagement = () => {
           columns={columns}
           data={filteredYears}
           isLoading={isLoading}
-          emptyMessage="ምንም የትምህርት ዘመን አልተገኘም (No academic years found)"
+          emptyMessage="ምንም የትምህርት ዘመን አልተገኘም"
           emptyIcon={Calendar}
         />
       ) : (
@@ -583,7 +583,7 @@ const AcademicYearsManagement = () => {
                   <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-2 mb-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-[#1657b8]" />
-                      <span>የትምህርት ዘመን ቆይታ (Duration)</span>
+                      <span>የትምህርት ዘመን ቆይታ</span>
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
@@ -688,7 +688,7 @@ const AcademicYearsManagement = () => {
                 <Calendar className="w-4 h-4" />
               </div>
               <span>
-                {editingYear ? 'የትምህርት ዘመን ማሻሻያ (Edit Academic Year)' : 'አዲስ የኢትዮጵያ የትምህርት ዘመን መመዝገቢያ'}
+                {editingYear ? 'የትምህርት ዘመን ማሻሻያ' : 'አዲስ የኢትዮጵያ የትምህርት ዘመን መመዝገቢያ'}
               </span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
@@ -701,7 +701,7 @@ const AcademicYearsManagement = () => {
             {!editingYear && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                  ፈጣን የኢትዮጵያ ዓመተ ምሕረት መምረጫ (Presets)
+                  ፈጣን የኢትዮጵያ ዓመተ ምሕረት መምረጫ
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {ETHIOPIAN_YEAR_PRESETS.map((p) => {
@@ -728,12 +728,12 @@ const AcademicYearsManagement = () => {
             {/* Academic Year Name */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                የትምህርት ዘመን ስም (Academic Year Name) <span className="text-rose-500">*</span>
+                የትምህርት ዘመን ስም <span className="text-rose-500">*</span>
               </label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g. 2017 ዓ.ም"
+                placeholder="ለምሳሌ፡ 2017 ዓ.ም"
                 required
                 className="font-bold text-sm"
               />
@@ -741,7 +741,7 @@ const AcademicYearsManagement = () => {
 
             {/* Start Date (Ethiopian Date Picker) */}
             <EthiopianDatePicker
-              label="የትምህርት ዘመን መጀመሪያ ቀን (Start Date - መስከረም 1)"
+              label="የትምህርት ዘመን መጀመሪያ ቀን (መስከረም 1)"
               value={formData.startDate}
               onChange={(val) => setFormData({ ...formData, startDate: val })}
               required
@@ -749,7 +749,7 @@ const AcademicYearsManagement = () => {
 
             {/* End Date (Ethiopian Date Picker) */}
             <EthiopianDatePicker
-              label="የትምህርት ዘመን ማብቂያ ቀን (End Date - ጳጉሜን 5/6)"
+              label="የትምህርት ዘመን ማብቂያ ቀን (ጳጉሜን 5/6)"
               value={formData.endDate}
               onChange={(val) => setFormData({ ...formData, endDate: val })}
               required
@@ -758,23 +758,23 @@ const AcademicYearsManagement = () => {
             {/* Status Select */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                የዘመኑ ሁኔታ (Status)
+                የዘመኑ ሁኔታ
               </label>
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
-                <option value="active">ንቁ (Active - አሁን የሚሠራበት)</option>
-                <option value="inactive">ቀጣይ / ያልጀመረ (Inactive / Upcoming)</option>
-                <option value="completed">የተጠናቀቀ (Completed - ያለፈ)</option>
-                <option value="archived">በማህደር የተቀመጠ (Archived)</option>
+                <option value="active">ንቁ (አሁን የሚሠራበት)</option>
+                <option value="inactive">ቀጣይ / ያልጀመረ</option>
+                <option value="completed">የተጠናቀቀ (ያለፈ)</option>
+                <option value="archived">በማህደር የተቀመጠ</option>
               </Select>
             </div>
 
             {/* Description */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                ማብራሪያ / ማስታወሻ (Description / Notes)
+                ማብራሪያ / ማስታወሻ
               </label>
               <textarea
                 value={formData.description}
@@ -795,7 +795,7 @@ const AcademicYearsManagement = () => {
                   className="w-4 h-4 rounded text-[#1657b8] focus:ring-[#1657b8]"
                 />
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  ይህንን የትምህርት ዘመን አሁን ንቁ (Active) አድርግ እና የመመዝገቢያ ዘመን አድርገው
+                  ይህንን የትምህርት ዘመን አሁን ንቁ አድርግ እና የመመዝገቢያ ዘመን አድርገው
                 </span>
               </label>
             )}
@@ -808,7 +808,7 @@ const AcademicYearsManagement = () => {
                 onClick={() => setIsModalOpen(false)}
                 className="text-xs"
               >
-                ይቅር (Cancel)
+                ይቅር
               </Button>
               <Button
                 type="submit"
@@ -817,7 +817,7 @@ const AcademicYearsManagement = () => {
                 disabled={createMutation.isPending || updateMutation.isPending}
                 className="bg-[#1657b8] text-white text-xs font-bold"
               >
-                {createMutation.isPending || updateMutation.isPending ? 'እየተመዘገበ ነው...' : editingYear ? 'አሻሽል (Save Changes)' : 'መዝግብ (Create Year)'}
+                {createMutation.isPending || updateMutation.isPending ? 'እየተመዘገበ ነው...' : editingYear ? 'አሻሽል' : 'መዝግብ'}
               </Button>
             </DialogFooter>
           </form>
@@ -836,7 +836,7 @@ const AcademicYearsManagement = () => {
               እርግጠኛ ነዎት <strong className="text-slate-900 dark:text-white font-bold">{yearToDelete?.name}</strong> የትምህርት ዘመንን መሰረዝ ይፈልጋሉ?
               {yearToDelete?.totalStudents > 0 && (
                 <span className="block mt-2 text-rose-500 font-semibold">
-                  ⚠️ ማሳሰቢያ፡ ይህ የትምህርት ዘመን ከ{yearToDelete.totalStudents} ተማሪዎች ጋር የተያያዘ ነው። ከተቻለ ማህደር (Archive) ማድረጉ ይመረጣል።
+                  ⚠️ ማሳሰቢያ፡ ይህ የትምህርት ዘመን ከ{yearToDelete.totalStudents} ተማሪዎች ጋር የተያያዘ ነው። ከተቻለ በማህደር ማስቀመጥ ይመረጣል።
                 </span>
               )}
             </DialogDescription>
@@ -850,7 +850,7 @@ const AcademicYearsManagement = () => {
               onClick={() => setIsDeleteModalOpen(false)}
               className="text-xs"
             >
-              ይቅር (Cancel)
+              ይቅር
             </Button>
             <Button
               type="button"
@@ -860,7 +860,7 @@ const AcademicYearsManagement = () => {
               disabled={deleteMutation.isPending}
               className="bg-rose-600 text-white text-xs font-bold"
             >
-              {deleteMutation.isPending ? 'እየተሰረዘ ነው...' : 'ሰርዝ (Delete)'}
+              {deleteMutation.isPending ? 'እየተሰረዘ ነው...' : 'ሰርዝ'}
             </Button>
           </DialogFooter>
         </DialogContent>

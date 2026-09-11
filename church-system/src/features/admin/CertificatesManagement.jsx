@@ -11,7 +11,7 @@ const CertificatesManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የምስክር ወረቀቶች (Certificates)"
+        title="የምስክር ወረቀቶች"
         subtitle="ትምህርታቸውን ላጠናቀቁ ተማሪዎች ምስክር ወረቀት ያዘጋጁ እና ያረጋግጡ"
         icon={Award}
         badge={<Badge variant="gold" size="sm"><Sparkles className="w-3 h-3" /> 0 የተሰጡ</Badge>}

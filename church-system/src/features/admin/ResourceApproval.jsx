@@ -59,7 +59,7 @@ const ResourceApproval = () => {
     () => [
       {
         accessorKey: 'title',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Resource Title" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የርዕስ ስም" />,
         cell: ({ row }) => {
           const r = row.original;
           return (
@@ -77,12 +77,12 @@ const ResourceApproval = () => {
       },
       {
         accessorKey: 'type',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'Document'}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት" />,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'ሰነድ'}</Badge>,
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => {
           const s = getValue();
           return (
@@ -90,14 +90,14 @@ const ResourceApproval = () => {
               variant={s === 'Approved' ? 'approved' : s === 'Rejected' ? 'danger' : 'pending'}
               size="sm"
             >
-              {s || 'Pending'}
+              {s === 'Approved' ? 'የጸደቀ' : s === 'Rejected' ? 'ውድቅ የተደረገ' : 'በመጠባበቅ ላይ'}
             </Badge>
           );
         },
       },
       {
         accessorKey: 'fileUrl',
-        header: 'File',
+        header: 'ፋይል',
         cell: ({ getValue }) => {
           const url = getValue();
           return url ? (
@@ -107,16 +107,16 @@ const ResourceApproval = () => {
               rel="noreferrer"
               className="text-[var(--brand-primary)] hover:underline text-xs font-semibold inline-flex items-center gap-1"
             >
-              <Download className="w-3.5 h-3.5" /> Open
+              <Download className="w-3.5 h-3.5" /> ክፈት
             </a>
           ) : (
-            <span className="text-xs text-slate-400">No file</span>
+            <span className="text-xs text-slate-400">ፋይል የለም</span>
           );
         },
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const r = row.original;
           return (
@@ -129,7 +129,7 @@ const ResourceApproval = () => {
                     onClick={() => handleApprove(r._id)}
                     disabled={approveMutation.isPending}
                   >
-                    <Check className="w-3.5 h-3.5 mr-1" /> Approve
+                    <Check className="w-3.5 h-3.5 mr-1" /> አጽድቅ
                   </Button>
                   <Button
                     size="xs"
@@ -137,7 +137,7 @@ const ResourceApproval = () => {
                     onClick={() => openRejectModal(r._id)}
                     disabled={approveMutation.isPending}
                   >
-                    <X className="w-3.5 h-3.5 mr-1" /> Reject
+                    <X className="w-3.5 h-3.5 mr-1" /> ውድቅ አድርግ
                   </Button>
                 </>
               )}
@@ -152,7 +152,7 @@ const ResourceApproval = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የመርጃ ሰነዶች ማጽደቂያ (Resource Approvals)"
+        title="የመርጃ ሰነዶች ማጽደቂያ"
         subtitle="በመምህራን የቀረቡ መጻሕፍትን፣ ሰነዶችን እና የትምህርት መርጃዎችን ይገምግሙ"
         icon={CheckCircle2}
         badge={<Badge variant="gold" size="sm">{resources.length} ሰነዶች</Badge>}
@@ -172,10 +172,10 @@ const ResourceApproval = () => {
 
       <div className="w-full sm:w-48">
         <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="Pending">Pending (የሚጠብቁ)</option>
-          <option value="Approved">Approved (የጸደቁ)</option>
-          <option value="Rejected">Rejected (ውድቅ የተደረጉ)</option>
-          <option value="All">All (ሁሉም)</option>
+          <option value="Pending">በመጠባበቅ ላይ</option>
+          <option value="Approved">የጸደቁ</option>
+          <option value="Rejected">ውድቅ የተደረጉ</option>
+          <option value="All">ሁሉም</option>
         </Select>
       </div>
 

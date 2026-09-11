@@ -16,25 +16,25 @@ const TeacherCourses = () => {
     () => [
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Course Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የኮርስ ስም" />,
         cell: ({ getValue }) => <span className="font-bold text-slate-900 dark:text-white">{getValue()}</span>,
       },
       {
         accessorKey: 'ageGroup',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Age Group / Grade" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'Youth'}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የዕድሜ ክልል / ክፍል" />,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'ወጣቶች'}</Badge>,
       },
       {
         accessorKey: 'schedule',
-        header: 'Schedule',
+        header: 'የክፍለ ጊዜ ሰሌዳ',
         cell: ({ getValue }) => <span className="text-slate-600 dark:text-slate-300">{getValue() || '-'}</span>,
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'Active' ? 'approved' : 'neutral'} size="sm">
-            {getValue() || 'Active'}
+            {getValue() === 'Active' ? 'ንቁ' : getValue() || '-'}
           </Badge>
         ),
       },
@@ -47,7 +47,7 @@ const TeacherCourses = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-[var(--brand-primary)]" />
-          <span>የእኔ ኮርሶች (My Courses)</span>
+          <span>የእኔ ኮርሶች</span>
         </h2>
         <Badge variant="gold" size="sm">{courses.length} ኮርሶች</Badge>
       </div>
@@ -56,7 +56,7 @@ const TeacherCourses = () => {
         columns={columns}
         data={courses}
         isLoading={isLoading}
-        emptyMessage="ምንም የተመደበ ኮርስ የለም (You are not assigned to any courses yet)"
+        emptyMessage="ምንም የተመደበ ኮርስ የለም።"
         emptyIcon={BookOpen}
       />
     </div>

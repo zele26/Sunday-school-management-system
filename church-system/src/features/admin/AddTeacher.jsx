@@ -127,7 +127,7 @@ const AddTeacher = () => {
     }
 
     if (scheduleConflicts.length > 0) {
-      toast.error('እባክዎ የተደራረቡትን የኮርስ ሰዓቶች ያስተካክሉ (Schedule conflict detected)');
+      toast.error('እባክዎ የተደራረቡትን የኮርስ ሰዓቶች ያስተካክሉ');
       return;
     }
 
@@ -152,7 +152,7 @@ const AddTeacher = () => {
         toast.error(data.message || 'መምህር መመዝገብ አልተቻለም');
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል');
     } finally {
       setLoading(false);
     }
@@ -161,7 +161,7 @@ const AddTeacher = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <PageHeader
-        title="አዲስ መምህር መዝግብ (Add Teacher)"
+        title="አዲስ መምህር መዝግብ"
         subtitle="የመምህሩን የግል መረጃ፣ የትምህርት ዝግጅት፣ እና የሚያስተምሯቸውን ኮርሶች ያስገቡ"
         icon={UserPlus}
         badge={<Badge variant="gold" size="sm">የመምህራን ምዝገባ</Badge>}
@@ -178,27 +178,27 @@ const AddTeacher = () => {
         <Card variant="default" padding="lg" className="space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <User className="w-5 h-5 text-[var(--brand-primary)]" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">የግልና የመግቢያ መረጃ (Profile & Login)</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">የግልና የመግቢያ መረጃ</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ሙሉ ስም (Full Name) *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ሙሉ ስም *</label>
               <Input name="fullName" required value={form.fullName} onChange={handleChange} placeholder="ዲ/ን ሙሉ ስም..." />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ ቁጥር (Phone)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ ቁጥር</label>
               <Input icon={Phone} name="phone" value={form.phone} onChange={handleChange} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ኢሜይል (Email) *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ኢሜይል *</label>
               <Input icon={Mail} type="email" name="email" required value={form.email} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የይለፍ ቃል (Password) *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የይለፍ ቃል *</label>
               <Input icon={Lock} type="password" name="password" required value={form.password} onChange={handleChange} />
             </div>
           </div>
@@ -213,16 +213,16 @@ const AddTeacher = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዋና የትምህርት መስክ (Subject)</label>
-              <Input name="subject" value={form.subject} onChange={handleChange} placeholder="e.g. ነገረ መለኮት, ዜማ..." />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዋና የትምህርት መስክ</label>
+              <Input name="subject" value={form.subject} onChange={handleChange} placeholder="ምሳሌ፡ ነገረ መለኮት፣ ዜማ..." />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የትምህርት ደረጃ (Qualification)</label>
-              <Input name="qualification" value={form.qualification} onChange={handleChange} placeholder="e.g. ዲፕሎማ, ዲግሪ..." />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የትምህርት ደረጃ</label>
+              <Input name="qualification" value={form.qualification} onChange={handleChange} placeholder="ምሳሌ፡ ዲፕሎማ፣ ዲግሪ..." />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአገልግሎት ልምድ (Experience)</label>
-              <Input name="experience" value={form.experience} onChange={handleChange} placeholder="e.g. 5 ዓመት" />
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአገልግሎት ልምድ</label>
+              <Input name="experience" value={form.experience} onChange={handleChange} placeholder="ምሳሌ፡ 5 ዓመት" />
             </div>
           </div>
 
@@ -239,7 +239,7 @@ const AddTeacher = () => {
                 <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                   <div>
-                    <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል (Schedule Conflict)</p>
+                    <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል</p>
                     {scheduleConflicts.map((c, idx) => (
                       <p key={idx} className="mt-0.5">• {c}</p>
                     ))}
@@ -295,7 +295,7 @@ const AddTeacher = () => {
           </Button>
           <Button variant="primary" type="submit" loading={loading} disabled={scheduleConflicts.length > 0} className="gap-2">
             <Save className="w-4 h-4" />
-            <span>መምህሩን መዝግብ (Save Teacher)</span>
+            <span>መምህሩን መዝግብ</span>
           </Button>
         </div>
       </form>

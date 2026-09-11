@@ -167,7 +167,7 @@ const StudentsManagement = () => {
       },
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ ስም" />,
         cell: ({ row }) => (
           <span className="font-bold text-slate-900 dark:text-white">
             {row.original.firstName} {row.original.middleName} {row.original.lastName}
@@ -176,7 +176,7 @@ const StudentsManagement = () => {
       },
       {
         accessorKey: 'studentId',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Student ID" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ መለያ" />,
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-600 dark:text-slate-300">
             {getValue() || '-'}
@@ -185,48 +185,48 @@ const StudentsManagement = () => {
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Grade" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል" />,
         cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || '-'}</Badge>,
       },
       {
         accessorKey: 'studentType',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'distance' ? 'gold' : 'approved'} size="sm">
-            {getValue() || 'regular'}
+            {getValue() === 'distance' ? 'የርቀት' : 'መደበኛ'}
           </Badge>
         ),
       },
       {
         accessorKey: 'teacher',
-        header: 'Teacher',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="መምህር" />,
         cell: ({ row }) => (
           <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            {row.original.teacher?.fullName || <span className="text-slate-400 italic">Unassigned</span>}
+            {row.original.teacher?.fullName || <span className="text-slate-400 italic">ያልተመደበ</span>}
           </span>
         ),
       },
       {
         id: 'qrCode',
-        header: 'QR',
+        header: 'የQR ኮድ',
         cell: ({ row }) => {
           const s = row.original;
           return s.qrCode ? (
-            <span className="text-emerald-600 font-bold text-xs">✓ Ready</span>
+            <span className="text-emerald-600 font-bold text-xs">✓ ተዘጋጅቷል</span>
           ) : (
             <button
               onClick={() => generateQRMutation.mutate(s._id)}
               disabled={generateQRMutation.isPending}
               className="text-xs text-[var(--brand-primary)] hover:underline font-bold disabled:opacity-50"
             >
-              Generate
+              አመንጭ
             </button>
           );
         },
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const s = row.original;
           return (
@@ -234,21 +234,21 @@ const StudentsManagement = () => {
               <button
                 onClick={() => openTeacherModal(s)}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
-                title="Assign Teacher"
+                title="መምህር መድብ"
               >
                 <UserCheck className="w-4 h-4" />
               </button>
               <button
                 onClick={() => openCourseModal(s)}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
-                title="Assign Courses"
+                title="ኮርሶችን መድብ"
               >
                 <BookOpen className="w-4 h-4" />
               </button>
               <Link
                 to={`/admin/edit-student/${s._id}`}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-[var(--brand-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Edit"
+                title="አርም"
               >
                 <Edit className="w-4 h-4" />
               </Link>
@@ -263,7 +263,7 @@ const StudentsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የተማሪዎች አስተዳደር (Student Management)"
+        title="የተማሪዎች አስተዳደር"
         subtitle="ተማሪዎችን ያስተዳድሩ፣ መምህራንን እና ኮርሶችን ይመድቡ፣ የ QR ኮድ ያመንጩ"
         icon={Users}
         badge={<Badge variant="gold" size="sm">{stats.total} ተማሪዎች</Badge>}
@@ -271,7 +271,7 @@ const StudentsManagement = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1.5">
               <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              <span>መረጃ ላክ (CSV)</span>
             </Button>
             <Button
               variant="gold"
@@ -281,7 +281,7 @@ const StudentsManagement = () => {
               className="gap-1.5"
             >
               <QrCode className="w-3.5 h-3.5" />
-              <span>{generateAllQRMutation.isPending ? 'Generating...' : 'Generate All QR'}</span>
+              <span>{generateAllQRMutation.isPending ? 'በማመንጨት ላይ...' : 'ሁሉንም QR አመንጭ'}</span>
             </Button>
             <Link to="/admin/add-student">
               <Button variant="primary" size="sm" className="gap-1.5">
@@ -296,19 +296,19 @@ const StudentsManagement = () => {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Students</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">አጠቃላይ ተማሪዎች</p>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">{stats.total}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Regular</p>
+          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">መደበኛ ተማሪዎች</p>
           <p className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">{stats.regular}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Distance</p>
+          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">የርቀት ተማሪዎች</p>
           <p className="text-2xl sm:text-3xl font-black text-amber-600 mt-1">{stats.distance}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">With QR</p>
+          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">QR ያላቸው</p>
           <p className="text-2xl sm:text-3xl font-black text-blue-600 mt-1">{stats.withQR}</p>
         </Card>
       </div>
@@ -334,9 +334,9 @@ const StudentsManagement = () => {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
           >
-            <option value="">All Grades</option>
+            <option value="">ሁሉም ክፍሎች</option>
             {[7, 8, 9, 10, 11, 12].map((g) => (
-              <option key={g} value={`Grade ${g}`}>Grade {g}</option>
+              <option key={g} value={`Grade ${g}`}>ክፍል {g}</option>
             ))}
           </Select>
         </div>
@@ -348,9 +348,9 @@ const StudentsManagement = () => {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
           >
-            <option value="">All Types</option>
-            <option value="regular">Regular</option>
-            <option value="distance">Distance</option>
+            <option value="">ሁሉም ዓይነቶች</option>
+            <option value="regular">መደበኛ</option>
+            <option value="distance">የርቀት</option>
           </Select>
         </div>
         {selectedStudentIds.length > 0 && (
@@ -378,7 +378,7 @@ const StudentsManagement = () => {
         onRowSelectionChange={setRowSelection}
         isLoading={isLoading}
         totalItemsCount={totalStudents}
-        emptyMessage="ምንም ተማሪ አልተገኘም (No students found)"
+        emptyMessage="ምንም ተማሪ አልተገኘም"
         emptyIcon={Users}
       />
 
@@ -386,7 +386,7 @@ const StudentsManagement = () => {
       {showTeacherModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
           <Card variant="default" padding="md" className="max-w-md w-full space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">መምህር መድብ (Assign Teacher)</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">መምህር መድብ</h3>
             <p className="text-xs text-slate-500">
               ለተማሪ {selectedStudent?.firstName} {selectedStudent?.lastName} መምህር ይምረጡ
             </p>
@@ -417,7 +417,7 @@ const StudentsManagement = () => {
       {showCourseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
           <Card variant="default" padding="md" className="max-w-md w-full space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">ኮርሶችን መድብ (Assign Courses)</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">ኮርሶችን መድብ</h3>
             <div className="max-h-60 overflow-y-auto space-y-2">
               {courses.map((c) => (
                 <label

@@ -104,16 +104,16 @@ const TeachersManagement = () => {
       },
       {
         accessorKey: 'fullName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Teacher Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የመምህር ስም" />,
         cell: ({ row }) => {
           const t = row.original;
-          const name = t.fullName || t.name || `${t.firstName || ''} ${t.lastName || ''}`.trim() || 'Unknown';
+          const name = t.fullName || t.name || `${t.firstName || ''} ${t.lastName || ''}`.trim() || 'ያልታወቀ';
           return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
         },
       },
       {
         accessorKey: 'contact',
-        header: 'Email / Phone',
+        header: 'ኢሜይል / ስልክ',
         cell: ({ row }) => {
           const t = row.original;
           return <span className="text-slate-600 dark:text-slate-300">{t.email || t.phone || '—'}</span>;
@@ -121,12 +121,12 @@ const TeachersManagement = () => {
       },
       {
         accessorKey: 'subject',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Subject" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'General'}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት መስክ" />,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'አጠቃላይ'}</Badge>,
       },
       {
         accessorKey: 'coursesTaught',
-        header: 'የሚያስተምሯቸው ኮርሶች (Courses)',
+        header: 'የሚያስተምሯቸው ኮርሶች',
         cell: ({ row }) => {
           const courses = row.original.coursesTaught;
           if (!courses || !Array.isArray(courses) || courses.length === 0) {
@@ -145,20 +145,20 @@ const TeachersManagement = () => {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ row }) => {
           const t = row.original;
           const isActive = t.isActive !== false && t.status !== 'inactive';
           return (
             <Badge variant={isActive ? 'approved' : 'neutral'} size="sm">
-              {isActive ? 'Active' : 'Inactive'}
+              {isActive ? 'ንቁ' : 'የማይሳተፍ'}
             </Badge>
           );
         },
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const t = row.original;
           return (
@@ -166,7 +166,7 @@ const TeachersManagement = () => {
               <Link
                 to={`/admin/edit-teacher/${t._id}`}
                 className="p-1.5 rounded-lg text-slate-500 hover:text-[var(--brand-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Edit"
+                title="አርም"
               >
                 <Edit className="w-4 h-4" />
               </Link>
@@ -178,7 +178,7 @@ const TeachersManagement = () => {
                 }}
                 disabled={deleteTeacherMutation.isPending}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                title="Delete"
+                title="ሰርዝ"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -193,7 +193,7 @@ const TeachersManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የመምህራን አስተዳደር (Teacher Management)"
+        title="የመምህራን አስተዳደር"
         subtitle="መምህራንን ያስተዳድሩ፣ ኮርሶችን ይመድቡ እና አጠቃላይ መረጃዎችን ይከታተሉ"
         icon={Users}
         badge={<Badge variant="gold" size="sm">{stats.total} መምህራን</Badge>}
@@ -201,7 +201,7 @@ const TeachersManagement = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1.5">
               <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              <span>መረጃ ላክ (CSV)</span>
             </Button>
             <Link to="/admin/add-teacher">
               <Button variant="primary" size="sm" className="gap-1.5">
@@ -216,19 +216,19 @@ const TeachersManagement = () => {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Teachers</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">አጠቃላይ መምህራን</p>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">{stats.total}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Active</p>
+          <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider">ንቁ መምህራን</p>
           <p className="text-2xl sm:text-3xl font-black text-emerald-600 mt-1">{stats.active}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Inactive</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">የማይሳተፉ</p>
           <p className="text-2xl sm:text-3xl font-black text-slate-500 mt-1">{stats.inactive}</p>
         </Card>
         <Card variant="elevated" padding="md">
-          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Subjects</p>
+          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">የትምህርት መስኮች</p>
           <p className="text-2xl sm:text-3xl font-black text-amber-600 mt-1">{stats.subjects}</p>
         </Card>
       </div>
@@ -254,9 +254,9 @@ const TeachersManagement = () => {
               setPagination((prev) => ({ ...prev, pageIndex: 0 }));
             }}
           >
-            <option value="">All Status (ሁሉም)</option>
-            <option value="active">Active (ንቁ)</option>
-            <option value="inactive">Inactive (የማይሳተፍ)</option>
+            <option value="">ሁሉም ሁኔታዎች</option>
+            <option value="active">ንቁ</option>
+            <option value="inactive">የማይሳተፍ</option>
           </Select>
         </div>
         {selectedTeacherIds.length > 0 && (
@@ -284,7 +284,7 @@ const TeachersManagement = () => {
         onRowSelectionChange={setRowSelection}
         isLoading={isLoading}
         totalItemsCount={totalTeachers}
-        emptyMessage="ምንም መምህር አልተገኘም (No teachers found)"
+        emptyMessage="ምንም መምህር አልተገኘም"
         emptyIcon={Users}
       />
     </div>

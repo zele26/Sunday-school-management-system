@@ -110,7 +110,7 @@ const TeacherDistanceHub = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">የመምህራን የርቀት ትምህርት ማዕከል (Teacher Distance Hub)</h2>
+          <h2 className="text-2xl font-black text-slate-800">የመምህራን የርቀት ትምህርት ማዕከል</h2>
           <p className="text-xs text-slate-500 mt-1">
             የተመደቡባቸውን የርቀት ትምህርቶች፣ የተማሪዎችን የትምህርት ሂደት እና የቤት ሥራ ምዘናዎችን እዚህ ያስተዳድሩ።
           </p>
@@ -145,7 +145,7 @@ const TeacherDistanceHub = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Courses list (4 cols) */}
         <div className="lg:col-span-4 space-y-3">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-600">የትምህርት ክፍሎች (Courses)</h3>
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-600">የትምህርት ክፍሎች</h3>
           {courses.map((c) => {
             const isSelected = activeCourse?._id === c._id;
             return (
@@ -171,7 +171,7 @@ const TeacherDistanceHub = () => {
 
                 <h4 className="font-extrabold text-sm mt-2">{c.nameAmharic || c.name}</h4>
                 <p className={`text-xs mt-1 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
-                  ደረጃ: {c.grade || 'Batch 1'}
+                  ደረጃ: {c.grade || 'ዙር 1'}
                 </p>
               </div>
             );
@@ -195,14 +195,14 @@ const TeacherDistanceHub = () => {
                   className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-xl text-xs font-black hover:brightness-110 shadow-md transition-all flex items-center gap-1.5"
                 >
                   <span>🎬</span>
-                  <span>ትምህርቶችን አስተዳድር (Manage Lessons)</span>
+                  <span>ትምህርቶችን አስተዳድር</span>
                 </button>
               )}
               <button
                 onClick={() => setShowAddModuleModal(true)}
                 className="px-4 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-md transition-all"
               >
-                + አዲስ ሞጁል (Add Module)
+                + አዲስ ሞጁል
               </button>
             </div>
           </div>
@@ -262,7 +262,7 @@ const TeacherDistanceHub = () => {
       {/* Pending Assignment Grading Queue */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
         <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-          <span>📝 ያልታረሙ የቤት ሥራዎች (Submissions Queue)</span>
+          <span>📝 ያልታረሙ የቤት ሥራዎች</span>
           <span className="text-xs bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full font-bold">
             {pendingSubmissions.length}
           </span>
@@ -277,7 +277,7 @@ const TeacherDistanceHub = () => {
                   <p className="text-[11px] text-slate-400 font-mono">{sub.assignment?.course?.name}</p>
                 </div>
                 <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
-                  Submitted
+                  ተልኳል
                 </span>
               </div>
 
@@ -293,7 +293,7 @@ const TeacherDistanceHub = () => {
                 }}
                 className="w-full py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-sm"
               >
-                አርም / ውጤት ስጥ (Grade Submission)
+                አርም / ውጤት ስጥ
               </button>
             </div>
           ))}
@@ -304,10 +304,10 @@ const TeacherDistanceHub = () => {
       {gradingSubmission && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-slate-900">የቤት ሥራ ማረሚያ (Grade Assignment)</h3>
+            <h3 className="font-extrabold text-base text-slate-900">የቤት ሥራ ማረሚያ</h3>
             <form onSubmit={handleGradeSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">ውጤት (Score out of 100):</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">ውጤት (ከ100):</label>
                 <input
                   type="number"
                   min="0"
@@ -320,7 +320,7 @@ const TeacherDistanceHub = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">አስተያየትና ማበረታቻ (Teacher Comments):</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">አስተያየትና ማበረታቻ:</label>
                 <textarea
                   rows={3}
                   value={gradeFeedback}
@@ -343,7 +343,7 @@ const TeacherDistanceHub = () => {
                   disabled={gradingSubmitting}
                   className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-md"
                 >
-                  {gradingSubmitting ? 'በመመዝገብ ላይ...' : 'ውጤቱን መዝግብ (Save Grade)'}
+                  {gradingSubmitting ? 'በመመዝገብ ላይ...' : 'ውጤቱን መዝግብ'}
                 </button>
               </div>
             </form>
@@ -355,7 +355,7 @@ const TeacherDistanceHub = () => {
       {showAddModuleModal && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 className="font-extrabold text-base text-slate-900">አዲስ ሞጁል ጨምር (Create Module)</h3>
+            <h3 className="font-extrabold text-base text-slate-900">አዲስ ሞጁል ጨምር</h3>
             <form onSubmit={handleCreateModule} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">የሞጁል ርዕስ በአማርኛ:</label>
@@ -370,7 +370,7 @@ const TeacherDistanceHub = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">መግለጫ (Description):</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">መግለጫ:</label>
                 <textarea
                   rows={2}
                   value={newModuleForm.description}
@@ -391,7 +391,7 @@ const TeacherDistanceHub = () => {
                   type="submit"
                   className="px-5 py-2 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-xl text-xs font-bold hover:brightness-110 shadow-md"
                 >
-                  ፍጠር (Create Module)
+                  ፍጠር
                 </button>
               </div>
             </form>

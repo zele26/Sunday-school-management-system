@@ -36,7 +36,7 @@ const ChangePassword = () => {
       });
       const resData = await res.json();
       if (res.ok) {
-        setMessage({ text: 'ፓስዎርድ በተሳካ ሁኔታ ተቀይሯል!', type: 'success' });
+        setMessage({ text: 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!', type: 'success' });
         reset();
       } else {
         setMessage({ text: resData.message || 'ለውጡ አልተሳካም', type: 'error' });
@@ -55,12 +55,11 @@ const ChangePassword = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </span>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">ፓስዎርድ ቀይር</h2>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">የይለፍ ቃል ቀይር</h2>
         </div>
         <BackButton
           href="/dashboard"
-          label="ዳሽቦርድ"
-          subLabel="Dashboard"
+          label="መነሻ ገጽ"
           variant="glass"
           className="text-xs py-1.5 px-3"
         />
@@ -80,7 +79,7 @@ const ChangePassword = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አሁን ያለው ፓስዎርድ</label>
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አሁን ያለው የይለፍ ቃል</label>
           <input
             type="password"
             placeholder="••••••••"
@@ -97,7 +96,7 @@ const ChangePassword = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲስ ፓስዎርድ</label>
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲስ የይለፍ ቃል</label>
           <input
             type="password"
             placeholder="••••••••"
@@ -114,7 +113,7 @@ const ChangePassword = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲሱን ያረጋግጡ</label>
+          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲሱን የይለፍ ቃል ያረጋግጡ</label>
           <input
             type="password"
             placeholder="••••••••"
@@ -135,7 +134,7 @@ const ChangePassword = () => {
           disabled={isSubmitting}
           className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:pointer-events-none mt-2 cursor-pointer"
         >
-          {isSubmitting ? 'በመቀየር ላይ…' : 'ፓስዎርድ ቀይር'}
+          {isSubmitting ? 'በመቀየር ላይ…' : 'የይለፍ ቃል ቀይር'}
         </button>
       </form>
 
@@ -145,7 +144,7 @@ const ChangePassword = () => {
             href="/dashboard"
             className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
           >
-            ወደ ዳሽቦርድ ሂድ
+            ወደ መነሻ ገጽ ተመለስ
           </Link>
         </div>
       )}

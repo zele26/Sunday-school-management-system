@@ -5,50 +5,50 @@ import { Card, FeatureCard, Badge } from '../../components/ui';
 
 const batchesData = [
   {
-    batch: 'Batch 1 (የመጀመሪያ ዓመት)',
+    batch: 'ዙር 1 (የመጀመሪያ ዓመት)',
     title: 'የነገረ መለኮት እና የብሉይ ኪዳን መሠረቶች',
     badge: 'መሠረታዊ',
     description: 'በዚህ ዙር ተማሪዎች የኦርቶዶክስ ተዋሕዶ እምነት መሠረታዊ አስተምህሮዎችን፣ የብሉይ ኪዳን መጻሕፍትን ታሪክ እና የመጀመሪያውን የክርስትና ሕይወት ሥርዓት ይማራሉ።',
     courses: [
-      { name: 'ነገረ መለኮት (Theology & Dogma I)', hours: '45 ሰዓታት', icon: '✝️' },
-      { name: 'የብሉይ ኪዳን ጥናት (Old Testament Survey)', hours: '60 ሰዓታት', icon: '📜' },
-      { name: 'የቤተክርስቲያን ታሪክ I (Church History I)', hours: '40 ሰዓታት', icon: '🏛️' },
-      { name: 'የክርስትና ሥነ ምግባር (Christian Ethics)', hours: '30 ሰዓታት', icon: '🕊️' },
+      { name: 'ነገረ መለኮት እና ዶግማ ፩', hours: '45 ሰዓታት', icon: '✝️' },
+      { name: 'የብሉይ ኪዳን ጥናት', hours: '60 ሰዓታት', icon: '📜' },
+      { name: 'የቤተክርስቲያን ታሪክ ፩', hours: '40 ሰዓታት', icon: '🏛️' },
+      { name: 'የክርስትና ሥነ ምግባር', hours: '30 ሰዓታት', icon: '🕊️' },
     ],
   },
   {
-    batch: 'Batch 2 (ሁለተኛ ዓመት)',
+    batch: 'ዙር 2 (ሁለተኛ ዓመት)',
     title: 'የሐዲስ ኪዳን እና የሥርዓተ ቤተክርስቲያን ጥናት',
     badge: 'መካከለኛ',
     description: 'የወንጌላት ጥልቅ ትንታኔ፣ የቅዱስ ጳውሎስ ሐዋርያዊ አገልግሎትና መልእክታት፣ ምስጢራተ ቤተክርስቲያን እና የቅዳሴ ትርጓሜ የሚዳሰስበት ዙር ነው።',
     courses: [
-      { name: 'የሐዲስ ኪዳን ጥናት (New Testament Survey)', hours: '60 ሰዓታት', icon: '📖' },
-      { name: 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ (St. Paul & Apostolic Ministry)', hours: '50 ሰዓታት', icon: '📜' },
-      { name: 'ምስጢራተ ቤተክርስቲያን (Sacraments of the Church)', hours: '45 ሰዓታት', icon: '🕯️' },
-      { name: 'የቅዳሴና የጸሎት ትርጓሜ (Liturgy & Worship)', hours: '40 ሰዓታት', icon: '⛪' },
+      { name: 'የሐዲስ ኪዳን ጥናት', hours: '60 ሰዓታት', icon: '📖' },
+      { name: 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ', hours: '50 ሰዓታት', icon: '📜' },
+      { name: 'ምስጢራተ ቤተክርስቲያን', hours: '45 ሰዓታት', icon: '🕯️' },
+      { name: 'የቅዳሴና የጸሎት ትርጓሜ', hours: '40 ሰዓታት', icon: '⛪' },
     ],
   },
   {
-    batch: 'Batch 3 (ሦስተኛ ዓመት)',
+    batch: 'ዙር 3 (ሦስተኛ ዓመት)',
     title: 'የአበው ትምህርት እና የሥነ መለኮት ጥልቀት',
     badge: 'ከፍተኛ',
-    description: 'የቀደምት የቤተክርስቲያን አባቶች (Patristics) አስተምህሮ፣ ነገረ ማርያም፣ እና የሃይማኖት አበው ትምህርት የሚቀርብበት ዙር።',
+    description: 'የቀደምት የቤተክርስቲያን አባቶች አስተምህሮ፣ ነገረ ማርያም፣ እና የሃይማኖት አበው ትምህርት የሚቀርብበት ዙር።',
     courses: [
-      { name: 'ነገረ ማርያም (Mariology)', hours: '40 ሰዓታት', icon: '👑' },
-      { name: 'ትምህርተ አበው (Patristics)', hours: '50 ሰዓታት', icon: '📜' },
-      { name: 'የመጽሐፍ ቅዱስ አፈታት ስልት (Hermeneutics)', hours: '45 ሰዓታት', icon: '🔍' },
-      { name: 'የስብከትና የሐዋርያዊ አገልግሎት ጥበብ (Homiletics)', hours: '35 ሰዓታት', icon: '🗣️' },
+      { name: 'ነገረ ማርያም', hours: '40 ሰዓታት', icon: '👑' },
+      { name: 'ትምህርተ አበው', hours: '50 ሰዓታት', icon: '📜' },
+      { name: 'የመጽሐፍ ቅዱስ አፈታት ስልት', hours: '45 ሰዓታት', icon: '🔍' },
+      { name: 'የስብከትና የሐዋርያዊ አገልግሎት ጥበብ', hours: '35 ሰዓታት', icon: '🗣️' },
     ],
   },
   {
-    batch: 'Batch 4 (አራተኛ ዓመት / ማጠቃለያ)',
+    batch: 'ዙር 4 (አራተኛ ዓመት / ማጠቃለያ)',
     title: 'የቀኖና ቤተክርስቲያን እና የመመረቂያ ጥናት',
     badge: 'ማጠቃለያ / ተመራቂ',
     description: 'የቀኖና መጻሕፍት ጥናት፣ የዘመኑ ጥያቄዎችና ኦርቶዶክሳዊ መልሶች እንዲሁም የማጠቃለያ የምርምር ጽሑፍ ዝግጅት።',
     courses: [
-      { name: 'ፍትሐ ነገሥት እና ቀኖና ቤተክርስቲያን (Canon Law)', hours: '50 ሰዓታት', icon: '⚖️' },
-      { name: 'አንቀጸ ሃይማኖትና የንጽጽር ጥናት (Apologetics)', hours: '45 ሰዓታት', icon: '🛡️' },
-      { name: 'የመመረቂያ ጽሑፍና የምርምር ሥራ (Senior Thesis)', hours: '60 ሰዓታት', icon: '🎓' },
+      { name: 'ፍትሐ ነገሥት እና ቀኖና ቤተክርስቲያን', hours: '50 ሰዓታት', icon: '⚖️' },
+      { name: 'አንቀጸ ሃይማኖትና የንጽጽር ጥናት', hours: '45 ሰዓታት', icon: '🛡️' },
+      { name: 'የመመረቂያ ጽሑፍና የምርምር ሥራ', hours: '60 ሰዓታት', icon: '🎓' },
     ],
   },
 ];
@@ -56,15 +56,15 @@ const batchesData = [
 const faqs = [
   {
     q: 'የርቀት ትምህርቱ እንዴት ነው የሚሰጠው?',
-    a: 'ትምህርቱ ሙሉ በሙሉ በበይነመረብ (Online) በኩል በድምፅ (Audio)፣ በቪዲዮ (Video lectures) እና በፒዲኤፍ (PDF modules) የሚቀርብ ሲሆን ተማሪዎች በራሳቸው ጊዜና ምቹ ሰዓት ይማራሉ።',
+    a: 'ትምህርቱ ሙሉ በሙሉ በበይነመረብ በኩል በድምፅ፣ በቪዲዮ እና በተሟሉ የትምህርት ሞጁሎች የሚቀርብ ሲሆን ተማሪዎች በራሳቸው ጊዜና ምቹ ሰዓት ይማራሉ።',
   },
   {
     q: 'ፈተናዎችና የቤት ሥራዎች እንዴት ይወሰዳሉ?',
-    a: 'በየምዕራፉ መጨረሻ ላይ በኦንላይን ፖርታሉ በኩል አጫጭር ፈተናዎች (Online Quizzes) እና የጽሑፍ የቤት ሥራዎች (Assignments) ይሰጣሉ። ውጤትዎም ወዲያውኑ ይታወቃል።',
+    a: 'በየምዕራፉ መጨረሻ ላይ በመማሪያ መድረኩ በኩል አጫጭር ፈተናዎች እና የጽሑፍ የቤት ሥራዎች ይሰጣሉ። ውጤትዎም ወዲያውኑ ይታወቃል።',
   },
   {
     q: 'ትምህርቱን ሲያጠናቅቁ ምን ዓይነት ማስረጃ ይሰጣል?',
-    a: 'እያንዳንዱን ባች እና አጠቃላይ የ4 ዓመቱን መርሃ ግብር ያጠናቀቁ ተማሪዎች በሰንበት ትምህርት ቤቱ እና በደብሩ አስተዳደር የተረጋገጠ ሕጋዊ የዲፕሎማ የምስክር ወረቀት (Certificate) ይሰጣቸዋል።',
+    a: 'እያንዳንዱን ዙር እና አጠቃላይ የ4 ዓመቱን መርሃ ግብር ያጠናቀቁ ተማሪዎች በሰንበት ትምህርት ቤቱ እና በደብሩ አስተዳደር የተረጋገጠ ሕጋዊ የዲፕሎማ የምስክር ወረቀት ይሰጣቸዋል።',
   },
   {
     q: 'የክፍያ ሁኔታው እንዴት ነው?',
@@ -105,14 +105,14 @@ const DistanceEducationPage = () => {
                 href="/register-distance"
                 className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2.5"
               >
-                <span>አሁኑኑ ይመዝገቡ (Enroll Now)</span>
+                <span>አሁኑኑ ይመዝገቡ</span>
                 <span className="text-lg">➔</span>
               </Link>
               <Link
                 href="/login"
                 className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2"
               >
-                <span>ወደ መማሪያ ፖርታል (Student Portal)</span>
+                <span>ወደ መማሪያ መድረክ</span>
                 <span>🔐</span>
               </Link>
             </div>
@@ -120,7 +120,7 @@ const DistanceEducationPage = () => {
             {/* Trust Badges */}
             <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 dark:border-slate-800 text-center lg:text-left">
               <div>
-                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">4 ባቾች</p>
+                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">4 ዙሮች</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">የተሟላ ሥርዓተ ትምህርት</p>
               </div>
               <div>
@@ -144,7 +144,7 @@ const DistanceEducationPage = () => {
                   </div>
                   <div>
                     <h3 className="font-extrabold text-slate-900 dark:text-white text-base">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Distance Education Center</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">የርቀት ትምህርት ማስተባበሪያ</p>
                   </div>
                 </div>
                 <Badge variant="gold" size="sm">
@@ -202,7 +202,7 @@ const DistanceEducationPage = () => {
             {
               step: '01',
               title: 'በኦንላይን ይመዝገቡ',
-              desc: 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር (TKD ID) ያግኙ።',
+              desc: 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር ያግኙ።',
               icon: '✍️',
               iconBg: 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
             },
@@ -245,7 +245,7 @@ const DistanceEducationPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
-              ሥርዓተ ትምህርት (Curriculum)
+              ሥርዓተ ትምህርት
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               የ4 ዓመታት የጥናት መርሃ ግብር
@@ -397,7 +397,7 @@ const DistanceEducationPage = () => {
       <section className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
           <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
-            ተደጋጋሚ ጥያቄዎች (FAQs)
+            ተደጋጋሚ ጥያቄዎች
           </span>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             ስለ ርቀት ትምህርቱ የተለመዱ ጥያቄዎች
@@ -445,13 +445,13 @@ const DistanceEducationPage = () => {
               href="/register-distance"
               className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
             >
-              አሁኑኑ ይመዝገቡ (Register for Distance) ➔
+              አሁኑኑ ይመዝገቡ ➔
             </Link>
             <Link
               href="/login"
               className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
             >
-              የተማሪ መግቢያ (Student Login)
+              የተማሪዎች መግቢያ
             </Link>
           </div>
         </div>

@@ -148,7 +148,7 @@ const CoursesManagement = () => {
     () => [
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Course Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የኮርስ ስም" />,
         cell: ({ row }) => {
           const c = row.original;
           return (
@@ -165,33 +165,33 @@ const CoursesManagement = () => {
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Grade / Level" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'Youth'}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል / ደረጃ" />,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'ወጣቶች'}</Badge>,
       },
       {
         accessorKey: 'studentType',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'distance' ? 'gold' : 'approved'} size="sm">
-            {getValue() || 'regular'}
+            {getValue() === 'distance' ? 'የርቀት' : 'መደበኛ'}
           </Badge>
         ),
       },
       {
         accessorKey: 'teacher',
-        header: 'Teacher',
+        header: 'መምህር',
         cell: ({ row }) => {
           const t = row.original.teacher;
           return (
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {t?.fullName || t?.name || <span className="text-slate-400 italic">Unassigned</span>}
+              {t?.fullName || t?.name || <span className="text-slate-400 italic">ያልተመደበ</span>}
             </span>
           );
         },
       },
       {
         accessorKey: 'schedule',
-        header: 'የክፍል ሰዓት (Schedule)',
+        header: 'የክፍል ሰዓት',
         cell: ({ row }) => {
           const c = row.original;
           const scheduleText = c.schedule || (c.dayOfWeek && c.startTime ? `${c.dayOfWeek} ${c.startTime}-${c.endTime}` : null);
@@ -205,28 +205,28 @@ const CoursesManagement = () => {
       },
       {
         accessorKey: 'numberOfLessons',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Lessons" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ብዛት" />,
         cell: ({ row }) => {
           const c = row.original;
           return (
             <span className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1 font-mono">
-              <Clock className="w-3.5 h-3.5 opacity-60" /> {c.numberOfLessons || 12} ({c.lessonDuration || 60}m)
+              <Clock className="w-3.5 h-3.5 opacity-60" /> {c.numberOfLessons || 12} ({c.lessonDuration || 60} ደቂቃ)
             </span>
           );
         },
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'Active' ? 'approved' : 'neutral'} size="sm">
-            {getValue() || 'Active'}
+            {getValue() === 'Active' ? 'ንቁ' : 'የማይሰራ'}
           </Badge>
         ),
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const c = row.original;
           return (
@@ -234,7 +234,7 @@ const CoursesManagement = () => {
               <button
                 onClick={() => handleOpenEdit(c)}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-[var(--brand-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Edit"
+                title="አርም"
               >
                 <Edit className="w-4 h-4" />
               </button>
@@ -242,7 +242,7 @@ const CoursesManagement = () => {
                 onClick={() => handleDelete(c._id)}
                 disabled={deleteMutation.isPending}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                title="Delete"
+                title="ሰርዝ"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -257,7 +257,7 @@ const CoursesManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የትምህርቶች ማዕከል (Courses Management)"
+        title="የትምህርቶች ማዕከል"
         subtitle="የሰንበት ትምህርት ቤት ኮርሶችን፣ የሰዓት መርሃ-ግብር እና መምህራንን ያስተዳድሩ"
         icon={BookOpen}
         badge={<Badge variant="gold" size="sm">{courses.length} ኮርሶች</Badge>}
@@ -267,14 +267,14 @@ const CoursesManagement = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Table View"
+                title="የሰንጠረዥ እይታ"
               >
                 <List className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Grid View"
+                title="የካርድ እይታ"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -299,16 +299,16 @@ const CoursesManagement = () => {
         </div>
         <div className="w-full sm:w-44">
           <Select value={studentTypeFilter} onChange={(e) => setStudentTypeFilter(e.target.value)}>
-            <option value="">All Types (ሁሉም)</option>
-            <option value="regular">መደበኛ (Regular)</option>
-            <option value="distance">የርቀት (Distance)</option>
+            <option value="">ሁሉም ዓይነቶች</option>
+            <option value="regular">መደበኛ</option>
+            <option value="distance">የርቀት</option>
           </Select>
         </div>
         <div className="w-full sm:w-40">
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            <option value="">ሁሉም ሁኔታዎች</option>
+            <option value="Active">ንቁ</option>
+            <option value="Inactive">የማይሰራ</option>
           </Select>
         </div>
       </div>
@@ -319,7 +319,7 @@ const CoursesManagement = () => {
           columns={columns}
           data={courses}
           isLoading={isLoading}
-          emptyMessage="ምንም ኮርስ አልተገኘም (No courses found)"
+          emptyMessage="ምንም ኮርስ አልተገኘም"
           emptyIcon={BookOpen}
         />
       ) : (
@@ -334,20 +334,20 @@ const CoursesManagement = () => {
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <Badge variant={c.studentType === 'distance' ? 'gold' : 'approved'} size="sm">
-                    {c.studentType || 'regular'}
+                    {c.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}
                   </Badge>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEdit(c)}
                       className="p-1 rounded-lg text-slate-400 hover:text-[var(--brand-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Edit"
+                      title="አርም"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(c._id)}
                       className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-                      title="Delete"
+                      title="ሰርዝ"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -386,7 +386,7 @@ const CoursesManagement = () => {
                   {c.numberOfLessons || 12} ትምህርቶች
                 </span>
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  {c.grade || c.ageGroup || 'Youth'}
+                  {c.grade || c.ageGroup || 'ወጣቶች'}
                 </span>
               </div>
             </Card>
@@ -403,14 +403,14 @@ const CoursesManagement = () => {
             className="max-w-xl w-full space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
           >
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {editingCourse ? 'ኮርስ አሻሽል (Edit Course)' : 'አዲስ ኮርስ ፍጠር (New Course)'}
+              {editingCourse ? 'ኮርስ አሻሽል' : 'አዲስ ኮርስ ፍጠር'}
             </h3>
 
             {conflictError && (
               <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                 <div>
-                  <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል (Schedule Conflict)</p>
+                  <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል</p>
                   <p className="mt-0.5 leading-relaxed">{conflictError}</p>
                 </div>
               </div>
@@ -423,7 +423,7 @@ const CoursesManagement = () => {
                 </label>
                 <Input
                   {...register('name')}
-                  placeholder="e.g. ነገረ ድኅነት"
+                  placeholder="ለምሳሌ፡ ነገረ ድኅነት"
                   error={errors.name?.message}
                 />
               </div>
@@ -434,18 +434,18 @@ const CoursesManagement = () => {
                     የምዝገባ ዓይነት
                   </label>
                   <Select {...register('studentType')}>
-                    <option value="regular">መደበኛ (Regular)</option>
-                    <option value="distance">የርቀት (Distance)</option>
+                    <option value="regular">መደበኛ</option>
+                    <option value="distance">የርቀት</option>
                   </Select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    ደረጃ (Grade)
+                    ደረጃ
                   </label>
                   <Select {...register('grade')}>
                     {[7, 8, 9, 10, 11, 12].map((g) => (
                       <option key={g} value={`Grade ${g}`}>
-                        Grade {g}
+                        ክፍል {g}
                       </option>
                     ))}
                   </Select>
@@ -454,20 +454,20 @@ const CoursesManagement = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  የመጽሐፍ ቅዱስ ጭብጥ (Bible Theme)
+                  የመጽሐፍ ቅዱስ ጭብጥ
                 </label>
                 <Input
                   {...register('bibleTheme')}
-                  placeholder="e.g. ዮሐንስ ፫፥፲፮"
+                  placeholder="ለምሳሌ፡ ዮሐንስ ፫፥፲፮"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  መምህር ምረጥ (Select Teacher)
+                  መምህር ይምረጡ
                 </label>
                 <Select {...register('teacher')}>
-                  <option value="">መምህር ይምረጡ (Unassigned)</option>
+                  <option value="">መምህር ይምረጡ</option>
                   {teachers.map((t) => {
                     const teacherValue = t.userId?._id || t.userId || t._id;
                     return (
@@ -484,39 +484,39 @@ const CoursesManagement = () => {
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    የክፍል መርሃ-ግብር (Schedule & Timeslot)
+                    የክፍል መርሃ-ግብር
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የሳምንቱ ቀን (Day)</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የሳምንቱ ቀን</label>
                     <Select {...register('dayOfWeek')}>
-                      <option value="እሑድ">እሑድ (Sunday)</option>
-                      <option value="ቅዳሜ">ቅዳሜ (Saturday)</option>
-                      <option value="ሰኞ">ሰኞ (Monday)</option>
-                      <option value="ማክሰኞ">ማክሰኞ (Tuesday)</option>
-                      <option value="ረቡዕ">ረቡዕ (Wednesday)</option>
-                      <option value="ሐሙስ">ሐሙስ (Thursday)</option>
-                      <option value="ዓርብ">ዓርብ (Friday)</option>
+                      <option value="እሑድ">እሑድ</option>
+                      <option value="ቅዳሜ">ቅዳሜ</option>
+                      <option value="ሰኞ">ሰኞ</option>
+                      <option value="ማክሰኞ">ማክሰኞ</option>
+                      <option value="ረቡዕ">ረቡዕ</option>
+                      <option value="ሐሙስ">ሐሙስ</option>
+                      <option value="ዓርብ">ዓርብ</option>
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">ፈረቃ (Shift)</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">ፈረቃ</label>
                     <Select {...register('shift')}>
-                      <option value="የቀን">የቀን (Weekend / Day)</option>
-                      <option value="የማታ">የማታ (Night / Weekday)</option>
+                      <option value="የቀን">የቀን</option>
+                      <option value="የማታ">የማታ</option>
                     </Select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የመጀመሪያ ሰዓት (Start Time)</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የመጀመሪያ ሰዓት</label>
                     <Input {...register('startTime')} placeholder="08:30" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የማብቂያ ሰዓት (End Time)</label>
+                    <label className="block text-xs font-semibold text-slate-500 mb-1">የማብቂያ ሰዓት</label>
                     <Input {...register('endTime')} placeholder="10:00" />
                   </div>
                 </div>

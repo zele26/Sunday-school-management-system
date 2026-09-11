@@ -54,16 +54,16 @@ const DepartmentMembershipsManagement = () => {
     () => [
       {
         accessorKey: 'person',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Person" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="አባል" />,
         cell: ({ row }) => {
           const m = row.original;
-          const name = m.personId ? `${m.personId.firstName} ${m.personId.lastName}` : 'Unknown';
+          const name = m.personId ? `${m.personId.firstName} ${m.personId.lastName}` : 'ያልታወቀ';
           return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
         },
       },
       {
         accessorKey: 'department',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Department" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የአገልግሎት ክፍል" />,
         cell: ({ row }) => {
           const m = row.original;
           return <span className="text-slate-600 dark:text-slate-300">{m.departmentId?.name || '-'}</span>;
@@ -71,7 +71,7 @@ const DepartmentMembershipsManagement = () => {
       },
       {
         accessorKey: 'departmentMemberId',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Dept Member ID" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የክፍል አባል መለያ" />,
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
             {getValue() || '-'}
@@ -80,7 +80,7 @@ const DepartmentMembershipsManagement = () => {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => {
           const status = getValue();
           return (
@@ -88,14 +88,14 @@ const DepartmentMembershipsManagement = () => {
               variant={status === 'active' ? 'approved' : status === 'inactive' ? 'neutral' : 'pending'}
               size="sm"
             >
-              {status}
+              {status === 'active' ? 'ንቁ' : status === 'inactive' ? 'የማይሳተፍ' : status || 'በመጠባበቅ ላይ'}
             </Badge>
           );
         },
       },
       {
         accessorKey: 'startDate',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Start Date" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተመዘገበበት ቀን" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {getValue() ? formatEthiopianDate(getValue()) : '-'}
@@ -109,7 +109,7 @@ const DepartmentMembershipsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የክፍላት አባላት ምዝገባ (Department Memberships)"
+        title="የክፍላት አባላት ምዝገባ"
         subtitle="የእያንዳንዱን አባል የአገልግሎት ክፍል ምደባና መታወቂያ ያስተዳድሩ"
         icon={Link2}
         badge={<Badge variant="gold" size="sm">{memberships.length} አባላት</Badge>}
@@ -139,7 +139,7 @@ const DepartmentMembershipsManagement = () => {
             onChange={handleChange}
             required
           >
-            <option value="">ሰው ይምረጡ (Select Person)</option>
+            <option value="">ሰው ይምረጡ</option>
             {people.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.firstName} {p.lastName}
@@ -153,7 +153,7 @@ const DepartmentMembershipsManagement = () => {
             onChange={handleChange}
             required
           >
-            <option value="">ክፍል ይምረጡ (Select Dept)</option>
+            <option value="">ክፍል ይምረጡ</option>
             {departments.map((d) => (
               <option key={d._id} value={d._id}>
                 {d.name}
@@ -164,7 +164,7 @@ const DepartmentMembershipsManagement = () => {
           <Input
             type="text"
             name="departmentMemberId"
-            placeholder="Dept ID (optional)"
+            placeholder="የክፍል መለያ (አማራጭ)"
             value={form.departmentMemberId}
             onChange={handleChange}
           />
@@ -174,9 +174,9 @@ const DepartmentMembershipsManagement = () => {
             value={form.status}
             onChange={handleChange}
           >
-            <option value="active">Active (ንቁ)</option>
-            <option value="inactive">Inactive (የማይሳተፍ)</option>
-            <option value="pending">Pending (በመጠባበቅ ላይ)</option>
+            <option value="active">ንቁ</option>
+            <option value="inactive">የማይሳተፍ</option>
+            <option value="pending">በመጠባበቅ ላይ</option>
           </Select>
 
           <Button

@@ -27,15 +27,15 @@ const StudentLayout = ({ children, onLogout }) => {
   const studentId = user?.studentId || '';
 
   const navItems = [
-    { label: 'መነሻ ገጽ (Dashboard)', path: '/dashboard', icon: <Home className="w-4 h-4 text-indigo-500" />, end: true },
-    { label: 'የኔ ኮርሶች (My Courses)', path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4 text-blue-500" /> },
-    { label: 'የመገኘት ሁኔታ (Attendance)', path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4 text-emerald-500" /> },
-    { label: 'ማስታወቂያዎች (Announcements)', path: '/dashboard/announcements', icon: <Bell className="w-4 h-4 text-amber-500" /> },
-    { label: 'የግል መረጃ (Profile)', path: '/dashboard/profile', icon: <User className="w-4 h-4 text-purple-500" /> },
-    { label: 'ማጣቀሻዎች (Resources)', path: '/dashboard/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
-    { label: 'የቤት ሥራዎች (Assignments)', path: '/dashboard/assignments', icon: <FileText className="w-4 h-4 text-teal-500" /> },
-    { label: 'ፈተናዎች (Exams)', path: '/dashboard/exams', icon: <GraduationCap className="w-4 h-4 text-rose-500" /> },
-    { label: 'ውጤት (Results)', path: '/dashboard/results', icon: <TrendingUp className="w-4 h-4 text-green-500" /> },
+    { label: 'መነሻ ገጽ', path: '/dashboard', icon: <Home className="w-4 h-4 text-indigo-500" />, end: true },
+    { label: 'የኔ ትምህርቶች', path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4 text-blue-500" /> },
+    { label: 'የመገኘት ሁኔታ', path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4 text-emerald-500" /> },
+    { label: 'ማስታወቂያዎች', path: '/dashboard/announcements', icon: <Bell className="w-4 h-4 text-amber-500" /> },
+    { label: 'የግል መረጃ', path: '/dashboard/profile', icon: <User className="w-4 h-4 text-purple-500" /> },
+    { label: 'ማጣቀሻዎች', path: '/dashboard/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
+    { label: 'የቤት ሥራዎች', path: '/dashboard/assignments', icon: <FileText className="w-4 h-4 text-teal-500" /> },
+    { label: 'ፈተናዎች', path: '/dashboard/exams', icon: <GraduationCap className="w-4 h-4 text-rose-500" /> },
+    { label: 'ውጤት', path: '/dashboard/results', icon: <TrendingUp className="w-4 h-4 text-green-500" /> },
   ];
 
   return (
@@ -50,7 +50,7 @@ const StudentLayout = ({ children, onLogout }) => {
             <h1 className="text-sm sm:text-base font-extrabold tracking-wide text-white">
               ተክለ ሳዊሮስ ሰንበት ት/ቤት
             </h1>
-            <p className="text-[10px] text-[var(--brand-gold)] font-bold uppercase tracking-wider">የተማሪዎች ፖርታል (Student Portal)</p>
+            <p className="text-[10px] text-[var(--brand-gold)] font-bold uppercase tracking-wider">የተማሪዎች መማሪያ መድረክ</p>
           </div>
         </div>
 
@@ -60,7 +60,7 @@ const StudentLayout = ({ children, onLogout }) => {
             onClick={onLogout}
             className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm"
           >
-            <span>Logout</span>
+            <span>ውጣ</span>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -80,7 +80,7 @@ const StudentLayout = ({ children, onLogout }) => {
             </h2>
             {studentId && (
               <div className="flex items-center gap-2 text-xs font-mono text-amber-200 mt-1">
-                <span className="opacity-80 font-semibold">ID:</span>
+                <span className="opacity-80 font-semibold">መለያ ቁጥር:</span>
                 <span className="font-black tracking-widest bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/20">{studentId}</span>
               </div>
             )}

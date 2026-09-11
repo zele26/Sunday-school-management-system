@@ -26,7 +26,7 @@ const AnnouncementsManagement = () => {
       });
 
       if (res.ok) {
-        toast.success('ማስታወቂያው በስኬት ተልኳል! (Announcement posted!)');
+        toast.success('ማስታወቂያው በተሳካ ሁኔታ ተልኳል!');
         setTitle('');
         setMessage('');
       } else {
@@ -42,7 +42,7 @@ const AnnouncementsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ማስታወቂያዎች (Announcements)"
+        title="ማስታወቂያዎች አስተዳደር"
         subtitle="ለተማሪዎች፣ መምህራን እና ምእመናን ይፋዊ ማስታወቂያ ያስተላልፉ"
         icon={Bell}
         badge={<Badge variant="gold" size="sm">ሕዝባዊ መልእክት</Badge>}
@@ -52,7 +52,7 @@ const AnnouncementsManagement = () => {
         <form onSubmit={handlePostAnnouncement} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              ርዕስ (Title)
+              ርዕስ
             </label>
             <Input
               required
@@ -64,7 +64,7 @@ const AnnouncementsManagement = () => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-              መልእክት (Message)
+              መልእክት
             </label>
             <textarea
               required
@@ -79,7 +79,7 @@ const AnnouncementsManagement = () => {
           <div className="pt-2">
             <Button variant="primary" type="submit" loading={loading} className="gap-2">
               <Send className="w-4 h-4" />
-              <span>ማስታወቂያ ላክ (Post Announcement)</span>
+              <span>ማስታወቂያ ላክ</span>
             </Button>
           </div>
         </form>

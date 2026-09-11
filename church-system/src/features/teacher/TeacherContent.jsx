@@ -12,7 +12,7 @@ const TeacherContent = () => {
         <div>
           <CardTitle className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-[var(--brand-primary)]" />
-            <span>ይዘት እና ፈተናዎች (Content & Exams)</span>
+            <span>የትምህርት ይዘት እና ፈተናዎች</span>
           </CardTitle>
           <CardDescription>የትምህርት ቁሳቁሶችን እና ፈተናዎችን ይስቀሉ ወይም ያዘጋጁ።</CardDescription>
         </div>

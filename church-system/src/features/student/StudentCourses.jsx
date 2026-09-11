@@ -15,14 +15,14 @@ const StudentCourses = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
           <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            የተመዘገቡባቸው ኮርሶች (Enrolled Courses)
+            የተመዘገቡባቸው ትምህርቶች
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             የዚህ መንፈቅ የነገረ መለኮት፣ የመጽሐፍ ቅዱስና የታሪክ ኮርሶች ዝርዝር።
           </p>
         </div>
         <Badge variant="gold" size="md">
-          {courses.length} የተመዘገቡ ኮርሶች
+          {courses.length} የተመዘገቡ ትምህርቶች
         </Badge>
       </div>
 
@@ -69,7 +69,7 @@ const StudentCourses = () => {
                   </div>
 
                   <Badge variant="approved" size="xs">
-                    Active
+                    ንቁ
                   </Badge>
                 </div>
 
@@ -111,13 +111,13 @@ const StudentCourses = () => {
                   to="/dashboard/resources"
                   className="flex-1 py-2.5 bg-slate-50 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-slate-700 dark:text-slate-200 hover:text-amber-800 rounded-xl text-xs font-bold text-center transition-colors border border-slate-200 dark:border-slate-700"
                 >
-                  📄 ማጣቀሻዎች (Resources)
+                  📄 ማጣቀሻዎች
                 </Link>
                 <Link
                   to="/dashboard/exams"
                   className="flex-1 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold text-center shadow-sm transition-colors"
                 >
-                  📝 ፈተናዎች (Exams)
+                  📝 ፈተናዎች
                 </Link>
               </div>
             </Card>

@@ -20,17 +20,17 @@ const DepartmentsManagement = () => {
     () => [
       {
         accessorKey: 'code',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Code" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="መለያ" />,
         cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'DEPT'}</Badge>,
       },
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Department Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የክፍል ስም" />,
         cell: ({ getValue }) => <span className="font-bold text-slate-900 dark:text-white">{getValue()}</span>,
       },
       {
         accessorKey: 'description',
-        header: 'Description',
+        header: 'መግለጫ',
         cell: ({ getValue }) => (
           <span className="text-slate-600 dark:text-slate-400 text-xs line-clamp-2">
             {getValue() || '—'}
@@ -44,7 +44,7 @@ const DepartmentsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የአገልግሎት ክፍሎች (Departments)"
+        title="የአገልግሎት ክፍሎች"
         subtitle="የሰንበት ትምህርት ቤቱ እና የቤተክርስቲያኑ ንኡሳን ክፍላትና አገልግሎቶች"
         icon={Building2}
         badge={<Badge variant="gold" size="sm">{departments.length} ክፍሎች</Badge>}
@@ -54,14 +54,14 @@ const DepartmentsManagement = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Table View"
+                title="የሰንጠረዥ እይታ"
               >
                 <List className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Grid View"
+                title="የካርድ እይታ"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -74,7 +74,7 @@ const DepartmentsManagement = () => {
               className="gap-2"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-              <span>አድስ (Refresh)</span>
+              <span>አድስ</span>
             </Button>
           </div>
         }
@@ -85,7 +85,7 @@ const DepartmentsManagement = () => {
           columns={columns}
           data={departments}
           isLoading={isLoading}
-          emptyMessage="ምንም የአገልግሎት ክፍል አልተገኘም (No departments found)"
+          emptyMessage="ምንም የአገልግሎት ክፍል አልተገኘም"
           emptyIcon={Building2}
         />
       ) : (

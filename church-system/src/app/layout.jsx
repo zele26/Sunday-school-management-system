@@ -8,10 +8,10 @@ import { QueryProvider } from '../providers/QueryProvider';
 
 export const metadata = {
   title: {
-    default: 'ተክለሳዊሮስ ሰንበት ትምህርት ቤት | Sunday School Management System',
-    template: '%s | ተክለሳዊሮስ ሰንበት ትምህርት ቤት',
+    default: 'ደብረ ይባቤ ቅዱስ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የመማሪያና ማስተዳደሪያ ሥርዓት',
+    template: '%s | ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት',
   },
-  description: 'የተክለሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች፣ የአስተማሪዎች እና የርቀት ትምህርት መከታተያ ሥርዓት (Sunday School Management System)',
+  description: 'የደብረ ይባቤ ቅዱስ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች፣ የመምህራን እና የርቀት ትምህርት መከታተያና ማስተዳደሪያ ሥርዓት',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',

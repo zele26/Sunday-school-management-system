@@ -11,7 +11,7 @@ const TeacherGrading = () => {
       <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
         <CardTitle className="flex items-center gap-2">
           <Award className="w-5 h-5 text-[var(--brand-primary)]" />
-          <span>ውጤት መስጫ (Grading Center)</span>
+          <span>ውጤት መስጫ</span>
         </CardTitle>
         <CardDescription>የተማሪዎችን ፈተና እና የቤት ሥራ ውጤቶች ያስገቡ።</CardDescription>
       </CardHeader>

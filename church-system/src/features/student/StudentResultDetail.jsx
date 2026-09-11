@@ -22,8 +22,8 @@ const StudentResultDetail = () => {
     fetchResult();
   }, [resultId]);
 
-  if (loading) return <div className="py-8 text-center text-slate-400">Loading...</div>;
-  if (!result) return <div className="py-8 text-center text-rose-500 font-bold">ውጤት አልተገኘም (Result not found)</div>;
+  if (loading) return <div className="py-8 text-center text-slate-400">ውጤት በመጫን ላይ ነው...</div>;
+  if (!result) return <div className="py-8 text-center text-rose-500 font-bold">ውጤት አልተገኘም።</div>;
 
   return (
     <div className="max-w-3xl mx-auto py-6 space-y-6 font-sans">
@@ -36,7 +36,7 @@ const StudentResultDetail = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <CardTitle>{result.quiz?.title}</CardTitle>
             <Badge variant="gold" size="lg">
-              ጠቅላላ ውጤት፡ {result.totalScore}
+              ጠቅላላ ውጤት፡ {result.totalScore} ነጥብ
             </Badge>
           </div>
         </CardHeader>
@@ -51,7 +51,7 @@ const StudentResultDetail = () => {
                   <p className="font-bold text-sm text-slate-900 dark:text-white">
                     {idx + 1}. {q.text}
                   </p>
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{ans.pointsEarned} / {q.points} pts</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{ans.pointsEarned} / {q.points} ነጥብ</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
                   የሰጡት መልስ፡ <span className={ans.isCorrect ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>{ans.selectedAnswer || '(መልስ አልተሰጠም)'}</span>

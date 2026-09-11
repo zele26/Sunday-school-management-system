@@ -36,36 +36,36 @@ const AcademicEnrollmentsManagement = () => {
     () => [
       {
         accessorKey: 'student',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ ስም" />,
         cell: ({ row }) => {
           const profile = row.original.studentProfileId?.personId;
-          const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown';
+          const name = profile ? `${profile.firstName} ${profile.lastName}` : 'ያልታወቀ';
           return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
         },
       },
       {
         accessorKey: 'academicYear',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Year" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ዘመን" />,
         cell: ({ row }) => <span>{row.original.academicYearId?.name || '-'}</span>,
       },
       {
         accessorKey: 'program',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Program" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ፕሮግራም" />,
         cell: ({ row }) => <span>{row.original.programId?.name || '-'}</span>,
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Grade / Batch" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል / ባች" />,
         cell: ({ row }) => <span>{row.original.gradeId?.name || '-'}</span>,
       },
       {
         accessorKey: 'studyMode',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Mode" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የመማሪያ ዘዴ" />,
         cell: ({ row }) => <span>{row.original.studyModeId?.name || '-'}</span>,
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => (
           <Badge variant={getStatusVariant(getValue())} size="sm">
             {getValue() || 'pending'}
@@ -74,7 +74,7 @@ const AcademicEnrollmentsManagement = () => {
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => (
           <div className="text-right">
             <Link
@@ -82,7 +82,7 @@ const AcademicEnrollmentsManagement = () => {
               className="inline-flex items-center gap-1.5 text-xs bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] dark:text-blue-400 hover:bg-[var(--brand-primary)] hover:text-white dark:hover:bg-blue-600 font-bold px-3 py-1.5 rounded-xl transition-all duration-150"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>Details</span>
+              <span>ዝርዝር</span>
             </Link>
           </div>
         ),
@@ -94,7 +94,7 @@ const AcademicEnrollmentsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የአካዳሚክ ምዝገባዎች (Academic Enrollments)"
+        title="የአካዳሚክ ምዝገባዎች"
         subtitle="የተማሪዎችን የክፍልና የትምህርት ዘመን ምዝገባ ሁኔታዎች እዚህ ይከታተሉ"
         icon={ClipboardList}
         badge={<Badge variant="gold" size="sm">{enrollments.length} ምዝገባዎች</Badge>}
@@ -107,7 +107,7 @@ const AcademicEnrollmentsManagement = () => {
             className="gap-2"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>አድስ (Refresh)</span>
+            <span>አድስ</span>
           </Button>
         }
       />
@@ -116,7 +116,7 @@ const AcademicEnrollmentsManagement = () => {
         columns={columns}
         data={enrollments}
         isLoading={isLoading}
-        emptyMessage="ምንም የተመዘገበ ተማሪ አልተገኘም (No enrollments found)"
+        emptyMessage="ምንም የተመዘገበ ተማሪ አልተገኘም"
         emptyIcon={ClipboardList}
       />
     </div>

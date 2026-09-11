@@ -55,14 +55,14 @@ const StudentTakeExam = () => {
         setScore(data.totalScore);
         setSubmitted(true);
       } else {
-        setError(data.message || 'Submission failed');
+        setError(data.message || 'ፈተናውን ማስገባት አልተሳካም');
       }
     } catch (err) {
-      setError('Network error');
+      setError('የግንኙነት ስህተት ተከስቷል');
     }
   };
 
-  if (loading) return <div className="py-16 text-center text-slate-400 font-semibold text-sm">ፈተና በመጫን ላይ... (Loading exam...)</div>;
+  if (loading) return <div className="py-16 text-center text-slate-400 font-semibold text-sm">ፈተና በመጫን ላይ ነው...</div>;
   if (error) return <div className="py-16 text-center text-rose-500 font-semibold text-sm">❌ {error}</div>;
 
   if (submitted) {
@@ -73,15 +73,15 @@ const StudentTakeExam = () => {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">ፈተናው በተሳካ ሁኔታ ተልኳል!</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Exam submitted successfully</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">የፈተና መልሶችዎ ተመዝግበዋል።</p>
           
           <div className="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">የተገኘው ውጤት (Score)</p>
-            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{score}</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">የተገኘው ውጤት</p>
+            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{score} ነጥብ</p>
           </div>
 
           <Button onClick={() => navigate('/dashboard/exams')} className="w-full font-bold">
-            ወደ ፈተናዎች ተመለስ (Back to Exams)
+            ወደ ፈተናዎች ተመለስ
           </Button>
         </Card>
       </div>
@@ -149,7 +149,7 @@ const StudentTakeExam = () => {
                         onChange={() => handleAnswerChange(q._id, val)}
                         className="text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                       />
-                      <span className="text-sm">{val === 'True' ? 'እውነት (True)' : 'ሐሰት (False)'}</span>
+                      <span className="text-sm">{val === 'True' ? 'እውነት' : 'ሐሰት'}</span>
                     </label>
                   ))}
                 </div>
@@ -172,7 +172,7 @@ const StudentTakeExam = () => {
             size="lg"
             className="w-full font-black text-base shadow-lg"
           >
-            ፈተናውን አስገባ (Submit Exam)
+            ፈተናውን አስገባ
           </Button>
         </CardContent>
       </Card>

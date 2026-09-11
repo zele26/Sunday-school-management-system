@@ -10,7 +10,7 @@ const AuditLogsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የሲስተም ኦዲት እና እንቅስቃሴዎች (Audit Logs)"
+        title="የሲስተም ኦዲትና እንቅስቃሴዎች"
         subtitle="በሲስተሙ ውስጥ የተከናወኑ ሁሉንም አስተዳደራዊ እንቅስቃሴዎች ይመልከቱ"
         icon={ShieldAlert}
         badge={<Badge variant="gold" size="sm">የደህንነት መዝገብ</Badge>}
@@ -24,8 +24,8 @@ const AuditLogsManagement = () => {
                 <User className="w-4 h-4" />
               </div>
               <div>
-                <p className="font-bold text-slate-900 dark:text-white">አድሚን ሲስተሙ ውስጥ ገብቷል (Admin Logged In)</p>
-                <p className="text-[11px] text-slate-400">IP: 127.0.0.1 • Role: Superadmin</p>
+                <p className="font-bold text-slate-900 dark:text-white">አስተዳዳሪ ወደ ሲስተም ገብቷል</p>
+                <p className="text-[11px] text-slate-400">አይፒ፡ 127.0.0.1 • ሚና፡ ዋና አስተዳዳሪ</p>
               </div>
             </div>
             <Badge variant="neutral" size="sm">ዛሬ 09:00</Badge>

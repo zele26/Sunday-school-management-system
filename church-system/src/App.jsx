@@ -92,7 +92,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-[var(--brand-blue-dark)] text-white">
         <div className="flex flex-col items-center gap-2">
           <div className="w-8 h-8 border-4 border-[var(--brand-yellow)] border-t-transparent rounded-full animate-spin"></div>
-          <p>Loading...</p>
+          <p>በመጫን ላይ...</p>
         </div>
       </div>
     );

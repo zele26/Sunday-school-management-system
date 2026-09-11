@@ -115,7 +115,7 @@ export function useGenerateAllQR() {
       queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
     },
     onError: () => {
-      toast.error('Network error');
+      toast.error('QR ኮድ ማዘጋጀት አልተቻለም');
     },
   });
 }
@@ -163,7 +163,7 @@ export function useAssignCourses() {
       queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
     },
     onError: () => {
-      toast.error('Network error');
+      toast.error('ኮርሶችን መመደብ አልተቻለም');
     },
   });
 }

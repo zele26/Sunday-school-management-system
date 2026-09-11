@@ -4,7 +4,7 @@ export const translations = {
   // Navigation & Headers
   distanceEducation: {
     en: 'Distance Education LMS',
-    am: 'የርቀት ትምህርት መርሃ ግብር (LMS)',
+    am: 'የርቀት ትምህርት መርሃ ግብር',
   },
   sundaySchoolTitle: {
     en: 'Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School',
@@ -68,7 +68,7 @@ export const translations = {
   },
   quizAssessment: {
     en: 'Knowledge Check / Quiz',
-    am: 'የዕውቀት መፈተሻ ጥያቄዎች (Quiz)',
+    am: 'የዕውቀት መፈተሻ ጥያቄዎች',
   },
   assignmentHomework: {
     en: 'Study Assignment & Essay',

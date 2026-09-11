@@ -70,14 +70,14 @@ const TeacherAttendanceSummary = () => {
       <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
         <CardTitle className="flex items-center gap-2">
           <CalendarCheck className="w-5 h-5 text-[var(--brand-primary)]" />
-          <span>የመገኘት ማጠቃለያ (Attendance Summary)</span>
+          <span>የመገኘት ማጠቃለያ</span>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6 p-0">
         {/* Course Selector */}
         <div className="max-w-xs">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">ኮርስ ይምረጡ (Select Course)</label>
+          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">ኮርስ ይምረጡ</label>
           <select
             value={selectedCourse}
             onChange={handleCourseChange}
@@ -90,11 +90,11 @@ const TeacherAttendanceSummary = () => {
           </select>
         </div>
 
-        {loading && <div className="py-6 text-center text-slate-400 text-sm">ማጠቃለያውን በመጫን ላይ...</div>}
+        {loading && <div className="py-6 text-center text-slate-400 text-sm">ማጠቃለያውን በመጫን ላይ ነው...</div>}
 
         {!loading && summary && summary.students.length === 0 && (
           <p className="text-slate-500 dark:text-slate-400 text-sm py-4 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
-            በዚህ ኮርስ የተመዘገበ ተማሪ የለም (No students enrolled in this course)
+            በዚህ ኮርስ የተመዘገበ ተማሪ የለም።
           </p>
         )}
 
@@ -108,8 +108,8 @@ const TeacherAttendanceSummary = () => {
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800 text-xs uppercase text-slate-400 bg-slate-50 dark:bg-slate-800/50">
-                    <th className="py-3 px-4 font-bold">የተማሪ ስም (Student)</th>
-                    <th className="py-3 px-4 font-bold text-right">የመገኘት ምጣኔ (Attendance)</th>
+                    <th className="py-3 px-4 font-bold">የተማሪ ስም</th>
+                    <th className="py-3 px-4 font-bold text-right">የመገኘት ምጣኔ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -30,7 +30,7 @@ const PeopleManagement = () => {
     () => [
       {
         accessorKey: 'fullName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሙሉ ስም" />,
         cell: ({ row }) => {
           const p = row.original;
           return (
@@ -42,18 +42,22 @@ const PeopleManagement = () => {
       },
       {
         accessorKey: 'phone',
-        header: 'Phone',
+        header: 'ስልክ ቁጥር',
         cell: ({ getValue }) => <span className="text-slate-600 dark:text-slate-300 font-mono">{getValue() || '-'}</span>,
       },
       {
         accessorKey: 'email',
-        header: 'Email',
+        header: 'ኢሜይል',
         cell: ({ getValue }) => <span className="text-slate-600 dark:text-slate-300">{getValue() || '-'}</span>,
       },
       {
         accessorKey: 'gender',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'Unknown'}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ጾታ" />,
+        cell: ({ getValue }) => (
+          <Badge variant="neutral" size="sm">
+            {getValue() === 'Male' || getValue() === 'ወንድ' ? 'ወንድ' : getValue() === 'Female' || getValue() === 'ሴት' ? 'ሴት' : getValue() || 'ያልታወቀ'}
+          </Badge>
+        ),
       },
     ],
     []
@@ -62,7 +66,7 @@ const PeopleManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የሰዎች መዝገብ (People Registry)"
+        title="የሰዎች መዝገብ"
         subtitle="በቤተክርስቲያኑና በሰንበት ትምህርት ቤቱ ያሉ አባላት፣ ወላጆችና ተማሪዎች መረጃ"
         icon={Users}
         badge={<Badge variant="gold" size="sm">{totalPeople} ሰዎች</Badge>}
@@ -75,7 +79,7 @@ const PeopleManagement = () => {
             className="gap-2"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>አድስ (Refresh)</span>
+            <span>አድስ</span>
           </Button>
         }
       />
@@ -101,7 +105,7 @@ const PeopleManagement = () => {
         onPaginationChange={setPagination}
         isLoading={isLoading}
         totalItemsCount={totalPeople}
-        emptyMessage="ምንም ሰው አልተገኘም (No people found)"
+        emptyMessage="ምንም ሰው አልተገኘም"
         emptyIcon={Users}
       />
     </div>

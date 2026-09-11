@@ -49,7 +49,7 @@ export default function ForgotPassword() {
         setMsg({ type: 'error', text: resData.message || 'ጥያቄውን መላክ አልተቻለም' });
       }
     } catch {
-      setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል (Network error)' });
+      setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል' });
     }
   };
 
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
 
       {/* Top Header with BackButton */}
       <header className="relative z-30 w-full max-w-5xl mx-auto flex items-center justify-between py-2">
-        <BackButton href="/login" label="ወደ መግቢያ ተመለስ" subLabel="Back to Login" variant="glass" />
+        <BackButton href="/login" label="ወደ መግቢያ ተመለስ" variant="glass" />
       </header>
 
       {/* Main Card */}
@@ -86,7 +86,7 @@ export default function ForgotPassword() {
               <KeyRound className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              የይለፍ ቃል ለመቀየር <span className="text-[#1657b8] dark:text-amber-400 text-lg block sm:inline">(Forgot Password)</span>
+              የይለፍ ቃል ለመቀየር
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
               ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ። አስተዳዳሪው መረጃዎን አረጋግጦ ጊዜያዊ ፓስዎርድ ያዘጋጅልዎታል።
@@ -114,7 +114,7 @@ export default function ForgotPassword() {
               <input
                 type="text"
                 {...register('identifier')}
-                placeholder="09... / example@gmail.com / TKD-..."
+                placeholder="09... ወይም ኢሜይል ወይም መለያ ቁጥር"
                 className={`w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
                   errors.identifier
                     ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
@@ -139,7 +139,7 @@ export default function ForgotPassword() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <span>ጥያቄ ላክ (Send Request to Admin)</span>
+                  <span>ጥያቄ ላክ</span>
                   <ArrowRight className="w-4 h-4 text-amber-300" />
                 </>
               )}
@@ -151,7 +151,7 @@ export default function ForgotPassword() {
               href="/login"
               className="text-xs text-[#1657b8] dark:text-amber-400 hover:underline font-bold transition-colors"
             >
-              ← ወደ መግቢያ ገጽ ተመለስ (Back to Login)
+              ← ወደ መግቢያ ገጽ ተመለስ
             </Link>
           </div>
         </motion.div>

@@ -211,7 +211,7 @@ const QRScanner = () => {
 
         if (data.alreadyRecorded) {
           playBeep('warning', soundEnabled);
-          toast.info(`${studentInfo.name} — ቀደም ሲል ተመዝግቧል (Already Checked-in)`);
+          toast.info(`${studentInfo.name} — ቀደም ሲል ተመዝግቧል`);
         } else {
           playBeep('success', soundEnabled);
           try {
@@ -223,7 +223,7 @@ const QRScanner = () => {
             });
           } catch (e) {}
 
-          toast.success(`${studentInfo.name} — ${status === 'Late' ? '🕒 አርፍዶ ተመዝግቧል (Late)' : '✅ ተገኝቷል (Present)'}`);
+          toast.success(`${studentInfo.name} — ${status === 'Late' ? '🕒 አርፍዶ ተመዝግቧል' : '✅ ተገኝቷል'}`);
         }
 
         // Add to recent feed
@@ -282,7 +282,7 @@ const QRScanner = () => {
       setIsScanning(false);
       setCameraError(
         err?.message?.includes('Permission') || err?.name === 'NotAllowedError'
-          ? 'የካሜራ ፈቃድ አልተሰጠም (Camera permission was denied). እባክዎ በBrowserዎ Settings ውስጥ የካሜራ ፈቃድ ይፍቀዱ።'
+          ? 'የካሜራ ፈቃድ አልተሰጠም። እባክዎ በብሮውዘርዎ ቅንብሮች ውስጥ የካሜራ ፈቃድ ይስጡ።'
           : 'ካሜራውን መክፈት አልተቻለም። እባክዎ ካሜራው በሌላ መተግበሪያ አለመያዙን ያረጋግጡ።'
       );
     }
@@ -330,7 +330,7 @@ const QRScanner = () => {
       }
     } catch (err) {
       playBeep('error', soundEnabled);
-      toast.error('በዚህ ምስል ላይ ትክክለኛ የQR ኮድ አልተገኘም (No QR code detected in image)');
+      toast.error('በዚህ ምስል ላይ ትክክለኛ የQR ኮድ አልተገኘም');
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -360,14 +360,14 @@ const QRScanner = () => {
     <div className="space-y-6 max-w-6xl mx-auto pb-12 font-sans">
       {/* 🌟 1. Header Banner */}
       <PageHeader
-        title="የቀጥታ QR የመገኘት መመዝገቢያ (Live QR Attendance)"
+        title="የቀጥታ QR የመገኘት መመዝገቢያ"
         subtitle="የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት"
         icon={QrCode}
         badge={
           <div className="flex items-center gap-2">
             <Badge variant={isScanning ? 'approved' : 'neutral'} size="sm" className="gap-1.5 font-bold">
               <span className={`w-2 h-2 rounded-full ${isScanning ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}`} />
-              <span>{isScanning ? '🔴 ካሜራው ንቁ ነው (Scanning)' : 'ካሜራ ዝግጁ ነው'}</span>
+              <span>{isScanning ? '🔴 ካሜራው ንቁ ነው' : 'ካሜራ ዝግጁ ነው'}</span>
             </Badge>
           </div>
         }
@@ -380,7 +380,7 @@ const QRScanner = () => {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
-              <span>የምዝገባ ዓይነት (Mode)</span>
+              <span>የምዝገባ ዓይነት</span>
             </label>
             <select
               value={studentTypeFilter}
@@ -390,9 +390,9 @@ const QRScanner = () => {
               }}
               className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
             >
-              <option value="">🏛️ ሁሉም ተማሪዎች (All Modes)</option>
-              <option value="regular">🏛️ መደበኛ ተማሪዎች (Regular)</option>
-              <option value="distance">🌐 የርቀት ተማሪዎች (Distance)</option>
+              <option value="">🏛️ ሁሉም ተማሪዎች</option>
+              <option value="regular">🏛️ መደበኛ ተማሪዎች</option>
+              <option value="distance">🌐 የርቀት ተማሪዎች</option>
             </select>
           </div>
 
@@ -400,7 +400,7 @@ const QRScanner = () => {
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               {shiftFilter === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
-              <span>የመማሪያ ፈረቃ (Shift)</span>
+              <span>የመማሪያ ፈረቃ</span>
             </label>
             <select
               value={shiftFilter}
@@ -408,9 +408,9 @@ const QRScanner = () => {
               disabled={studentTypeFilter === 'distance'}
               className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">🕒 ሁሉም ፈረቃዎች (All Shifts)</option>
-              <option value="weekend">☀️ የቀን / ቅዳሜና እሁድ (Weekend)</option>
-              <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+              <option value="">🕒 ሁሉም ፈረቃዎች</option>
+              <option value="weekend">☀️ የቀን / ቅዳሜና እሁድ</option>
+              <option value="night">🌙 የማታ ፈረቃ</option>
             </select>
           </div>
 
@@ -425,7 +425,7 @@ const QRScanner = () => {
               onChange={(e) => setSelectedCourseId(e.target.value)}
               className="w-full p-2.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
             >
-              <option value="">🏛️ አጠቃላይ መገኘት (General)</option>
+              <option value="">🏛️ አጠቃላይ መገኘት</option>
               {courses.map((c) => (
                 <option key={c._id} value={c._id}>
                   📖 {c.name} {c.code ? `(${c.code})` : ''}
@@ -473,7 +473,7 @@ const QRScanner = () => {
           >
             <div>
               <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 block">
-                የትምህርት መጀመሪያ ሰዓት (Start Time)
+                የትምህርት መጀመሪያ ሰዓት
               </label>
               <input
                 type="time"
@@ -484,7 +484,7 @@ const QRScanner = () => {
             </div>
             <div>
               <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 block">
-                የማስተናገጃ ደቂቃ (Grace Minutes)
+                የማስተናገጃ ደቂቃ
               </label>
               <input
                 type="number"
@@ -510,7 +510,7 @@ const QRScanner = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="text-xs font-bold text-slate-300 ml-2">High-Speed QR Optical Scanner</span>
+                <span className="text-xs font-bold text-slate-300 ml-2">ፈጣን የQR ኮድ ስካነር</span>
               </div>
 
               {/* Mode Tabs */}
@@ -611,7 +611,7 @@ const QRScanner = () => {
                     className="w-full bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/30 gap-2 border border-blue-400/30"
                   >
                     <Play className="w-4 h-4 fill-current text-amber-300" />
-                    <span>ካሜራ ጀምር (Start Camera Scanner)</span>
+                    <span>ካሜራ ጀምር</span>
                   </Button>
                 </div>
               )}
@@ -663,7 +663,7 @@ const QRScanner = () => {
                   className="bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1.5 rounded-xl text-xs shadow-md"
                 >
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>ካሜራ አቁም (Stop)</span>
+                  <span>ካሜራ አቁም</span>
                 </Button>
               </div>
             )}
@@ -674,7 +674,7 @@ const QRScanner = () => {
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Search className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
-                <span>በስም ወይም በመታወቂያ ፈልጎ መመዝገብ (Manual Check-In)</span>
+                <span>በስም ወይም በመታወቂያ ፈልጎ መመዝገብ</span>
               </span>
               <span className="text-[10px] text-slate-400">
                 {studentTypeFilter ? (studentTypeFilter === 'distance' ? 'የርቀት ተማሪዎች ብቻ' : 'መደበኛ ተማሪዎች ብቻ') : 'ሁሉም ተማሪዎች'}
@@ -836,7 +836,7 @@ const QRScanner = () => {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-[#1657b8] dark:text-amber-400" />
-                <span>የቅርብ ጊዜ ምዝገባዎች (Live Feed)</span>
+                <span>የቅርብ ጊዜ ምዝገባዎች</span>
               </h3>
               <Badge variant="neutral" size="sm">{recentScans.length} ተመዝግበዋል</Badge>
             </div>

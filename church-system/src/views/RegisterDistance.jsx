@@ -91,10 +91,10 @@ const RegisterDistanceContent = () => {
         }
         setStep('success');
       } else {
-        setServerError(resData.message || 'ምዝገባ አልተሳካም (Registration Failed)');
+        setServerError(resData.message || 'ምዝገባ አልተሳካም');
       }
     } catch {
-      setServerError('የአውታረ መረብ ስህተት እባክዎ እንደገና ይሞክሩ (Network Error)');
+      setServerError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     }
   };
 
@@ -113,7 +113,7 @@ const RegisterDistanceContent = () => {
             <span className="inline-block px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
               ምዝገባ ለጊዜው ተዘግቷል
             </span>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white">የርቀት ተማሪዎች ምዝገባ (Distance LMS)</h2>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white">የርቀት ተማሪዎች ምዝገባ</h2>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {regStatus?.distanceClosedMessage || regStatus?.generalClosedMessage || 'የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።'}
             </p>
@@ -125,7 +125,7 @@ const RegisterDistanceContent = () => {
                 href="/register-regular"
                 className="w-full bg-[#1657b8] hover:bg-[#124796] active:scale-98 text-white font-bold py-3.5 px-6 rounded-2xl shadow-sm hover:shadow-md transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>የመደበኛ ትምህርት ይመዝገቡ (Switch to Regular In-Person)</span>
+                <span>የመደበኛ ትምህርት ይመዝገቡ</span>
                 <span>➔</span>
               </Link>
             )}
@@ -133,7 +133,7 @@ const RegisterDistanceContent = () => {
               href="/check-status"
               className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-98 text-slate-800 dark:text-slate-100 font-bold py-3.5 px-6 rounded-2xl transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>የምዝገባ ሁኔታ ያረጋግጡ (Check Status)</span>
+              <span>የምዝገባ ሁኔታ ያረጋግጡ</span>
               <span>🔍</span>
             </Link>
             <div className="pt-2">
@@ -141,7 +141,7 @@ const RegisterDistanceContent = () => {
                 href="/"
                 className="inline-block text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:underline"
               >
-                ← ወደ ዋናው ገጽ ይመለሱ (Back to Home)
+                ← ወደ ዋናው ገጽ ይመለሱ
               </Link>
             </div>
           </div>
@@ -155,7 +155,7 @@ const RegisterDistanceContent = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
         <header className="w-full max-w-2xl mx-auto flex items-center justify-between py-2">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
         </header>
 
         <motion.div
@@ -181,7 +181,7 @@ const RegisterDistanceContent = () => {
                 <span className="text-xl">📘</span> ለምን ይመዘገባሉ?
               </h2>
               <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                የርቀት ትምህርት በባች የሚሰጥ ሲሆን አዲስ ተማሪ ከ Batch 1 ይጀምራል። አንድ ባች ሲያጠናቅቁ ወደ ቀጣዩ ባች ያድጋሉ። በስርዓቱ ለመግባት መመዝገብ ግዴታ ነው።
+                የርቀት ትምህርት በዙር የሚሰጥ ሲሆን አዲስ ተማሪ ከመጀመሪያው ዙር (ዙር 1) ይጀምራል። አንድ ዙር ሲያጠናቅቁ ወደ ቀጣዩ ዙር ያድጋሉ። በስርዓቱ ለመግባት መመዝገብ ግዴታ ነው።
               </p>
             </div>
 
@@ -192,7 +192,7 @@ const RegisterDistanceContent = () => {
               <ul className="list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1">
                 <li>ከታች ያለውን ቅጽ ይሙሉ።</li>
                 <li>ዕድሜ እና የመኖሪያ አድራሻ (ክፍለ ከተማ፣ ወረዳ፣ ቀበሌ) ያስገቡ።</li>
-                <li>የ10 አሃዝ ስልክ ቁጥር እና ፓስዎርድ ያስገቡ።</li>
+                <li>የ10 አሃዝ ስልክ ቁጥር እና የይለፍ ቃል ያስገቡ።</li>
                 <li>የአደጋ ጊዜ ተጠሪ ስልክ ቁጥርም ግዴታ ነው።</li>
                 <li>ከተመዘገቡ በኋላ የክፍያ መመሪያ ይመጣል።</li>
               </ul>
@@ -212,16 +212,16 @@ const RegisterDistanceContent = () => {
                 <span className="text-xl">🎯</span> ምን ያገኛሉ?
               </h2>
               <ul className="list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1">
-                <li>ምዝገባዎን ኦንላይን ያከናውናሉ</li>
-                <li>የሰንበት ትምህርት ቤቱን መለያ ኮድ (School ID) ያገኛሉ</li>
+                <li>ምዝገባዎን በቀጥታ በሲስተሙ ያከናውናሉ</li>
+                <li>የሰንበት ትምህርት ቤቱን መለያ ቁጥር ያገኛሉ</li>
                 <li>የግል መረጃዎን ያስተዳድራሉ</li>
                 <li>ስለሚወስዷቸው ትምህርቶች መረጃ ያገኛሉ ያስተዳድራሉ</li>
-                <li>ፈተና ፣ አሳይመንት ሲስተሙ ላይ ይወስዳሉ</li>
-                <li>የመገኘት ሁኔታዎን (Attendance) ይሞላሉ ይከታተላሉ</li>
-                <li>የክፍል ውጤት (Grade) ይከታተላሉ</li>
-                <li>የክፍል ውጤት ሪፖርት (Grade Report) ይወስዳሉ</li>
-                <li>የትምህርት ቁሳቁሶች (መጽሐፍትን ፣ ዩቱብ ቪዲዮ ፣ ወቅታዊ መንፈሳዊ ዜናዎችን) ያገኛሉ</li>
-                <li>ከክፍል ወደ ክፍል ሲሸጋገሩ ሰርተፍኬት ኦንላይን ማግኘት ይችላሉ</li>
+                <li>ፈተናና የቤት ሥራ በሲስተሙ ይወስዳሉ</li>
+                <li>የመገኘት ሁኔታዎን ይከታተላሉ</li>
+                <li>የክፍል ውጤትዎን ይከታተላሉ</li>
+                <li>የትምህርት ውጤት መግለጫ ይወስዳሉ</li>
+                <li>የትምህርት ቁሳቁሶችን (መጻሕፍት፣ መንፈሳዊ ትምህርቶችና ዜናዎች) ያገኛሉ</li>
+                <li>ከክፍል ወደ ክፍል ሲሸጋገሩ ይፋዊ የምስክር ወረቀት ያገኛሉ</li>
               </ul>
             </div>
           </div>
@@ -232,7 +232,7 @@ const RegisterDistanceContent = () => {
             onClick={() => setStep('form')}
             className="mt-8 w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-4 rounded-2xl font-bold text-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
           >
-            ወደ ምዝገባ ቀጥል (Proceed to Registration)
+            ወደ ምዝገባ ቅጽ ይቀጥሉ
           </motion.button>
         </motion.div>
 
@@ -248,7 +248,7 @@ const RegisterDistanceContent = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
         <header className="w-full max-w-lg mx-auto flex items-center justify-between py-2">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
         </header>
 
         <motion.div
@@ -308,7 +308,7 @@ const RegisterDistanceContent = () => {
               <div>
                 <p className="font-bold text-slate-800 dark:text-white">ማረጋገጫ ይጠብቁ</p>
                 <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  አስተዳደሩ ከፈተሸ በኋላ ትክክለኛውን የትምህርት ቤት መለያ (School ID) ያገኛሉ።
+                  አስተዳደሩ ከፈተሸ በኋላ ትክክለኛውን የትምህርት ቤት መለያ ቁጥር ያገኛሉ።
                 </p>
               </div>
             </div>
@@ -319,7 +319,7 @@ const RegisterDistanceContent = () => {
               href="/continue-registration"
               className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-center"
             >
-              ደረሰኝ ለመላክ ይቀጥሉ (Continue Registration)
+              ደረሰኝ ለመላክ ይቀጥሉ
             </Link>
           </motion.div>
 
@@ -335,7 +335,7 @@ const RegisterDistanceContent = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#fdfdfc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-3xl mx-auto mb-4">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
       </div>
 
       <div className="max-w-3xl mx-auto">
@@ -364,11 +364,11 @@ const RegisterDistanceContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1657b8] flex items-center justify-center text-lg font-bold">👤</div>
-              <h2 className="text-lg font-bold text-slate-800">የግል መረጃ (Personal Info)</h2>
+              <h2 className="text-lg font-bold text-slate-800">የግል መረጃ</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>የመጀመሪያ ስም (First Name) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የመጀመሪያ ስም <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   placeholder="የመጀመሪያ ስም"
@@ -378,20 +378,20 @@ const RegisterDistanceContent = () => {
                 {errors.firstName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>የአባት ስም (Middle Name) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የአባት ስም <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
-                  placeholder="የመካከለኛ ስም"
+                  placeholder="የአባት ስም"
                   {...register('middleName')}
                   className={`${inputClass} ${errors.middleName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
                 {errors.middleName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.middleName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>የአያት ስም (Last Name) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>የአያት ስም <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
-                  placeholder="የአባት/የእናት ስም"
+                  placeholder="የአያት ስም"
                   {...register('lastName')}
                   className={`${inputClass} ${errors.lastName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -451,18 +451,18 @@ const RegisterDistanceContent = () => {
                           }
                         }
                       }}
-                      label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
+                      label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር"
                       error={errors.dateOfBirth?.message}
                     />
                   )}
                 />
               </div>
 
-              {/* ዕድሜ (Age) */}
+              {/* ዕድሜ */}
               <div>
                 <div className="flex items-center justify-between mb-1.5 ml-1">
                   <label className="text-sm font-semibold text-slate-700">
-                    ዕድሜ (Age) <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ / &gt; 14)</span>
+                    ዕድሜ <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">(ከ 14 ዓመት በላይ)</span>
                   </label>
                   {watch('age') && watch('dateOfBirth') && (
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 animate-in fade-in">
@@ -492,7 +492,7 @@ const RegisterDistanceContent = () => {
                 {errors.phone && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.phone.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>ኢሜይል (Email) <span className="text-slate-400">(optional)</span></label>
+                <label className={labelClass}>ኢሜይል <span className="text-slate-400">(አማራጭ)</span></label>
                 <input
                   type="email"
                   placeholder="example@email.com"
@@ -502,48 +502,48 @@ const RegisterDistanceContent = () => {
                 {errors.email && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.email.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>የዙር (Batch) </label>
+                <label className={labelClass}>የትምህርት ዙር</label>
                 <input
                   type="text"
-                  value="Batch 1"
+                  value="ዙር 1 (Batch 1)"
                   disabled
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 text-sm cursor-not-allowed"
                 />
-                <p className="text-xs text-slate-400 mt-1">አዲስ ተማሪ ከ Batch 1 ይጀምራል</p>
+                <p className="text-xs text-slate-400 mt-1">አዲስ ተማሪ ከ ዙር 1 ይጀምራል</p>
               </div>
             </div>
           </div>
 
-          {/* Residential Address Information (የመኖሪያ አድራሻ) */}
+          {/* Residential Address Information */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">📍</div>
               <div>
-                <h2 className="text-lg font-bold text-slate-800">የመኖሪያ አድራሻ መረጃ (Address Info)</h2>
+                <h2 className="text-lg font-bold text-slate-800">የመኖሪያ አድራሻ መረጃ</h2>
                 <p className="text-xs text-slate-400">ክፍለ ከተማ፣ ወረዳ እና ቀበሌ</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div>
-                <label className={labelClass}>ክፍለ ከተማ (Subcity)</label>
+                <label className={labelClass}>ክፍለ ከተማ</label>
                 <select {...register('subcity')} className={inputClass}>
                   <option value="">ክፍለ ከተማ ይምረጡ</option>
-                  <option value="ቦሌ (Bole)">ቦሌ (Bole)</option>
-                  <option value="አራዳ (Arada)">አራዳ (Arada)</option>
-                  <option value="ቂርቆስ (Kirkos)">ቂርቆስ (Kirkos)</option>
-                  <option value="ልደታ (Lideta)">ልደታ (Lideta)</option>
-                  <option value="የካ (Yeka)">የካ (Yeka)</option>
-                  <option value="ኮልፌ ቀራኒዮ (Kolfe Keranio)">ኮልፌ ቀራኒዮ (Kolfe Keranio)</option>
-                  <option value="አቃቂ ቃሊቲ (Akaki Kality)">አቃቂ ቃሊቲ (Akaki Kality)</option>
-                  <option value="ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)">ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)</option>
-                  <option value="ጉለሌ (Gulele)">ጉለሌ (Gulele)</option>
-                  <option value="አዲስ ከተማ (Addis Ketema)">አዲስ ከተማ (Addis Ketema)</option>
-                  <option value="ለሚ ኩራ (Lemi Kura)">ለሚ ኩራ (Lemi Kura)</option>
-                  <option value="ከአዲስ አበባ ውጪ (Outside AA)">ከአዲስ አበባ ውጪ (Outside AA)</option>
+                  <option value="ቦሌ">ቦሌ</option>
+                  <option value="አራዳ">አራዳ</option>
+                  <option value="ቂርቆስ">ቂርቆስ</option>
+                  <option value="ልደታ">ልደታ</option>
+                  <option value="የካ">የካ</option>
+                  <option value="ኮልፌ ቀራኒዮ">ኮልፌ ቀራኒዮ</option>
+                  <option value="አቃቂ ቃሊቲ">አቃቂ ቃሊቲ</option>
+                  <option value="ንፋስ ስልክ ላፍቶ">ንፋስ ስልክ ላፍቶ</option>
+                  <option value="ጉለሌ">ጉለሌ</option>
+                  <option value="አዲስ ከተማ">አዲስ ከተማ</option>
+                  <option value="ለሚ ኩራ">ለሚ ኩራ</option>
+                  <option value="ከአዲስ አበባ ውጪ">ከአዲስ አበባ ውጪ</option>
                 </select>
               </div>
               <div>
-                <label className={labelClass}>ወረዳ (Woreda)</label>
+                <label className={labelClass}>ወረዳ</label>
                 <input
                   type="text"
                   placeholder="ወረዳ (ምሳሌ፡ 03)"
@@ -552,7 +552,7 @@ const RegisterDistanceContent = () => {
                 />
               </div>
               <div>
-                <label className={labelClass}>ቀበሌ / የቤት ቁጥር (Kebele / House No)</label>
+                <label className={labelClass}>ቀበሌ / የቤት ቁጥር</label>
                 <input
                   type="text"
                   placeholder="ቀበሌ / የቤት ቁጥር"
@@ -561,7 +561,7 @@ const RegisterDistanceContent = () => {
                 />
               </div>
               <div className="sm:col-span-3">
-                <label className={labelClass}>ተጨማሪ አድራሻ (Additional Address Details)</label>
+                <label className={labelClass}>ተጨማሪ አድራሻ</label>
                 <input
                   type="text"
                   placeholder="ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት"
@@ -576,11 +576,11 @@ const RegisterDistanceContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">👨‍👩‍👧</div>
-              <h2 className="text-lg font-bold text-slate-800">የአደጋ ጊዜ ተጠሪ መረጃ (Emergency Info)</h2>
+              <h2 className="text-lg font-bold text-slate-800">የአደጋ ጊዜ ተጠሪ መረጃ</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>ስም (First Name) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>ስም <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   placeholder="ስም"
@@ -590,7 +590,7 @@ const RegisterDistanceContent = () => {
                 {errors.emergencyFirstName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyFirstName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>የአባት ስም (Father Name)</label>
+                <label className={labelClass}>የአባት ስም</label>
                 <input
                   type="text"
                   placeholder="የአባት ስም"
@@ -599,7 +599,7 @@ const RegisterDistanceContent = () => {
                 />
               </div>
               <div>
-                <label className={labelClass}>የአያት ስም (Grandfather Name)</label>
+                <label className={labelClass}>የአያት ስም</label>
                 <input
                   type="text"
                   placeholder="የአያት ስም"
@@ -608,17 +608,17 @@ const RegisterDistanceContent = () => {
                 />
               </div>
               <div>
-                <label className={labelClass}>ዝምድና (Relationship) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>ዝምድና <span className="text-rose-500">*</span></label>
                 <select {...register('relationship')} className={inputClass}>
-                  <option value="Father">አባት (Father)</option>
-                  <option value="Mother">እናት (Mother)</option>
-                  <option value="Brother">ወንድም (Brother)</option>
-                  <option value="Sister">እህት (Sister)</option>
-                  <option value="Relative">ዘመድ (Relative)</option>
+                  <option value="Father">አባት</option>
+                  <option value="Mother">እናት</option>
+                  <option value="Brother">ወንድም</option>
+                  <option value="Sister">እህት</option>
+                  <option value="Relative">ዘመድ</option>
                 </select>
               </div>
               <div>
-                <label className={labelClass}>ስልክ (Phone) <span className="text-rose-500">*</span></label>
+                <label className={labelClass}>ስልክ ቁጥር <span className="text-rose-500">*</span></label>
                 <input
                   type="tel"
                   placeholder="09XXXXXXXX"
@@ -628,7 +628,7 @@ const RegisterDistanceContent = () => {
                 {errors.emergencyPhone && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyPhone.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>ኢሜይል (Email)</label>
+                <label className={labelClass}>ኢሜይል</label>
                 <input
                   type="email"
                   placeholder="email@example.com"
@@ -638,7 +638,7 @@ const RegisterDistanceContent = () => {
                 {errors.emergencyEmail && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyEmail.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>አድራሻ (Address)</label>
+                <label className={labelClass}>አድራሻ</label>
                 <input
                   type="text"
                   placeholder="አድራሻ"
@@ -653,12 +653,12 @@ const RegisterDistanceContent = () => {
           <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg">🔐</div>
-              <h2 className="text-lg font-bold text-slate-800">የመግቢያ መረጃ (Login Info)</h2>
+              <h2 className="text-lg font-bold text-slate-800">የመግቢያ መረጃ</h2>
             </div>
             <div className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className={labelClass}>የምስጢር ቃል (ፓስዎርድ) <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>የይለፍ ቃል <span className="text-rose-500">*</span></label>
                   <input
                     type="password"
                     placeholder="ቢያንስ 6 ፊደላት/ቁጥሮች"
@@ -668,7 +668,7 @@ const RegisterDistanceContent = () => {
                   {errors.password && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.password.message}</p>}
                 </div>
                 <div>
-                  <label className={labelClass}>የይለፍ ቃል ማረጋገጫ (Confirm Password) <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>የይለፍ ቃል ማረጋገጫ <span className="text-rose-500">*</span></label>
                   <input
                     type="password"
                     placeholder="የይለፍ ቃሉን በድጋሚ ያስገቡ"
@@ -681,7 +681,7 @@ const RegisterDistanceContent = () => {
               <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100/60 flex items-start gap-3">
                 <span className="text-xl">📌</span>
                 <p className="text-sm text-slate-600 font-medium leading-relaxed mt-0.5">
-                  በርቀት ትምህርት ሲስተም ውስጥ ለመግባት፣ ከላይ የሰጡትን <span className="text-blue-700 font-bold">ስልክ ቁጥር</span> እና <span className="text-blue-700 font-bold">ፓስዎርድ</span> ይጠቀማሉ።
+                  በርቀት ትምህርት ሲስተም ውስጥ ለመግባት፣ ከላይ የሰጡትን <span className="text-blue-700 font-bold">ስልክ ቁጥር</span> እና <span className="text-blue-700 font-bold">የይለፍ ቃል</span> ይጠቀማሉ።
                 </p>
               </div>
             </div>
@@ -703,7 +703,7 @@ const RegisterDistanceContent = () => {
                   በመጠበቅ ላይ...
                 </>
               ) : (
-                'ይመዝገቡ (Register)'
+                'ይመዝገቡ'
               )}
             </button>
           </div>

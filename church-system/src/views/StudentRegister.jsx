@@ -9,17 +9,17 @@ import { BackButton } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
 const ADDIS_ABABA_SUBCITIES = [
-  'አዲስ ከተማ (Addis Ketema)',
-  'አካቂ ቃሊቲ (Akaky Kaliti)',
-  'አራዳ (Arada)',
-  'ቦሌ (Bole)',
-  'ጉለሌ (Gullele)',
-  'ቂርቆስ (Kirkos)',
-  'ኮልፌ ቀራኒዮ (Kolfe Keranio)',
-  'ልደታ (Lideta)',
-  'ንፋስ ስልክ ላፍቶ (Nifas Silk-Lafto)',
-  'የካ (Yeka)',
-  'ለሚ ኩራ (Lemi Kura)',
+  'አዲስ ከተማ',
+  'አካቂ ቃሊቲ',
+  'አራዳ',
+  'ቦሌ',
+  'ጉለሌ',
+  'ቂርቆስ',
+  'ኮልፌ ቀራኒዮ',
+  'ልደታ',
+  'ንፋስ ስልክ ላፍቶ',
+  'የካ',
+  'ለሚ ኩራ',
 ];
 
 const StudentRegister = () => {
@@ -92,7 +92,7 @@ const StudentRegister = () => {
     return (
       <div className="max-w-md mx-auto my-12 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 text-center">
         <div className="mb-4 flex justify-start">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
         </div>
         <h2 className="text-2xl font-black text-emerald-600 mb-4">✅ ምዝገባ ተሳክቷል</h2>
         <p className="text-slate-600 dark:text-slate-300 mb-2">የምዝገባ ቁጥርዎ:</p>
@@ -111,7 +111,7 @@ const StudentRegister = () => {
 
         <p className="mt-4 text-sm text-slate-500">ክፍያ ከፍለው ከሆነ ደረሰኝዎን እዚህ ያስገቡ:</p>
         <Link href="/continue-registration" className="mt-3 inline-block bg-[#1657b8] hover:bg-[#124796] text-white px-6 py-2.5 rounded-xl font-bold shadow-md transition">
-          ቀጥል ምዝገባ
+          ምዝገባን ይቀጥሉ
         </Link>
       </div>
     );
@@ -120,7 +120,7 @@ const StudentRegister = () => {
   return (
     <div className="max-w-3xl mx-auto py-10 px-4 space-y-6 font-sans">
       <div className="flex items-center justify-between">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
       </div>
 
       <div className="text-center">
@@ -142,8 +142,8 @@ const StudentRegister = () => {
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ጾታ</label>
             <select {...register('gender')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-              <option value="Male">ወንድ (Male)</option>
-              <option value="Female">ሴት (Female)</option>
+              <option value="Male">ወንድ</option>
+              <option value="Female">ሴት</option>
             </select>
           </div>
           <div>
@@ -170,7 +170,7 @@ const StudentRegister = () => {
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">ዕድሜ (ከ 14 ዓመት በላይ / Age &gt; 14) *</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">ዕድሜ (ከ 14 ዓመት በላይ) *</label>
               {watch('age') && watch('dateOfBirth') && (
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                   በቀኑ የተሰላ: {watch('age')} ዓመት
@@ -194,29 +194,36 @@ const StudentRegister = () => {
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የምዝገባ ዓይነት</label>
             <select {...register('studentType')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-              <option value="regular">መደበኛ (Regular)</option>
-              <option value="distance">ርቀት (Distance)</option>
+              <option value="regular">መደበኛ</option>
+              <option value="distance">የርቀት</option>
             </select>
           </div>
           {studentType === 'regular' && (
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የመማሪያ ፈረቃ (Study Shift)</label>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የመማሪያ ፈረቃ</label>
               <select {...register('shift')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-                <option value="weekend">የቀን / ቅዳሜና እሁድ (Weekend)</option>
-                <option value="night">የማታ (Night)</option>
+                <option value="weekend">የቀን / ቅዳሜና እሁድ</option>
+                <option value="night">የማታ</option>
               </select>
             </div>
           )}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ክፍል (Grade)</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ክፍል</label>
             <select {...register('grade')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-              {['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'].map((g) => (
-                <option key={g} value={g}>{g}</option>
+              {[
+                { val: 'Grade 7', label: '7ኛ ክፍል' },
+                { val: 'Grade 8', label: '8ኛ ክፍል' },
+                { val: 'Grade 9', label: '9ኛ ክፍል' },
+                { val: 'Grade 10', label: '10ኛ ክፍል' },
+                { val: 'Grade 11', label: '11ኛ ክፍል' },
+                { val: 'Grade 12', label: '12ኛ ክፍል' },
+              ].map((g) => (
+                <option key={g.val} value={g.val}>{g.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ክፍለ ከተማ (Subcity)</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ክፍለ ከተማ</label>
             <select {...register('subcity')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
               <option value="">-- ክፍለ ከተማ ይምረጡ --</option>
               {ADDIS_ABABA_SUBCITIES.map((sc) => (
@@ -225,15 +232,15 @@ const StudentRegister = () => {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ወረዳ (Woreda)</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ወረዳ</label>
             <input type="text" placeholder="ምሳሌ: 03" {...register('woreda')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ቀበሌ / የቤት ቁጥር (Kebele / House No)</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ቀበሌ / የቤት ቁጥር</label>
             <input type="text" placeholder="ቀበሌ ወይም የቤት ቁጥር" {...register('kebele')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ልዩ አድራሻ (Detailed Address)</label>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ልዩ አድራሻ</label>
             <input type="text" placeholder="አድራሻ" {...register('address')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
           </div>
         </div>
@@ -254,23 +261,23 @@ const StudentRegister = () => {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የይለፍ ቃል *</label>
-            <input type="password" placeholder="ፓስዎርድ" {...register('password')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.password ? 'border-rose-400' : 'border-slate-200'}`} />
+            <input type="password" placeholder="የይለፍ ቃል" {...register('password')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.password ? 'border-rose-400' : 'border-slate-200'}`} />
             {errors.password && <p className="text-xs text-rose-500 mt-1">{errors.password.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የይለፍ ቃል ማረጋገጫ *</label>
-            <input type="password" placeholder="ፓስዎርዱን በድጋሚ ያስገቡ" {...register('confirmPassword')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.confirmPassword ? 'border-rose-400' : 'border-slate-200'}`} />
+            <input type="password" placeholder="የይለፍ ቃሉን በድጋሚ ያስገቡ" {...register('confirmPassword')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.confirmPassword ? 'border-rose-400' : 'border-slate-200'}`} />
             {errors.confirmPassword && <p className="text-xs text-rose-500 mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">የክፍያ ደረሰኝ (PDF/ምስል) ካለ</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">የክፍያ ደረሰኝ (ምስል ወይም ፒዲኤፍ) ካለ</label>
           <input type="file" accept="image/*,application/pdf" onChange={(e) => setReceiptFile(e.target.files[0])} className="w-full p-2 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm" />
         </div>
 
         <button type="submit" disabled={isSubmitting} className="w-full bg-[var(--brand-primary)] text-white p-3.5 rounded-xl font-bold hover:bg-[var(--brand-primary-hover)] transition disabled:opacity-50 shadow-md">
-          {isSubmitting ? 'በመጠበቅ ላይ…' : 'ይመዝገቡ (Submit Registration)'}
+          {isSubmitting ? 'በመጠበቅ ላይ…' : 'ይመዝገቡ'}
         </button>
       </form>
     </div>

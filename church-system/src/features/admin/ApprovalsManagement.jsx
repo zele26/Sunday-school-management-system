@@ -24,7 +24,7 @@ const ApprovalsManagement = () => {
     () => [
       {
         accessorKey: 'fullName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሙሉ ስም" />,
         cell: ({ row }) => {
           const u = row.original;
           return <span className="font-bold text-slate-900 dark:text-white">{u.fullName || u.username}</span>;
@@ -32,7 +32,7 @@ const ApprovalsManagement = () => {
       },
       {
         accessorKey: 'contact',
-        header: 'Phone / Username',
+        header: 'ስልክ / የተጠቃሚ ስም',
         cell: ({ row }) => {
           const u = row.original;
           return <span className="text-slate-600 dark:text-slate-300">{u.phone || u.username}</span>;
@@ -40,17 +40,30 @@ const ApprovalsManagement = () => {
       },
       {
         accessorKey: 'role',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
-        cell: ({ getValue }) => <Badge variant="gold" size="sm">{getValue()}</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሚና" />,
+        cell: ({ getValue }) => {
+          const role = getValue();
+          const roleLabel =
+            role === 'teacher'
+              ? 'መምህር'
+              : role === 'student'
+              ? 'ተማሪ'
+              : role === 'admin'
+              ? 'አስተዳዳሪ'
+              : role === 'superadmin'
+              ? 'ዋና አስተዳዳሪ'
+              : role;
+          return <Badge variant="gold" size="sm">{roleLabel}</Badge>;
+        },
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-        cell: () => <Badge variant="pending" size="sm">Pending</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
+        cell: () => <Badge variant="pending" size="sm">በመጠባበቅ ላይ</Badge>,
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const u = row.original;
           return (
@@ -63,7 +76,7 @@ const ApprovalsManagement = () => {
                 className="gap-1.5"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>{approveMutation.isPending ? '...' : 'አጽድቅ (Approve)'}</span>
+                <span>{approveMutation.isPending ? '...' : 'አጽድቅ'}</span>
               </Button>
               <Button
                 variant="danger"
@@ -86,7 +99,7 @@ const ApprovalsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የማጽደቂያ ጥያቄዎች (Pending Approvals)"
+        title="የተጠቃሚዎች ማረጋገጫና ማጽደቂያ"
         subtitle="አዳዲስ የተመዘገቡ ተጠቃሚዎችን እና መምህራንን ያጽድቁ ወይም ውድቅ ያድርጉ"
         icon={CheckCircle2}
         badge={<Badge variant="pending" size="sm">{pendingUsers.length} የሚጠብቁ</Badge>}
@@ -99,7 +112,7 @@ const ApprovalsManagement = () => {
             className="gap-1.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>አድስ (Refresh)</span>
+            <span>አድስ</span>
           </Button>
         }
       />
@@ -108,7 +121,7 @@ const ApprovalsManagement = () => {
         columns={columns}
         data={pendingUsers}
         isLoading={isLoading}
-        emptyMessage="ምንም የሚጠብቅ የማጽደቂያ ጥያቄ የለም (All requests resolved)"
+        emptyMessage="ምንም የሚጠብቅ የማጽደቂያ ጥያቄ የለም"
         emptyIcon={CheckCircle2}
       />
     </div>

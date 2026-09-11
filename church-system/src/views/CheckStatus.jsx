@@ -32,7 +32,7 @@ const getStatusMessage = (status, studentType) => {
       case 'Approved':
         return 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። የተማሪ መለያ ቁጥርዎን እና ፓስዎርድዎን ተጠቅመው ወደ ኦንላይን መማሪያ ፖርታል መግባት ይችላሉ።';
       case 'Rejected':
-        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ መረጃ ትምህርት ቤቱን ያግኙ።';
+        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ መረጃ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ።';
       default:
         return 'የምዝገባ ሁኔታዎ እየተዘመነ ነው።';
     }
@@ -42,32 +42,32 @@ const getStatusMessage = (status, studentType) => {
 const CheckStatusContent = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState(null);
   const [copiedId, setCopiedId] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleCheck = async (e) => {
-    e?.preventDefault();
-    setError('');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/registrations/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/registration/check-status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.trim(), password }),
+        body: JSON.stringify({ phone, password }),
       });
       const data = await res.json();
 
       if (res.ok) {
         setResult(data);
       } else {
-        setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል (Invalid credentials)');
+        setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል');
       }
     } catch (err) {
-      setError('የአውታረ መረብ ስህተት እባክዎ እንደገና ይሞክሩ (Network connection error)');
+      setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setLoading(false);
     }
@@ -97,12 +97,12 @@ const CheckStatusContent = () => {
 
       {/* Top Bar Navigation */}
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 relative z-10">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
         <Link
           href="/login"
           className="text-xs font-bold text-[#1657b8] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-2xs backdrop-blur-xs cursor-pointer"
         >
-          <span>የተማሪ መግቢያ (Login)</span>
+          <span>የተማሪ መግቢያ</span>
           <span>➔</span>
         </Link>
       </header>
@@ -166,10 +166,10 @@ const CheckStatusContent = () => {
                     }`}
                   >
                     {result.status === 'Approved'
-                      ? '🟢 ምዝገባዎ ጸድቋል (Application Approved)'
+                      ? '🟢 ምዝገባዎ ጸድቋል'
                       : result.status === 'Rejected'
-                      ? '🔴 ምዝገባው ውድቅ ሆኗል (Application Rejected)'
-                      : '⏳ ማመልከቻው በመረጋገጥ ላይ (Pending Verification)'}
+                      ? '🔴 ምዝገባው ውድቅ ሆኗል'
+                      : '⏳ ማመልከቻው በመረጋገጥ ላይ'}
                   </span>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                     የምዝገባ ሁኔታ መረጃ
@@ -197,7 +197,7 @@ const CheckStatusContent = () => {
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400/20 border border-amber-300/40 text-amber-200">
-                      {result.studentType === 'distance' ? '🌐 ርቀት (Distance)' : '🏛️ መደበኛ (Regular)'}
+                      {result.studentType === 'distance' ? '🌐 ርቀት' : '🏛️ መደበኛ'}
                     </span>
                   </div>
 
@@ -212,7 +212,7 @@ const CheckStatusContent = () => {
 
                     <div>
                       <span className="text-[10px] text-blue-200 font-bold uppercase tracking-wider block">
-                        የማመልከቻ ቁጥር (Reg No.)
+                        የማመልከቻ ቁጥር
                       </span>
                       <span className="text-sm font-black font-mono text-amber-300 block mt-0.5">
                         {result.registrationNumber}
@@ -224,7 +224,7 @@ const CheckStatusContent = () => {
                   <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col sm:flex-row items-center justify-between gap-3 relative z-10">
                     <div>
                       <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider block">
-                        የተማሪ መለያ ቁጥር (OFFICIAL STUDENT ID)
+                        ይፋዊ የተማሪ መለያ ቁጥር
                       </span>
                       <span className="text-2xl sm:text-3xl font-black font-mono text-white tracking-widest block mt-0.5">
                         {result.studentId}
@@ -240,7 +240,7 @@ const CheckStatusContent = () => {
                           <svg className="w-4 h-4 text-emerald-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                           </svg>
-                          <span>ተቀድቷል (Copied!)</span>
+                          <span>ተቀድቷል!</span>
                         </>
                       ) : (
                         <>
@@ -266,7 +266,7 @@ const CheckStatusContent = () => {
                       <span className="text-base font-black text-slate-900 dark:text-white">{result.fullName}</span>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-black bg-blue-100 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300">
-                      {result.studentType === 'distance' ? '🌐 ርቀት (Distance)' : '🏛️ መደበኛ (Regular)'}
+                      {result.studentType === 'distance' ? '🌐 ርቀት' : '🏛️ መደበኛ'}
                     </span>
                   </div>
 
@@ -274,12 +274,12 @@ const CheckStatusContent = () => {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የማመልከቻ ቁጥር (Reg No.)</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">የማመልከቻ ቁጥር</span>
                       <span className="text-sm font-black font-mono text-[#1657b8] dark:text-blue-400">{result.registrationNumber}</span>
                     </div>
                     {result.batch && (
                       <div className="text-right">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ክፍል / ባች</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ክፍል / ዙር</span>
                         <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">{result.batch}</span>
                       </div>
                     )}
@@ -291,7 +291,7 @@ const CheckStatusContent = () => {
               {result.status === 'Pending Verification' && (
                 <div className="p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-left space-y-4">
                   <div className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider">
-                    📋 የምዝገባ ሂደት ደረጃዎች (Progress Stages)
+                    📋 የምዝገባ ሂደት ደረጃዎች
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
@@ -340,7 +340,7 @@ const CheckStatusContent = () => {
                     href="/login"
                     className="w-full bg-gradient-to-r from-[#1657b8] to-[#0d3f8a] hover:from-[#124796] hover:to-[#0a316b] active:scale-98 text-white py-4 px-6 rounded-2xl font-black shadow-xl shadow-blue-600/30 transition-all text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>ወደ መማሪያ ፖርታል ይግቡ (Login to Student LMS)</span>
+                    <span>ወደ መማሪያ ፖርታል ይግቡ</span>
                     <span className="text-amber-300 font-black">➔</span>
                   </Link>
                 )}
@@ -359,7 +359,7 @@ const CheckStatusContent = () => {
                   onClick={resetForm}
                   className="w-full py-3.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                 >
-                  ← ሌላ ማመልከቻ ለመፈተሽ ይመለሱ (Check Another Status)
+                  ← ሌላ ማመልከቻ ለመፈተሽ ይመለሱ
                 </button>
               </div>
             </div>
@@ -447,7 +447,7 @@ const CheckStatusContent = () => {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                   <span className="text-[11px] font-black uppercase tracking-wider text-[#1657b8] dark:text-blue-400">
-                    ✨ የተማሪዎች ማረጋገጫ (Verification)
+                    ✨ የተማሪዎች ማረጋገጫ
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -471,11 +471,11 @@ const CheckStatusContent = () => {
               )}
 
               {/* Interactive Form */}
-              <form onSubmit={handleCheck} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Phone Input */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                    የተመዘገቡበት ስልክ ቁጥር (Phone Number) <span className="text-rose-500">*</span>
+                    የተመዘገቡበት ስልክ ቁጥር <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -498,7 +498,7 @@ const CheckStatusContent = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1.5 ml-1">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                      የይለፍ ቃል (Password) <span className="text-rose-500">*</span>
+                      የይለፍ ቃል <span className="text-rose-500">*</span>
                     </label>
                     <Link
                       href="/forgot-password"
@@ -525,7 +525,7 @@ const CheckStatusContent = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                      aria-label="Toggle password visibility"
+                      aria-label="የይለፍ ቃል ማሳያ ወይም መደበቂያ"
                     >
                       {showPassword ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

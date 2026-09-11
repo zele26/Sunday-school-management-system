@@ -33,7 +33,7 @@ export function useApproveResource() {
     },
     onSuccess: (_, variables) => {
       if (variables.action === 'approve') {
-        toast.success('የመርጃ ሰነዱ ጸድቋል! (Resource approved)');
+        toast.success('የመርጃ ሰነዱ ጸድቋል!');
       } else {
         toast.info('የመርጃ ሰነዱ ውድቅ ተደርጓል');
       }

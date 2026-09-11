@@ -54,7 +54,7 @@ const PasswordResets = () => {
     () => [
       {
         accessorKey: 'user',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ተጠቃሚ" />,
         cell: ({ row }) => {
           const req = row.original;
           return (
@@ -71,12 +71,12 @@ const PasswordResets = () => {
       },
       {
         accessorKey: 'role',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሚና" />,
         cell: ({ getValue }) => <Badge variant="gold" size="sm">{getValue() || 'student'}</Badge>,
       },
       {
         accessorKey: 'identifier',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Identifier" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="መለያ / ስልክ / ኢሜይል" />,
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
             {getValue()}
@@ -85,7 +85,7 @@ const PasswordResets = () => {
       },
       {
         accessorKey: 'createdAt',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ቀን" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {formatEthiopianDate(getValue())}
@@ -94,7 +94,7 @@ const PasswordResets = () => {
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const req = row.original;
           return (
@@ -130,7 +130,7 @@ const PasswordResets = () => {
     () => [
       {
         accessorKey: 'user',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ተጠቃሚ" />,
         cell: ({ row }) => {
           const req = row.original;
           return (
@@ -142,14 +142,14 @@ const PasswordResets = () => {
       },
       {
         accessorKey: 'identifier',
-        header: 'Identifier',
+        header: 'መለያ',
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{getValue()}</span>
         ),
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'approved' ? 'approved' : 'danger'} size="sm">
             {getValue() === 'approved' ? 'ተፈቅዷል' : 'ውድቅ ተደርጓል'}
@@ -158,7 +158,7 @@ const PasswordResets = () => {
       },
       {
         accessorKey: 'tempPasswordIssued',
-        header: 'Temp Password',
+        header: 'የተሰጠ ጊዜያዊ የይለፍ ቃል',
         cell: ({ getValue }) => (
           <span className="font-mono text-xs font-bold text-[var(--brand-primary)] dark:text-blue-400">
             {getValue() || '-'}
@@ -167,7 +167,7 @@ const PasswordResets = () => {
       },
       {
         accessorKey: 'updatedAt',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Processed Date" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተከናወነበት ቀን" />,
         cell: ({ row }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {formatEthiopianDate(row.original.updatedAt || row.original.createdAt)}
@@ -181,7 +181,7 @@ const PasswordResets = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የፓስዎርድ ቅያሬ ጥያቄዎች (Password Resets)"
+        title="የይለፍ ቃል ቅያሬ ጥያቄዎች"
         subtitle="የተጠቃሚዎችን የይለፍ ቃል ቅያሬ ጥያቄ ማረጋገጫ እና ማጽደቂያ መድረክ"
         icon={KeyRound}
         badge={<Badge variant="pending" size="sm">{pendingRequests.length} የሚጠብቁ</Badge>}
@@ -203,7 +203,7 @@ const PasswordResets = () => {
       <div className="space-y-3">
         <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-          <span>ማረጋገጫ የሚጠብቁ ጥያቄዎች (Pending Requests)</span>
+          <span>ማረጋገጫ የሚጠብቁ ጥያቄዎች</span>
         </h3>
         <DataTable
           columns={pendingColumns}
@@ -218,7 +218,7 @@ const PasswordResets = () => {
       {processedRequests.length > 0 && (
         <div className="space-y-3 pt-4">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            የተከናወኑ ጥያቄዎች ታሪክ (Processed History)
+            የተከናወኑ ጥያቄዎች ታሪክ
           </h3>
           <DataTable
             columns={historyColumns}
@@ -276,7 +276,7 @@ const PasswordResets = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                  ማስታወሻ (Admin Note - Optional)
+                  ማስታወሻ (አማራጭ)
                 </label>
                 <Input
                   placeholder="ማስታወሻ ያስገቡ..."

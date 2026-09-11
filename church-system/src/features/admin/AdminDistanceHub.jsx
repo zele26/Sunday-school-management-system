@@ -158,12 +158,12 @@ const AdminDistanceHub = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የርቀት ትምህርት አስተዳደር ማዕከል (Distance LMS Control Center)"
-        subtitle="Manage distance curriculums, lesson studios, teacher assignments, and verifiable graduation certificates."
+        title="የርቀት ትምህርት አስተዳደር ማዕከል"
+        subtitle="የየርቀት ትምህርት ሥርዓተ ትምህርቶችን፣ የትምህርት ክፍሎችን፣ የመምህራን ምደባን እና ይፋዊ የምስክር ወረቀቶችን ያስተዳድሩ።"
         icon={Globe}
         actions={
           <Button variant="primary" onClick={() => setShowAddCourseModal(true)}>
-            <Plus className="w-4 h-4 mr-1.5" /> አዲስ የርቀት ኮርስ ፍጠር (Add Distance Course)
+            <Plus className="w-4 h-4 mr-1.5" /> አዲስ የርቀት ኮርስ ፍጠር
           </Button>
         }
       />
@@ -171,9 +171,9 @@ const AdminDistanceHub = () => {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-subtle pb-2">
         {[
-          { id: 'overview', title: '📊 አጠቃላይ እይታ (Analytics)' },
-          { id: 'courses', title: '📚 የርቀት ኮርሶች (Courses & Modules)' },
-          { id: 'certificates', title: '📜 ይፋዊ የምስክር ወረቀቶች (Certificates)' },
+          { id: 'overview', title: '📊 አጠቃላይ እይታ' },
+          { id: 'courses', title: '📚 የርቀት ኮርሶች' },
+          { id: 'certificates', title: '📜 ይፋዊ የምስክር ወረቀቶች' },
         ].map((tab) => (
           <Button
             key={tab.id}
@@ -218,22 +218,22 @@ const AdminDistanceHub = () => {
 
           {/* Batch Distribution */}
           <Card className="p-6 space-y-4">
-            <h3 className="font-extrabold text-base text-main">የተማሪዎች ክፍፍል በባች (Batch Distribution)</h3>
+            <h3 className="font-extrabold text-base text-main">የተማሪዎች ክፍፍል በደረጃ (ምድብ)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
-                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Batch 1 (1ኛ ዓመት)</span>
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">1ኛ ዓመት (ምድብ 1)</span>
                 <p className="text-xl font-black text-main mt-1">{metrics?.batchBreakdown?.batch1 || 0} ተማሪዎች</p>
               </div>
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">Batch 2 (2ኛ ዓመት)</span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2ኛ ዓመት (ምድብ 2)</span>
                 <p className="text-xl font-black text-main mt-1">{metrics?.batchBreakdown?.batch2 || 0} ተማሪዎች</p>
               </div>
               <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl">
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Batch 3 (3ኛ ዓመት)</span>
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">3ኛ ዓመት (ምድብ 3)</span>
                 <p className="text-xl font-black text-main mt-1">{metrics?.batchBreakdown?.batch3 || 0} ተማሪዎች</p>
               </div>
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Batch 4 (ተመራቂዎች)</span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">ተመራቂዎች (ምድብ 4)</span>
                 <p className="text-xl font-black text-main mt-1">{metrics?.batchBreakdown?.batch4 || 0} ተማሪዎች</p>
               </div>
             </div>
@@ -244,17 +244,17 @@ const AdminDistanceHub = () => {
       {/* TAB 2: Courses & Modules Management */}
       {activeTab === 'courses' && (
         <Card className="p-6 space-y-4">
-          <h3 className="font-extrabold text-base text-main">የርቀት ትምህርት ኮርሶች ዝርዝር (Distance Courses)</h3>
+          <h3 className="font-extrabold text-base text-main">የርቀት ትምህርት ኮርሶች ዝርዝር</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-muted">
               <thead className="bg-surface-page text-[11px] font-bold text-main uppercase border-b border-subtle">
                 <tr>
                   <th className="p-3">ኮርስ</th>
                   <th className="p-3">ኮድ</th>
-                  <th className="p-3">ደረጃ (Batch)</th>
+                  <th className="p-3">ደረጃ</th>
                   <th className="p-3">የተመደበ መምህር</th>
                   <th className="p-3">ሁኔታ</th>
-                  <th className="p-3 text-right">የትምህርት ማዕከል (Curriculum)</th>
+                  <th className="p-3 text-right">የትምህርት ማዕከል</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle bg-surface-card">
@@ -280,7 +280,7 @@ const AdminDistanceHub = () => {
                           variant="primary"
                           onClick={() => setStudioCourse(c)}
                         >
-                          <Video className="w-3.5 h-3.5 mr-1" /> ትምህርቶችና ቪዲዮዎች (Manage Lessons)
+                          <Video className="w-3.5 h-3.5 mr-1" /> ትምህርቶችና ቪዲዮዎች
                         </Button>
                       </td>
                     </tr>
@@ -296,7 +296,7 @@ const AdminDistanceHub = () => {
       {activeTab === 'certificates' && (
         <Card className="p-6 space-y-6">
           <div>
-            <h3 className="font-extrabold text-base text-main">ይፋዊ የምስክር ወረቀት መስጫ ማዕከል (Certificate Issuance)</h3>
+            <h3 className="font-extrabold text-base text-main">ይፋዊ የምስክር ወረቀት መስጫ ማዕከል</h3>
             <p className="text-xs text-muted mt-1">
               ሁሉንም የትምህርት ክፍሎች፣ ቪዲዮዎች፣ ንባቦችና ፈተናዎች ላጠናቀቁ ተማሪዎች ይፋዊና በQR ኮድ የተረጋገጠ ዲፕሎማ ይስጡ።
             </p>
@@ -304,7 +304,7 @@ const AdminDistanceHub = () => {
 
           <form onSubmit={handleIssueCertificate} className="max-w-md space-y-4 p-5 bg-surface-page rounded-2xl border border-subtle">
             <Select
-              label="ተማሪ ይምረጡ (Select Student):"
+              label="ተማሪ ይምረጡ:"
               value={selectedStudentForCert}
               onChange={(e) => setSelectedStudentForCert(e.target.value)}
               required
@@ -324,7 +324,7 @@ const AdminDistanceHub = () => {
               disabled={certIssuing || !selectedStudentForCert}
             >
               <Award className="w-4 h-4 mr-1.5" />
-              {certIssuing ? 'የምስክር ወረቀቱን በማዘጋጀት ላይ...' : '📜 የምስክር ወረቀት አዘጋጅ (Issue Certificate)'}
+              {certIssuing ? 'የምስክር ወረቀቱን በማዘጋጀት ላይ...' : '📜 የምስክር ወረቀት አዘጋጅ'}
             </Button>
           </form>
         </Card>
@@ -334,10 +334,10 @@ const AdminDistanceHub = () => {
       {showAddCourseModal && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
           <Card className="max-w-lg w-full p-6 shadow-2xl space-y-4 border-subtle">
-            <h3 className="font-extrabold text-base text-main">አዲስ የርቀት ኮርስ ፍጠር (Create Distance Course)</h3>
+            <h3 className="font-extrabold text-base text-main">አዲስ የርቀት ኮርስ ፍጠር</h3>
             <form onSubmit={handleCreateCourse} className="space-y-3">
               <Input
-                label="የኮርሱ ስም በአማርኛ (Course Name in Amharic):"
+                label="የኮርሱ ስም:"
                 value={newCourseForm.nameAmharic}
                 onChange={(e) => setNewCourseForm({ ...newCourseForm, nameAmharic: e.target.value, name: e.target.value })}
                 placeholder="ለምሳሌ፡ የነገረ መለኮት ጥናት"
@@ -346,18 +346,18 @@ const AdminDistanceHub = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <Select
-                  label="የትምህርት ደረጃ (Batch):"
+                  label="የትምህርት ደረጃ (ምድብ):"
                   value={newCourseForm.grade}
                   onChange={(e) => setNewCourseForm({ ...newCourseForm, grade: e.target.value })}
                 >
-                  <option value="Batch 1">Batch 1</option>
-                  <option value="Batch 2">Batch 2</option>
-                  <option value="Batch 3">Batch 3</option>
-                  <option value="Batch 4">Batch 4</option>
+                  <option value="Batch 1">ምድብ ፩</option>
+                  <option value="Batch 2">ምድብ ፪</option>
+                  <option value="Batch 3">ምድብ ፫</option>
+                  <option value="Batch 4">ምድብ ፬</option>
                 </Select>
 
                 <Select
-                  label="የተመደበ መምህር (Assign Teacher):"
+                  label="የተመደበ መምህር:"
                   value={newCourseForm.teacher}
                   onChange={(e) => setNewCourseForm({ ...newCourseForm, teacher: e.target.value })}
                 >
@@ -369,7 +369,7 @@ const AdminDistanceHub = () => {
               </div>
 
               <Input
-                label="ዋና የመጽሐፍ ቅዱስ ጥቅስ (Main Bible Verse):"
+                label="ዋና የመጽሐፍ ቅዱስ ጥቅስ:"
                 value={newCourseForm.bibleTheme}
                 onChange={(e) => setNewCourseForm({ ...newCourseForm, bibleTheme: e.target.value })}
                 placeholder="ለምሳሌ፡ ዮሐንስ 1:1"
@@ -387,7 +387,7 @@ const AdminDistanceHub = () => {
                   type="submit"
                   variant="primary"
                 >
-                  ፍጠር (Create Course)
+                  ፍጠር
                 </Button>
               </div>
             </form>

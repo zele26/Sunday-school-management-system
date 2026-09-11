@@ -16,12 +16,12 @@ const StudentExams = () => {
     }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="py-8 text-center text-slate-400">Loading exams...</div>;
+  if (loading) return <div className="py-8 text-center text-slate-400">ፈተናዎች በመጫን ላይ ናቸው...</div>;
 
   return (
     <Card variant="default" padding="lg" className="space-y-6 font-sans">
       <CardHeader>
-        <CardTitle>የፈተናዎች ዝርዝር (Available Exams)</CardTitle>
+        <CardTitle>የፈተናዎች ዝርዝር</CardTitle>
       </CardHeader>
       <CardContent>
         {quizzes.length === 0 ? (

@@ -20,20 +20,20 @@ const ProgramsManagement = () => {
     () => [
       {
         accessorKey: 'code',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Code" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="መለያ" />,
         cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'PROG'}</Badge>,
       },
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Program Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የፕሮግራም ስም" />,
         cell: ({ getValue }) => <span className="font-bold text-slate-900 dark:text-white">{getValue()}</span>,
       },
       {
         accessorKey: 'type',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'distance' ? 'gold' : 'approved'} size="sm">
-            {getValue() || 'መደበኛ'}
+            {getValue() === 'distance' ? 'የርቀት' : 'መደበኛ'}
           </Badge>
         ),
       },
@@ -44,7 +44,7 @@ const ProgramsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የትምህርት ፕሮግራሞች (Education Programs)"
+        title="የትምህርት ፕሮግራሞች"
         subtitle="የመደበኛና የርቀት ትምህርት መርሃግብሮችን እዚህ ያስተዳድሩ"
         icon={BookOpen}
         badge={<Badge variant="gold" size="sm">{programs.length} ፕሮግራሞች</Badge>}
@@ -54,14 +54,14 @@ const ProgramsManagement = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Table View"
+                title="የሰንጠረዥ እይታ"
               >
                 <List className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Grid View"
+                title="የካርድ እይታ"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -74,7 +74,7 @@ const ProgramsManagement = () => {
               className="gap-2"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-              <span>አድስ (Refresh)</span>
+              <span>አድስ</span>
             </Button>
           </div>
         }
@@ -85,7 +85,7 @@ const ProgramsManagement = () => {
           columns={columns}
           data={programs}
           isLoading={isLoading}
-          emptyMessage="ምንም ፕሮግራም አልተገኘም (No programs found)"
+          emptyMessage="ምንም ፕሮግራም አልተገኘም"
           emptyIcon={BookOpen}
         />
       ) : (

@@ -219,7 +219,7 @@ const DistanceClassroom = () => {
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-amber-300 font-bold text-lg">የትምህርት ክፍሉን በመክፈት ላይ... (Loading Classroom)</p>
+          <p className="text-amber-300 font-bold text-lg">የትምህርት ክፍሉን በመክፈት ላይ...</p>
         </div>
       </div>
     );
@@ -229,10 +229,10 @@ const DistanceClassroom = () => {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white p-6">
         <div className="bg-slate-800 p-8 rounded-3xl text-center max-w-md border border-slate-700">
-          <h2 className="text-xl font-bold text-rose-400 mb-2">ትምህርቱ አልተገኘም (Course Not Found)</h2>
+          <h2 className="text-xl font-bold text-rose-400 mb-2">ትምህርቱ አልተገኘም</h2>
           <p className="text-sm text-slate-300 mb-6">የተጠየቀው የርቀት ትምህርት ኮርስ አልተገኘም ወይም አልተፈቀደልዎትም።</p>
           <Link to="/student" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-bold text-white transition-all">
-            ወደ ዋና ገጽ ተመለስ (Back to Dashboard)
+            ወደ ዋና ገጽ ተመለስ
           </Link>
         </div>
       </div>
@@ -251,7 +251,7 @@ const DistanceClassroom = () => {
             <Image src={ChurchLogo} alt="Logo" width={36} height={36} className="w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(255,204,0,0.5)] group-hover:scale-105 transition-transform" style={{ width: 'auto', height: 'auto' }} />
             <div className="hidden sm:block">
               <h1 className="text-xs font-black text-amber-400 tracking-wide">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h1>
-              <p className="text-[10px] text-slate-300 font-medium">የርቀት ትምህርት ማዕከል (Distance LMS)</p>
+              <p className="text-[10px] text-slate-300 font-medium">የርቀት ትምህርት ማዕከል</p>
             </div>
           </Link>
           <span className="text-slate-600 hidden sm:inline">|</span>
@@ -259,7 +259,7 @@ const DistanceClassroom = () => {
             <h2 className="text-xs md:text-sm font-extrabold text-white truncate">
               {isAmharic ? course.nameAmharic || course.name : course.name}
             </h2>
-            <p className="text-[10px] text-amber-300/80 font-mono truncate">{course.code} • {course.grade || 'Batch 1'}</p>
+            <p className="text-[10px] text-amber-300/80 font-mono truncate">{course.code} • {course.grade || 'ዙር 1'}</p>
           </div>
         </div>
 
@@ -289,7 +289,7 @@ const DistanceClassroom = () => {
             className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
           >
             <span>←</span>
-            <span className="hidden sm:inline">ይውጡ (Exit)</span>
+            <span className="hidden sm:inline">ይውጡ</span>
           </Link>
         </div>
       </header>
@@ -411,7 +411,7 @@ const DistanceClassroom = () => {
                   onClick={handleVideoCompleted}
                   className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-xl text-xs font-extrabold hover:brightness-110 transition-all shadow-md"
                 >
-                  {videoProgress >= 90 ? '✅ ቪዲዮው ተጠናቋል (Completed)' : 'ቪዲዮውን እንዳጠናቀቁ ይመዝግቡ (Mark Watched)'}
+                  {videoProgress >= 90 ? '✅ ቪዲዮው ተጠናቋል' : 'ቪዲዮውን እንዳጠናቀቁ ይመዝግቡ'}
                 </button>
               </div>
             </div>
@@ -452,7 +452,7 @@ const DistanceClassroom = () => {
                 </div>
 
                 <div className="p-4 bg-slate-800/80 rounded-2xl text-center border border-dashed border-slate-700">
-                  <p className="text-xs text-amber-300 font-bold">✨ የትምህርቱ ማጠቃለያ ክፍል ደርሰዋል (End of Reading)</p>
+                  <p className="text-xs text-amber-300 font-bold">✨ የትምህርቱ ማጠቃለያ ክፍል ደርሰዋል</p>
                   <button
                     onClick={() => {
                       setReadingProgress(100);
@@ -460,7 +460,7 @@ const DistanceClassroom = () => {
                     }}
                     className="mt-2 px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-md"
                   >
-                    ንባቡን አጠናቅቄያለሁ (Confirm Reading Finished)
+                    ንባቡን አጠናቅቄያለሁ
                   </button>
                 </div>
               </div>
@@ -511,7 +511,7 @@ const DistanceClassroom = () => {
                   </p>
                   {quizResult.unlockedNextModule && (
                     <div className="p-3 bg-emerald-950/80 border border-emerald-500/40 rounded-xl text-xs text-emerald-300 font-bold">
-                      🔓 ቀጣዩ ሞጁል በተሳካ ሁኔታ ተከፍቷል! (Next Module Unlocked!)
+                      🔓 ቀጣዩ ሞጁል በተሳካ ሁኔታ ተከፍቷል!
                     </div>
                   )}
 
@@ -519,13 +519,13 @@ const DistanceClassroom = () => {
                     onClick={() => setQuizResult(null)}
                     className="px-6 py-2.5 bg-amber-400 text-slate-950 font-bold rounded-xl text-xs hover:bg-amber-300 transition-colors"
                   >
-                    እንደገና ተፈተን (Retake Quiz)
+                    እንደገና ተፈተን
                   </button>
                 </div>
               ) : (
                 <form onSubmit={handleQuizSubmit} className="space-y-6">
                   <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2">
-                    <p className="font-bold text-amber-300">የፈተና መመሪያዎች (Instructions):</p>
+                    <p className="font-bold text-amber-300">የፈተና መመሪያዎች፡</p>
                     <ul className="list-disc list-inside space-y-1 text-slate-400">
                       <li>ሁሉንም ጥያቄዎች በትክክል ይመልሱ።</li>
                       <li>የሚያሳልፈው ውጤት {activeQuiz.passingMark || 70}% ነው።</li>
@@ -580,7 +580,7 @@ const DistanceClassroom = () => {
               <form onSubmit={handleAssignmentSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">
-                    የመልስዎ ማጠቃለያ ጽሑፍ (Essay / Solution Text):
+                    የመልስዎ ማጠቃለያ ጽሑፍ፡
                   </label>
                   <textarea
                     rows={6}
@@ -610,7 +610,7 @@ const DistanceClassroom = () => {
             <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
               <span>📚</span> {t('learningPath')}
             </h4>
-            <span className="text-[11px] font-bold text-slate-400 font-mono">{modules.length} {t('module')}s</span>
+            <span className="text-[11px] font-bold text-slate-400 font-mono">{modules.length} {t('module')}</span>
           </div>
 
           {/* Modules Accordion List */}
@@ -697,7 +697,7 @@ const DistanceClassroom = () => {
                               {les.isFullyCompleted ? (
                                 <span className="text-[10px] text-emerald-400 font-bold">✓</span>
                               ) : (
-                                <span className="text-[9px] text-slate-500 font-mono">{les.durationMinutes}m</span>
+                                <span className="text-[9px] text-slate-500 font-mono">{les.durationMinutes} ደቂቃ</span>
                               )}
                             </div>
                           </button>
@@ -717,7 +717,7 @@ const DistanceClassroom = () => {
                           }`}
                         >
                           <span className="truncate">📝 {quiz.title}</span>
-                          <span className="text-[10px] font-mono">{quiz.passed ? '✅ Passed' : `${quiz.passingMark}%`}</span>
+                          <span className="text-[10px] font-mono">{quiz.passed ? '✅ አልፏል' : `${quiz.passingMark}%`}</span>
                         </button>
                       ))}
 
@@ -734,7 +734,7 @@ const DistanceClassroom = () => {
                           }`}
                         >
                           <span className="truncate">📎 {assign.title}</span>
-                          <span className="text-[10px] font-mono">{assign.status}</span>
+                          <span className="text-[10px] font-mono">{assign.status === 'submitted' ? 'ተልኳል' : 'አልተላከም'}</span>
                         </button>
                       ))}
                     </div>

@@ -30,7 +30,7 @@ export function DataTable({
   onRowSelectionChange,
   globalFilter,
   onGlobalFilterChange,
-  emptyMessage = 'ምንም መረጃ አልተገኘም (No data found)',
+  emptyMessage = 'ምንም መረጃ አልተገኘም',
   emptyIcon: EmptyIcon = Inbox,
   showPagination = true,
   pageSizeOptions = [10, 20, 30, 50, 100],

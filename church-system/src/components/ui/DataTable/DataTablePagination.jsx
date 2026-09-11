@@ -30,19 +30,19 @@ export function DataTablePagination({
             ) : (
               0
             )}{' '}
-            of{' '}
+            ከ{' '}
             <span className="font-semibold text-slate-900 dark:text-white">
               {totalRows}
             </span>{' '}
-            row(s) selected
+            ረድፎች ተመርጠዋል
           </span>
         ) : (
           <span>
-            Total:{' '}
+            አጠቃላይ:{' '}
             <span className="font-semibold text-slate-900 dark:text-white">
               {totalRows}
             </span>{' '}
-            record(s)
+            መዝገቦች
           </span>
         )}
       </div>
@@ -51,7 +51,7 @@ export function DataTablePagination({
       <div className="flex flex-wrap items-center gap-4 sm:gap-6">
         {/* Page size dropdown */}
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap">Rows per page:</span>
+          <span className="whitespace-nowrap">በአንድ ገጽ:</span>
           <select
             value={pageSize}
             onChange={(e) => {
@@ -69,7 +69,7 @@ export function DataTablePagination({
 
         {/* Page indicator */}
         <div className="whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
-          Page <span className="font-bold text-slate-900 dark:text-white">{pageIndex + 1}</span> of{' '}
+          ገጽ <span className="font-bold text-slate-900 dark:text-white">{pageIndex + 1}</span> ከ{' '}
           <span className="font-bold text-slate-900 dark:text-white">{Math.max(pageCount, 1)}</span>
         </div>
 
@@ -79,7 +79,7 @@ export function DataTablePagination({
             type="button"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
-            aria-label="First page"
+            aria-label="የመጀመሪያ ገጽ"
             className="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           >
             <ChevronsLeft className="w-4 h-4" />
@@ -88,7 +88,7 @@ export function DataTablePagination({
             type="button"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            aria-label="Previous page"
+            aria-label="ያለፈው ገጽ"
             className="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -97,7 +97,7 @@ export function DataTablePagination({
             type="button"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            aria-label="Next page"
+            aria-label="ቀጣይ ገጽ"
             className="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
@@ -106,7 +106,7 @@ export function DataTablePagination({
             type="button"
             onClick={() => table.setPageIndex(pageCount - 1)}
             disabled={!table.getCanNextPage()}
-            aria-label="Last page"
+            aria-label="የመጨረሻ ገጽ"
             className="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
           >
             <ChevronsRight className="w-4 h-4" />

@@ -139,7 +139,7 @@ const ReportsManagement = () => {
 
   const fetchReport = async () => {
     if (!reportType) {
-      toast.info('እባክዎ የሪፖርት ዓይነት ይምረጡ (Please select a report type)');
+      toast.info('እባክዎ የሪፖርት ዓይነት ይምረጡ');
       return;
     }
     setLoading(true);
@@ -150,7 +150,7 @@ const ReportsManagement = () => {
       switch (reportType) {
         case 'student':
           if (!selectedStudent) {
-            toast.error('Please select a student');
+            toast.error('እባክዎ ተማሪ ይምረጡ');
             setLoading(false);
             return;
           }
@@ -158,7 +158,7 @@ const ReportsManagement = () => {
           break;
         case 'grade':
           if (!selectedGrade) {
-            toast.error('Please select a grade');
+            toast.error('እባክዎ የክፍል ደረጃ ይምረጡ');
             setLoading(false);
             return;
           }
@@ -166,7 +166,7 @@ const ReportsManagement = () => {
           break;
         case 'course':
           if (!selectedCourse) {
-            toast.error('Please select a course');
+            toast.error('እባክዎ ኮርስ ይምረጡ');
             setLoading(false);
             return;
           }
@@ -174,7 +174,7 @@ const ReportsManagement = () => {
           break;
         case 'teacher':
           if (!selectedTeacher) {
-            toast.error('Please select a teacher');
+            toast.error('እባክዎ መምህር ይምረጡ');
             setLoading(false);
             return;
           }
@@ -182,7 +182,7 @@ const ReportsManagement = () => {
           break;
         case 'date':
           if (!selectedDate) {
-            toast.error('Please pick a date');
+            toast.error('እባክዎ ቀን ይምረጡ');
             setLoading(false);
             return;
           }
@@ -194,7 +194,7 @@ const ReportsManagement = () => {
       const res = await apiFetch(url);
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to load report');
+        throw new Error(errData.message || 'ሪፖርቱን መጫን አልተቻለም');
       }
       const reportData = await res.json();
       setData(reportData);
@@ -214,23 +214,23 @@ const ReportsManagement = () => {
         <Card className="p-5 bg-surface-page border-subtle">
           <h3 className="text-lg font-bold text-main">{student.fullName}</h3>
           <div className="flex items-center gap-3 mt-1">
-            <Badge variant="primary">Grade: {student.grade || 'N/A'}</Badge>
-            <span className="text-xs text-muted">{student.email || 'No email provided'}</span>
+            <Badge variant="primary">ክፍል: {student.grade || '—'}</Badge>
+            <span className="text-xs text-muted">{student.email || 'ኢሜይል አልተገለጸም'}</span>
           </div>
         </Card>
 
         <Card className="p-5 space-y-3">
           <h4 className="font-bold text-sm text-main flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-brand-primary" /> የኮርሶች ማጠቃለያ (Course Summary)
+            <BookOpen className="w-4 h-4 text-brand-primary" /> የኮርሶች ማጠቃለያ
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-muted">
               <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
                 <tr>
-                  <th className="py-2.5 px-3">Course</th>
-                  <th className="py-2.5 px-3">Attended</th>
-                  <th className="py-2.5 px-3">Total Sessions</th>
-                  <th className="py-2.5 px-3">Attendance Rate</th>
+                  <th className="py-2.5 px-3">ኮርስ</th>
+                  <th className="py-2.5 px-3">የተገኘበት</th>
+                  <th className="py-2.5 px-3">አጠቃላይ ክፍለ ጊዜ</th>
+                  <th className="py-2.5 px-3">የመገኘት ምጣኔ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
@@ -256,14 +256,14 @@ const ReportsManagement = () => {
 
         <Card className="p-5 space-y-3">
           <h4 className="font-bold text-sm text-main flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-brand-primary" /> የተሳትፎ ታሪክ (Attendance History)
+            <Calendar className="w-4 h-4 text-brand-primary" /> የተሳትፎ ታሪክ
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm text-muted">
               <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
                 <tr>
-                  <th className="py-2.5 px-3">Date</th>
-                  <th className="py-2.5 px-3">Course</th>
+                  <th className="py-2.5 px-3">ቀን</th>
+                  <th className="py-2.5 px-3">ኮርስ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
@@ -287,7 +287,7 @@ const ReportsManagement = () => {
     return (
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-main flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-brand-primary" /> {grade} Attendance Overview
+          <GraduationCap className="w-5 h-5 text-brand-primary" /> {grade} የመገኘት አጠቃላይ እይታ
         </h3>
         <div className="grid grid-cols-1 gap-4">
           {(gradeStudents || []).map((s) => (
@@ -295,7 +295,7 @@ const ReportsManagement = () => {
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="font-bold text-main text-base">{s.studentName}</span>
                 <Badge variant="primary">
-                  Overall: {s.overallAttended || 0} / {s.overallSessions || 0}
+                  አጠቃላይ: {s.overallAttended || 0} / {s.overallSessions || 0}
                 </Badge>
               </div>
 
@@ -304,9 +304,9 @@ const ReportsManagement = () => {
                   <table className="w-full text-left text-xs text-muted">
                     <thead className="bg-surface-page text-[11px] font-bold text-main uppercase border-b border-subtle">
                       <tr>
-                        <th className="py-2 px-3">Course</th>
-                        <th className="py-2 px-3">Attended</th>
-                        <th className="py-2 px-3">Total Sessions</th>
+                        <th className="py-2 px-3">ኮርስ</th>
+                        <th className="py-2 px-3">የተገኘበት</th>
+                        <th className="py-2 px-3">አጠቃላይ ክፍለ ጊዜ</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-subtle">
@@ -321,7 +321,7 @@ const ReportsManagement = () => {
                   </table>
                 </div>
               ) : (
-                <p className="text-xs text-muted">No courses enrolled.</p>
+                <p className="text-xs text-muted">የተመዘገበበት ኮርስ የለም።</p>
               )}
             </Card>
           ))}
@@ -338,19 +338,19 @@ const ReportsManagement = () => {
         <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-subtle">
           <div>
             <h3 className="text-lg font-bold text-main">{course.name}</h3>
-            <p className="text-xs text-muted mt-0.5">Teacher: {course.teacherName || 'N/A'}</p>
+            <p className="text-xs text-muted mt-0.5">መምህር: {course.teacherName || 'አልተመደበም'}</p>
           </div>
-          <Badge variant="gold">Total class days: {totalSessions || 0}</Badge>
+          <Badge variant="gold">አጠቃላይ የክፍል ቀናት: {totalSessions || 0}</Badge>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-muted">
             <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
               <tr>
-                <th className="py-2.5 px-3">Student</th>
-                <th className="py-2.5 px-3">Attended</th>
-                <th className="py-2.5 px-3">Total Sessions</th>
-                <th className="py-2.5 px-3">Status</th>
+                <th className="py-2.5 px-3">ተማሪ</th>
+                <th className="py-2.5 px-3">የተገኘበት</th>
+                <th className="py-2.5 px-3">አጠቃላይ ክፍለ ጊዜ</th>
+                <th className="py-2.5 px-3">ሁኔታ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-subtle">
@@ -382,7 +382,7 @@ const ReportsManagement = () => {
     return (
       <div className="space-y-6">
         <Card className="p-5 bg-surface-page border-subtle">
-          <h3 className="text-lg font-bold text-main">{teacher.fullName}'s Assigned Courses</h3>
+          <h3 className="text-lg font-bold text-main">የመምህር {teacher.fullName} የተመደቡ ኮርሶች</h3>
           <p className="text-xs text-muted mt-0.5">{teacher.email || ''}</p>
         </Card>
 
@@ -390,16 +390,16 @@ const ReportsManagement = () => {
           <Card key={c.courseId} className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-base text-main">{c.courseName}</h4>
-              <Badge variant="info">Total days: {c.totalSessions || 0}</Badge>
+              <Badge variant="info">አጠቃላይ ቀናት: {c.totalSessions || 0}</Badge>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-muted">
                 <thead className="bg-surface-page text-[11px] font-bold text-main uppercase border-b border-subtle">
                   <tr>
-                    <th className="py-2 px-3">Student</th>
-                    <th className="py-2 px-3">Attended</th>
-                    <th className="py-2 px-3">Total</th>
+                    <th className="py-2 px-3">ተማሪ</th>
+                    <th className="py-2 px-3">የተገኘበት</th>
+                    <th className="py-2 px-3">አጠቃላይ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-subtle">
@@ -425,17 +425,17 @@ const ReportsManagement = () => {
     return (
       <Card className="p-6 space-y-4">
         <h3 className="text-lg font-bold text-main flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-brand-primary" /> Attendance for {formatEthiopianDate(date)}
+          <Calendar className="w-5 h-5 text-brand-primary" /> የ{formatEthiopianDate(date)} የመገኘት ሁኔታ
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-muted">
             <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
               <tr>
-                <th className="py-2.5 px-3">Student</th>
-                <th className="py-2.5 px-3">Grade</th>
-                <th className="py-2.5 px-3">Course</th>
-                <th className="py-2.5 px-3">Time</th>
+                <th className="py-2.5 px-3">ተማሪ</th>
+                <th className="py-2.5 px-3">ክፍል</th>
+                <th className="py-2.5 px-3">ኮርስ</th>
+                <th className="py-2.5 px-3">ሰዓት</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-subtle">
@@ -457,8 +457,8 @@ const ReportsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Attendance & System Reports (የመገኘትና የስርዓት ሪፖርቶች)"
-        subtitle="Generate detailed analytic reports by student, grade, course, teacher, or specific date."
+        title="የመገኘትና የስርዓት ሪፖርቶች"
+        subtitle="በተማሪ፣ በክፍል፣ በኮርስ፣ በመምህር ወይም በቀን ዝርዝር የትንታኔ ሪፖርቶችን ያመንጩ።"
         icon={FileText}
         actions={
           data && (
@@ -466,7 +466,7 @@ const ReportsManagement = () => {
               variant="success"
               onClick={() => downloadCSV(generateCSV(data, reportType), `${reportType}-report.csv`)}
             >
-              <Download className="w-4 h-4 mr-1.5" /> ⬇ Download CSV
+              <Download className="w-4 h-4 mr-1.5" /> ⬇ በሲኤስቪ (CSV) አውርድ
             </Button>
           )
         }
@@ -477,30 +477,30 @@ const ReportsManagement = () => {
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[200px]">
             <Select
-              label="Report Type"
+              label="የሪፖርት ዓይነት"
               value={reportType}
               onChange={(e) => {
                 setReportType(e.target.value);
                 setData(null);
               }}
             >
-              <option value="">-- Select Report Type --</option>
-              <option value="student">By Student (የተማሪ)</option>
-              <option value="grade">By Grade (የክፍል)</option>
-              <option value="course">By Course (የኮርስ)</option>
-              <option value="teacher">By Teacher (የመምህር)</option>
-              <option value="date">By Date (የቀን)</option>
+              <option value="">-- የሪፖርት ዓይነት ይምረጡ --</option>
+              <option value="student">በተማሪ</option>
+              <option value="grade">በክፍል</option>
+              <option value="course">በኮርስ</option>
+              <option value="teacher">በመምህር</option>
+              <option value="date">በቀን</option>
             </Select>
           </div>
 
           {reportType === 'student' && (
             <div className="flex-1 min-w-[200px]">
               <Select
-                label="Select Student"
+                label="ተማሪ ይምረጡ"
                 value={selectedStudent}
                 onChange={(e) => setSelectedStudent(e.target.value)}
               >
-                <option value="">Select Student</option>
+                <option value="">ተማሪ ይምረጡ</option>
                 {students.map((s) => (
                   <option key={s._id} value={s._id}>
                     {s.firstName} {s.lastName}
@@ -513,11 +513,11 @@ const ReportsManagement = () => {
           {reportType === 'grade' && (
             <div className="flex-1 min-w-[200px]">
               <Select
-                label="Select Grade"
+                label="የክፍል ደረጃ ይምረጡ"
                 value={selectedGrade}
                 onChange={(e) => setSelectedGrade(e.target.value)}
               >
-                <option value="">Select Grade</option>
+                <option value="">የክፍል ደረጃ ይምረጡ</option>
                 {grades.map((g) => (
                   <option key={g} value={g}>
                     {g}
@@ -530,11 +530,11 @@ const ReportsManagement = () => {
           {reportType === 'course' && (
             <div className="flex-1 min-w-[200px]">
               <Select
-                label="Select Course"
+                label="ኮርስ ይምረጡ"
                 value={selectedCourse}
                 onChange={(e) => setSelectedCourse(e.target.value)}
               >
-                <option value="">Select Course</option>
+                <option value="">ኮርስ ይምረጡ</option>
                 {courses.map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.name}
@@ -547,11 +547,11 @@ const ReportsManagement = () => {
           {reportType === 'teacher' && (
             <div className="flex-1 min-w-[200px]">
               <Select
-                label="Select Teacher"
+                label="መምህር ይምረጡ"
                 value={selectedTeacher}
                 onChange={(e) => setSelectedTeacher(e.target.value)}
               >
-                <option value="">Select Teacher</option>
+                <option value="">መምህር ይምረጡ</option>
                 {teachers.map((t) => (
                   <option key={t._id} value={t._id}>
                     {t.fullName}
@@ -564,7 +564,7 @@ const ReportsManagement = () => {
           {reportType === 'date' && (
             <div className="flex-1 min-w-[200px]">
               <Input
-                label="Select Date"
+                label="ቀን ይምረጡ"
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
@@ -573,7 +573,7 @@ const ReportsManagement = () => {
           )}
 
           <Button variant="primary" onClick={fetchReport} disabled={loading}>
-            <Search className="w-4 h-4 mr-1.5" /> {loading ? 'Generating...' : 'Generate Report'}
+            <Search className="w-4 h-4 mr-1.5" /> {loading ? 'በማመንጨት ላይ...' : 'ሪፖርት አውጣ'}
           </Button>
         </div>
       </Card>
@@ -582,7 +582,7 @@ const ReportsManagement = () => {
       {loading && (
         <Card className="py-12 text-center text-muted">
           <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-sm">Loading report...</p>
+          <p className="text-sm">ሪፖርቱ በመጫን ላይ ነው...</p>
         </Card>
       )}
 

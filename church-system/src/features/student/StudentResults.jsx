@@ -23,12 +23,12 @@ const StudentResults = () => {
     fetchResults();
   }, []);
 
-  if (loading) return <div className="py-8 text-center text-slate-400">Loading results...</div>;
+  if (loading) return <div className="py-8 text-center text-slate-400">ውጤቶች በመጫን ላይ ናቸው...</div>;
 
   return (
     <Card variant="default" padding="lg" className="space-y-6 font-sans">
       <CardHeader>
-        <CardTitle>የፈተና ውጤቶች (My Exam Results)</CardTitle>
+        <CardTitle>የፈተና ውጤቶች</CardTitle>
       </CardHeader>
       <CardContent>
         {results.length === 0 ? (
@@ -45,12 +45,12 @@ const StudentResults = () => {
                       <Award className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">{r.quiz?.title || 'Exam'}</p>
+                      <p className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">{r.quiz?.title || 'ፈተና'}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{formatEthiopianDate(r.submittedAt)}</p>
                     </div>
                   </div>
                   <Badge variant="gold" size="md">
-                    {r.totalScore}  pts
+                    {r.totalScore} ነጥብ
                   </Badge>
                 </div>
               </Link>

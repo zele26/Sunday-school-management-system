@@ -14,8 +14,8 @@ const AttendanceManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የተማሪዎች ቁጥጥርና አቴንዳንስ (Attendance Tracking)"
-        subtitle="የክፍሎችን አቴንዳንስ እና የተማሪዎችን መገኘት ይከታተሉ"
+        title="የተማሪዎች ቁጥጥርና መገኘት"
+        subtitle="የክፍሎችን መገኘት እና የተማሪዎችን ተሳትፎ ይከታተሉ"
         icon={ClipboardList}
         badge={<Badge variant="neutral" size="sm">የቀን መከታተያ</Badge>}
       />
@@ -29,14 +29,14 @@ const AttendanceManagement = () => {
         />
         <Button variant="primary" className="gap-2 shrink-0">
           <Search className="w-4 h-4" />
-          <span>አቴንዳንስ ፈልግ</span>
+          <span>መገኘት ፈልግ</span>
         </Button>
       </div>
 
       <Card variant="subtle" padding="lg" className="text-center py-16">
         <ClipboardList className="w-12 h-12 mx-auto text-slate-400 opacity-40 mb-3" />
-        <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">ምንም የአቴንዳንስ መረጃ አልተገኘም</h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ለተመረጠው ቀን ({date}) የተመዘገበ የአቴንዳንስ መረጃ የለም።</p>
+        <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">ምንም የመገኘት መረጃ አልተገኘም</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ለተመረጠው ቀን ({date}) የተመዘገበ የመገኘት መረጃ የለም።</p>
       </Card>
     </div>
   );

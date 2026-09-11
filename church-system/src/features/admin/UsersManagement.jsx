@@ -239,19 +239,19 @@ const UsersManagement = () => {
       },
       {
         accessorKey: 'fullName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ተጠቃሚ" />,
         cell: ({ row }) => (
           <div>
             <div className="font-bold text-slate-900 dark:text-white">{row.original.fullName}</div>
             <div className="text-xs text-slate-500 dark:text-slate-400">
-              {row.original.email || 'No email'}
+              {row.original.email || 'ኢሜይል የለም'}
             </div>
           </div>
         ),
       },
       {
         accessorKey: 'role',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሚና" />,
         cell: ({ row }) => (
           <div className="flex items-center gap-1.5 flex-wrap">
             <Badge variant={getRoleVariant(row.original.role)} size="sm">
@@ -269,7 +269,7 @@ const UsersManagement = () => {
       },
       {
         accessorKey: 'department',
-        header: 'Department',
+        header: 'ክፍል',
         cell: ({ row }) => {
           const dept = row.original.departmentId;
           return dept ? (
@@ -277,18 +277,18 @@ const UsersManagement = () => {
               {dept.name || dept}
             </span>
           ) : (
-            <span className="text-xs text-slate-400 italic">Church-wide</span>
+            <span className="text-xs text-slate-400 italic">ጠቅላላ ቤተክርስቲያን</span>
           );
         },
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => <Badge variant={getStatusVariant(getValue())} size="sm">{getValue()}</Badge>,
       },
       {
         accessorKey: 'contact',
-        header: 'Contact',
+        header: 'አድራሻ',
         cell: ({ row }) => (
           <div className="text-xs text-slate-500 dark:text-slate-400">
             <div>{row.original.phone || '—'}</div>
@@ -298,7 +298,7 @@ const UsersManagement = () => {
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const u = row.original;
           return (
@@ -307,9 +307,9 @@ const UsersManagement = () => {
                 size="xs"
                 variant="gold"
                 onClick={() => openJourneyModal(u)}
-                title="View full timeline journey & preserved profiles"
+                title="የአባሉን ሙሉ ጉዞና መዝገብ ይመልከቱ"
               >
-                <History className="w-3.5 h-3.5 mr-1" /> Journey
+                <History className="w-3.5 h-3.5 mr-1" /> የአባል ጉዞ
               </Button>
 
               {u.status === 'pending' && (
@@ -318,32 +318,32 @@ const UsersManagement = () => {
                     size="xs"
                     variant="success"
                     onClick={() => {
-                      if (confirm('Approve this user?')) approveUserMutation.mutate(u._id);
+                      if (confirm('ይህን ተጠቃሚ ማጽደቅ ይፈልጋሉ?')) approveUserMutation.mutate(u._id);
                     }}
                     disabled={approveUserMutation.isPending}
                   >
-                    Approve
+                    አጽድቅ
                   </Button>
                   <Button
                     size="xs"
                     variant="danger"
                     onClick={() => {
-                      if (confirm('Reject this user?')) rejectUserMutation.mutate(u._id);
+                      if (confirm('ይህን ተጠቃሚ ውድቅ ማድረግ ይፈልጋሉ?')) rejectUserMutation.mutate(u._id);
                     }}
                     disabled={rejectUserMutation.isPending}
                   >
-                    Reject
+                    ውድቅ አድርግ
                   </Button>
                 </>
               )}
               <Button size="xs" variant="secondary" onClick={() => openEditModal(u)}>
-                <Edit className="w-3.5 h-3.5 mr-1" /> Edit
+                <Edit className="w-3.5 h-3.5 mr-1" /> አርም
               </Button>
               <Button
                 size="xs"
                 variant="outline"
                 onClick={() => {
-                  if (confirm('Delete this user?')) deleteUserMutation.mutate(u._id);
+                  if (confirm('ይህን ተጠቃሚ መሰረዝ ይፈልጋሉ?')) deleteUserMutation.mutate(u._id);
                 }}
                 disabled={deleteUserMutation.isPending}
               >
@@ -360,20 +360,20 @@ const UsersManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="User & Role Management (የአባላትና የአስተዳደር አስተዳደር)"
-        subtitle="Manage user accounts, assign Super Admin & Department Admin roles, and preserve lifetime member progression history."
+        title="የተጠቃሚዎችና የሚና አስተዳደር"
+        subtitle="የተጠቃሚ መለያዎችን ያስተዳድሩ፣ የአስተዳዳሪ እና የክፍል ኃላፊ ሚናዎችን ይመድቡ፣ የአባላትን ታሪክ ይከታተሉ"
         icon={Users}
       />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Users</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">አጠቃላይ ተጠቃሚዎች</span>
           <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{stats.total}</p>
         </Card>
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center border-amber-500/30 bg-amber-500/5">
           <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-            <Crown className="w-3.5 h-3.5" /> Super Admins
+            <Crown className="w-3.5 h-3.5" /> ዋና አስተዳዳሪዎች
           </span>
           <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {stats.superadmin || stats.admin}
@@ -381,25 +381,25 @@ const UsersManagement = () => {
         </Card>
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center border-indigo-500/30 bg-indigo-500/5">
           <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1">
-            <Building2 className="w-3.5 h-3.5" /> Dept Admins
+            <Building2 className="w-3.5 h-3.5" /> የክፍል ኃላፊዎች
           </span>
           <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{stats.department_admin}</p>
         </Card>
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center border-orange-500/30 bg-orange-500/5">
           <span className="text-[11px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider flex items-center gap-1">
-            <GraduationCap className="w-3.5 h-3.5" /> Teachers
+            <GraduationCap className="w-3.5 h-3.5" /> መምህራን
           </span>
           <p className="text-2xl font-black text-orange-600 dark:text-orange-400 mt-1">{stats.teacher}</p>
         </Card>
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center border-blue-500/30 bg-blue-500/5">
           <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1">
-            <Users className="w-3.5 h-3.5" /> Students
+            <Users className="w-3.5 h-3.5" /> ተማሪዎች
           </span>
           <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{stats.student}</p>
         </Card>
         <Card variant="elevated" padding="sm" className="flex flex-col justify-center border-yellow-500/30 bg-yellow-500/5">
           <span className="text-[11px] font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" /> Pending
+            <Clock className="w-3.5 h-3.5" /> በመጠባበቅ ላይ
           </span>
           <p className="text-2xl font-black text-yellow-600 dark:text-yellow-400 mt-1">{stats.pending}</p>
         </Card>
@@ -410,8 +410,8 @@ const UsersManagement = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <Input
-              label="Search"
-              placeholder="Search by name, email, phone..."
+              label="ፈልግ"
+              placeholder="በስም፣ በኢሜይል ወይም በስልክ ይፈልጉ..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -422,32 +422,32 @@ const UsersManagement = () => {
           </div>
           <div>
             <Select
-              label="Filter by Role"
+              label="በሚና ለይ"
               value={roleFilter}
               onChange={(e) => {
                 setRoleFilter(e.target.value);
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
             >
-              <option value="">All Roles</option>
-              <option value="superadmin">👑 Super Admin</option>
-              <option value="department_admin">🏛️ Department Admin</option>
-              <option value="admin">Admin</option>
-              <option value="teacher">Teacher</option>
-              <option value="student">Student</option>
-              <option value="member">Church Member</option>
+              <option value="">ሁሉም ሚናዎች</option>
+              <option value="superadmin">👑 ዋና አስተዳዳሪ</option>
+              <option value="department_admin">🏛️ የክፍል አስተዳዳሪ</option>
+              <option value="admin">አስተዳዳሪ</option>
+              <option value="teacher">መምህር</option>
+              <option value="student">ተማሪ</option>
+              <option value="member">የሰንበት ት/ቤት አባል</option>
             </Select>
           </div>
           <div>
             <Select
-              label="Filter by Department"
+              label="በክፍል ለይ"
               value={deptFilter}
               onChange={(e) => {
                 setDeptFilter(e.target.value);
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
             >
-              <option value="">All Departments</option>
+              <option value="">ሁሉም ክፍላት</option>
               {departments.map((d) => (
                 <option key={d._id} value={d._id}>{d.name}</option>
               ))}
@@ -455,17 +455,17 @@ const UsersManagement = () => {
           </div>
           <div>
             <Select
-              label="Filter by Status"
+              label="በሁኔታ ለይ"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPagination((p) => ({ ...p, pageIndex: 0 }));
               }}
             >
-              <option value="">All Statuses</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
+              <option value="">ሁሉም ሁኔታዎች</option>
+              <option value="approved">የጸደቁ</option>
+              <option value="pending">በመጠባበቅ ላይ</option>
+              <option value="rejected">ውድቅ የተደረጉ</option>
             </Select>
           </div>
         </div>
@@ -475,7 +475,7 @@ const UsersManagement = () => {
       {selectedUserIds.length > 0 && (
         <Card variant="elevated" padding="sm" className="bg-[var(--brand-primary)]/10 border-[var(--brand-primary)]/30 flex items-center justify-between flex-wrap gap-3">
           <span className="text-sm font-bold text-slate-900 dark:text-white">
-            {selectedUserIds.length} user(s) selected:
+            {selectedUserIds.length} ተጠቃሚዎች ተመርጠዋል:
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -484,7 +484,7 @@ const UsersManagement = () => {
               onClick={handleBulkApprove}
               disabled={bulkApproveMutation.isPending}
             >
-              <Check className="w-3.5 h-3.5 mr-1" /> Approve Selected
+              <Check className="w-3.5 h-3.5 mr-1" /> የተመረጡትን አጽድቅ
             </Button>
             <Button
               size="sm"
@@ -492,7 +492,7 @@ const UsersManagement = () => {
               onClick={handleBulkReject}
               disabled={bulkRejectMutation.isPending}
             >
-              <X className="w-3.5 h-3.5 mr-1" /> Reject Selected
+              <X className="w-3.5 h-3.5 mr-1" /> የተመረጡትን ውድቅ አድርግ
             </Button>
             <Button
               size="sm"
@@ -500,7 +500,7 @@ const UsersManagement = () => {
               onClick={handleBulkDelete}
               disabled={bulkDeleteMutation.isPending}
             >
-              <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Selected
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> የተመረጡትን ሰርዝ
             </Button>
           </div>
         </Card>
@@ -517,7 +517,7 @@ const UsersManagement = () => {
         onRowSelectionChange={setRowSelection}
         isLoading={isLoading}
         totalItemsCount={totalUsers}
-        emptyMessage="ምንም ተጠቃሚ አልተገኘም (No users found matching the criteria)"
+        emptyMessage="ምንም ተጠቃሚ አልተገኘም"
         emptyIcon={Users}
       />
 
@@ -533,10 +533,10 @@ const UsersManagement = () => {
                 </span>
                 <div>
                   <h3 className="font-extrabold text-base text-white">
-                    {selectedJourneyUser.fullName} — የአባል ጉዞ (Member Journey)
+                    {selectedJourneyUser.fullName} — የአባል ጉዞ
                   </h3>
                   <p className="text-xs text-amber-300 font-medium">
-                    የአባሉ ታሪክና የዕድገት ሂደት (Preserved Lifetime Progression)
+                    የአባሉ ታሪክና የዕድገት ሂደት
                   </p>
                 </div>
               </div>
@@ -561,7 +561,7 @@ const UsersManagement = () => {
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase">
-                        ወቅታዊ ደረጃ (Current Active Role)
+                        ወቅታዊ ደረጃ
                       </span>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant={getRoleVariant(journeyData.user?.role)}>
@@ -575,10 +575,10 @@ const UsersManagement = () => {
 
                     <div>
                       <span className="text-[11px] font-bold text-slate-400 uppercase">
-                        የተመደበበት ክፍል (Department)
+                        የተመደበበት ክፍል
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1">
-                        {journeyData.user?.departmentId?.name || 'Church-wide / All'}
+                        {journeyData.user?.departmentId?.name || 'ጠቅላላ ቤተክርስቲያን'}
                       </p>
                     </div>
                   </div>
@@ -586,7 +586,7 @@ const UsersManagement = () => {
                   {/* Chronological Role History Timeline */}
                   <div className="space-y-3">
                     <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-                      <span>⏳ የደረጃዎች የጊዜ ሰሌዳ (Role Progression Timeline)</span>
+                      <span>⏳ የደረጃዎች የጊዜ ሰሌዳ</span>
                     </h4>
 
                     {journeyData.user?.roleHistory && journeyData.user.roleHistory.length > 0 ? (
@@ -603,7 +603,7 @@ const UsersManagement = () => {
                                   {formatEthiopianDate(item.startDate)}{' '}
                                   {item.endDate
                                     ? `— ${formatEthiopianDate(item.endDate)}`
-                                    : '— Present'}
+                                    : '— አሁን'}
                                 </span>
                               </div>
                               {item.notes && (
@@ -636,7 +636,7 @@ const UsersManagement = () => {
                           <span>🎓 የተማሪነት መዝገብ</span>
                         </span>
                         <Badge variant={journeyData.student ? 'approved' : 'neutral'} size="xs">
-                          {journeyData.student ? 'ተገኝቷል (Preserved)' : 'የለም'}
+                          {journeyData.student ? 'ተገኝቷል' : 'የለም'}
                         </Badge>
                       </div>
                       {journeyData.student ? (
@@ -674,7 +674,7 @@ const UsersManagement = () => {
                           <span>👨‍🏫 የመምህርነት መዝገብ</span>
                         </span>
                         <Badge variant={journeyData.teacher ? 'approved' : 'neutral'} size="xs">
-                          {journeyData.teacher ? 'ተገኝቷል (Preserved)' : 'የለም'}
+                          {journeyData.teacher ? 'ተገኝቷል' : 'የለም'}
                         </Badge>
                       </div>
                       {journeyData.teacher ? (
@@ -706,7 +706,7 @@ const UsersManagement = () => {
                   {journeyData.memberships && journeyData.memberships.length > 0 && (
                     <div className="space-y-2">
                       <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5" /> የአገልግሎት ክፍሎች (Department Memberships)
+                        <Building2 className="w-3.5 h-3.5" /> የአገልግሎት ክፍሎች
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {journeyData.memberships.map((m) => (
@@ -730,7 +730,7 @@ const UsersManagement = () => {
             {/* Modal Footer */}
             <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-right">
               <Button variant="outline" size="sm" onClick={() => setShowJourneyModal(false)}>
-                ዝጋ (Close)
+                ዝጋ
               </Button>
             </div>
           </Card>
@@ -743,7 +743,7 @@ const UsersManagement = () => {
           <Card variant="default" padding="none" className="max-w-lg w-full overflow-hidden shadow-2xl">
             <div className="p-6 bg-gradient-to-r from-[var(--brand-primary)] to-indigo-950 text-white flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-lg">Edit User & Role (አባልና ሚና አሻሽል)</h3>
+                <h3 className="font-bold text-lg">አባልና ሚና አሻሽል</h3>
                 <p className="text-xs text-blue-200">የአባሉን ሚና ሲቀይሩ ታሪኩና መረጃው አይጠፋም</p>
               </div>
               <button
@@ -757,7 +757,7 @@ const UsersManagement = () => {
             <form onSubmit={handleEditSubmit(onSaveEdit)}>
               <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto bg-white dark:bg-slate-900">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ሙሉ ስም *</label>
                   <Input
                     {...editRegister('fullName')}
                     icon={Users}
@@ -767,21 +767,21 @@ const UsersManagement = () => {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Role (ሚና) *</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ሚና *</label>
                     <Select {...editRegister('role')}>
-                      <option value="superadmin">👑 Super Admin (Full Access)</option>
-                      <option value="department_admin">🏛️ Department Admin</option>
-                      <option value="admin">Admin</option>
-                      <option value="teacher">👨‍🏫 Teacher</option>
-                      <option value="student">🎓 Student</option>
-                      <option value="member">Church Member</option>
+                      <option value="superadmin">👑 ዋና አስተዳዳሪ</option>
+                      <option value="department_admin">🏛️ የክፍል አስተዳዳሪ</option>
+                      <option value="admin">አስተዳዳሪ</option>
+                      <option value="teacher">👨‍🏫 መምህር</option>
+                      <option value="student">🎓 ተማሪ</option>
+                      <option value="member">የሰንበት ት/ቤት አባል</option>
                     </Select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Department</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">የተመደበበት ክፍል</label>
                     <Select {...editRegister('departmentId')}>
-                      <option value="">Church-wide / All</option>
+                      <option value="">ጠቅላላ ቤተክርስቲያን</option>
                       {departments.map((d) => (
                         <option key={d._id} value={d._id}>{d.name}</option>
                       ))}
@@ -790,17 +790,17 @@ const UsersManagement = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Reason / Promotion Note (የለውጡ ምክንያት / ማስታወሻ)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">የለውጡ ምክንያት / ማስታወሻ</label>
                   <Input
                     {...editRegister('notes')}
-                    placeholder="e.g. ተማሪነቱን ጨርሶ ወደ መምህርነት ተዛውሯል (Graduated Batch 4)"
+                    placeholder="ለምሳሌ፡ ተማሪነቱን ጨርሶ ወደ መምህርነት ተዛውሯል"
                     icon={Sparkles}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ስልክ ቁጥር</label>
                     <Input
                       {...editRegister('phone')}
                       icon={Phone}
@@ -808,28 +808,28 @@ const UsersManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ሁኔታ</label>
                     <Select {...editRegister('status')}>
-                      <option value="approved">Approved</option>
-                      <option value="pending">Pending</option>
-                      <option value="rejected">Rejected</option>
-                      <option value="active">Active</option>
+                      <option value="approved">የጸደቀ</option>
+                      <option value="pending">በመጠባበቅ ላይ</option>
+                      <option value="rejected">ውድቅ የተደረገ</option>
+                      <option value="active">ንቁ</option>
                     </Select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Gender</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ጾታ</label>
                     <Select {...editRegister('gender')}>
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
+                      <option value="">ጾታ ይምረጡ</option>
+                      <option value="Male">ወንድ</option>
+                      <option value="Female">ሴት</option>
                     </Select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">City</label>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">ከተማ</label>
                     <Input
                       {...editRegister('city')}
                       icon={MapPin}
@@ -840,7 +840,7 @@ const UsersManagement = () => {
 
               <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
                 <Button variant="outline" size="sm" type="button" onClick={() => setShowEditModal(false)}>
-                  Cancel
+                  ሰርዝ
                 </Button>
                 <Button
                   variant="primary"
@@ -848,7 +848,7 @@ const UsersManagement = () => {
                   type="submit"
                   disabled={updateUserMutation.isPending || editSubmitting}
                 >
-                  {updateUserMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateUserMutation.isPending ? 'በማስቀመጥ ላይ...' : 'ለውጦችን አስቀምጥ'}
                 </Button>
               </div>
             </form>

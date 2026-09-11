@@ -26,14 +26,14 @@ const StudentResources = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading resources...</div>;
+  if (loading) return <div className="p-8 text-center text-slate-400">ማቴሪያሎች በመጫን ላይ ናቸው...</div>;
 
   return (
     <div className="space-y-6 font-sans">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
           <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            📚 የመማሪያ ማቴሪያሎች (Learning Resources)
+            📚 የመማሪያ ማቴሪያሎች
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             የተመደቡ የፒዲኤፍ ማስታወሻዎች፣ የድምፅና የቪዲዮ ትምህርቶች
@@ -72,7 +72,7 @@ const StudentResources = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-bold text-base text-slate-900 dark:text-white truncate">{r.title}</h3>
-                    <Badge variant="neutral" size="xs">{r.resourceType || 'File'}</Badge>
+                    <Badge variant="neutral" size="xs">{r.resourceType || 'ፋይል'}</Badge>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">{r.course?.name}</p>
                   {r.description && (
@@ -86,7 +86,7 @@ const StudentResources = () => {
                         rel="noopener noreferrer"
                         className="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold flex items-center gap-1"
                       >
-                        📎 ማውረድ (Download)
+                        📎 አውርድ
                       </a>
                     )}
                     {r.externalLink && (
@@ -96,7 +96,7 @@ const StudentResources = () => {
                         rel="noopener noreferrer"
                         className="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold flex items-center gap-1"
                       >
-                        🔗 መመልከት (Open Link)
+                        🔗 ተመልከት
                       </a>
                     )}
                   </div>

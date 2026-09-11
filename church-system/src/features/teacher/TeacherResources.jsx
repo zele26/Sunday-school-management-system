@@ -83,15 +83,15 @@ const TeacherResources = () => {
       if (res.ok) {
         const data = await res.json();
         setForm({ ...form, fileUrl: data.url });
-        setMsg({ type: 'success', text: '✅ File uploaded successfully!' });
+        setMsg({ type: 'success', text: '✅ ፋይሉ በተሳካ ሁኔታ ተጭኗል!' });
         setTimeout(() => setMsg({ type: '', text: '' }), 3000);
       } else {
         const err = await res.json();
-        setMsg({ type: 'error', text: err.message || 'Upload failed.' });
+        setMsg({ type: 'error', text: err.message || 'ፋይሉን መጫን አልተሳካም።' });
       }
     } catch (err) {
       console.error(err);
-      setMsg({ type: 'error', text: 'Network error during upload.' });
+      setMsg({ type: 'error', text: 'የግንኙነት ስህተት ተከስቷል።' });
     } finally {
       setUploading(false);
     }
@@ -114,18 +114,18 @@ const TeacherResources = () => {
 
       if (res.ok) {
         const data = await res.json();
-        setMsg({ type: 'success', text: data.message || 'Resource saved successfully!' });
+        setMsg({ type: 'success', text: '✅ ማቴሪያሉ በተሳካ ሁኔታ ተቀምጧል!' });
         resetForm();
         fetchResources();
         setShowForm(false);
         setTimeout(() => setMsg({ type: '', text: '' }), 3000);
       } else {
         const error = await res.json();
-        setMsg({ type: 'error', text: error.message || 'Failed to save resource.' });
+        setMsg({ type: 'error', text: error.message || 'ማቴሪያሉን ማስቀመጥ አልተሳካም።' });
       }
     } catch (err) {
       console.error(err);
-      setMsg({ type: 'error', text: 'Network error.' });
+      setMsg({ type: 'error', text: 'የኔትወርክ ችግር አጋጥሟል።' });
     } finally {
       setLoading(false);
     }
@@ -148,21 +148,21 @@ const TeacherResources = () => {
 
   // ---------- Delete ----------
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this resource?')) return;
+    if (!confirm('ይህን ማቴሪያል በእርግጥ መሰረዝ ይፈልጋሉ?')) return;
     setDeletingId(id);
     try {
       const res = await apiFetch(`/api/resources/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setMsg({ type: 'success', text: '✅ Resource deleted successfully!' });
+        setMsg({ type: 'success', text: '✅ ማቴሪያሉ በተሳካ ሁኔታ ተሰርዟል!' });
         fetchResources();
         setTimeout(() => setMsg({ type: '', text: '' }), 3000);
       } else {
         const err = await res.json();
-        setMsg({ type: 'error', text: err.message || 'Delete failed.' });
+        setMsg({ type: 'error', text: err.message || 'ማስወገድ አልተሳካም።' });
       }
     } catch (err) {
       console.error(err);
-      setMsg({ type: 'error', text: 'Network error.' });
+      setMsg({ type: 'error', text: 'የኔትወርክ ችግር አጋጥሟል።' });
     } finally {
       setDeletingId(null);
     }
@@ -191,14 +191,14 @@ const TeacherResources = () => {
       'Approved': 'bg-emerald-100 text-emerald-800 border-emerald-200',
       'Rejected': 'bg-rose-100 text-rose-800 border-rose-200',
     };
-    const emojis = {
-      'Pending': '⏳',
-      'Approved': '✅',
-      'Rejected': '❌',
+    const labels = {
+      'Pending': '⏳ በሂደት ላይ',
+      'Approved': '✅ ጸድቋል',
+      'Rejected': '❌ ውድቅ ተደርጓል',
     };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${colors[status] || 'bg-gray-100'}`}>
-        {emojis[status]} {status}
+        {labels[status] || status}
       </span>
     );
   };
@@ -214,9 +214,9 @@ const TeacherResources = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </span>
-            Teaching Resources
+            የማስተማሪያ ማቴሪያሎች
           </h2>
-          <p className="text-sm text-slate-500">Upload, manage, and track teaching resources for your courses.</p>
+          <p className="text-sm text-slate-500">ለኮርሶችዎ የመማሪያ ማቴሪያሎችን ይጫኑ፣ ያስተዳድሩ እና ሁኔታቸውን ይከታተሉ።</p>
         </div>
         <button
           onClick={() => {
@@ -229,26 +229,26 @@ const TeacherResources = () => {
               : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white shadow-indigo-500/20'
           }`}
         >
-          {showForm ? '✕ Cancel' : '➕ New Resource'}
+          {showForm ? '✕ ሰርዝ' : '➕ አዲስ ማቴሪያል'}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-2xl border border-indigo-100">
-          <p className="text-xs text-indigo-600 font-semibold uppercase">Total</p>
+          <p className="text-xs text-indigo-600 font-semibold uppercase">ጠቅላላ</p>
           <p className="text-2xl font-bold text-indigo-800">{stats.total}</p>
         </div>
         <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-4 rounded-2xl border border-yellow-100">
-          <p className="text-xs text-yellow-600 font-semibold uppercase">Pending</p>
+          <p className="text-xs text-yellow-600 font-semibold uppercase">በሂደት ላይ</p>
           <p className="text-2xl font-bold text-yellow-800">{stats.pending}</p>
         </div>
         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100">
-          <p className="text-xs text-emerald-600 font-semibold uppercase">Approved</p>
+          <p className="text-xs text-emerald-600 font-semibold uppercase">የጸደቁ</p>
           <p className="text-2xl font-bold text-emerald-800">{stats.approved}</p>
         </div>
         <div className="bg-gradient-to-r from-rose-50 to-red-50 p-4 rounded-2xl border border-rose-100">
-          <p className="text-xs text-rose-600 font-semibold uppercase">Rejected</p>
+          <p className="text-xs text-rose-600 font-semibold uppercase">ውድቅ የተደረጉ</p>
           <p className="text-2xl font-bold text-rose-800">{stats.rejected}</p>
         </div>
       </div>
@@ -271,16 +271,16 @@ const TeacherResources = () => {
       {showForm && (
         <div className="bg-slate-50/70 p-6 rounded-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-5 duration-300">
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <span>{editingId ? '✏️ Edit Resource' : '📤 Upload New Resource'}</span>
+            <span>{editingId ? '✏️ ማቴሪያል አርትዕ' : '📤 አዲስ ማቴሪያል ጫን'}</span>
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Title *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">የርዕስ ስም *</label>
                 <input
                   type="text"
                   name="title"
-                  placeholder="Resource title"
+                  placeholder="የማቴሪያል ርዕስ"
                   required
                   value={form.title}
                   onChange={handleChange}
@@ -288,7 +288,7 @@ const TeacherResources = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Course *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">ኮርስ *</label>
                 <select
                   name="course"
                   value={form.course}
@@ -296,33 +296,33 @@ const TeacherResources = () => {
                   onChange={handleChange}
                   className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition"
                 >
-                  <option value="">Select Course</option>
+                  <option value="">ኮርስ ይምረጡ</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>{c.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Resource Type</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">የማቴሪያል ዓይነት</label>
                 <select
                   name="resourceType"
                   value={form.resourceType}
                   onChange={handleChange}
                   className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition"
                 >
-                  <option value="PDF">📄 PDF</option>
-                  <option value="Document">📝 Document</option>
-                  <option value="Image">🖼️ Image</option>
-                  <option value="Video">🎬 Video</option>
-                  <option value="YouTube">▶️ YouTube</option>
-                  <option value="Audio">🎵 Audio</option>
-                  <option value="Link">🔗 Link</option>
-                  <option value="Book">📚 Book</option>
-                  <option value="Other">📦 Other</option>
+                  <option value="PDF">📄 ፒዲኤፍ (PDF)</option>
+                  <option value="Document">📝 ሰነድ / ጽሑፍ</option>
+                  <option value="Image">🖼️ ምስል</option>
+                  <option value="Video">🎬 ቪዲዮ</option>
+                  <option value="YouTube">▶️ ዩቲዩብ (YouTube)</option>
+                  <option value="Audio">🎵 የድምፅ ፋይል</option>
+                  <option value="Link">🔗 ማስፈንጠሪያ</option>
+                  <option value="Book">📚 መጽሐፍ</option>
+                  <option value="Other">📦 ሌላ</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Upload File</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">ፋይል ጫን</label>
                 <input
                   type="file"
                   onChange={handleFileUpload}
@@ -330,16 +330,16 @@ const TeacherResources = () => {
                   className="w-full p-2 bg-white border border-slate-200 rounded-xl text-sm file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.mp3,.zip,.rar"
                 />
-                {uploading && <p className="text-indigo-600 text-xs mt-1">Uploading...</p>}
+                {uploading && <p className="text-indigo-600 text-xs mt-1">በመጫን ላይ ነው...</p>}
                 {form.fileUrl && (
                   <p className="text-emerald-600 text-xs mt-1 flex items-center gap-1">
-                    ✅ File uploaded
-                    <a href={form.fileUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline ml-2">View</a>
+                    ✅ ፋይል ተጭኗል
+                    <a href={form.fileUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline ml-2">ተመልከት</a>
                   </p>
                 )}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">External Link (YouTube, etc.)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">ውጫዊ ማስፈንጠሪያ (YouTube፣ ወዘተ)</label>
                 <input
                   type="url"
                   name="externalLink"
@@ -350,11 +350,11 @@ const TeacherResources = () => {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">መግለጫ</label>
                 <textarea
                   name="description"
                   rows="3"
-                  placeholder="Optional description"
+                  placeholder="አጭር መግለጫ (አማራጭ)"
                   value={form.description}
                   onChange={handleChange}
                   className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition resize-none"
@@ -367,7 +367,7 @@ const TeacherResources = () => {
                 onClick={() => { setShowForm(false); resetForm(); }}
                 className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-200 hover:bg-slate-300 text-slate-700 transition"
               >
-                Cancel
+                ሰርዝ
               </button>
               <button
                 type="submit"
@@ -377,7 +377,7 @@ const TeacherResources = () => {
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 ) : (
-                  <>{editingId ? 'Update Resource' : 'Submit for Approval'}</>
+                  <>{editingId ? 'ማቴሪያሉን አዘምን' : 'ለማረጋገጫ አስገባ'}</>
                 )}
               </button>
             </div>
@@ -389,18 +389,18 @@ const TeacherResources = () => {
       {loading ? (
         <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center space-y-3">
           <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-semibold text-slate-500">Loading resources...</p>
+          <p className="text-sm font-semibold text-slate-500">ማቴሪያሎች በመጫን ላይ ናቸው...</p>
         </div>
       ) : (
         <div className="space-y-4">
           {resources.length === 0 ? (
             <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-              <p className="text-slate-400 text-sm">No resources uploaded yet.</p>
+              <p className="text-slate-400 text-sm">ምንም የተጫነ ማቴሪያል የለም።</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="mt-3 text-indigo-600 font-semibold text-sm hover:underline"
               >
-                Upload your first resource
+                የመጀመሪያውን ማቴሪያል ጫን
               </button>
             </div>
           ) : (
@@ -415,28 +415,28 @@ const TeacherResources = () => {
                     <p className="text-sm text-slate-500 flex items-center gap-2">
                       <span className="font-medium">{r.resourceType}</span>
                       <span className="text-slate-300">•</span>
-                      <span>{r.course?.name || 'No Course'}</span>
+                      <span>{r.course?.name || 'ኮርስ ያልተገለጸ'}</span>
                     </p>
                     {r.description && <p className="text-sm text-slate-600">{r.description}</p>}
                     <div className="flex flex-wrap gap-4 text-sm">
                       {r.fileUrl && (
                         <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1">
-                          📎 View File
+                          📎 ፋይሉን ተመልከት
                         </a>
                       )}
                       {r.externalLink && (
                         <a href={r.externalLink} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline flex items-center gap-1">
-                          🔗 Open Link
+                          🔗 ማስፈንጠሪያውን ክፈት
                         </a>
                       )}
                       {r.status === 'Rejected' && r.rejectionReason && (
                         <span className="text-rose-600 text-xs bg-rose-50 px-2 py-1 rounded-lg">
-                          Reason: {r.rejectionReason}
+                          ምክንያት: {r.rejectionReason}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-slate-400">
-                      Uploaded: {formatEthiopianDate(r.uploadDate)}
+                      የተጫነበት ቀን፡ {formatEthiopianDate(r.uploadDate)}
                     </p>
                   </div>
                   <div className="flex gap-2 ml-auto md:ml-0">
@@ -444,14 +444,14 @@ const TeacherResources = () => {
                       onClick={() => handleEdit(r)}
                       className="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1.5 rounded-xl border border-indigo-200 hover:bg-indigo-100 transition"
                     >
-                      ✏️ Edit
+                      ✏️ አርትዕ
                     </button>
                     <button
                       onClick={() => handleDelete(r._id)}
                       disabled={deletingId === r._id}
                       className="text-xs bg-rose-50 text-rose-700 font-semibold px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-100 transition disabled:opacity-50"
                     >
-                      {deletingId === r._id ? '...' : '🗑️ Delete'}
+                      {deletingId === r._id ? '...' : '🗑️ ሰርዝ'}
                     </button>
                   </div>
                 </div>

@@ -20,10 +20,10 @@ const ChangePasswordModal = () => {
     setSuccess('');
 
     if (newPassword !== confirmPassword) {
-      return setError('አዲሶቹ ፓስዎርዶች አይዛመዱም።');
+      return setError('አዲሱ የይለፍ ቃል እና ማረጋገጫው አይዛመዱም።');
     }
     if (newPassword.length < 6) {
-      return setError('አዲሱ ፓስዎርድ ቢያንስ 6 ፊደላት ሊሆን ይገባል።');
+      return setError('አዲሱ የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።');
     }
 
     setLoading(true);
@@ -35,7 +35,7 @@ const ChangePasswordModal = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess('ፓስዎርድ ተቀይሯል!');
+        setSuccess('የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!');
 
         // Update the Zustand store to clear the flag
         try {
@@ -83,10 +83,10 @@ const ChangePasswordModal = () => {
             </div>
 
             <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
-              የመጀመሪያ ፓስዎርድ ለውጥ
+              የመጀመሪያ የይለፍ ቃል ለውጥ
             </h2>
             <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto leading-relaxed">
-              እባክዎ ለደህንነትዎ ሲባል አሁን ያለውን እና አዲሱን ፓስዎርድ ያስገቡ
+              እባክዎ ለደህንነትዎ ሲባል አሁን ያለውን እና አዲሱን የይለፍ ቃል ያስገቡ
             </p>
           </div>
 
@@ -112,7 +112,7 @@ const ChangePasswordModal = () => {
             {/* Current Password Field */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አሁን ያለው ፓስዎርድ
+                አሁን ያለው የይለፍ ቃል
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
@@ -134,7 +134,7 @@ const ChangePasswordModal = () => {
             {/* New Password Field */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አዲስ ፓስዎርድ (ቢያንስ 6)
+                አዲስ የይለፍ ቃል (ቢያንስ 6 ቁምፊዎች)
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
@@ -156,7 +156,7 @@ const ChangePasswordModal = () => {
             {/* Confirm Password Field */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አዲሱን ያረጋግጡ
+                አዲሱን የይለፍ ቃል ያረጋግጡ
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
@@ -188,7 +188,7 @@ const ChangePasswordModal = () => {
                 </div>
               ) : (
                 <>
-                  <span>ፓስዎርድ ቀይር</span>
+                  <span>የይለፍ ቃል ቀይር</span>
                   <span className="text-base leading-none">➔</span>
                 </>
               )}

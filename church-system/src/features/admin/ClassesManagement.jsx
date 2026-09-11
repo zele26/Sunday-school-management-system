@@ -20,7 +20,7 @@ const ClassesManagement = () => {
     () => [
       {
         accessorKey: 'name',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Class Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የክፍል ስም" />,
         cell: ({ row }) => {
           const c = row.original;
           return <span className="font-bold text-slate-900 dark:text-white">{c.className || c.name}</span>;
@@ -28,16 +28,16 @@ const ClassesManagement = () => {
       },
       {
         accessorKey: 'teacherName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Assigned Teacher" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተመደበ መምህር" />,
         cell: ({ getValue }) => (
           <span className="text-slate-700 dark:text-slate-300 font-medium">
-            {getValue() || <span className="text-slate-400 italic">Unassigned</span>}
+            {getValue() || <span className="text-slate-400 italic">ያልተመደበ</span>}
           </span>
         ),
       },
       {
         accessorKey: 'studentCount',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Students" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ ብዛት" />,
         cell: ({ getValue }) => <Badge variant="active" size="sm">{getValue() || 0} ተማሪዎች</Badge>,
       },
     ],
@@ -47,7 +47,7 @@ const ClassesManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የክፍሎች አስተዳደር (Classes Management)"
+        title="የክፍሎች አስተዳደር"
         subtitle="ክፍሎችን እና የተመደቡ መምህራንን ያስተዳድሩ"
         icon={School}
         badge={<Badge variant="neutral" size="sm">{classes.length} ክፍሎች</Badge>}
@@ -57,14 +57,14 @@ const ClassesManagement = () => {
               <button
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Table View"
+                title="የሰንጠረዥ እይታ"
               >
                 <List className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-xs text-[var(--brand-primary)]' : 'text-slate-400'}`}
-                title="Grid View"
+                title="የካርድ እይታ"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
@@ -88,7 +88,7 @@ const ClassesManagement = () => {
           columns={columns}
           data={classes}
           isLoading={isLoading}
-          emptyMessage="ምንም ክፍሎች አልተገኙም (No classes found)"
+          emptyMessage="ምንም ክፍሎች አልተገኙም"
           emptyIcon={School}
         />
       ) : (

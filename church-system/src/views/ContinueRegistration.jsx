@@ -53,16 +53,16 @@ const ContinueRegistrationContent = () => {
 
       if (res.ok) {
         if (data.studentType !== 'distance') {
-          setError('ይህ የመደበኛ ተማሪ ምዝገባ ነው። ክፍያ አያስፈልገውም። (Regular stream registration does not require receipt upload)');
+          setError('ይህ የመደበኛ ተማሪ ምዝገባ ነው። ክፍያ አያስፈልገውም።');
           setIsLoggingIn(false);
           return;
         }
         setRegistration(data);
       } else {
-        setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል (Login Failed)');
+        setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል');
       }
     } catch (err) {
-      setError('የአውታረ መረብ ስህተት እባክዎ እንደገና ይሞክሩ (Network Error)');
+      setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setIsLoggingIn(false);
     }
@@ -74,7 +74,7 @@ const ContinueRegistrationContent = () => {
 
     // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('የፋይል መጠን ከ 5MB መብለጥ የለበትም (File too large)');
+      setError('የፋይሉ መጠን ከ 5MB መብለጥ የለበትም');
       return;
     }
 
@@ -94,12 +94,12 @@ const ContinueRegistrationContent = () => {
 
       if (res.ok) {
         setReceiptUrl(data.receiptUrl);
-        setMessage('ደረሰኝ በተሳካ ሁኔታ ተጭኗል (Receipt uploaded successfully)');
+        setMessage('የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል');
       } else {
         setError(data.message || 'ደረሰኝ መጫን አልተሳካም');
       }
     } catch (err) {
-      setError('የአውታረ መረብ ስህተት በደረሰኝ ጭነት ወቅት');
+      setError('የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት');
     } finally {
       setUploading(false);
     }
@@ -108,7 +108,7 @@ const ContinueRegistrationContent = () => {
   const handleFinalSubmit = async (e) => {
     e?.preventDefault();
     if (!transactionRef.trim()) {
-      setError('እባክዎ የክፍያ ማጣቀሻ ቁጥር (Transaction Ref) ያስገቡ');
+      setError('እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ');
       return;
     }
     if (!receiptUrl) {
@@ -137,7 +137,7 @@ const ContinueRegistrationContent = () => {
         setError(data.message || 'ክፍያ ማረጋገጥ አልተሳካም');
       }
     } catch (err) {
-      setError('የአውታረ መረብ ስህተት እባክዎ እንደገና ይሞክሩ');
+      setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +152,7 @@ const ContinueRegistrationContent = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#f8fafc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] flex flex-col justify-between items-center p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
         <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 relative z-10">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
         </header>
 
         <motion.div
@@ -176,7 +176,7 @@ const ContinueRegistrationContent = () => {
           </p>
 
           <div className="bg-slate-50 dark:bg-slate-800/70 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 mb-6">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">የማመልከቻ ቁጥርዎ (Reg No.)</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">የማመልከቻ ቁጥርዎ</p>
             <p className="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 tracking-widest">
               {registration?.registrationNumber}
             </p>
@@ -193,13 +193,13 @@ const ContinueRegistrationContent = () => {
               href="/check-status"
               className="block w-full bg-gradient-to-r from-[#1657b8] to-[#0d3f8a] hover:from-[#124796] hover:to-[#0a316b] text-white py-3.5 sm:py-4 rounded-2xl font-black shadow-lg shadow-blue-600/25 transition-all text-sm cursor-pointer"
             >
-              የምዝገባ ሁኔታ ይከታተሉ (Check Status) ➔
+              የምዝገባ ሁኔታ ይከታተሉ ➔
             </Link>
             <Link
               href="/login"
               className="block w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3.5 rounded-2xl font-bold transition-all text-sm cursor-pointer"
             >
-              ወደ መግቢያ ገጽ ይመለሱ (Back to Login)
+              ወደ መግቢያ ገጽ ይመለሱ
             </Link>
           </div>
         </motion.div>
@@ -220,12 +220,12 @@ const ContinueRegistrationContent = () => {
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[350px] bg-amber-400/10 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
         <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 relative z-10">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
           <Link
             href="/check-status"
             className="text-xs font-bold text-[#1657b8] dark:text-blue-400 hover:text-blue-800 transition-colors flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 shadow-2xs backdrop-blur-xs cursor-pointer"
           >
-            <span>ሁኔታ አረጋግጥ (Check Status)</span>
+            <span>ሁኔታ ያረጋግጡ</span>
             <span>➔</span>
           </Link>
         </header>
@@ -306,7 +306,7 @@ const ContinueRegistrationContent = () => {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                   <span className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                    💳 የክፍያ ማረጋገጫ (Payment Completion)
+                    💳 የክፍያ ማረጋገጫ
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -332,7 +332,7 @@ const ContinueRegistrationContent = () => {
                 {/* Phone */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                    የተመዘገቡበት ስልክ ቁጥር (Phone Number) <span className="text-rose-500">*</span>
+                    የተመዘገቡበት ስልክ ቁጥር <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -354,7 +354,7 @@ const ContinueRegistrationContent = () => {
                 {/* Password */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                    የይለፍ ቃል (Password) <span className="text-rose-500">*</span>
+                    የይለፍ ቃል <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
@@ -407,7 +407,7 @@ const ContinueRegistrationContent = () => {
                       </>
                     ) : (
                       <>
-                        <span>ቀጥል (Continue)</span>
+                        <span>ቀጥል</span>
                         <span className="text-amber-300 text-lg font-black">➔</span>
                       </>
                     )}
@@ -443,13 +443,13 @@ const ContinueRegistrationContent = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50/90 via-[#f8fafc] to-amber-50/70 dark:from-[#050c1a] dark:via-[#09152b] dark:to-[#030710] py-8 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
       <div className="max-w-3xl mx-auto space-y-6 relative z-10">
         <header className="flex items-center justify-between pb-2">
-          <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+          <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
           <button
             type="button"
             onClick={() => setRegistration(null)}
             className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 cursor-pointer"
           >
-            ← ውጣ (Switch Account)
+            ← አካውንት ቀይር
           </button>
         </header>
 
@@ -525,11 +525,11 @@ const ContinueRegistrationContent = () => {
               <div className="space-y-5 pt-2">
                 <div>
                   <label className={labelClass}>
-                    የክፍያ ማጣቀሻ ቁጥር (Transaction Reference / FT Number) <span className="text-rose-500">*</span>
+                    የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር ወይም የግብይት መለያ) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="ለምሳሌ፡ FT23456789 ወይም CBE/BOA Ref"
+                    placeholder="ለምሳሌ፡ FT23456789 ወይም የቴሌብር/ባንክ ማጣቀሻ"
                     value={transactionRef}
                     onChange={(e) => setTransactionRef(e.target.value)}
                     className={inputClass}
@@ -562,7 +562,7 @@ const ContinueRegistrationContent = () => {
                           <span>በመጫን ላይ...</span>
                         </>
                       ) : (
-                        'አፕሎድ (Upload)'
+                        'ጫን'
                       )}
                     </button>
                   </div>
@@ -571,7 +571,7 @@ const ContinueRegistrationContent = () => {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>ደረሰኝ በተሳካ ሁኔታ ተያይዟል (Receipt attached)</span>
+                      <span>የክፍያ ደረሰኝ በተሳካ ሁኔታ ተያይዟል</span>
                     </div>
                   )}
                 </div>
@@ -593,7 +593,7 @@ const ContinueRegistrationContent = () => {
                       </>
                     ) : (
                       <>
-                        <span>ምዝገባውን አጠናቅቅ (Finalize Registration)</span>
+                        <span>ምዝገባውን ያጠናቁ</span>
                         <span className="text-amber-300 font-black">➔</span>
                       </>
                     )}

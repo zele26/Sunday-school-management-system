@@ -66,11 +66,11 @@ const StudentOverview = () => {
   }, []);
 
   const isDistance = profile?.studentType === 'distance' || profile?.studentId?.startsWith('TKD');
-  const batchOrGrade = profile?.batch || profile?.grade || 'Batch 1';
+  const batchOrGrade = profile?.batch || profile?.grade || 'ዙር 1';
 
   const metricsCards = [
     {
-      label: 'የተመዘገቡ ኮርሶች',
+      label: 'የተመዘገቡ ትምህርቶች',
       value: distanceCourses.length || courses.length,
       icon: BookOpen,
       variant: 'default',
@@ -91,7 +91,7 @@ const StudentOverview = () => {
       badge: 'ወቅታዊ ደረጃ',
     },
     {
-      label: 'የተማሪ መለያ ID',
+      label: 'የተማሪ መለያ',
       value: profile?.studentId || 'TKD-STU',
       icon: User,
       variant: 'default',
@@ -114,7 +114,7 @@ const StudentOverview = () => {
                       : 'bg-white/20 text-white'
                   }`}
                 >
-                  {isDistance ? '🌐 የርቀት ትምህርት (Distance LMS)' : '🏛️ መደበኛ ትምህርት'}
+                  {isDistance ? '🌐 የርቀት ትምህርት' : '🏛️ መደበኛ ትምህርት'}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20 text-white">
                   {batchOrGrade}
@@ -135,7 +135,7 @@ const StudentOverview = () => {
                   className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-center text-xs shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   <span>🚀</span>
-                  <span>ትምህርቱን ቀጥል (Continue Learning)</span>
+                  <span>ትምህርቱን ቀጥል</span>
                 </Link>
               )}
             </div>
@@ -155,7 +155,7 @@ const StudentOverview = () => {
               </span>
               <div>
                 <h4 className="font-black text-sm text-slate-900 dark:text-white">
-                  የተመረቁበት ይፋዊ የምስክር ወረቀት (Official Graduation Certificate)
+                  የተመረቁበት ይፋዊ የምስክር ወረቀት
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
                   የ{certificates[0].batch} የትምህርት መርሃ ግብርን በስኬት ስላጠናቀቁ የምስክር ወረቀት ተሰጥቷል።
@@ -168,7 +168,7 @@ const StudentOverview = () => {
               className="px-5 py-2.5 bg-[#1657b8] hover:bg-[#124796] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <span>👁️</span>
-              <span>የምስክር ወረቀቱን ይመልከቱ / አትሙ (View & Print)</span>
+              <span>የምስክር ወረቀቱን ይመልከቱ / አትሙ</span>
             </button>
           </Card>
         </FadeIn>
@@ -182,7 +182,7 @@ const StudentOverview = () => {
                 </span>
                 <div>
                   <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">
-                    የምስክር ወረቀት ማጠናቀቂያ ሂደት (Graduation Clearance Progress)
+                    የምስክር ወረቀት ማጠናቀቂያ ሂደት
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     ይፋዊ የሰንበት ት/ቤት ዲፕሎማ የሚሰጠው ሁሉንም {clearance.totalRequired} ኮርሶች 100% ሲያጠናቅቁ ነው።
@@ -218,7 +218,7 @@ const StudentOverview = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-              <span>🎓 ወቅታዊ የርቀት ትምህርት ኮርሶች (Active Distance Courses)</span>
+              <span>🎓 ወቅታዊ የርቀት ትምህርቶች</span>
             </h3>
             <span className="text-xs font-bold text-slate-500">{distanceCourses.length} ኮርሶች</span>
           </div>
@@ -246,7 +246,7 @@ const StudentOverview = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-              <span>📖 የተመዘገቡባቸው ኮርሶች (Enrolled Courses)</span>
+              <span>📖 የተመዘገቡባቸው ትምህርቶች</span>
             </h3>
             <span className="text-xs font-bold text-slate-500">{courses.length} ኮርሶች</span>
           </div>

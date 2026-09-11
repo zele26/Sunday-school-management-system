@@ -297,15 +297,15 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                Curriculum Studio
+                የትምህርት ዝግጅት ማዕከል
               </span>
-              <span className="text-xs text-slate-400 font-mono">{curriculum.course?.code || 'LMS'}</span>
+              <span className="text-xs text-slate-400 font-mono">{curriculum.course?.code || 'የርቀት ትምህርት'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white mt-1">
               {curriculum.course?.nameAmharic || courseName || 'የርቀት ኮርስ ማስተካከያ'} — የትምህርትና ሞጁሎች ማዕከል
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              የYouTube ቪዲዮዎችን፣ መንፈሳዊ ንባቦችንና የድምፅ ትምህርቶችን በቀላሉ እዚህ ያክሉና ያስተካክሉ።
+              የቪዲዮ ትምህርቶችን፣ መንፈሳዊ ንባቦችንና የድምፅ ትምህርቶችን በቀላሉ እዚህ ያክሉና ያስተካክሉ።
             </p>
           </div>
 
@@ -315,7 +315,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
               className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-xl text-xs font-black hover:brightness-110 shadow-md transition-all flex items-center gap-1.5"
             >
               <span>+</span>
-              <span>አዲስ ሞጁል (Add Module)</span>
+              <span>አዲስ ሞጁል</span>
             </button>
             <button
               onClick={onClose}
@@ -346,7 +346,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                 onClick={handleOpenAddModule}
                 className="px-5 py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl hover:brightness-110 shadow-md"
               >
-                + የመጀመሪያውን ሞጁል ፍጠር (Create 1st Module)
+                + የመጀመሪያውን ሞጁል ፍጠር
               </button>
             </div>
           ) : (
@@ -384,7 +384,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                         className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1"
                       >
                         <span>+</span>
-                        <span>ትምህርት ጨምር (Add Lesson)</span>
+                        <span>ትምህርት ጨምር</span>
                       </button>
                       <button
                         onClick={() => handleOpenEditModule(module)}
@@ -412,7 +412,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                           onClick={() => handleOpenAddLesson(module)}
                           className="mt-2 text-xs text-amber-400 hover:underline font-bold"
                         >
-                          + የYouTube ቪዲዮ ወይም ንባብ ትምህርት ያክሉ
+                          + የቪዲዮ ወይም የንባብ ትምህርት ያክሉ
                         </button>
                       </div>
                     ) : (
@@ -439,7 +439,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                                     rel="noreferrer"
                                     className="px-2 py-0.5 bg-red-950/60 text-red-400 border border-red-800/50 rounded-md text-[10px] font-bold flex items-center gap-1 hover:bg-red-900/60"
                                   >
-                                    <span>🎥 YouTube</span>
+                                    <span>🎥 ቪዲዮ</span>
                                     <span>➔</span>
                                   </a>
                                 ) : (
@@ -478,7 +478,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                               className="px-3 py-1.5 bg-slate-800 hover:bg-amber-400 hover:text-slate-950 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
                             >
                               <span>✏️</span>
-                              <span>አስተካክል (Edit)</span>
+                              <span>አስተካክል</span>
                             </button>
                             <button
                               onClick={() => handleDeleteLesson(lesson._id)}
@@ -503,7 +503,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
             onClick={onClose}
             className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all"
           >
-            ዝጋ (Close Studio)
+            ዝጋ
           </button>
         </div>
       </div>
@@ -515,7 +515,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
               <div>
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  <span>{editingLesson ? '✏️ ትምህርቱን ያሻሽሉ (Edit Lesson)' : '✨ አዲስ ትምህርት ጨምር (Create Lesson)'}</span>
+                  <span>{editingLesson ? '✏️ ትምህርቱን ያሻሽሉ' : '✨ አዲስ ትምህርት ጨምር'}</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   ሞጁል፡ <span className="text-amber-300 font-bold">{activeModuleForLesson?.titleAmharic || activeModuleForLesson?.title}</span>
@@ -541,7 +541,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
               {/* Titles & Order */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="md:col-span-2 space-y-1">
-                  <label className="font-bold text-slate-300">የትምህርቱ ርዕስ በአማርኛ * (Lesson Title in Amharic):</label>
+                  <label className="font-bold text-slate-300">የትምህርቱ ርዕስ *:</label>
                   <input
                     type="text"
                     value={lessonForm.titleAmharic}
@@ -553,7 +553,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-300">ቅደም ተከተል (Order):</label>
+                  <label className="font-bold text-slate-300">ቅደም ተከተል:</label>
                   <input
                     type="number"
                     min="1"
@@ -569,13 +569,13 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-sm text-red-400 flex items-center gap-1.5">
                     <span>🎥</span>
-                    <span>የYouTube ቪዲዮ ትምህርት (Video Lesson Link)</span>
+                    <span>የቪዲዮ ትምህርት ማስፈንጠሪያ</span>
                   </span>
-                  <span className="text-[11px] text-slate-400">YouTube, youtu.be, or Direct URL</span>
+                  <span className="text-[11px] text-slate-400">YouTube ወይም ቀጥታ የቪዲዮ ማስፈንጠሪያ</span>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 mb-1">የYouTube ሊንክ ይለጥፉ (Paste YouTube Video URL):</label>
+                  <label className="block text-slate-400 mb-1">የቪዲዮ ማስፈንጠሪያ (URL) ያስገቡ:</label>
                   <input
                     type="url"
                     value={lessonForm.videoUrl}
@@ -588,7 +588,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                 {/* Real-time YouTube Live Preview Player */}
                 {lessonForm.videoUrl && (
                   <div className="space-y-1.5 pt-1">
-                    <span className="text-[11px] font-bold text-slate-400">የቪዲዮ ቅድመ እይታ (Live Preview):</span>
+                    <span className="text-[11px] font-bold text-slate-400">የቪዲዮ ቅድመ እይታ:</span>
                     <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800">
                       <iframe
                         src={getEmbedUrl(lessonForm.videoUrl)}
@@ -602,7 +602,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="block text-slate-400 mb-1">የቪዲዮው ርዝመት በደቂቃ (Duration in Mins):</label>
+                    <label className="block text-slate-400 mb-1">የቪዲዮው ርዝመት (በደቂቃ):</label>
                     <input
                       type="number"
                       min="1"
@@ -621,7 +621,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                       className="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700"
                     />
                     <label htmlFor="videoMandatory" className="text-slate-300 font-semibold cursor-pointer">
-                      ቪዲዮውን ማየት ግዴታ ይሁን (Mandatory Watch)
+                      ቪዲዮውን ማየት ግዴታ ይሁን
                     </label>
                   </div>
                 </div>
@@ -631,11 +631,11 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
               <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-3">
                 <span className="font-extrabold text-sm text-emerald-400 flex items-center gap-1.5">
                   <span>📖</span>
-                  <span>የዕለቱ መንፈሳዊ ንባብና የትምህርት ጽሑፍ (Spiritual Reading Material)</span>
+                  <span>የዕለቱ መንፈሳዊ ንባብና የትምህርት ጽሑፍ</span>
                 </span>
 
                 <div>
-                  <label className="block text-slate-400 mb-1">የትምህርቱ ጽሑፍና የመጽሐፍ ቅዱስ ማብራሪያ (Reading Content in Amharic):</label>
+                  <label className="block text-slate-400 mb-1">የትምህርቱ ጽሑፍና የመጽሐፍ ቅዱስ ማብራሪያ:</label>
                   <textarea
                     rows={5}
                     value={lessonForm.readingContentAmharic}
@@ -647,7 +647,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
 
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <label className="block text-slate-400 mb-1">የንባብ ግምት ጊዜ በደቂቃ (Reading Minutes):</label>
+                    <label className="block text-slate-400 mb-1">የንባብ ግምት ጊዜ (በደቂቃ):</label>
                     <input
                       type="number"
                       min="1"
@@ -666,7 +666,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                       className="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700"
                     />
                     <label htmlFor="readingMandatory" className="text-slate-300 font-semibold cursor-pointer">
-                      ንባቡን ማጠናቀቅ ግዴታ ይሁን (Mandatory Reading)
+                      ንባቡን ማጠናቀቅ ግዴታ ይሁን
                     </label>
                   </div>
                 </div>
@@ -676,22 +676,22 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
               <div className="p-4 bg-slate-950/80 rounded-2xl border border-slate-800 space-y-3">
                 <span className="font-extrabold text-sm text-indigo-400 flex items-center gap-1.5">
                   <span>🎧</span>
-                  <span>የድምፅ ትምህርት ወይም መዝሙር (Audio / Chant URL - Optional)</span>
+                  <span>የድምፅ ትምህርት ወይም መዝሙር (አማራጭ)</span>
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 mb-1">የድምፅ ፋይል ሊንክ (Audio MP3 URL):</label>
+                    <label className="block text-slate-400 mb-1">የድምፅ ፋይል ማስፈንጠሪያ:</label>
                     <input
                       type="url"
                       value={lessonForm.audioUrl}
                       onChange={(e) => setLessonForm({ ...lessonForm, audioUrl: e.target.value })}
-                      placeholder="https://... (mp3 / audio url)"
+                      placeholder="https://..."
                       className="w-full p-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">የድምፅ ርዕስ (Audio Title):</label>
+                    <label className="block text-slate-400 mb-1">የድምፅ ርዕስ:</label>
                     <input
                       type="text"
                       value={lessonForm.audioTitle}
@@ -710,14 +710,14 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                   onClick={() => setShowLessonModal(false)}
                   className="px-5 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700"
                 >
-                  ሰርዝ (Cancel)
+                  ሰርዝ
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 rounded-xl font-black hover:brightness-110 shadow-lg disabled:opacity-50"
                 >
-                  {submitting ? 'በማስቀመጥ ላይ...' : editingLesson ? 'ያዘምኑ (Update Lesson)' : 'ትምህርቱን ፍጠር (Save Lesson)'}
+                  {submitting ? 'በማስቀመጥ ላይ...' : editingLesson ? 'ያዘምኑ' : 'ትምህርቱን ፍጠር'}
                 </button>
               </div>
             </form>
@@ -730,12 +730,12 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-60 animate-in fade-in">
           <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 text-white">
             <h3 className="text-lg font-black text-white">
-              {editingModule ? '✏️ ሞጁል ያሻሽሉ (Edit Module)' : '✨ አዲስ ሞጁል ፍጠር (Add Module)'}
+              {editingModule ? '✏️ ሞጁል ያሻሽሉ' : '✨ አዲስ ሞጁል ፍጠር'}
             </h3>
 
             <form onSubmit={handleSaveModule} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-slate-300 mb-1">የሞጁል ርዕስ በአማርኛ * (Module Title in Amharic):</label>
+                <label className="block font-bold text-slate-300 mb-1">የሞጁል ርዕስ *:</label>
                 <input
                   type="text"
                   value={moduleForm.titleAmharic}
@@ -747,7 +747,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 mb-1">መግለጫ (Description in Amharic):</label>
+                <label className="block font-bold text-slate-300 mb-1">መግለጫ:</label>
                 <textarea
                   rows={3}
                   value={moduleForm.descriptionAmharic}
@@ -759,7 +759,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">የጥናት ሰዓት ግምት (Est. Hours):</label>
+                  <label className="block font-bold text-slate-300 mb-1">የጥናት ሰዓት ግምት (በሰዓት):</label>
                   <input
                     type="number"
                     min="1"
@@ -769,7 +769,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">ቅደም ተከተል (Order):</label>
+                  <label className="block font-bold text-slate-300 mb-1">ቅደም ተከተል:</label>
                   <input
                     type="number"
                     min="1"
@@ -793,7 +793,7 @@ const CurriculumLessonStudio = ({ courseId, courseName, onClose, onUpdated }) =>
                   disabled={submitting}
                   className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black rounded-xl hover:brightness-110"
                 >
-                  {submitting ? 'በማስቀመጥ ላይ...' : editingModule ? 'ያዘምኑ' : 'ፍጠር (Save Module)'}
+                  {submitting ? 'በማስቀመጥ ላይ...' : editingModule ? 'ያዘምኑ' : 'ፍጠር'}
                 </button>
               </div>
             </form>

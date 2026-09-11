@@ -84,7 +84,7 @@ export function useApproveUser() {
       return res.json().catch(() => ({}));
     },
     onSuccess: () => {
-      toast.success('ተጠቃሚው ጸድቋል (User approved)');
+      toast.success('ተጠቃሚው ጸድቋል');
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {
@@ -105,7 +105,7 @@ export function useRejectUser() {
       return res.json().catch(() => ({}));
     },
     onSuccess: () => {
-      toast.success('ተጠቃሚው ውድቅ ተደርጓል (User rejected)');
+      toast.success('ተጠቃሚው ውድቅ ተደርጓል');
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {
@@ -126,7 +126,7 @@ export function useDeleteUser() {
       return res.json().catch(() => ({}));
     },
     onSuccess: () => {
-      toast.success('ተጠቃሚው ተሰርዟል (User deleted)');
+      toast.success('ተጠቃሚው ተሰርዟል');
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {
@@ -151,7 +151,7 @@ export function useBulkApproveUsers() {
       return res.json().catch(() => ({}));
     },
     onSuccess: (_, userIds) => {
-      toast.success(`${userIds.length} ተጠቃሚዎች ጸድቀዋል (Approved)`);
+      toast.success(`${userIds.length} ተጠቃሚዎች ጸድቀዋል`);
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {
@@ -176,7 +176,7 @@ export function useBulkRejectUsers() {
       return res.json().catch(() => ({}));
     },
     onSuccess: (_, userIds) => {
-      toast.success(`${userIds.length} ተጠቃሚዎች ውድቅ ተደርገዋል (Rejected)`);
+      toast.success(`${userIds.length} ተጠቃሚዎች ውድቅ ተደርገዋል`);
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {
@@ -201,7 +201,7 @@ export function useBulkDeleteUsers() {
       return res.json().catch(() => ({}));
     },
     onSuccess: (_, userIds) => {
-      toast.success(`${userIds.length} ተጠቃሚዎች ተሰርዘዋል (Deleted)`);
+      toast.success(`${userIds.length} ተጠቃሚዎች ተሰርዘዋል`);
       queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
     },
     onError: () => {

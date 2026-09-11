@@ -53,7 +53,7 @@ const StudentProfilesManagement = () => {
     () => [
       {
         accessorKey: 'studentNumber',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Student ID" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ መለያ" />,
         cell: ({ getValue }) => (
           <span className="font-mono font-bold text-xs text-[var(--brand-primary)] dark:text-blue-400">
             {getValue()}
@@ -62,35 +62,35 @@ const StudentProfilesManagement = () => {
       },
       {
         accessorKey: 'person',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Person" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ ስም" />,
         cell: ({ row }) => {
           const p = row.original.personId;
-          const name = p ? `${p.firstName} ${p.lastName}` : 'Unknown';
+          const name = p ? `${p.firstName} ${p.lastName}` : 'ያልታወቀ';
           return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
         },
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Current Grade / Batch" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ወቅታዊ ክፍል / ባች" />,
         cell: ({ row }) => <Badge variant="active" size="sm">{getCurrentGrade(row.original)}</Badge>,
       },
       {
         accessorKey: 'academicYear',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Year" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ዘመን" />,
         cell: ({ row }) => <span className="text-slate-600 dark:text-slate-300">{getAcademicYear(row.original)}</span>,
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'active' ? 'approved' : 'neutral'} size="sm">
-            {getValue() || 'active'}
+            {getValue() === 'active' ? 'ንቁ' : getValue() || 'ንቁ'}
           </Badge>
         ),
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
+        header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => (
           <div className="text-right">
             <Button
@@ -100,7 +100,7 @@ const StudentProfilesManagement = () => {
               className="gap-1.5"
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>ዝርዝር (Details)</span>
+              <span>ዝርዝር</span>
             </Button>
           </div>
         ),
@@ -112,7 +112,7 @@ const StudentProfilesManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የተማሪዎች ፕሮፋይል (Student Profiles)"
+        title="የተማሪዎች ፕሮፋይል"
         subtitle="የእያንዳንዱን ተማሪ የትምህርት ደረጃ፣ የምዝገባ ታሪክ እና የደረጃ ሽግግር ያስተዳድሩ"
         icon={GraduationCap}
         badge={<Badge variant="gold" size="sm">{profiles.length} ተማሪዎች</Badge>}
@@ -152,7 +152,7 @@ const StudentProfilesManagement = () => {
                   {selectedProfile.personId?.firstName} {selectedProfile.personId?.lastName}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                  Student ID:{' '}
+                  የተማሪ መለያ:{' '}
                   <span className="font-bold text-[var(--brand-primary)] dark:text-blue-400">
                     {selectedProfile.studentNumber}
                   </span>
@@ -170,35 +170,35 @@ const StudentProfilesManagement = () => {
             {selectedProfile.latestEnrollment && (
               <div className="bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/20 p-4 rounded-2xl">
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
-                  Current Enrollment
+                  ወቅታዊ ምዝገባ
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-400 block">Academic Year</span>
+                    <span className="text-slate-400 block">የትምህርት ዘመን</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
                       {selectedProfile.latestEnrollment.academicYearId?.name}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Program</span>
+                    <span className="text-slate-400 block">ፕሮግራም</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
                       {selectedProfile.latestEnrollment.programId?.name}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Grade/Batch</span>
+                    <span className="text-slate-400 block">ክፍል/ባች</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
                       {getCurrentGrade(selectedProfile)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Study Mode</span>
+                    <span className="text-slate-400 block">የመማሪያ ዘዴ</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">
                       {selectedProfile.latestEnrollment.studyModeId?.name || '-'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Status</span>
+                    <span className="text-slate-400 block">ሁኔታ</span>
                     <Badge variant="approved" size="sm">
                       {selectedProfile.latestEnrollment.status}
                     </Badge>
@@ -216,10 +216,10 @@ const StudentProfilesManagement = () => {
                 className="gap-2"
               >
                 <TrendingUp className="w-4 h-4" />
-                <span>ቀጣይ ደረጃ አሸጋግር (Progress Student)</span>
+                <span>ቀጣይ ደረጃ አሸጋግር</span>
               </Button>
               <Button variant="outline" size="sm" onClick={() => setShowDetailModal(false)}>
-                ዝጋ (Close)
+                ዝጋ
               </Button>
             </div>
 

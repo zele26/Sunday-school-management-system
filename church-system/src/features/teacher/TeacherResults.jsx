@@ -67,14 +67,14 @@ const TeacherResults = () => {
       <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
         <CardTitle className="flex items-center gap-2">
           <Award className="w-5 h-5 text-[var(--brand-primary)]" />
-          <span>የፈተና ውጤቶች (Exam Results)</span>
+          <span>የፈተና ውጤቶች</span>
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-6 p-0">
         <div className="flex flex-wrap gap-4 items-end bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700">
           <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ፈተና ይምረጡ (Select Exam)</label>
+            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">ፈተና ይምረጡ</label>
             <select
               value={selectedQuiz}
               onChange={(e) => setSelectedQuiz(e.target.value)}
@@ -87,16 +87,16 @@ const TeacherResults = () => {
             </select>
           </div>
           <Button onClick={() => fetchResults()} size="sm" className="font-bold">
-            ውጤቶችን አሳይ (Show Results)
+            ውጤቶችን አሳይ
           </Button>
         </div>
 
-        {loading && <div className="py-8 text-center text-slate-400 text-sm">ውጤት በመጫን ላይ…</div>}
+        {loading && <div className="py-8 text-center text-slate-400 text-sm">ውጤት በመጫን ላይ ነው...</div>}
         {error && <div className="py-4 text-center text-rose-500 font-semibold text-sm">❌ {error}</div>}
 
         {!loading && !error && results.length === 0 && (
           <p className="text-slate-500 dark:text-slate-400 text-sm py-6 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl">
-            ማንም ተማሪ ይህን ፈተና አልወሰደም (No student has taken this exam yet)
+            ማንም ተማሪ ይህን ፈተና እስካሁን አልወሰደም።
           </p>
         )}
 

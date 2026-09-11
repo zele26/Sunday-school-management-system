@@ -6,10 +6,10 @@ import { CheckCircle2, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 let toastListeners = [];
 
 export const showToast = {
-  success: (message, title = 'ተሳክቷል (Success)') => notify({ type: 'success', message, title }),
-  error: (message, title = 'ስህተት (Error)') => notify({ type: 'error', message, title }),
-  warning: (message, title = 'ማስጠንቀቂያ (Warning)') => notify({ type: 'warning', message, title }),
-  info: (message, title = 'መረጃ (Info)') => notify({ type: 'info', message, title }),
+  success: (message, title = 'ተሳክቷል') => notify({ type: 'success', message, title }),
+  error: (message, title = 'ስህተት') => notify({ type: 'error', message, title }),
+  warning: (message, title = 'ማስጠንቀቂያ') => notify({ type: 'warning', message, title }),
+  info: (message, title = 'መረጃ') => notify({ type: 'info', message, title }),
 };
 
 export const toast = showToast;

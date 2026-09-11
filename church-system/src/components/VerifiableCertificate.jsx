@@ -41,7 +41,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
             <Image src={ChurchLogo} alt="Logo" width={32} height={32} className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(255,204,0,0.6)]" style={{ width: 'auto', height: 'auto' }} />
             <div>
               <h3 className="font-extrabold text-sm text-white">ይፋዊ የሰንበት ት/ቤት የምስክር ወረቀት</h3>
-              <p className="text-[10px] text-amber-300">Official Ethiopian Orthodox Sunday School Diploma</p>
+              <p className="text-[10px] text-amber-300">የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ሰንበት ትምህርት ቤት የዲፕሎማ ምስክር ወረቀት</p>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 rounded-xl text-xs font-black hover:brightness-110 transition-all shadow-md flex items-center gap-1.5"
             >
               <span>🖨️</span>
-              <span>አትም / አውርድ (Print / PDF)</span>
+              <span>አትም / አውርድ</span>
             </button>
             {onClose && (
               <button
@@ -198,17 +198,17 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               {/* Signatory 1: Sunday School Chairperson */}
               <div className="space-y-1">
                 <div className="h-8 flex items-end justify-center">
-                  <span className="font-serif italic text-slate-400 text-xs">ፊርማ (Signature)</span>
+                  <span className="font-serif italic text-slate-400 text-xs">ፊርማ</span>
                 </div>
                 <div className="border-t border-slate-700 pt-1 font-bold text-slate-900 text-[11px] sm:text-xs">
                   የሰንበት ትምህርት ቤቱ ሊቀመንበር ስምና ፊርማ
                 </div>
-                <p className="text-[10px] text-slate-500">Sunday School Chair</p>
+                <p className="text-[10px] text-slate-500">የሰንበት ት/ቤት ሰብሳቢ</p>
               </div>
 
               {/* Center: Official Seal & QR Code */}
               <div className="flex flex-col items-center justify-center space-y-1">
-                <span className="text-[10px] font-serif font-bold text-amber-900">የማኅተም ቦታ (Seal)</span>
+                <span className="text-[10px] font-serif font-bold text-amber-900">የማኅተም ቦታ</span>
                 {certificate.qrCodeUrl && (
                   <Image
                     src={certificate.qrCodeUrl}
@@ -223,19 +223,19 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                   {certificate.certificateNumber}
                 </span>
                 <span className="text-[8px] text-emerald-800 font-bold uppercase tracking-wider">
-                  ✓ VERIFIED AUTHENTIC
+                  ✓ የተረጋገጠ ኦፊሴላዊ ሰነድ
                 </span>
               </div>
 
               {/* Signatory 2: Debre Administrator */}
               <div className="space-y-1">
                 <div className="h-8 flex items-end justify-center">
-                  <span className="font-serif italic text-slate-400 text-xs">ፊርማ (Signature)</span>
+                  <span className="font-serif italic text-slate-400 text-xs">ፊርማ</span>
                 </div>
                 <div className="border-t border-slate-700 pt-1 font-bold text-slate-900 text-[11px] sm:text-xs">
                   የደብሩ አስተዳዳሪ ስምና ፊርማ
                 </div>
-                <p className="text-[10px] text-slate-500">Parish Administrator</p>
+                <p className="text-[10px] text-slate-500">የደብሩ አስተዳደር</p>
               </div>
             </div>
 
@@ -247,7 +247,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
               <p className="text-[10px] font-bold text-amber-800 font-serif">— አባ ጊዮርጊስ ዘጋስጫ</p>
               
               <p className="text-[9px] text-slate-400 font-mono pt-0.5">
-                የተሰጠበት ቀን: {certificate.issueDateEthiopian} (ዓ.ም) • Serial: {certificate.certificateNumber}
+                የተሰጠበት ቀን: {certificate.issueDateEthiopian} (ዓ.ም) • ተከታታይ ቁጥር: {certificate.certificateNumber}
               </p>
             </div>
           </div>

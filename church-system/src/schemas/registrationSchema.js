@@ -6,23 +6,23 @@ export const regularRegistrationSchema = z.object({
   firstName: z
     .string()
     .trim()
-    .min(1, 'የመጀመሪያ ስም ግዴታ ነው (First name is required)'),
+    .min(1, 'የመጀመሪያ ስም ግዴታ ነው'),
   middleName: z
     .string()
     .trim()
-    .min(1, 'የመካከለኛ ስም ግዴታ ነው (Middle name is required)'),
+    .min(1, 'የመካከለኛ ስም ግዴታ ነው'),
   lastName: z
     .string()
     .trim()
-    .min(1, 'የአያት ስም ግዴታ ነው (Last name is required)'),
+    .min(1, 'የአያት ስም ግዴታ ነው'),
   educationLevel: z
     .string()
     .trim()
-    .min(1, 'የትምህርት ደረጃ ይምረጡ (Education level is required)'),
+    .min(1, 'የትምህርት ደረጃ ይምረጡ'),
   profession: z
     .string()
     .trim()
-    .min(1, 'ሙያ ያስገቡ (Profession is required)'),
+    .min(1, 'ሙያ ያስገቡ'),
   gender: z
     .string()
     .default('Male'),
@@ -32,7 +32,7 @@ export const regularRegistrationSchema = z.object({
       const n = Number(val);
       return !isNaN(n) && n > 14;
     }, {
-      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be greater than 14)',
+      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት',
     }),
   dateOfBirth: z
     .string()
@@ -41,11 +41,11 @@ export const regularRegistrationSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(1, 'ስልክ ቁጥር ግዴታ ነው (Phone is required)')
-    .regex(phoneRegex, 'ትክክለኛ ስልክ ቁጥር ያስገቡ (Valid 10-digit phone required)'),
+    .min(1, 'ስልክ ቁጥር ግዴታ ነው')
+    .regex(phoneRegex, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
   grade: z
     .string()
-    .min(1, 'ክፍል ይምረጡ (Grade is required)'),
+    .min(1, 'ክፍል ይምረጡ'),
   shift: z
     .string()
     .default('weekend'),
@@ -71,15 +71,15 @@ export const regularRegistrationSchema = z.object({
   email: z
     .string()
     .trim()
-    .email('ትክክለኛ ኢሜይል ያስገቡ (Invalid email format)')
+    .email('ትክክለኛ ኢሜይል ያስገቡ')
     .optional()
     .or(z.literal('')),
   password: z
     .string()
-    .min(6, 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት (Password must be at least 6 characters)'),
+    .min(6, 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት'),
   confirmPassword: z
     .string()
-    .min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ (Please confirm your password)'),
+    .min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ'),
   studentType: z
     .string()
     .default('regular'),
@@ -87,7 +87,7 @@ export const regularRegistrationSchema = z.object({
   emergencyFirstName: z
     .string()
     .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው (Emergency contact first name is required)'),
+    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው'),
   emergencyMiddleName: z
     .string()
     .trim()
@@ -104,12 +104,12 @@ export const regularRegistrationSchema = z.object({
   emergencyPhone: z
     .string()
     .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ ስልክ ግዴታ ነው (Emergency phone is required)')
-    .regex(phoneRegex, 'የአደጋ ጊዜ ተጠሪ ስልክ 10 አሃዝ መሆን አለበት (Valid 10-digit emergency phone required)'),
+    .min(1, 'የአደጋ ጊዜ ተጠሪ ስልክ ግዴታ ነው')
+    .regex(phoneRegex, 'የአደጋ ጊዜ ተጠሪ ስልክ 10 አሃዝ መሆን አለበት'),
   emergencyEmail: z
     .string()
     .trim()
-    .email('ትክክለኛ ኢሜይል ያስገቡ (Invalid email)')
+    .email('ትክክለኛ ኢሜይል ያስገቡ')
     .optional()
     .or(z.literal('')),
   emergencyAddress: z
@@ -117,7 +117,7 @@ export const regularRegistrationSchema = z.object({
     .optional()
     .or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'የይለፍ ቃሎቹ አይመሳሰሉም (Passwords do not match)',
+  message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
 });
 
@@ -125,23 +125,23 @@ export const distanceRegistrationSchema = z.object({
   firstName: z
     .string()
     .trim()
-    .min(1, 'የመጀመሪያ ስም ግዴታ ነው (First name is required)'),
+    .min(1, 'የመጀመሪያ ስም ግዴታ ነው'),
   middleName: z
     .string()
     .trim()
-    .min(1, 'የመካከለኛ ስም ግዴታ ነው (Middle name is required)'),
+    .min(1, 'የመካከለኛ ስም ግዴታ ነው'),
   lastName: z
     .string()
     .trim()
-    .min(1, 'የአያት ስም ግዴታ ነው (Last name is required)'),
+    .min(1, 'የአያት ስም ግዴታ ነው'),
   educationLevel: z
     .string()
     .trim()
-    .min(1, 'የትምህርት ደረጃ ይምረጡ (Education level is required)'),
+    .min(1, 'የትምህርት ደረጃ ይምረጡ'),
   profession: z
     .string()
     .trim()
-    .min(1, 'ሙያ ያስገቡ (Profession is required)'),
+    .min(1, 'ሙያ ያስገቡ'),
   gender: z
     .string()
     .default('Male'),
@@ -151,7 +151,7 @@ export const distanceRegistrationSchema = z.object({
       const n = Number(val);
       return !isNaN(n) && n > 14;
     }, {
-      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be greater than 14)',
+      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት',
     }),
   dateOfBirth: z
     .string()
@@ -160,8 +160,8 @@ export const distanceRegistrationSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(1, 'ስልክ ቁጥር ግዴታ ነው (Phone is required)')
-    .regex(phoneRegex, 'ትክክለኛ ስልክ ቁጥር ያስገቡ (Valid 10-digit phone required)'),
+    .min(1, 'ስልክ ቁጥር ግዴታ ነው')
+    .regex(phoneRegex, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
   subcity: z
     .string()
     .trim()
@@ -184,15 +184,15 @@ export const distanceRegistrationSchema = z.object({
   email: z
     .string()
     .trim()
-    .email('ትክክለኛ ኢሜይል ያስገቡ (Invalid email format)')
+    .email('ትክክለኛ ኢሜይል ያስገቡ')
     .optional()
     .or(z.literal('')),
   password: z
     .string()
-    .min(6, 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት (Password must be at least 6 characters)'),
+    .min(6, 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት'),
   confirmPassword: z
     .string()
-    .min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ (Please confirm your password)'),
+    .min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ'),
   studentType: z
     .string()
     .default('distance'),
@@ -200,7 +200,7 @@ export const distanceRegistrationSchema = z.object({
   emergencyFirstName: z
     .string()
     .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው (Emergency contact first name is required)'),
+    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው'),
   emergencyMiddleName: z
     .string()
     .trim()
@@ -217,12 +217,12 @@ export const distanceRegistrationSchema = z.object({
   emergencyPhone: z
     .string()
     .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ ስልክ ግዴታ ነው (Emergency phone is required)')
-    .regex(phoneRegex, 'የአደጋ ጊዜ ተጠሪ ስልክ 10 አሃዝ መሆን አለበት (Valid 10-digit emergency phone required)'),
+    .min(1, 'የአደጋ ጊዜ ተጠሪ ስልክ ግዴታ ነው')
+    .regex(phoneRegex, 'የአደጋ ጊዜ ተጠሪ ስልክ 10 አሃዝ መሆን አለበት'),
   emergencyEmail: z
     .string()
     .trim()
-    .email('ትክክለኛ ኢሜይል ያስገቡ (Invalid email)')
+    .email('ትክክለኛ ኢሜይል ያስገቡ')
     .optional()
     .or(z.literal('')),
   emergencyAddress: z
@@ -230,12 +230,12 @@ export const distanceRegistrationSchema = z.object({
     .optional()
     .or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'የይለፍ ቃሎቹ አይመሳሰሉም (Passwords do not match)',
+  message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
 });
 
 export const studentSelfRegisterSchema = z.object({
-  fullName: z.string().trim().min(1, 'ሙሉ ስም ያስገቡ (Full name is required)'),
+  fullName: z.string().trim().min(1, 'ሙሉ ስም ያስገቡ'),
   gender: z.string().default('Male'),
   age: z
     .union([z.string(), z.number()])
@@ -243,24 +243,24 @@ export const studentSelfRegisterSchema = z.object({
       const n = Number(val);
       return !isNaN(n) && n > 14;
     }, {
-      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be greater than 14)',
+      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት',
     }),
   dateOfBirth: z.string().optional().or(z.literal('')),
   shift: z.string().optional().or(z.literal('')),
   subcity: z.string().trim().optional().or(z.literal('')),
   woreda: z.string().trim().optional().or(z.literal('')),
   kebele: z.string().trim().optional().or(z.literal('')),
-  phone: z.string().trim().min(1, 'ስልክ ቁጥር ያስገቡ (Phone is required)'),
+  phone: z.string().trim().min(1, 'ስልክ ቁጥር ያስገቡ'),
   grade: z.string().default('Grade 7'),
   studentType: z.string().default('regular'),
   address: z.string().optional().or(z.literal('')),
   parentName: z.string().optional().or(z.literal('')),
   parentPhone: z.string().optional().or(z.literal('')),
   parentEmail: z.string().optional().or(z.literal('')),
-  email: z.string().trim().email('ትክክለኛ ኢሜይል ያስገቡ (Valid email is required)'),
-  password: z.string().min(6, 'የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት (Password min 6 chars)'),
-  confirmPassword: z.string().min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ (Please confirm your password)'),
+  email: z.string().trim().email('ትክክለኛ ኢሜይል ያስገቡ'),
+  password: z.string().min(6, 'የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት'),
+  confirmPassword: z.string().min(1, 'የይለፍ ቃል ማረጋገጫ ያስገቡ'),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: 'የይለፍ ቃሎቹ አይመሳሰሉም (Passwords do not match)',
+  message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
 });

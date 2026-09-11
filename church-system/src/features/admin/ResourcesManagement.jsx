@@ -13,14 +13,14 @@ const ResourcesManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የመጽሐፍትና ዲጂታል ግብአቶች (Resources)"
+        title="የመጽሐፍትና ዲጂታል ግብአቶች"
         subtitle="የዲጂታል መጽሐፍትን እና የትምህርት መረጃዎችን እዚህ ያስተዳድሩ"
         icon={FileText}
         badge={<Badge variant="neutral" size="sm">{resources.length} ፋይሎች</Badge>}
         actions={
           <Button variant="primary" size="sm" className="gap-2">
             <UploadCloud className="w-3.5 h-3.5" />
-            <span>+ ግብአት ጫን (Upload)</span>
+            <span>+ ግብአት ጫን</span>
           </Button>
         }
       />

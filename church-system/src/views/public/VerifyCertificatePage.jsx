@@ -33,7 +33,7 @@ const VerifyCertificatePage = () => {
       if (res.ok && data.isValid) {
         setCertData(data.certificate);
       } else {
-        setError(data.message || 'ይህ የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም (Certificate not found)');
+        setError(data.message || 'ይህ የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም');
       }
     } catch (err) {
       setError('የማረጋገጫ አገልግሎት አሁን አልተሳካም። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።');
@@ -53,7 +53,7 @@ const VerifyCertificatePage = () => {
     <div className="min-h-screen bg-slate-50/50 text-slate-900 flex flex-col font-sans selection:bg-amber-400 selection:text-slate-950">
       {/* Header */}
       <header className="py-4 px-4 sm:px-8 border-b border-slate-200/80 bg-white dark:bg-slate-900 flex items-center justify-between max-w-7xl mx-auto w-full">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="Back to Home" variant="glass" />
+        <BackButton href="/" label="ወደ ዋናው ገጽ" subLabel="ወደ መነሻ ገጽ" variant="glass" />
 
         <Link href="/" className="inline-flex items-center gap-3">
           <div className="w-10 h-10 rounded-full p-1 border border-amber-400 bg-white shadow-xs overflow-hidden flex items-center justify-center">
@@ -83,7 +83,7 @@ const VerifyCertificatePage = () => {
           <form onSubmit={handleManualSearch} className="flex gap-2">
             <input
               type="text"
-              placeholder="e.g. TKD-CERT-2017-B1-4028"
+              placeholder="ምሳሌ፡ TKD-CERT-2017-B1-4028"
               value={inputNumber}
               onChange={(e) => setInputNumber(e.target.value)}
               className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-900 uppercase outline-none focus:border-[#1657b8] focus:bg-white transition-all"
@@ -111,40 +111,40 @@ const VerifyCertificatePage = () => {
             <div className="p-6 bg-slate-50 border-2 border-emerald-500/40 rounded-3xl space-y-4 animate-in fade-in">
               <div className="flex items-center gap-2 text-emerald-700 font-extrabold text-xs">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>ይፋዊና ትክክለኛ የምስክር ወረቀት (Authentic & Valid Certificate)</span>
+                <span>ይፋዊና ትክክለኛ የምስክር ወረቀት</span>
               </div>
 
               <div className="space-y-3 pt-2 text-xs divide-y divide-slate-200">
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">የተማሪው ስም (Student Name):</span>
+                  <span className="text-slate-500">የተማሪው ሙሉ ስም:</span>
                   <span className="font-black text-slate-900">{certData.studentNameAmharic || certData.studentName}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">የተማሪ መለያ (Student ID):</span>
+                  <span className="text-slate-500">የተማሪ መለያ ቁጥር:</span>
                   <span className="font-mono font-bold text-[#1657b8]">{certData.studentNumber}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">የትምህርት መርሃ ግብር (Program):</span>
+                  <span className="text-slate-500">የትምህርት መርሃ ግብር:</span>
                   <span className="font-bold text-slate-800 text-right">{certData.program}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">ደረጃ (Batch):</span>
+                  <span className="text-slate-500">የትምህርት ደረጃ (ምድብ):</span>
                   <span className="font-bold text-amber-700">{certData.batch}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">የትምህርት ዘመን (Academic Year):</span>
+                  <span className="text-slate-500">የትምህርት ዘመን:</span>
                   <span className="font-bold text-slate-800">{certData.academicYear}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">የተሰጠበት ቀን (Issue Date):</span>
+                  <span className="text-slate-500">የተሰጠበት ቀን:</span>
                   <span className="font-bold text-slate-800">{certData.issueDateEthiopian} (ዓ.ም)</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">ማዕረግ (Honors):</span>
+                  <span className="text-slate-500">ማዕረግ:</span>
                   <span className="font-bold text-emerald-700">{certData.honors}</span>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">ሰጪው ተቋም (Institution):</span>
+                  <span className="text-slate-500">ሰጪው ተቋም:</span>
                   <span className="font-bold text-slate-800">{certData.institution}</span>
                 </div>
               </div>
@@ -161,7 +161,7 @@ const VerifyCertificatePage = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-500 border-t border-slate-200 bg-white">
-        © {new Date().getFullYear()} ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • Teklesawiros Distance LMS
+        © {new Date().getFullYear()} ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የርቀት ትምህርት ማስተባበሪያ
       </footer>
     </div>
   );

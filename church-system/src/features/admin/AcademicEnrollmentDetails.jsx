@@ -43,7 +43,7 @@ const AcademicEnrollmentDetails = () => {
         const data = await res.json();
         setEnrollment(data.enrollment);
       } else {
-        toast.error('Failed to load enrollment');
+        toast.error('የምዝገባ መረጃ መጫን አልተቻለም');
       }
       const coursesRes = await apiFetch(`/api/education/academic-enrollments/${enrollmentId}/courses`);
       if (coursesRes.ok) {
@@ -51,7 +51,7 @@ const AcademicEnrollmentDetails = () => {
         setCourses(coursesData.courseEnrollments || []);
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ችግር ተፈጥሯል');
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const AcademicEnrollmentDetails = () => {
         toast.error('ኮርስ መጨመር አልተቻለም');
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ችግር ተፈጥሯል');
     }
   };
 
@@ -112,7 +112,7 @@ const AcademicEnrollmentDetails = () => {
         fetchEnrollmentDetails();
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ችግር ተፈጥሯል');
     }
   };
 
@@ -137,10 +137,10 @@ const AcademicEnrollmentDetails = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <PageHeader
-        title="የትምህርት ምዝገባ ዝርዝር (Enrollment Details)"
+        title="የትምህርት ምዝገባ ዝርዝር"
         subtitle="የተማሪውን የዓመቱ ኮርሶች፣ መምህራን እና የማጠናቀቂያ ሁኔታዎች እዚህ ይከታተሉ"
         icon={ClipboardList}
-        badge={<Badge variant="gold" size="sm">{enrollment?.status || 'Active'}</Badge>}
+        badge={<Badge variant="gold" size="sm">{enrollment?.status || 'ንቁ'}</Badge>}
         actions={
           <Button variant="outline" size="sm" onClick={() => navigate('/admin/academic-enrollments')} className="gap-2">
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ const AcademicEnrollmentDetails = () => {
             <div>
               <span className="text-slate-400 block font-semibold uppercase">ሁኔታ</span>
               <Badge variant={enrollment.status === 'active' ? 'approved' : 'neutral'} size="sm">
-                {enrollment.status || 'Active'}
+                {enrollment.status || 'ንቁ'}
               </Badge>
             </div>
           </div>
@@ -185,7 +185,7 @@ const AcademicEnrollmentDetails = () => {
 
       {/* Add Course Form */}
       <Card variant="default" padding="md">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">ኮርስ ጨምር (Add Course)</h3>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-3">ኮርስ ጨምር</h3>
         <form onSubmit={handleAddCourse} className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <Select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>

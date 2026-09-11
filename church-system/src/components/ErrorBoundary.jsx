@@ -18,9 +18,9 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="p-8 text-center text-red-600">
-          <h2 className="text-lg font-bold mb-2">Something went wrong</h2>
-          <p className="mb-4">An unexpected error occurred while rendering this page.</p>
-          <pre className="text-xs bg-slate-100 p-3 rounded overflow-auto">{String(this.state.error)}</pre>
+          <h2 className="text-lg font-bold mb-2">ያልተጠበቀ ስህተት ተከስቷል</h2>
+          <p className="mb-4">ይህንን ገጽ በማቅረብ ሂደት ላይ ያልተጠበቀ ችግር አጋጥሟል። እባክዎ ገጹን ዳግም ይጫኑ።</p>
+          <pre className="text-xs bg-slate-100 dark:bg-slate-800 p-3 rounded overflow-auto">{String(this.state.error)}</pre>
         </div>
       );
     }

@@ -28,7 +28,7 @@ export function useApprovePendingUser() {
       return data;
     },
     onSuccess: () => {
-      toast.success('ተጠቃሚው በስኬት ጸድቋል! (User approved successfully)');
+      toast.success('ተጠቃሚው በስኬት ጸድቋል!');
       queryClient.invalidateQueries({ queryKey: APPROVALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
@@ -48,7 +48,7 @@ export function useRejectPendingUser() {
       return data;
     },
     onSuccess: () => {
-      toast.info('ተጠቃሚው ውድቅ ተደርጓል። (User rejected)');
+      toast.info('ተጠቃሚው ውድቅ ተደርጓል።');
       queryClient.invalidateQueries({ queryKey: APPROVALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

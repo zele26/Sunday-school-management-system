@@ -110,7 +110,7 @@ const RegistrationsManagement = () => {
 
   const handleReject = (id) => {
     if (!rejectReason.trim()) {
-      alert('እባክዎ የውድቅ ማድረጊያውን ምክንያት ያስገቡ (Please provide rejection reason)');
+      alert('እባክዎ ውድቅ የሚደረግበትን ምክንያት ያስገቡ');
       return;
     }
     rejectMutation.mutate(
@@ -140,7 +140,7 @@ const RegistrationsManagement = () => {
     () => [
       {
         accessorKey: 'registrationNumber',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Reg Number" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የምዝገባ ቁጥር" />,
         cell: ({ getValue }) => (
           <span className="font-mono font-bold text-[var(--brand-primary)] text-xs">
             {getValue()}
@@ -149,26 +149,26 @@ const RegistrationsManagement = () => {
       },
       {
         accessorKey: 'fullName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሙሉ ስም" />,
         cell: ({ getValue }) => <span className="font-semibold text-slate-900 dark:text-white">{getValue()}</span>,
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Grade / Batch" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የክፍል ደረጃ / ምድብ" />,
         cell: ({ getValue }) => <span>{getValue() || '—'}</span>,
       },
       {
         accessorKey: 'studentType',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት" />,
         cell: ({ getValue }) => (
           <Badge variant={getValue() === 'distance' ? 'gold' : 'approved'} size="sm">
-            {getValue() || 'regular'}
+            {getValue() === 'distance' ? 'የርቀት' : 'መደበኛ'}
           </Badge>
         ),
       },
       {
         accessorKey: 'transactionRef',
-        header: 'Transaction Ref',
+        header: 'የግብይት መለያ',
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
             {getValue() || '—'}
@@ -177,7 +177,7 @@ const RegistrationsManagement = () => {
       },
       {
         accessorKey: 'receiptUrl',
-        header: 'Receipt',
+        header: 'ደረሰኝ',
         cell: ({ getValue }) => {
           const url = getValue();
           return url ? (
@@ -187,20 +187,20 @@ const RegistrationsManagement = () => {
               rel="noreferrer"
               className="text-[var(--brand-primary)] hover:underline text-xs font-semibold inline-flex items-center gap-1"
             >
-              <FileText className="w-3.5 h-3.5" /> View Receipt
+              <FileText className="w-3.5 h-3.5" /> ደረሰኝ ይመልከቱ
             </a>
           ) : (
-            <span className="text-slate-400 text-xs">No receipt</span>
+            <span className="text-slate-400 text-xs">ደረሰኝ የለም</span>
           );
         },
       },
       {
         id: 'actions',
-        header: () => <div className="text-right">Action</div>,
+        header: () => <div className="text-right">ተግባር</div>,
         cell: ({ row }) => (
           <div className="text-right">
             <Button size="sm" variant="primary" onClick={() => openDetailModal(row.original)}>
-              <Eye className="w-3.5 h-3.5 mr-1" /> Review
+              <Eye className="w-3.5 h-3.5 mr-1" /> መርምር
             </Button>
           </div>
         ),
@@ -212,14 +212,14 @@ const RegistrationsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Pending Registrations Review (የአዳዲስ ተማሪዎች ምዝገባ ፍተሻ)"
-        subtitle="Review public applications, verify bank transaction receipts, and approve students into the system."
+        title="የአዳዲስ ተማሪዎች ምዝገባ ፍተሻ"
+        subtitle="የህዝብ ማመልከቻዎችን ይገምግሙ፣ የባንክ ግብይት ደረሰኞችን ያረጋግጡ እና ተማሪዎችን ወደ ስርዓቱ ያጽድቁ።"
         icon={UserCheck}
-        badge={<Badge variant="gold" size="sm">{rawRegistrations.length} Pending</Badge>}
+        badge={<Badge variant="gold" size="sm">{rawRegistrations.length} በመጠባበቅ ላይ</Badge>}
         actions={
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading || isFetching} className="gap-1.5">
             <RotateCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>እደስ (Refresh)</span>
+            <span>እደስ</span>
           </Button>
         }
       />
@@ -233,9 +233,9 @@ const RegistrationsManagement = () => {
             </div>
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-                <span>የምዝገባ ሁኔታ መቆጣጠሪያ (Intake Status Controls)</span>
+                <span>የምዝገባ ሁኔታ መቆጣጠሪያ</span>
                 <Badge variant={regSettings.isRegistrationOpen !== false ? 'approved' : 'rejected'} size="sm">
-                  {regSettings.isRegistrationOpen !== false ? '🟢 ክፍት (Active Intake)' : '🔴 ዝግ (Intake Closed)'}
+                  {regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው' : '🔴 ተዘግቷል'}
                 </Badge>
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -251,7 +251,7 @@ const RegistrationsManagement = () => {
             className="gap-2 shrink-0"
           >
             <Sliders className="w-4 h-4" />
-            <span>መልእክቶችን አስተካክል (Edit Notices & Year)</span>
+            <span>ማስታወቂያዎችንና ዓመተ ምሕረት አስተካክል</span>
           </Button>
         </div>
 
@@ -264,7 +264,7 @@ const RegistrationsManagement = () => {
               : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">አጠቃላይ ምዝገባ (Master)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">አጠቃላይ ምዝገባ</span>
               <span className={`text-sm font-black ${
                 regSettings.isRegistrationOpen !== false ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
               }`}>
@@ -277,7 +277,7 @@ const RegistrationsManagement = () => {
               onClick={() => handleToggle('isRegistrationOpen', regSettings.isRegistrationOpen !== false)}
               disabled={updateSettingsMutation.isPending}
             >
-              {regSettings.isRegistrationOpen !== false ? 'ዝጋ (Close)' : 'ክፈት (Open)'}
+              {regSettings.isRegistrationOpen !== false ? 'ዝጋ' : 'ክፈት'}
             </Button>
           </div>
 
@@ -288,13 +288,13 @@ const RegistrationsManagement = () => {
               : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🏛️ መደበኛ (Regular - በአካል)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🏛️ መደበኛ (በአካል)</span>
               <span className={`text-sm font-black ${
                 regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false
                   ? 'text-[#1657b8] dark:text-blue-400'
                   : 'text-slate-500 dark:text-slate-400'
               }`}>
-                {regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው (Open)' : '🔴 ተዘግቷል (Closed)'}
+                {regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው' : '🔴 ተዘግቷል'}
               </span>
             </div>
             <Button
@@ -314,13 +314,13 @@ const RegistrationsManagement = () => {
               : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🌐 ርቀት (Distance - LMS)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🌐 የርቀት ትምህርት</span>
               <span className={`text-sm font-black ${
                 regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false
                   ? 'text-amber-800 dark:text-amber-300'
                   : 'text-slate-500 dark:text-slate-400'
               }`}>
-                {regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው (Open)' : '🔴 ተዘግቷል (Closed)'}
+                {regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false ? '🟢 ክፍት ነው' : '🔴 ተዘግቷል'}
               </span>
             </div>
             <Button
@@ -347,9 +347,9 @@ const RegistrationsManagement = () => {
         </div>
         <div className="w-full sm:w-48">
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="">All Types (ሁሉም)</option>
-            <option value="regular">Regular (መደበኛ)</option>
-            <option value="distance">Distance (የርቀት)</option>
+            <option value="">ሁሉም ዓይነቶች</option>
+            <option value="regular">መደበኛ</option>
+            <option value="distance">የርቀት</option>
           </Select>
         </div>
       </div>
@@ -359,7 +359,7 @@ const RegistrationsManagement = () => {
         columns={columns}
         data={filteredRegistrations}
         isLoading={isLoading}
-        emptyMessage="ምንም በመጠባበቅ ላይ ያለ ምዝገባ የለም (No pending registrations found)"
+        emptyMessage="ምንም በመጠባበቅ ላይ ያለ ምዝገባ አልተገኘም"
         emptyIcon={AlertCircle}
       />
 
@@ -388,7 +388,7 @@ const RegistrationsManagement = () => {
               <Card variant="default" padding="none" className="w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
                 <div className="px-6 py-5 bg-gradient-to-r from-[var(--brand-primary)] to-indigo-950 text-white flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-bold text-white">Registration Application Details</h3>
+                    <h3 className="text-lg font-bold text-white">የምዝገባ ማመልከቻ ዝርዝር</h3>
                     <p className="text-xs text-blue-200">የተማሪውን መረጃና ደረሰኝ ያረጋግጡ</p>
                   </div>
                   <button
@@ -403,21 +403,21 @@ const RegistrationsManagement = () => {
                   {/* Top info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Full Name</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ሙሉ ስም</span>
                       <span className="text-slate-900 dark:text-white font-bold text-base">{selectedRegistration.fullName}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Student Type</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተማሪ ዓይነት</span>
                       <Badge variant={selectedRegistration.studentType === 'distance' ? 'gold' : 'approved'} size="sm">
-                        {selectedRegistration.studentType}
+                        {selectedRegistration.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}
                       </Badge>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Registration Number</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የምዝገባ ቁጥር</span>
                       <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedRegistration.registrationNumber}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Grade / Batch</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የክፍል ደረጃ / ምድብ</span>
                       <span className="text-slate-900 dark:text-white font-medium">{selectedRegistration.grade}</span>
                     </div>
                   </div>
@@ -425,67 +425,67 @@ const RegistrationsManagement = () => {
                   {/* Personal Details */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">First Name</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስም</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.firstName || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Middle Name</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የአባት ስም</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.middleName || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Last Name</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የአያት ስም</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.lastName || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዕድሜ (Age)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዕድሜ</span>
                       <span className="text-slate-900 dark:text-white font-semibold">{selectedRegistration.age || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Education Level</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የትምህርት ደረጃ</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.educationLevel || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Gender</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ጾታ</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.gender || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የትውልድ ቀን (DOB - Ethiopian)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የትውልድ ቀን</span>
                       <span className="text-slate-900 dark:text-white font-medium">{formatEthiopianDate(selectedRegistration.dateOfBirth)}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተመዘገበበት ቀን (Applied Date)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተመዘገበበት ቀን</span>
                       <span className="text-slate-900 dark:text-white font-medium">{formatEthiopianDate(selectedRegistration.createdAt)}</span>
                     </div>
                     {selectedRegistration.studentType === 'regular' && (
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የመማሪያ ፈረቃ (Study Shift)</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የመማሪያ ፈረቃ</span>
                         <Badge variant={selectedRegistration.shift === 'night' ? 'gold' : 'approved'} size="sm">
-                          {selectedRegistration.shift === 'night' ? 'የማታ (Night)' : 'የቀን (Weekend)'}
+                          {selectedRegistration.shift === 'night' ? 'የማታ' : 'የቀን'}
                         </Badge>
                       </div>
                     )}
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Phone</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስልክ ቁጥር</span>
                       <span className="text-slate-900 dark:text-white font-mono">{selectedRegistration.phone}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Email</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ኢሜይል</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.email || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ክፍለ ከተማ (Subcity)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ክፍለ ከተማ</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.subcity || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ወረዳ (Woreda)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ወረዳ</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.woreda || '—'}</span>
                     </div>
                     <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ቀበሌ / የቤት ቁጥር (Kebele)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ቀበሌ / የቤት ቁጥር</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.kebele || '—'}</span>
                     </div>
                     <div className="sm:col-span-2">
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ተጨማሪ አድራሻ (Full Address)</span>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ተጨማሪ አድራሻ</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.address || '—'}</span>
                     </div>
                   </div>
@@ -493,11 +493,11 @@ const RegistrationsManagement = () => {
                   {/* Emergency Contact */}
                   <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
                     <h4 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-wider mb-3">
-                      የአደጋ ጊዜ ተጠሪ (Emergency Contact)
+                      የአደጋ ጊዜ ተጠሪ
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Contact Name</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተጠሪ ስም</span>
                         <span className="text-slate-900 dark:text-white font-medium">
                           {selectedRegistration.emergencyFirstName || selectedRegistration.parentName || '—'}{' '}
                           {selectedRegistration.emergencyMiddleName || ''}{' '}
@@ -505,17 +505,17 @@ const RegistrationsManagement = () => {
                         </span>
                       </div>
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Relationship</span>
-                        <span className="text-slate-900 dark:text-white">{selectedRegistration.relationship || 'Parent/Guardian'}</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዝምድና</span>
+                        <span className="text-slate-900 dark:text-white">{selectedRegistration.relationship || 'ወላጅ/አሳዳጊ'}</span>
                       </div>
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Phone</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስልክ ቁጥር</span>
                         <span className="text-slate-900 dark:text-white font-mono">
                           {selectedRegistration.emergencyPhone || selectedRegistration.parentPhone || '—'}
                         </span>
                       </div>
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Email</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ኢሜይል</span>
                         <span className="text-slate-900 dark:text-white">
                           {selectedRegistration.emergencyEmail || selectedRegistration.parentEmail || '—'}
                         </span>
@@ -526,22 +526,22 @@ const RegistrationsManagement = () => {
                   {/* Payment / Receipt */}
                   <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
                     <h4 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-wider mb-3">
-                      የክፍያና ደረሰኝ ማረጋገጫ (Payment & Receipt)
+                      የክፍያና ደረሰኝ ማረጋገጫ
                     </h4>
                     <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-sm">
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">Transaction Reference</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የግብይት መለያ ቁጥር</span>
                         <span className="text-slate-900 dark:text-white font-mono font-bold">{selectedRegistration.transactionRef || '—'}</span>
                       </div>
                       <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-1">Receipt Attachment</span>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-1">የተያያዘ ደረሰኝ</span>
                         {selectedRegistration.receiptUrl ? (
                           <div>
                             {isImageUrl(selectedRegistration.receiptUrl) ? (
                               <a href={selectedRegistration.receiptUrl} target="_blank" rel="noopener noreferrer">
                                 <Image
                                   src={selectedRegistration.receiptUrl}
-                                  alt="Receipt"
+                                  alt="ደረሰኝ"
                                   width={384}
                                   height={260}
                                   unoptimized
@@ -555,7 +555,7 @@ const RegistrationsManagement = () => {
                                 rel="noopener noreferrer"
                                 className="text-[var(--brand-primary)] hover:underline text-xs font-bold inline-flex items-center gap-1"
                               >
-                                <ExternalLink className="w-3.5 h-3.5" /> Open Attachment Document
+                                <ExternalLink className="w-3.5 h-3.5" /> የተያያዘውን ሰነድ ክፈት
                               </a>
                             )}
                           </div>
@@ -575,14 +575,14 @@ const RegistrationsManagement = () => {
                     disabled={rejectMutation.isPending || approveMutation.isPending}
                     className="border-rose-300 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20"
                   >
-                    <X className="w-4 h-4 mr-1" /> {rejectMutation.isPending ? '...' : 'Reject'}
+                    <X className="w-4 h-4 mr-1" /> {rejectMutation.isPending ? 'በማስኬድ ላይ...' : 'ውድቅ አድርግ'}
                   </Button>
                   <Button
                     onClick={() => handleApprove(selectedRegistration._id)}
                     disabled={approveMutation.isPending || rejectMutation.isPending}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
-                    <Check className="w-4 h-4 mr-1" /> {approveMutation.isPending ? '...' : 'Approve & Create Account'}
+                    <Check className="w-4 h-4 mr-1" /> {approveMutation.isPending ? 'በማስኬድ ላይ...' : 'አጽድቅና አካውንት ፍጠር'}
                   </Button>
                 </div>
               </Card>
@@ -626,18 +626,18 @@ const RegistrationsManagement = () => {
                 <form onSubmit={handleSaveConfig} className="p-6 space-y-4 bg-white dark:bg-slate-900">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      የትምህርት ዘመን (Academic Intake Year)
+                      የትምህርት ዘመን
                     </label>
                     <Input
                       value={formData.academicYear}
                       onChange={(e) => setFormData({ ...formData, academicYear: e.target.value })}
-                      placeholder="e.g., 2017 ዓ.ም"
+                      placeholder="ለምሳሌ፡ 2017 ዓ.ም"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      አጠቃላይ የምዝገባ መዘጋት መልእክት (General Closed Notice)
+                      አጠቃላይ የምዝገባ መዘጋት ማስታወቂያ
                     </label>
                     <textarea
                       value={formData.generalClosedMessage}
@@ -650,7 +650,7 @@ const RegistrationsManagement = () => {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      የመደበኛ ምዝገባ መዘጋት መልእክት (Regular Closed Notice)
+                      የመደበኛ ምዝገባ መዘጋት ማስታወቂያ
                     </label>
                     <textarea
                       value={formData.regularClosedMessage}
@@ -663,7 +663,7 @@ const RegistrationsManagement = () => {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      የርቀት ምዝገባ መዘጋት መልእክት (Distance Closed Notice)
+                      የርቀት ምዝገባ መዘጋት ማስታወቂያ
                     </label>
                     <textarea
                       value={formData.distanceClosedMessage}
@@ -680,14 +680,14 @@ const RegistrationsManagement = () => {
                       variant="outline"
                       onClick={() => setShowConfigModal(false)}
                     >
-                      ሰርዝ (Cancel)
+                      ሰርዝ
                     </Button>
                     <Button
                       type="submit"
                       variant="primary"
                       loading={updateSettingsMutation.isPending}
                     >
-                      ቅንብሮችን አስቀምጥ (Save Settings)
+                      ቅንብሮችን አስቀምጥ
                     </Button>
                   </div>
                 </form>

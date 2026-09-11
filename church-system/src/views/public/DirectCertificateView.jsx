@@ -21,10 +21,10 @@ const DirectCertificateView = () => {
         if (res.ok && data.certificate) {
           setCert(data.certificate);
         } else {
-          setError(data.message || 'Certificate not found');
+          setError(data.message || 'የምስክር ወረቀት አልተገኘም');
         }
       } catch (err) {
-        setError('Failed to load certificate');
+        setError('የምስክር ወረቀቱን መጫን አልተቻለም');
       } finally {
         setLoading(false);
       }
@@ -38,7 +38,7 @@ const DirectCertificateView = () => {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-amber-300 font-bold text-sm">የምስክር ወረቀቱን በመጫን ላይ... (Loading Certificate)</p>
+          <p className="text-amber-300 font-bold text-sm">የምስክር ወረቀቱን በመጫን ላይ...</p>
         </div>
       </div>
     );
@@ -52,7 +52,7 @@ const DirectCertificateView = () => {
           <h2 className="text-lg font-bold text-rose-400">የምስክር ወረቀት አልተገኘም</h2>
           <p className="text-xs text-slate-300">የተጠየቀው የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም ወይም ተሰርዟል።</p>
           <Link href="/" className="inline-block px-5 py-2.5 bg-[#1657b8] hover:bg-[#124796] rounded-2xl text-xs font-bold text-white transition-colors">
-            ወደ ዋና ገጽ (Home)
+            ወደ ዋና ገጽ ተመለስ
           </Link>
         </Card>
       </div>

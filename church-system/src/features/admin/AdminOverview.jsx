@@ -37,10 +37,10 @@ import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../compone
 import { apiFetch } from '../../api/apiClient';
 
 const MODULE_CATEGORIES = [
-  { id: 'all', label: 'ሁሉም (All)' },
-  { id: 'academic', label: '🎓 አካዳሚክና ተማሪዎች (Academics)' },
-  { id: 'communication', label: '📢 ኮሙኒኬሽንና ይዘት (Content)' },
-  { id: 'system', label: '⚙️ ሲስተምና ሪፖርት (System)' },
+  { id: 'all', label: 'ሁሉም' },
+  { id: 'academic', label: '🎓 አካዳሚክና ተማሪዎች' },
+  { id: 'communication', label: '📢 ተግባቦትና ይዘት' },
+  { id: 'system', label: '⚙️ ሲስተምና ሪፖርቶች' },
 ];
 
 const ALL_MODULES = [
@@ -48,7 +48,7 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/users',
-    label: 'ተጠቃሚዎች (Users)',
+    label: 'ተጠቃሚዎች',
     icon: Users,
     color: 'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     countKey: 'users',
@@ -57,7 +57,7 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/approvals',
-    label: 'ማረጋገጫዎች (Approvals)',
+    label: 'ማረጋገጫዎች',
     icon: CheckCircle2,
     color: 'from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     countKey: 'pendingApprovals',
@@ -67,7 +67,7 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/distance-hub',
-    label: 'የርቀት ትምህርት (LMS Hub)',
+    label: 'የርቀት ትምህርት ማዕከል',
     icon: GraduationCap,
     color: 'from-indigo-500/20 to-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
     badge: '6 ሞጁሎች',
@@ -75,7 +75,7 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/classes',
-    label: 'ክፍሎች (Classes)',
+    label: 'ክፍሎች',
     icon: School,
     color: 'from-sky-500/20 to-sky-600/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
     countKey: 'classes',
@@ -84,7 +84,7 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/courses',
-    label: 'ትምህርቶች (Courses)',
+    label: 'ትምህርቶች',
     icon: BookOpen,
     color: 'from-emerald-500/20 to-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     countKey: 'courses',
@@ -93,17 +93,17 @@ const ALL_MODULES = [
   {
     category: 'academic',
     path: '/admin/attendance-reports',
-    label: 'ክትትል (Attendance)',
+    label: 'የመገኘት ክትትል',
     icon: ClipboardList,
     color: 'from-teal-500/20 to-teal-600/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-    badge: 'አቴንዳንስ',
+    badge: 'መገኘት',
   },
 
   // Communication & Media
   {
     category: 'communication',
     path: '/admin/announcements',
-    label: 'ማስታወቂያዎች (Announcements)',
+    label: 'ማስታወቂያዎች',
     icon: Bell,
     color: 'from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
     badge: 'ይፋዊ',
@@ -111,7 +111,7 @@ const ALL_MODULES = [
   {
     category: 'communication',
     path: '/admin/resources',
-    label: 'የትምህርት መርጃዎች (Resources)',
+    label: 'የትምህርት መርጃዎች',
     icon: FileText,
     color: 'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     badge: 'ፒዲኤፍ/ቪዲዮ',
@@ -119,15 +119,15 @@ const ALL_MODULES = [
   {
     category: 'communication',
     path: '/admin/certificates',
-    label: 'ምስክር ወረቀቶች (Certificates)',
+    label: 'የምስክር ወረቀቶች',
     icon: Award,
     color: 'from-yellow-500/20 to-yellow-600/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
-    badge: 'QR የተረጋገጠ',
+    badge: 'በQR የተረጋገጠ',
   },
   {
     category: 'communication',
     path: '/admin/church-memberships',
-    label: 'የአባልነት መታወቂያ (Memberships)',
+    label: 'የአባልነት መታወቂያዎች',
     icon: Layers,
     color: 'from-cyan-500/20 to-cyan-600/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
     badge: 'መታወቂያ',
@@ -137,7 +137,7 @@ const ALL_MODULES = [
   {
     category: 'system',
     path: '/admin/reports',
-    label: 'ሪፖርቶች (Reports)',
+    label: 'ሪፖርቶች',
     icon: BarChart3,
     color: 'from-violet-500/20 to-violet-600/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
     badge: 'ስታቲስቲክስ',
@@ -145,7 +145,7 @@ const ALL_MODULES = [
   {
     category: 'system',
     path: '/admin/complaints',
-    label: 'ቅሬታዎች (Complaints)',
+    label: 'ቅሬታዎች',
     icon: AlertTriangle,
     color: 'from-rose-500/20 to-rose-600/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
     countKey: 'activeComplaints',
@@ -154,7 +154,7 @@ const ALL_MODULES = [
   {
     category: 'system',
     path: '/admin/audit-logs',
-    label: 'የሲስተም መዝገቦች (Audit Logs)',
+    label: 'የሲስተም እንቅስቃሴ መዝገቦች',
     icon: ShieldAlert,
     color: 'from-slate-500/20 to-slate-600/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
     badge: 'ደህንነት',
@@ -162,7 +162,7 @@ const ALL_MODULES = [
   {
     category: 'system',
     path: '/admin/settings',
-    label: 'መቼቶች (Settings)',
+    label: 'መቼቶችና ማዋቀሪያ',
     icon: Settings,
     color: 'from-neutral-500/20 to-neutral-600/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
     badge: 'ማዋቀሪያ',
@@ -216,7 +216,7 @@ const AdminOverviewContent = () => {
       {/* 🌟 1. Crisp Top Header */}
       <FadeIn direction="down" duration={0.35}>
         <PageHeader
-          title="የአስተዳዳሪ ማዕከል (Admin Overview)"
+          title="የአስተዳዳሪ ማጠቃለያ ማዕከል"
           subtitle="የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት"
           icon={TrendingUp}
           badge={
@@ -251,7 +251,7 @@ const AdminOverviewContent = () => {
               onClick={() => navigate('/admin/approvals')}
               className="bg-amber-600 hover:bg-amber-700 text-white font-bold shrink-0 self-start sm:self-auto gap-2 px-4 shadow-md"
             >
-              <span>አሁን ገምግም (Review)</span>
+              <span>አሁን ገምግም</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -350,7 +350,7 @@ const AdminOverviewContent = () => {
                 <BookOpen className="w-4 h-4" />
               </div>
               <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
-                LMS ንቁ
+                ንቁ
               </span>
             </div>
             <div>
@@ -376,7 +376,7 @@ const AdminOverviewContent = () => {
                 <Activity className="w-4 h-4" />
               </div>
               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                100% Online
+                100% ዝግጁ
               </span>
             </div>
             <div>
@@ -491,7 +491,7 @@ const AdminOverviewContent = () => {
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>⚡ ፈጣን ተግባራት</span>
               </h3>
-              <span className="text-[10px] text-slate-400 font-semibold">Shortcuts</span>
+              <span className="text-[10px] text-slate-400 font-semibold">ፈጣን ምርጫዎች</span>
             </div>
 
             <div className="grid grid-cols-1 gap-2 pt-1">
@@ -534,7 +534,7 @@ const AdminOverviewContent = () => {
               >
                 <div className="flex items-center gap-2.5">
                   <QrCode className="w-4 h-4 text-emerald-600" />
-                  <span>QR አቴንዳንስ አንብብ</span>
+                  <span>የQR መገኘት መቆጣጠሪያ</span>
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 opacity-60" />
               </button>

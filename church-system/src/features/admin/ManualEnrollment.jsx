@@ -101,7 +101,7 @@ const ManualEnrollment = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success('ተማሪው በተሳካ ሁኔታ ተመዝግቧል! (Enrollment created successfully)');
+        toast.success('ተማሪው በተሳካ ሁኔታ ተመዝግቧል!');
         setForm((prev) => ({
           ...prev,
           personId: '',
@@ -112,7 +112,7 @@ const ManualEnrollment = () => {
         toast.error(data.message || 'ምዝገባው አልተሳካም');
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል');
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ const ManualEnrollment = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ቀጥታ የተማሪ ምዝገባ (Manual Enrollment)"
+        title="ቀጥታ የተማሪ ምዝገባ"
         subtitle="ነባር ሰዎችን ወደ ትምህርት ፕሮግራም፣ ዘመን እና ክፍል በቀጥታ ያስመዝግቡ"
         icon={UserPlus}
         badge={<Badge variant="gold" size="sm">አስተዳደራዊ ምዝገባ</Badge>}
@@ -132,7 +132,7 @@ const ManualEnrollment = () => {
           {/* Person Search */}
           <div className="relative">
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              ተማሪ ይፈልጉና ይምረጡ (Select Student) *
+              ተማሪ ይፈልጉና ይምረጡ *
             </label>
             <Input
               icon={Search}
@@ -150,7 +150,7 @@ const ManualEnrollment = () => {
                     onClick={() => selectPerson(p)}
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 last:border-0"
                   >
-                    {p.firstName} {p.middleName} {p.lastName} <span className="text-xs text-slate-400">({p.phone || 'No phone'})</span>
+                    {p.firstName} {p.middleName} {p.lastName} <span className="text-xs text-slate-400">({p.phone || 'ስልክ የለም'})</span>
                   </button>
                 ))}
               </div>
@@ -160,7 +160,7 @@ const ManualEnrollment = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የትምህርት ፕሮግራም (Program)
+                የትምህርት ፕሮግራም
               </label>
               <Select
                 value={form.programCode}
@@ -169,13 +169,13 @@ const ManualEnrollment = () => {
                 {programs.length > 0 ? (
                   programs.map((p) => (
                     <option key={p._id} value={p.code}>
-                      {p.name} ({p.code})
+                      {p.name}
                     </option>
                   ))
                 ) : (
                   <>
-                    <option value="REG">መደበኛ (Regular)</option>
-                    <option value="DIST">የርቀት (Distance)</option>
+                    <option value="REG">መደበኛ</option>
+                    <option value="DIST">የርቀት</option>
                   </>
                 )}
               </Select>
@@ -183,7 +183,7 @@ const ManualEnrollment = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የትምህርት ዘመን (Academic Year)
+                የትምህርት ዘመን
               </label>
               <Select
                 value={form.academicYearName}
@@ -203,10 +203,10 @@ const ManualEnrollment = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                ክፍል / ባች (Grade/Batch)
+                ክፍል / የትምህርት ምድብ
               </label>
               <Input
-                placeholder="e.g. 1ኛ ዓመት, Batch 1"
+                placeholder="ምሳሌ፡ 1ኛ ዓመት፣ ምድብ 1"
                 value={form.gradeName}
                 onChange={(e) => setForm({ ...form, gradeName: e.target.value })}
               />
@@ -214,14 +214,14 @@ const ManualEnrollment = () => {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የመማሪያ ሁነታ (Study Mode)
+                የመማሪያ ሁነታ
               </label>
               <Select
                 value={form.studyModeCode}
                 onChange={(e) => setForm({ ...form, studyModeCode: e.target.value })}
               >
-                <option value="REGULAR">መደበኛ (Regular)</option>
-                <option value="DISTANCE">የርቀት (Distance)</option>
+                <option value="REGULAR">መደበኛ</option>
+                <option value="DISTANCE">የርቀት</option>
               </Select>
             </div>
           </div>
@@ -229,7 +229,7 @@ const ManualEnrollment = () => {
           <div className="pt-3">
             <Button variant="primary" type="submit" loading={loading} className="gap-2">
               <UserPlus className="w-4 h-4" />
-              <span>ተማሪውን አስመዝግብ (Complete Enrollment)</span>
+              <span>ተማሪውን አስመዝግብ</span>
             </Button>
           </div>
         </form>

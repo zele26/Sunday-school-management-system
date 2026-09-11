@@ -42,7 +42,7 @@ const SettingsManagement = () => {
     setSavingGeneral(true);
     setTimeout(() => {
       setSavingGeneral(false);
-      toast.success('አጠቃላይ ቅንብሮቹ በተሳካ ሁኔታ ተቀምጠዋል! (General settings saved)');
+      toast.success('አጠቃላይ ቅንብሮቹ በተሳካ ሁኔታ ተቀምጠዋል!');
     }, 400);
   };
 
@@ -60,7 +60,7 @@ const SettingsManagement = () => {
   return (
     <div className="space-y-8 max-w-4xl">
       <PageHeader
-        title="የሲስተም ቅንብሮች (Settings)"
+        title="የሲስተም ቅንብሮችና ማዋቀሪያ"
         subtitle="የሰንበት ትምህርት ቤት ሥርዓት አጠቃላይ መረጃዎችንና የተማሪዎች ምዝገባ ፍሰትን ያስተካክሉ"
         icon={Settings}
         badge={<Badge variant="gold" size="sm">አስተዳደራዊ</Badge>}
@@ -75,7 +75,7 @@ const SettingsManagement = () => {
             </div>
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-base">
-                የተማሪዎች ምዝገባ መቆጣጠሪያ (Registration Intake Controls)
+                የተማሪዎች ምዝገባ መቆጣጠሪያ
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 የአዳዲስ ተማሪዎችን መደበኛና የርቀት ምዝገባ ክፍት ወይም ዝግ ያድርጉ
@@ -83,7 +83,7 @@ const SettingsManagement = () => {
             </div>
           </div>
           <Badge variant={regSettings.isRegistrationOpen !== false ? 'approved' : 'rejected'}>
-            {regSettings.isRegistrationOpen !== false ? '🟢 ምዝገባ ክፍት ነው (Open)' : '🔴 ምዝገባ ተዘግቷል (Closed)'}
+            {regSettings.isRegistrationOpen !== false ? '🟢 ምዝገባ ክፍት ነው' : '🔴 ምዝገባ ተዘግቷል'}
           </Badge>
         </div>
 
@@ -96,7 +96,7 @@ const SettingsManagement = () => {
               : 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">አጠቃላይ ምዝገባ (Master)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">አጠቃላይ የምዝገባ በር</span>
               <span className={`text-sm font-black ${
                 regSettings.isRegistrationOpen !== false ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
               }`}>
@@ -121,7 +121,7 @@ const SettingsManagement = () => {
               : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🏛️ መደበኛ (Regular - በአካል)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🏛️ መደበኛ (በአካል)</span>
               <span className={`text-sm font-black ${
                 regSettings.isRegularOpen !== false && regSettings.isRegistrationOpen !== false
                   ? 'text-[#1657b8] dark:text-blue-400'
@@ -148,7 +148,7 @@ const SettingsManagement = () => {
               : 'bg-slate-100/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
           }`}>
             <div>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🌐 ርቀት (Distance - LMS)</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-0.5">🌐 የርቀት ትምህርት</span>
               <span className={`text-sm font-black ${
                 regSettings.isDistanceOpen !== false && regSettings.isRegistrationOpen !== false
                   ? 'text-amber-800 dark:text-amber-300'
@@ -174,7 +174,7 @@ const SettingsManagement = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የትምህርት ዘመን (Academic Year)
+                የትምህርት ዘመን
               </label>
               <Input
                 value={regForm.academicYear}
@@ -184,7 +184,7 @@ const SettingsManagement = () => {
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                አጠቃላይ የተዘጋበት መልእክት (General Closed Notice)
+                አጠቃላይ የተዘጋበት መልእክት
               </label>
               <Input
                 value={regForm.generalClosedMessage}
@@ -197,7 +197,7 @@ const SettingsManagement = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የመደበኛ ምዝገባ መዘጋት መልእክት (Regular Closed Notice)
+                የመደበኛ ምዝገባ መዘጋት መልእክት
               </label>
               <Input
                 value={regForm.regularClosedMessage}
@@ -207,7 +207,7 @@ const SettingsManagement = () => {
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                የርቀት ምዝገባ መዘጋት መልእክት (Distance Closed Notice)
+                የርቀት ምዝገባ መዘጋት መልእክት
               </label>
               <Input
                 value={regForm.distanceClosedMessage}
@@ -220,7 +220,7 @@ const SettingsManagement = () => {
           <div className="flex justify-end pt-2">
             <Button type="submit" variant="primary" loading={updateSettingsMutation.isPending} className="gap-2">
               <Save className="w-4 h-4" />
-              <span>የምዝገባ ማስታወቂያዎችን አስቀምጥ (Save Intake Config)</span>
+              <span>የምዝገባ ማስታወቂያዎችን አስቀምጥ</span>
             </Button>
           </div>
         </form>
@@ -229,29 +229,29 @@ const SettingsManagement = () => {
       {/* 🏢 2. GENERAL SYSTEM SETTINGS */}
       <Card variant="default" padding="md" className="border border-slate-200 dark:border-slate-800">
         <h3 className="font-bold text-slate-900 dark:text-white text-base mb-4">
-          አጠቃላይ የድርጅት መረጃ (General System Profile)
+          አጠቃላይ የድርጅት መረጃ
         </h3>
         <form onSubmit={handleGeneralSave} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              የመተግበሪያ ስም (System Title)
+              የመተግበሪያ ስም
             </label>
             <Input
               value={systemName}
               onChange={(e) => setSystemName(e.target.value)}
-              placeholder="System name"
+              placeholder="የመተግበሪያ ስም"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-              የቤተክርስቲያን ይፋዊ ኢሜይል (Official Email)
+              የቤተክርስቲያን ይፋዊ ኢሜይል
             </label>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="contact@domain.org"
+              placeholder="info@teklesawiros.org"
             />
           </div>
 

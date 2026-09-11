@@ -43,12 +43,12 @@ import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 
 const GRADE_OPTIONS = [
-  { value: 'Grade 7', label: '7ኛ ክፍል (Grade 7)' },
-  { value: 'Grade 8', label: '8ኛ ክፍል (Grade 8)' },
-  { value: 'Grade 9', label: '9ኛ ክፍል (Grade 9)' },
-  { value: 'Grade 10', label: '10ኛ ክፍል (Grade 10)' },
-  { value: 'Grade 11', label: '11ኛ ክፍል (Grade 11)' },
-  { value: 'Grade 12', label: '12ኛ ክፍል (Grade 12)' },
+  { value: 'Grade 7', label: '7ኛ ክፍል' },
+  { value: 'Grade 8', label: '8ኛ ክፍል' },
+  { value: 'Grade 9', label: '9ኛ ክፍል' },
+  { value: 'Grade 10', label: '10ኛ ክፍል' },
+  { value: 'Grade 11', label: '11ኛ ክፍል' },
+  { value: 'Grade 12', label: '12ኛ ክፍል' },
 ];
 
 const getStatusBadge = (status) => {
@@ -57,21 +57,21 @@ const getStatusBadge = (status) => {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-          <span>ተገኝቷል (Present)</span>
+          <span>ተገኝቷል</span>
         </span>
       );
     case 'Late':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <Clock className="w-3.5 h-3.5 text-amber-500" />
-          <span>ዘግይቷል (Late)</span>
+          <span>ዘግይቷል</span>
         </span>
       );
     case 'Absent':
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
           <XCircle className="w-3.5 h-3.5 text-rose-500" />
-          <span>አልተገኘም (Absent)</span>
+          <span>አልተገኘም</span>
         </span>
       );
     default:
@@ -112,17 +112,17 @@ const getModeBadge = (studentType, shift) => {
 const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   if (!rows.length) return;
   const headers = [
-    'ተማሪ (Student)',
-    'የምዝገባ ዓይነት (Student Type)',
-    'ፈረቃ (Shift)',
-    'ክፍል (Grade)',
-    'ኮርስ (Course)',
-    'መምህር (Teacher)',
-    'ቀን (Date - Ethiopian)',
-    'የመግቢያ ሰዓት (Check-in Time)',
-    'ሁኔታ (Status)',
-    'የትምህርት ዘመን (Academic Year)',
-    'ሴሚስተር (Semester)',
+    'ተማሪ',
+    'የምዝገባ ዓይነት',
+    'ፈረቃ',
+    'ክፍል',
+    'ኮርስ',
+    'መምህር',
+    'ቀን',
+    'የመግቢያ ሰዓት',
+    'ሁኔታ',
+    'የትምህርት ዘመን',
+    'ሴሚስተር',
   ];
   const csvRows = [headers.join(',')];
   rows.forEach((r) => {
@@ -132,8 +132,8 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
     csvRows.push(
       [
         `"${r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '')}"`,
-        `"${studentType === 'distance' ? 'የርቀት (Distance)' : 'መደበኛ (Regular)'}"`,
-        `"${shift === 'night' ? 'የማታ (Night)' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ (Weekend)' : '-'}"`,
+        `"${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}"`,
+        `"${shift === 'night' ? 'የማታ' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ' : '-'}"`,
         `"${r.grade || r.student?.grade || ''}"`,
         `"${r.courseName || r.course?.name || 'አጠቃላይ'}"`,
         `"${r.teacherName || r.teacher?.fullName || '—'}"`,
@@ -265,7 +265,7 @@ const AttendanceReports = () => {
     () => [
       {
         accessorKey: 'studentName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ተማሪ (Student)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ተማሪ" />,
         cell: ({ row }) => {
           const r = row.original;
           const name = r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '—');
@@ -285,7 +285,7 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'studentType',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነትና ፈረቃ (Mode & Shift)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነትና ፈረቃ" />,
         cell: ({ row }) => {
           const studentType = row.original.studentType || row.original.student?.studentType || 'regular';
           const shift = row.original.shift || row.original.student?.shift || 'weekend';
@@ -294,7 +294,7 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል (Grade)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል" />,
         cell: ({ row }) => {
           const val = row.original.grade || row.original.student?.grade;
           return <Badge variant="neutral" size="sm" className="font-semibold">{val || '—'}</Badge>;
@@ -302,20 +302,20 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'courseName',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ኮርስ (Course)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ኮርስ" />,
         cell: ({ row }) => {
           const course = row.original.courseName || row.original.course?.name;
           return (
             <span className="font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400 shrink-0" />
-              <span>{course || 'አጠቃላይ (General)'}</span>
+              <span>{course || 'አጠቃላይ'}</span>
             </span>
           );
         },
       },
       {
         accessorKey: 'teacherName',
-        header: 'መምህር (Teacher)',
+        header: 'መምህር',
         cell: ({ row }) => {
           const teacher = row.original.teacherName || row.original.teacher?.fullName;
           return <span className="text-slate-600 dark:text-slate-300 text-xs font-medium">{teacher || '—'}</span>;
@@ -323,7 +323,7 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'date',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ቀን (Date)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ቀን" />,
         cell: ({ getValue }) => (
           <span className="font-semibold text-slate-900 dark:text-white text-xs">
             {formatEthiopianDate(getValue())}
@@ -332,7 +332,7 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'checkInTime',
-        header: 'ሰዓት (Check-in)',
+        header: 'የመግቢያ ሰዓት',
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
             {getValue() ? new Date(getValue()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
@@ -341,7 +341,7 @@ const AttendanceReports = () => {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ (Status)" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
         cell: ({ getValue }) => getStatusBadge(getValue()),
       },
     ],
@@ -353,7 +353,7 @@ const AttendanceReports = () => {
       {/* 🌟 1. Header Banner */}
       <FadeIn direction="down" duration={0.35}>
         <PageHeader
-          title="የመገኘት ሪፖርቶች (Attendance Reports & Analytics)"
+          title="የመገኘት ሪፖርቶች"
           subtitle="የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት"
           icon={ClipboardCheck}
           badge={
@@ -379,7 +379,7 @@ const AttendanceReports = () => {
                 className="gap-1.5 bg-white dark:bg-slate-900"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-                <span>አድስ (Refresh)</span>
+                <span>አድስ</span>
               </Button>
 
               {totalCount > 0 && (
@@ -400,7 +400,7 @@ const AttendanceReports = () => {
                     className="gap-1.5 bg-white dark:bg-slate-900 hidden sm:inline-flex"
                   >
                     <Printer className="w-3.5 h-3.5 text-blue-600" />
-                    <span>አትም (Print)</span>
+                    <span>አትም</span>
                   </Button>
                 </>
               )}
@@ -527,7 +527,7 @@ const AttendanceReports = () => {
                 {absentCount}
               </p>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                ያልተገኙ (Absent)
+                ያልተገኙ
               </p>
             </div>
           </div>
@@ -548,28 +548,28 @@ const AttendanceReports = () => {
               onClick={() => applyDatePreset('today')}
               className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              ዛሬ (Today)
+              ዛሬ
             </button>
             <button
               type="button"
               onClick={() => applyDatePreset('week')}
               className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              ይህ ሳምንት (Week)
+              ይህ ሳምንት
             </button>
             <button
               type="button"
               onClick={() => applyDatePreset('month')}
               className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-950 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              ይህ ወር (Month)
+              ይህ ወር
             </button>
             <button
               type="button"
               onClick={() => applyDatePreset('all')}
               className="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
             >
-              ሁሉም (All Time)
+              ሁሉም ጊዜ
             </button>
           </div>
 
@@ -592,7 +592,7 @@ const AttendanceReports = () => {
           {/* 1. Student Type (Mode) */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              የምዝገባ ዓይነት (Mode)
+              የምዝገባ ዓይነት
             </label>
             <select
               name="studentType"
@@ -600,16 +600,16 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም (All Modes)</option>
-              <option value="regular">🏛️ መደበኛ (Regular)</option>
-              <option value="distance">🌐 የርቀት (Distance)</option>
+              <option value="">ሁሉም</option>
+              <option value="regular">🏛️ መደበኛ</option>
+              <option value="distance">🌐 የርቀት</option>
             </select>
           </div>
 
           {/* 2. Shift (If Regular or All: Weekend vs Night) */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ፈረቃ (Shift)
+              ፈረቃ
             </label>
             <select
               name="shift"
@@ -618,9 +618,9 @@ const AttendanceReports = () => {
               disabled={filters.studentType === 'distance'}
               className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">ሁሉም ፈረቃዎች (All)</option>
+              <option value="">ሁሉም ፈረቃዎች</option>
               <option value="weekend">☀️ የቀን / ቅዳሜና እሁድ</option>
-              <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+              <option value="night">🌙 የማታ ፈረቃ</option>
             </select>
           </div>
 
@@ -655,7 +655,7 @@ const AttendanceReports = () => {
           {/* 5. Course */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ኮርስ (Course)
+              ኮርስ
             </label>
             <select
               name="courseId"
@@ -663,7 +663,7 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም ኮርሶች (All)</option>
+              <option value="">ሁሉም ኮርሶች</option>
               {courses.map((c) => (
                 <option key={c._id} value={c._id}>
                   {c.name}
@@ -675,7 +675,7 @@ const AttendanceReports = () => {
           {/* 6. Grade */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ክፍል (Grade)
+              ክፍል
             </label>
             <select
               name="grade"
@@ -683,7 +683,7 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም ክፍሎች (All)</option>
+              <option value="">ሁሉም ክፍሎች</option>
               {GRADE_OPTIONS.map((g) => (
                 <option key={g.value} value={g.value}>
                   {g.label}
@@ -695,7 +695,7 @@ const AttendanceReports = () => {
           {/* 7. Status */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ሁኔታ (Status)
+              ሁኔታ
             </label>
             <select
               name="status"
@@ -703,17 +703,17 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም ሁኔታዎች (All)</option>
-              <option value="Present">✅ ተገኝቷል (Present)</option>
-              <option value="Late">🕒 ዘግይቷል (Late)</option>
-              <option value="Absent">❌ አልተገኘም (Absent)</option>
+              <option value="">ሁሉም ሁኔታዎች</option>
+              <option value="Present">✅ ተገኝቷል</option>
+              <option value="Late">🕒 ዘግይቷል</option>
+              <option value="Absent">❌ አልተገኘም</option>
             </select>
           </div>
 
           {/* 8. Teacher */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              መምህር (Teacher)
+              መምህር
             </label>
             <select
               name="teacher"
@@ -721,7 +721,7 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም መምህራን (All)</option>
+              <option value="">ሁሉም መምህራን</option>
               {teachers.map((t) => (
                 <option key={t._id} value={t._id}>
                   {t.fullName || t.name}
@@ -739,7 +739,7 @@ const AttendanceReports = () => {
             className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>ማጣሪያዎችን አጽዳ (Reset)</span>
+            <span>ማጣሪያዎችን አጽዳ</span>
           </button>
 
           <Button
@@ -750,7 +750,7 @@ const AttendanceReports = () => {
             className="bg-[#1657b8] hover:bg-[#124796] text-white font-bold gap-1.5 shadow-sm"
           >
             <Filter className="w-3.5 h-3.5" />
-            <span>{isFetching ? 'በመፈለግ ላይ...' : 'አጣራና ፈልግ (Filter)'}</span>
+            <span>{isFetching ? 'በመፈለግ ላይ...' : 'አጣራና ፈልግ'}</span>
           </Button>
         </div>
       </Card>

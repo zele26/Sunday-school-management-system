@@ -55,10 +55,10 @@ const DepartmentHub = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={department?.name || 'Department Control Hub'}
+        title={department?.name || 'የክፍል አስተዳደር ማዕከል'}
         subtitle={department?.description || 'የክፍሉን አባላት፣ እንቅስቃሴዎች እና ሪፖርቶች እዚህ ያስተዳድሩ'}
         icon={Building2}
-        badge={<Badge variant="gold" size="sm">{department?.code || 'DEPT'}</Badge>}
+        badge={<Badge variant="gold" size="sm">{department?.code || 'ክፍል'}</Badge>}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -88,7 +88,7 @@ const DepartmentHub = () => {
         <Card variant="elevated" padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Members</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">አጠቃላይ አባላት</p>
               <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">{members.length}</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] dark:text-blue-400 flex items-center justify-center">
@@ -101,8 +101,10 @@ const DepartmentHub = () => {
         <Card variant="elevated" padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department Status</p>
-              <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{department?.status || 'Active'}</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">የክፍሉ ሁኔታ</p>
+              <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
+                {department?.status === 'active' || department?.status === 'Active' ? 'ንቁ' : (department?.status || 'ንቁ')}
+              </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
@@ -114,14 +116,14 @@ const DepartmentHub = () => {
         <Card variant="elevated" padding="md">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Module Scoping</p>
-              <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">Autonomous</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">የአገልግሎት ወሰን</p>
+              <p className="text-3xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">ራሱን የቻለ</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
               <Layers className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Role-Based Access Guarded</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">በፈቃድ ደረጃ የተጠበቀ</p>
         </Card>
       </div>
 
@@ -145,24 +147,24 @@ const DepartmentHub = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50">
-                  <th className="py-3 px-4">Member</th>
-                  <th className="py-3 px-4">Member ID</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Start Date</th>
+                  <th className="py-3 px-4">አባል</th>
+                  <th className="py-3 px-4">የአባል መለያ ቁጥር</th>
+                  <th className="py-3 px-4">ሁኔታ</th>
+                  <th className="py-3 px-4">የተመደበበት ቀን</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
                 {members.map((m) => (
                   <tr key={m._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
-                      {m.personId?.firstName ? `${m.personId.firstName} ${m.personId.lastName || ''}` : (m.personId?.fullName || 'Member')}
+                      {m.personId?.firstName ? `${m.personId.firstName} ${m.personId.lastName || ''}` : (m.personId?.fullName || 'አባል')}
                     </td>
                     <td className="py-3 px-4 font-mono text-xs text-[var(--brand-primary)] dark:text-blue-400">
                       {m.departmentMemberId || '—'}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant={m.status === 'active' ? 'approved' : 'neutral'} size="sm">
-                        {m.status || 'Active'}
+                        {m.status === 'active' || m.status === 'Active' ? 'ንቁ' : (m.status || 'ንቁ')}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-500 dark:text-slate-400">

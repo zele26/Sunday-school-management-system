@@ -31,7 +31,7 @@ const TeacherClasses = () => {
     <Card variant="default" padding="lg" className="space-y-6 font-sans">
       <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
-          <CardTitle>የተመደቡ ክፍሎች (My Assigned Classes)</CardTitle>
+          <CardTitle>የተመደቡ ክፍሎች</CardTitle>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">የሚያስተምሯቸውን ክፍሎች እና ተማሪዎችን ይመልከቱ።</p>
         </div>
         <Badge variant="gold" size="sm">{classes.length} ክፍሎች</Badge>

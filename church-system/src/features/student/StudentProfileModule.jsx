@@ -101,7 +101,7 @@ const StudentProfile = () => {
             }}
             className="text-[#1657b8] hover:underline text-sm mt-3 inline-block font-bold"
           >
-            ወደ መግቢያ ገጽ ተመለስ (Go to Login)
+            ወደ መግቢያ ገጽ ተመለስ
           </button>
         </div>
       </div>
@@ -125,8 +125,8 @@ const StudentProfile = () => {
   const emergencyPhone = profile.emergencyPhone || profile.parentPhone || profile.contactPhone || '';
   const emergencyEmail = profile.emergencyEmail || profile.parentEmail || profile.contactEmail || '';
   const studentType = profile.studentType || 'regular';
-  const batch = profile.batch || profile.grade || 'N/A';
-  const registrationNumber = profile.registrationNumber || 'N/A';
+  const batch = profile.batch || profile.grade || '-';
+  const registrationNumber = profile.registrationNumber || '-';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/70 via-white to-amber-50/60 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-8 px-4 sm:px-6 lg:px-8 font-sans">
@@ -142,16 +142,16 @@ const StudentProfile = () => {
                   <div className="flex flex-wrap items-center gap-2 mt-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${studentType === 'distance' ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-emerald-950'
                       }`}>
-                      {studentType === 'distance' ? '🌐 የርቀት ተማሪ (Distance)' : '🏛️ መደበኛ ተማሪ (Regular)'}
+                      {studentType === 'distance' ? '🌐 የርቀት ተማሪ' : '🏛️ መደበኛ ተማሪ'}
                     </span>
                     <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-sm">
-                      {studentType === 'distance' ? `Batch: ${batch}` : `Grade: ${batch}`}
+                      {studentType === 'distance' ? `ዙር: ${batch}` : `ክፍል: ${batch}`}
                     </span>
                   </div>
                 </div>
                 <div className="text-left sm:text-right">
-                  <p className="text-xs text-blue-100 uppercase tracking-wider font-semibold">የተማሪ መለያ ቁጥር (ID)</p>
-                  <p className="text-lg font-mono font-black bg-white/10 px-3 py-1 rounded-xl inline-block mt-0.5 border border-white/20">{profile.studentId || 'N/A'}</p>
+                  <p className="text-xs text-blue-100 uppercase tracking-wider font-semibold">የተማሪ መለያ ቁጥር</p>
+                  <p className="text-lg font-mono font-black bg-white/10 px-3 py-1 rounded-xl inline-block mt-0.5 border border-white/20">{profile.studentId || '-'}</p>
                 </div>
               </div>
             </div>
@@ -163,34 +163,34 @@ const StudentProfile = () => {
                     <div className="bg-white p-2 rounded-xl shadow-md border border-blue-100 dark:border-slate-700">
                       <QRCodeSVG value={profile.qrCode} size={140} />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">የተማሪው QR ኮድ (Your QR Code)</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">የተማሪው የQR መለያ ኮድ</p>
                   </>
                 ) : (
                   <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-amber-700 dark:text-amber-300 text-sm">
-                    QR code not generated. Ask an admin to generate one.
+                    የQR ኮድ አልተፈጠረም። እባክዎ አስተዳዳሪውን ያነጋግሩ።
                   </div>
                 )}
               </div>
               {/* Quick Info */}
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Application No.</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400">የማመልከቻ ቁጥር</span>
                   <span className="font-mono font-bold text-slate-700 dark:text-slate-200">{registrationNumber}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Full Name</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400">ሙሉ ስም</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{fullName}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Gender</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.gender || '-'}</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400">ጾታ</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.gender === 'male' ? 'ወንድ' : profile.gender === 'female' ? 'ሴት' : profile.gender || '-'}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Date of Birth</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400">የትውልድ ቀን</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">{formatEthiopianDate(profile.dob)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="font-medium text-slate-500 dark:text-slate-400">Address</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400">አድራሻ</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">{profile.address || '-'}</span>
                 </div>
               </div>
@@ -203,67 +203,67 @@ const StudentProfile = () => {
           <Card variant="default" padding="lg">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-400 flex items-center justify-center font-bold">👤</span>
-              የግል መረጃ (Personal Information)
+              የግል መረጃ
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">First Name</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ስም</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.firstName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Middle Name</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የአባት ስም</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.middleName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Last Name</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የአያት ስም</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.lastName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ዕድሜ (Age)</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ዕድሜ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.age || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Education Level</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የትምህርት ደረጃ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.educationLevel || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Profession</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የሥራ መስክ / ሙያ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.profession || '-'}</span>
               </div>
               {studentType === 'regular' && (
                 <div>
-                  <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የመማሪያ ፈረቃ (Shift)</span>
+                  <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">የመማሪያ ፈረቃ</span>
                   <span className="font-semibold text-[#1657b8] dark:text-amber-400">
-                    {profile.shift === 'night' ? 'የማታ (Night)' : 'የቀን (Weekend)'}
+                    {profile.shift === 'night' ? 'የማታ' : 'የቀን / ቅዳሜና እሁድ'}
                   </span>
                 </div>
               )}
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Phone</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ስልክ ቁጥር</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">{profile.studentPhone || profile.contactPhone || profile.phone || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Email</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ኢሜይል</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.userId?.email || profile.email || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ክፍለ ከተማ (Subcity)</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ክፍለ ከተማ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.subcity || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ወረዳ (Woreda)</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ወረዳ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.woreda || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ቀበሌ / የቤት ቁጥር (Kebele)</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ቀበሌ / የቤት ቁጥር</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.kebele || '-'}</span>
               </div>
               <div className="sm:col-span-2">
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ሙሉ አድራሻ (Address)</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ሙሉ አድራሻ</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.address || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Teacher</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">መምህር</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {profile.teacher ? (profile.teacher.fullName || profile.teacher.email) : '-'}
                 </span>
@@ -277,23 +277,23 @@ const StudentProfile = () => {
           <Card variant="default" padding="lg">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center">📞</span>
-              Emergency Contact
+              የአስቸኳይ ጊዜ ተጠሪ መረጃ
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Name</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ሙሉ ስም</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyName || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Relationship</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ዝምድና</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.relationship || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Phone</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ስልክ ቁጥር</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyPhone || '-'}</span>
               </div>
               <div>
-                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Email</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">ኢሜይል</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyEmail || '-'}</span>
               </div>
             </div>
@@ -305,11 +305,11 @@ const StudentProfile = () => {
           <Card variant="default" padding="lg">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">📚</span>
-              Enrolled Courses
+              የተመዘገቡባቸው ትምህርቶች
             </h3>
             {courses.length === 0 ? (
               <p className="text-sm text-slate-400 dark:text-slate-500 py-3 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
-                You are not enrolled in any courses yet.
+                እስካሁን የተመዘገቡበት ትምህርት የለም።
               </p>
             ) : (
               <ul className="space-y-2">
@@ -332,25 +332,25 @@ const StudentProfile = () => {
           <Card variant="default" padding="lg">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center">📅</span>
-              Attendance History
+              የተሳትፎ / የዕለታዊ ክትትል ታሪክ
             </h3>
             {attendance.length === 0 ? (
               <p className="text-sm text-slate-400 dark:text-slate-500 py-3 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
-                No attendance records found.
+                ምንም የዕለታዊ ክትትል መረጃ አልተገኘም።
               </p>
             ) : (
               <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
                 <table className="w-full text-left border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800 text-xs uppercase text-slate-400 bg-slate-50 dark:bg-slate-800/50">
-                      <th className="py-2.5 px-3 font-bold">Date</th>
-                      <th className="py-2.5 px-3 font-bold">Check-in</th>
-                      <th className="py-2.5 px-3 font-bold">Course</th>
-                      <th className="py-2.5 px-3 font-bold">Teacher</th>
-                      <th className="py-2.5 px-3 font-bold">Grade</th>
-                      <th className="py-2.5 px-3 font-bold">Status</th>
-                      <th className="py-2.5 px-3 font-bold">Acad. Year</th>
-                      <th className="py-2.5 px-3 font-bold">Semester</th>
+                      <th className="py-2.5 px-3 font-bold">ቀን</th>
+                      <th className="py-2.5 px-3 font-bold">የመግቢያ ሰዓት</th>
+                      <th className="py-2.5 px-3 font-bold">ትምህርት</th>
+                      <th className="py-2.5 px-3 font-bold">መምህር</th>
+                      <th className="py-2.5 px-3 font-bold">ክፍል</th>
+                      <th className="py-2.5 px-3 font-bold">ሁኔታ</th>
+                      <th className="py-2.5 px-3 font-bold">የትምህርት ዘመን</th>
+                      <th className="py-2.5 px-3 font-bold">መንፈቀ ትምህርት</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -362,15 +362,15 @@ const StudentProfile = () => {
                         <tr key={record._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 text-slate-700 dark:text-slate-300">
                           <td className="py-2.5 px-3 font-medium">{formatEthiopianDate(record.date)}</td>
                           <td className="py-2.5 px-3 font-mono text-xs">{checkIn}</td>
-                          <td className="py-2.5 px-3">{record.courseName || 'General'}</td>
-                          <td className="py-2.5 px-3">{record.teacherName || 'N/A'}</td>
+                          <td className="py-2.5 px-3">{record.courseName || 'አጠቃላይ'}</td>
+                          <td className="py-2.5 px-3">{record.teacherName || '-'}</td>
                           <td className="py-2.5 px-3">{record.grade || '-'}</td>
                           <td className="py-2.5 px-3">
                             <Badge
                               variant={record.status === 'Present' ? 'success' : record.status === 'Late' ? 'warning' : 'destructive'}
                               size="sm"
                             >
-                              {record.status}
+                              {record.status === 'Present' ? 'ተገኝቷል' : record.status === 'Late' ? 'አርፍዷል' : record.status === 'Absent' ? 'አልተገኘም' : record.status || '-'}
                             </Badge>
                           </td>
                           <td className="py-2.5 px-3 font-mono text-xs">{record.academicYear || '-'}</td>

@@ -42,16 +42,16 @@ const Register = () => {
     setSuccess('');
 
     if (!formData.fullName.trim()) {
-      return setError('Full name is required.');
+      return setError('እባክዎ ሙሉ ስምዎን ያስገቡ');
     }
     if (!validateEmail(formData.email.trim())) {
-      return setError('Please enter a valid email address.');
+      return setError('እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ');
     }
     if (formData.password.length < 6) {
-      return setError('Password must be at least 6 characters.');
+      return setError('የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት');
     }
     if (formData.password !== formData.confirmPassword) {
-      return setError('Passwords do not match.');
+      return setError('የይለፍ ቃሎቹ አይመሳሰሉም');
     }
 
     setLoading(true);
@@ -82,7 +82,7 @@ const Register = () => {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        setSuccess(data.message || 'Registration successful! Your account is pending admin approval.');
+        setSuccess(data.message || 'ምዝገባዎ በተሳካ ሁኔታ ተከናውኗል! በአስተዳዳሪው ሲረጋገጥ ማሳወቂያ ይደርስዎታል።');
         setFormData({
           role: 'teacher',
           fullName: '',
@@ -99,10 +99,10 @@ const Register = () => {
           experience: '',
         });
       } else {
-        setError(data.message || 'Registration failed.');
+        setError(data.message || 'ምዝገባው አልተሳካም። እባክዎ እንደገና ይሞክሩ።');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError('የኔትወርክ ችግር አጋጥሟል። እባክዎ እንደገና ይሞክሩ።');
     } finally {
       setLoading(false);
     }
@@ -111,11 +111,11 @@ const Register = () => {
   const teacherSpecificFields = () => {
     return (
       <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
-        <div className="text-xs text-indigo-300 font-bold md:col-span-2">📚 Teacher Info (optional)</div>
+        <div className="text-xs text-indigo-300 font-bold md:col-span-2">📚 የመምህርነት መረጃ (አማራጭ)</div>
         <input
           type="text"
           name="subject"
-          placeholder="Subject (e.g., Mathematics)"
+          placeholder="የሚያስተምሩት የትምህርት ዓይነት"
           value={formData.subject}
           onChange={handleChange}
           className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500"
@@ -123,7 +123,7 @@ const Register = () => {
         <input
           type="text"
           name="experience"
-          placeholder="Years of Experience"
+          placeholder="የማስተማር ልምድ (በዓመታት)"
           value={formData.experience}
           onChange={handleChange}
           className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500"
@@ -150,8 +150,8 @@ const Register = () => {
       <Card variant="glass" padding="none" className="max-w-3xl w-full bg-slate-900/85 text-white rounded-3xl shadow-2xl p-6 sm:p-10 relative z-10 border border-slate-700/50 backdrop-blur-md my-auto max-h-[90vh] overflow-y-auto">
         <div className="mb-6 border-b border-slate-800 pb-4 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-white">አዲስ መምህር መመዝገቢያ (Teacher Registration)</h2>
-            <p className="text-xs text-slate-400 mt-1">ለመምህራን ብቻ (Teachers only)</p>
+            <h2 className="text-2xl font-bold text-white">አዲስ መምህር መመዝገቢያ</h2>
+            <p className="text-xs text-slate-400 mt-1">ለመምህራን ብቻ</p>
           </div>
           <Link href="/login" className="text-xs text-indigo-400 hover:underline font-bold">
             ← ወደ መግቢያ ተመለስ
@@ -172,24 +172,24 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Role Selection – fixed to teacher */}
           <div className="md:col-span-2">
-            <label className="text-xs font-semibold text-slate-300 block mb-1">የተጠቃሚ ሚና (Role)</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">የተጠቃሚ ሚና</label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
               className="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-indigo-300 font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="teacher">መምህር (Teacher)</option>
+              <option value="teacher">መምህር</option>
             </select>
             <p className="text-xs text-slate-500 mt-1">
-              ተማሪዎች በአስተዳዳሪዎ በኩል ይመዘገባሉ። (Students are registered by an admin.)
+              ተማሪዎች በአስተዳዳሪው ወይም በተማሪዎች ምዝገባ ገጽ በኩል ይመዘገባሉ።
             </p>
           </div>
 
           <input type="text" name="fullName" placeholder="ሙሉ ስም *" value={formData.fullName} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
           <input type="email" name="email" placeholder="ኢሜይል *" value={formData.email} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="password" name="password" placeholder="ፓስዎርድ * (min. 6 characters)" value={formData.password} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="password" name="confirmPassword" placeholder="ፓስዎርድ ያረጋግጡ *" value={formData.confirmPassword} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="password" name="password" placeholder="የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)" value={formData.password} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="password" name="confirmPassword" placeholder="የይለፍ ቃል ያረጋግጡ *" value={formData.confirmPassword} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
 
           <input type="text" name="phoneNumber" placeholder="ስልክ ቁጥር" value={formData.phoneNumber} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
           <input type="text" name="city" placeholder="ከተማ" value={formData.city} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -197,7 +197,7 @@ const Register = () => {
           <input type="text" name="kebele" placeholder="ቀበሌ" value={formData.kebele} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
 
           <div className="md:col-span-2 pt-2 border-t border-slate-800 text-xs text-indigo-300 font-bold">
-            የአደጋ ጊዜ ተጠሪ (Emergency Contact)
+            የአደጋ ጊዜ ተጠሪ
           </div>
           <input type="text" name="emergencyPersonName" placeholder="የተጠሪ ስም" value={formData.emergencyPersonName} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
           <input type="text" name="emergencyPhone" placeholder="የተጠሪ ስልክ" value={formData.emergencyPhone} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -213,7 +213,7 @@ const Register = () => {
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              'ይመዝገቡ (Submit Registration)'
+              'ይመዝገቡ'
             )}
           </button>
         </form>

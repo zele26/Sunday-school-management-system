@@ -68,7 +68,7 @@ const TeacherLessons = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[var(--brand-primary)]" />
-              <span>የትምህርት ክፍለ ጊዜያት (My Lessons)</span>
+              <span>የትምህርት ክፍለ ጊዜያት</span>
             </CardTitle>
             <Badge variant="neutral" size="sm">{lessons.length} ክፍሎች</Badge>
           </div>
@@ -78,13 +78,13 @@ const TeacherLessons = () => {
           <form onSubmit={handleSubmit} className="space-y-4 bg-slate-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700">
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <Plus className="w-4 h-4 text-[var(--brand-primary)]" />
-              <span>አዲስ ትምህርት ጨምር (Add New Lesson)</span>
+              <span>አዲስ ትምህርት ጨምር</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 name="title"
-                placeholder="የክፍለ ጊዜው ርዕስ (Lesson Title)"
+                placeholder="የክፍለ ጊዜው ርዕስ"
                 required
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -97,7 +97,7 @@ const TeacherLessons = () => {
                 onChange={(e) => setForm({ ...form, courseId: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               >
-                <option value="">ኮርስ ይምረጡ (Select Course)</option>
+                <option value="">ኮርስ ይምረጡ</option>
                 {courses.map((c) => (
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
@@ -106,7 +106,7 @@ const TeacherLessons = () => {
 
             <textarea
               name="content"
-              placeholder="የትምህርቱ ማብራሪያና ይዘት (Lesson Content)"
+              placeholder="የትምህርቱ ማብራሪያና ይዘት"
               rows={3}
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
@@ -118,14 +118,14 @@ const TeacherLessons = () => {
                 <input
                   type="number"
                   name="order"
-                  placeholder="ተራ ቁጥር (Order)"
+                  placeholder="ተራ ቁጥር"
                   value={form.order}
                   onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               <Button type="submit" disabled={loading} size="sm" className="font-bold">
-                {loading ? 'በመጫን ላይ...' : 'ትምህርቱን ጫን (Upload Lesson)'}
+                {loading ? 'በመጫን ላይ...' : 'ትምህርቱን ጫን'}
               </Button>
             </div>
           </form>
@@ -133,12 +133,12 @@ const TeacherLessons = () => {
           <div className="space-y-3">
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <ListOrdered className="w-4 h-4 text-amber-500" />
-              <span>የተዘጋጁ ትምህርቶች (Existing Lessons)</span>
+              <span>የተዘጋጁ ትምህርቶች</span>
             </h3>
 
             {lessons.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400 py-4 text-center bg-slate-50 dark:bg-slate-800/30 rounded-xl">
-                ምንም የተጫነ ትምህርት የለም (No lessons uploaded yet)
+                ምንም የተጫነ ትምህርት የለም።
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">

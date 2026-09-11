@@ -31,10 +31,10 @@ export function ThemeToggle({ className, variant = 'icon' }) {
               ? 'bg-white text-slate-900 shadow-sm'
               : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
           )}
-          title="Light mode"
+          title="ደማቅ እይታ"
         >
           <Sun className="w-3.5 h-3.5 text-amber-500" />
-          <span>Light</span>
+          <span>ደማቅ</span>
         </button>
         <button
           type="button"
@@ -45,10 +45,10 @@ export function ThemeToggle({ className, variant = 'icon' }) {
               ? 'bg-slate-900 text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
           )}
-          title="Dark mode"
+          title="ጨለማ እይታ"
         >
           <Moon className="w-3.5 h-3.5 text-blue-400" />
-          <span>Dark</span>
+          <span>ጨለማ</span>
         </button>
         <button
           type="button"
@@ -59,32 +59,45 @@ export function ThemeToggle({ className, variant = 'icon' }) {
               ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
           )}
-          title="System theme"
+          title="የመሣሪያው ቅንብር"
         >
           <Monitor className="w-3.5 h-3.5 text-slate-400" />
-          <span>System</span>
+          <span>የመሣሪያው</span>
         </button>
       </div>
     );
   }
 
-  const isDark = resolvedTheme === 'dark';
+  const currentTheme = resolvedTheme || theme;
+  const isDark = currentTheme === 'dark';
+
+  const handleToggle = () => {
+    const nextTheme = isDark ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (typeof document !== 'undefined') {
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
 
   return (
     <button
       type="button"
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      onClick={handleToggle}
       className={cn(
-        'relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors duration-150 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] active:opacity-85 cursor-pointer',
+        'relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 backdrop-blur hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all duration-150 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)] active:scale-95 cursor-pointer',
         className
       )}
-      aria-label="Toggle theme"
-      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      aria-label="የገጽታ እይታ መቀየሪያ"
+      title={isDark ? 'ወደ ደማቅ እይታ ቀይር' : 'ወደ ጨለማ እይታ ቀይር'}
     >
       {isDark ? (
         <Sun className="w-4 h-4 text-amber-400 transition-transform duration-200" />
       ) : (
-        <Moon className="w-4 h-4 text-blue-600 transition-transform duration-200" />
+        <Moon className="w-4 h-4 text-[#1657b8] transition-transform duration-200" />
       )}
     </button>
   );

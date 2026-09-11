@@ -74,7 +74,7 @@ const EditStudent = () => {
           toast.error('ተማሪውን መጫን አልተቻለም');
         }
       } catch (err) {
-        toast.error('Network error');
+        toast.error('የግንኙነት ስህተት ተከስቷል');
       } finally {
         setLoading(false);
       }
@@ -89,7 +89,7 @@ const EditStudent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.age && Number(form.age) <= 14) {
-      toast.error('የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be greater than 14)');
+      toast.error('የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት');
       return;
     }
 
@@ -130,7 +130,7 @@ const EditStudent = () => {
         toast.error('ማሻሻል አልተቻለም');
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል');
     } finally {
       setSubmitting(false);
     }
@@ -184,22 +184,22 @@ const EditStudent = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (Age) (&gt; 14)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (ከ 14 በላይ)</label>
               <Input type="number" name="age" min="15" max="120" placeholder="ምሳሌ፡ 18" value={form.age} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍል (Grade)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍል</label>
               <Select name="grade" value={form.grade} onChange={handleChange}>
                 {[7, 8, 9, 10, 11, 12].map((g) => (
-                  <option key={g} value={`Grade ${g}`}>Grade {g}</option>
+                  <option key={g} value={`Grade ${g}`}>{g}ኛ ክፍል</option>
                 ))}
               </Select>
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የምዝገባ ዓይነት</label>
               <Select name="studentType" value={form.studentType} onChange={handleChange}>
-                <option value="regular">መደበኛ (Regular)</option>
-                <option value="distance">የርቀት (Distance)</option>
+                <option value="regular">መደበኛ</option>
+                <option value="distance">የርቀት</option>
               </Select>
             </div>
           </div>
@@ -209,17 +209,17 @@ const EditStudent = () => {
             <EthiopianDatePicker
               value={form.dob}
               onChange={(iso) => setForm({ ...form, dob: iso })}
-              label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth - Ethiopian Calendar)"
+              label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር"
             />
           </div>
 
           {form.studentType === 'regular' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ (Study Shift)</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ</label>
                 <Select name="shift" value={form.shift} onChange={handleChange}>
-                  <option value="weekend">የቀን (ቅዳሜ እና እሑድ) - Weekend</option>
-                  <option value="night">የማታ - Night</option>
+                  <option value="weekend">የቀን (ቅዳሜ እና እሑድ)</option>
+                  <option value="night">የማታ</option>
                 </Select>
               </div>
               <div>
@@ -239,33 +239,33 @@ const EditStudent = () => {
           {/* Subcity, Woreda, Kebele & Address */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍለ ከተማ (Subcity)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍለ ከተማ</label>
               <Select name="subcity" value={form.subcity} onChange={handleChange}>
-                <option value="">ይምረጡ (Select)</option>
-                <option value="ቦሌ (Bole)">ቦሌ (Bole)</option>
-                <option value="አራዳ (Arada)">አራዳ (Arada)</option>
-                <option value="ቂርቆስ (Kirkos)">ቂርቆስ (Kirkos)</option>
-                <option value="ልደታ (Lideta)">ልደታ (Lideta)</option>
-                <option value="የካ (Yeka)">የካ (Yeka)</option>
-                <option value="ኮልፌ ቀራኒዮ (Kolfe Keranio)">ኮልፌ ቀራኒዮ (Kolfe Keranio)</option>
-                <option value="አቃቂ ቃሊቲ (Akaki Kality)">አቃቂ ቃሊቲ (Akaki Kality)</option>
-                <option value="ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)">ንፋስ ስልክ ላፍቶ (Nifas Silk Lafto)</option>
-                <option value="ጉለሌ (Gulele)">ጉለሌ (Gulele)</option>
-                <option value="አዲስ ከተማ (Addis Ketema)">አዲስ ከተማ (Addis Ketema)</option>
-                <option value="ለሚ ኩራ (Lemi Kura)">ለሚ ኩራ (Lemi Kura)</option>
-                <option value="ከአዲስ አበባ ውጪ (Outside AA)">ከአዲስ አበባ ውጪ (Outside AA)</option>
+                <option value="">ይምረጡ</option>
+                <option value="ቦሌ">ቦሌ</option>
+                <option value="አራዳ">አራዳ</option>
+                <option value="ቂርቆስ">ቂርቆስ</option>
+                <option value="ልደታ">ልደታ</option>
+                <option value="የካ">የካ</option>
+                <option value="ኮልፌ ቀራኒዮ">ኮልፌ ቀራኒዮ</option>
+                <option value="አቃቂ ቃሊቲ">አቃቂ ቃሊቲ</option>
+                <option value="ንፋስ ስልክ ላፍቶ">ንፋስ ስልክ ላፍቶ</option>
+                <option value="ጉለሌ">ጉለሌ</option>
+                <option value="አዲስ ከተማ">አዲስ ከተማ</option>
+                <option value="ለሚ ኩራ">ለሚ ኩራ</option>
+                <option value="ከአዲስ አበባ ውጪ">ከአዲስ አበባ ውጪ</option>
               </Select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ወረዳ (Woreda)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ወረዳ</label>
               <Input name="woreda" placeholder="ምሳሌ፡ 03" value={form.woreda} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ቀበሌ / የቤት ቁጥር (Kebele)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ቀበሌ / የቤት ቁጥር</label>
               <Input name="kebele" placeholder="ቀበሌ / የቤት ቁጥር" value={form.kebele} onChange={handleChange} />
             </div>
             <div className="sm:col-span-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ተጨማሪ አድራሻ (Address Details)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ተጨማሪ አድራሻ</label>
               <Input icon={MapPin} name="address" placeholder="የሰፈር ስም ወይም ልዩ ምልክት" value={form.address} onChange={handleChange} />
             </div>
           </div>
@@ -286,10 +286,10 @@ const EditStudent = () => {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዝምድና</label>
               <Select name="relationship" value={form.relationship} onChange={handleChange}>
-                <option value="Father">አባት (Father)</option>
-                <option value="Mother">እናት (Mother)</option>
-                <option value="Guardian">አሳዳጊ (Guardian)</option>
-                <option value="Other">ሌላ (Other)</option>
+                <option value="Father">አባት</option>
+                <option value="Mother">እናት</option>
+                <option value="Guardian">አሳዳጊ</option>
+                <option value="Other">ሌላ</option>
               </Select>
             </div>
             <div>
@@ -305,7 +305,7 @@ const EditStudent = () => {
           </Button>
           <Button variant="primary" type="submit" loading={submitting} className="gap-2">
             <Save className="w-4 h-4" />
-            <span>ለውጦችን አስቀምጥ (Save Changes)</span>
+            <span>ለውጦችን አስቀምጥ</span>
           </Button>
         </div>
       </form>

@@ -89,7 +89,7 @@ const EditTeacher = () => {
           else if (cData.courses && Array.isArray(cData.courses)) setAvailableCourses(cData.courses);
         }
       } catch (err) {
-        toast.error('Network error');
+        toast.error('የግንኙነት ስህተት ተከስቷል');
       } finally {
         setLoading(false);
       }
@@ -151,7 +151,7 @@ const EditTeacher = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (scheduleConflicts.length > 0) {
-      toast.error('እባክዎ የተደራረቡትን የኮርስ ሰዓቶች ያስተካክሉ (Schedule conflict detected)');
+      toast.error('እባክዎ የተደራረቡትን የኮርስ ሰዓቶች ያስተካክሉ');
       return;
     }
 
@@ -177,7 +177,7 @@ const EditTeacher = () => {
         toast.error(data.message || 'ማሻሻል አልተቻለም');
       }
     } catch (err) {
-      toast.error('Network error');
+      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል');
     } finally {
       setSubmitting(false);
     }
@@ -227,7 +227,7 @@ const EditTeacher = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዋና የትምህርት መስክ (Subject)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዋና የትምህርት መስክ</label>
               <Input name="subject" value={form.subject} onChange={handleChange} />
             </div>
             <div>
@@ -269,7 +269,7 @@ const EditTeacher = () => {
                 <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                   <div>
-                    <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል (Schedule Conflict)</p>
+                    <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል</p>
                     {scheduleConflicts.map((c, idx) => (
                       <p key={idx} className="mt-0.5">• {c}</p>
                     ))}
@@ -327,7 +327,7 @@ const EditTeacher = () => {
           </Button>
           <Button variant="primary" type="submit" loading={submitting} disabled={scheduleConflicts.length > 0} className="gap-2">
             <Save className="w-4 h-4" />
-            <span>ለውጦችን አስቀምጥ (Save Changes)</span>
+            <span>ለውጦችን አስቀምጥ</span>
           </Button>
         </div>
       </form>

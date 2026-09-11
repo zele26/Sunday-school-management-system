@@ -59,7 +59,7 @@ export function useRejectRegistration() {
       return data;
     },
     onSuccess: () => {
-      toast.success('ምዝገባው ውድቅ ተደርጓል (Registration rejected)');
+      toast.success('ምዝገባው ውድቅ ተደርጓል');
       queryClient.invalidateQueries({ queryKey: REGISTRATIONS_QUERY_KEY });
     },
     onError: (err) => {

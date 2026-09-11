@@ -6,12 +6,12 @@ import { FadeIn, StaggerContainer, StaggerItem } from '../../components/motion';
 import { Card, FeatureCard } from '../../components/ui/Card';
 
 const classList = [
-  { grade: 'Grade 7', age: '12-13', description: 'የመጀመሪያ ደረጃ የመጽሐፍ ቅዱስ ትምህርት' },
-  { grade: 'Grade 8', age: '13-14', description: 'የክርስትና ሕይወት መሠረቶች' },
-  { grade: 'Grade 9', age: '14-15', description: 'የወንጌል ታሪክ እና ትምህርት' },
-  { grade: 'Grade 10', age: '15-16', description: 'የብሉይ ኪዳን አጠቃላይ እይታ' },
-  { grade: 'Grade 11', age: '16-17', description: 'የሐዋርያት ሥራ እና የመጀመሪያዎቹ አብያተ ክርስቲያናት' },
-  { grade: 'Grade 12', age: '17-18', description: 'የክርስትና መሪነት እና የሕይወት ዝግጅት' },
+  { grade: '7ኛ ክፍል', age: '12-13', description: 'የመጀመሪያ ደረጃ የመጽሐፍ ቅዱስ ትምህርት' },
+  { grade: '8ኛ ክፍል', age: '13-14', description: 'የክርስትና ሕይወት መሠረቶች' },
+  { grade: '9ኛ ክፍል', age: '14-15', description: 'የወንጌል ታሪክ እና ትምህርት' },
+  { grade: '10ኛ ክፍል', age: '15-16', description: 'የብሉይ ኪዳን አጠቃላይ እይታ' },
+  { grade: '11ኛ ክፍል', age: '16-17', description: 'የሐዋርያት ሥራ እና የመጀመሪያዎቹ አብያተ ክርስቲያናት' },
+  { grade: '12ኛ ክፍል', age: '17-18', description: 'የክርስትና መሪነት እና የሕይወት ዝግጅት' },
 ];
 
 const Classes = () => {

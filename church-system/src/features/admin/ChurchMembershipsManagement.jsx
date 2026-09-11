@@ -76,16 +76,16 @@ const ChurchMembershipsManagement = () => {
     () => [
       {
         accessorKey: 'person',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Person" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ምእመን / ሰው" />,
         cell: ({ row }) => {
           const p = row.original.personId;
-          const name = p ? `${p.firstName} ${p.lastName}` : 'Unknown';
+          const name = p ? `${p.firstName} ${p.lastName}` : 'ያልታወቀ';
           return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
         },
       },
       {
         accessorKey: 'memberId',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Church Member ID" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የቤተክርስቲያን አባል መለያ" />,
         cell: ({ getValue }) => (
           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
             {getValue() || '-'}
@@ -94,12 +94,12 @@ const ChurchMembershipsManagement = () => {
       },
       {
         accessorKey: 'status',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-        cell: () => <Badge variant="approved" size="sm">Active Member</Badge>,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
+        cell: () => <Badge variant="approved" size="sm">ንቁ አባል</Badge>,
       },
       {
         accessorKey: 'createdAt',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Assigned Date" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የተሰጠበት ቀን" />,
         cell: ({ getValue }) => (
           <span className="text-xs text-slate-500 dark:text-slate-400">
             {getValue() ? formatEthiopianDate(getValue()) : '-'}
@@ -113,7 +113,7 @@ const ChurchMembershipsManagement = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="የቤተክርስቲያን አባልነት (Church Memberships)"
+        title="የቤተክርስቲያን አባልነት አስተዳደር"
         subtitle="የምእመናንን የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን ይፋዊ የአባልነት መታወቂያ ያስተዳድሩ"
         icon={Church}
         badge={<Badge variant="gold" size="sm">{memberships.length} አባላት</Badge>}
@@ -154,7 +154,7 @@ const ChurchMembershipsManagement = () => {
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 last:border-0"
                   >
                     {p.firstName} {p.middleName} {p.lastName}{' '}
-                    <span className="text-xs text-slate-400">({p.phone || 'No phone'})</span>
+                    <span className="text-xs text-slate-400">({p.phone || 'ስልክ የለም'})</span>
                   </button>
                 ))}
               </div>
@@ -163,7 +163,7 @@ const ChurchMembershipsManagement = () => {
 
           <div className="w-full sm:w-64">
             <Input
-              placeholder="Church Member ID (e.g. CM-1002)"
+              placeholder="የአባልነት መለያ ቁጥር (ምሳሌ፡ CM-1002)"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
               required
@@ -177,7 +177,7 @@ const ChurchMembershipsManagement = () => {
             className="gap-2 shrink-0"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{assignMutation.isPending ? 'በመመደብ ላይ...' : 'መድብ (Assign)'}</span>
+            <span>{assignMutation.isPending ? 'በመመደብ ላይ...' : 'መድብ'}</span>
           </Button>
         </form>
       </Card>
