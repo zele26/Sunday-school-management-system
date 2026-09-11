@@ -75,27 +75,57 @@ try {
 
 // --- CORS CONFIGURATION ---
 const rawAllowedOrigins = [
+  'https://sunday-school-management-system.vercel.app',
   'https://sunday-school-management-system-u68.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:4173',
   'https://church-api-3l2c.onrender.com',
-  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((s) => s.trim()) : []),
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()) : [])
 ];
 const allowedOrigins = Array.from(new Set(rawAllowedOrigins.filter(Boolean)));
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
+    // Allow non-browser requests or same-origin requests (e.g. mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+
+    // Exact match in configured allowed origins
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`CORS blocked for origin: ${origin}`));
+
+    // Allow all Vercel deployment preview and production domains
+    if (/^https:\/\/[a-zA-Z0-9_-]+\.vercel\.app$/.test(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+
+    // Allow Render subdomains
+    if (/^https:\/\/[a-zA-Z0-9_-]+\.onrender\.com$/.test(origin) || origin.endsWith('.onrender.com')) {
+      return callback(null, true);
+    }
+
+    // Allow local development (localhost / 127.0.0.1 on any port)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    console.warn(`⚠️ [CORS Blocked] Origin not allowed: ${origin}`);
+    return callback(null, false);
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
-}));
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // --- MIDDLEWARE ---
 app.use(bodyParser.json({ limit: '50mb' }));

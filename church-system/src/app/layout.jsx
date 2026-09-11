@@ -13,7 +13,9 @@ export const metadata = {
   },
   description: 'የተክለሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች፣ የአስተማሪዎች እና የርቀት ትምህርት መከታተያ ሥርዓት (Sunday School Management System)',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 
