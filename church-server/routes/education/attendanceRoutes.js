@@ -6,6 +6,11 @@ const Attendance = require('../../models/education/Attendance');
 const Student = require('../../models/Student');
 const Course = require('../../models/education/Course');
 
+const getStudentFullName = (s) => {
+  if (!s) return 'ተማሪ';
+  return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim() || 'ተማሪ';
+};
+
 // All routes require authentication
 router.use(protect);
 
@@ -76,10 +81,14 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
     if (alreadyMarked) {
       return res.json({
         success: true,
-        message: 'Attendance already recorded for today.',
+        message: 'ለዛሬ ቀደም ሲል ተመዝግቧል (Already Checked)',
         student: {
           id: student._id,
-          name: `${student.firstName} ${student.lastName}`,
+          name: getStudentFullName(student),
+          grade: student.grade || student.batch || '',
+          studentType: student.studentType || 'regular',
+          shift: student.shift || '',
+          studentId: student.studentId || '',
         },
         alreadyRecorded: true,
       });
@@ -100,8 +109,8 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
     try {
       await Attendance.create({
         student: student._id,
-        studentName: `${student.firstName} ${student.lastName}`,
-        grade: student.grade || '',
+        studentName: getStudentFullName(student),
+        grade: student.grade || student.batch || '',
         studentType: student.studentType || 'regular',
         shift: student.shift || '',
         course: courseId || null,
@@ -119,11 +128,11 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
       if (createErr.code === 11000) {
         return res.json({
           success: true,
-          message: 'Attendance already recorded for today.',
+          message: 'ለዛሬ ቀደም ሲል ተመዝግቧል (Already Checked)',
           student: {
             id: student._id,
-            name: `${student.firstName} ${student.lastName}`,
-            grade: student.grade || '',
+            name: getStudentFullName(student),
+            grade: student.grade || student.batch || '',
             studentType: student.studentType || 'regular',
             shift: student.shift || '',
             studentId: student.studentId || '',
@@ -136,11 +145,11 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Attendance recorded successfully.',
+      message: 'ተገኝነት በተሳካ ሁኔታ ተመዝግቧል!',
       student: {
         id: student._id,
-        name: `${student.firstName} ${student.lastName}`,
-        grade: student.grade || '',
+        name: getStudentFullName(student),
+        grade: student.grade || student.batch || '',
         studentType: student.studentType || 'regular',
         shift: student.shift || '',
         studentId: student.studentId || '',
@@ -178,11 +187,11 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
     if (alreadyMarked) {
       return res.json({
         success: true,
-        message: 'Attendance already recorded for this date.',
+        message: 'ለዚህ ቀን ቀደም ሲል ተመዝግቧል',
         student: {
           id: student._id,
-          name: `${student.firstName} ${student.lastName}`,
-          grade: student.grade || '',
+          name: getStudentFullName(student),
+          grade: student.grade || student.batch || '',
           studentType: student.studentType || 'regular',
           shift: student.shift || '',
           studentId: student.studentId || '',
@@ -220,8 +229,8 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
     try {
       await Attendance.create({
         student: student._id,
-        studentName: `${student.firstName} ${student.lastName}`,
-        grade: student.grade || '',
+        studentName: getStudentFullName(student),
+        grade: student.grade || student.batch || '',
         studentType: student.studentType || 'regular',
         shift: student.shift || '',
         course: courseId || null,
@@ -239,11 +248,11 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
       if (createErr.code === 11000) {
         return res.json({
           success: true,
-          message: 'Attendance already recorded for this date.',
+          message: 'ለዚህ ቀን ቀደም ሲል ተመዝግቧል',
           student: {
             id: student._id,
-            name: `${student.firstName} ${student.lastName}`,
-            grade: student.grade || '',
+            name: getStudentFullName(student),
+            grade: student.grade || student.batch || '',
             studentType: student.studentType || 'regular',
             shift: student.shift || '',
             studentId: student.studentId || '',
@@ -256,11 +265,11 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Attendance recorded successfully.',
+      message: 'ተገኝነት በተሳካ ሁኔታ ተመዝግቧል!',
       student: {
         id: student._id,
-        name: `${student.firstName} ${student.lastName}`,
-        grade: student.grade || '',
+        name: getStudentFullName(student),
+        grade: student.grade || student.batch || '',
         studentType: student.studentType || 'regular',
         shift: student.shift || '',
         studentId: student.studentId || '',
@@ -301,7 +310,7 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
     }
 
     const attendances = await Attendance.find(query)
-      .populate('student', 'firstName lastName grade studentId shift studentType phone')
+      .populate('student', 'firstName middleName lastName grade studentId shift studentType phone')
       .populate('course', 'name')
       .populate('teacher', 'fullName')
       .populate('recordedBy', 'fullName')
@@ -386,7 +395,7 @@ router.get('/today', authorize('admin', 'teacher'), async (req, res) => {
     }
 
     const attendances = await Attendance.find(query)
-      .populate('student', 'firstName lastName grade')
+      .populate('student', 'firstName middleName lastName grade')
       .populate('course', 'name');
 
     const grouped = {};
@@ -440,7 +449,7 @@ router.put('/:id', authorize('admin'), async (req, res) => {
         updatedAt: new Date()
       },
       { new: true }
-    ).populate('student', 'firstName lastName grade')
+    ).populate('student', 'firstName middleName lastName grade')
      .populate('course', 'name');
 
     if (!attendance) {
@@ -594,14 +603,14 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
           await existing.save();
           results.push({
             studentId: student._id,
-            studentName: `${student.firstName} ${student.lastName}`,
+            studentName: getStudentFullName(student),
             status: targetStatus,
             action: 'updated',
           });
         } else {
           await Attendance.create({
             student: student._id,
-            studentName: `${student.firstName} ${student.lastName}`,
+            studentName: getStudentFullName(student),
             grade: student.grade || student.batch || '',
             studentType: student.studentType || 'regular',
             shift: student.shift || '',
@@ -616,7 +625,7 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
           });
           results.push({
             studentId: student._id,
-            studentName: `${student.firstName} ${student.lastName}`,
+            studentName: getStudentFullName(student),
             status: targetStatus,
             action: 'created',
           });

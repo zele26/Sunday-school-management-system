@@ -214,9 +214,14 @@ const QRScanner = () => {
       const data = await res.json();
 
       if (data.success) {
+        const studentFullName =
+          data.student?.name ||
+          [payload.firstName, payload.middleName, payload.lastName].filter(Boolean).join(' ') ||
+          'ተማሪ';
+
         const studentInfo = {
           id: data.student?.id || data.student?._id || payload.studentId || 'ID',
-          name: data.student?.name || (payload.firstName ? `${payload.firstName} ${payload.lastName}` : 'ተማሪ'),
+          name: studentFullName,
           grade: data.student?.grade || payload.grade || '',
           studentId: data.student?.studentId || payload.studentId || '',
           studentType: data.student?.studentType || payload.studentType || 'regular',
@@ -231,7 +236,7 @@ const QRScanner = () => {
 
         if (data.alreadyRecorded) {
           playFeedback('warning', soundEnabled);
-          toast.info(`${studentInfo.name} — ቀደም ሲል ተመዝግቧል`);
+          toast.info(`${studentFullName} — ለዛሬ ቀደም ሲል ተመዝግቧል`);
         } else {
           playFeedback('success', soundEnabled);
           try {
@@ -243,11 +248,22 @@ const QRScanner = () => {
             });
           } catch (e) {}
 
-          toast.success(`${studentInfo.name} — ${status === 'Late' ? '🕒 አርፍዶ ተመዝግቧል' : '✅ ተገኝቷል'}`);
+          toast.success(`${studentFullName} — ${status === 'Late' ? '🕒 አርፍዶ ተመዝግቧል' : '✅ ተገኝቷል'}`);
         }
 
-        // Add to recent feed
-        setRecentScans((prev) => [studentInfo, ...prev.slice(0, 49)]);
+        // Deduplicate recent scans: Only add if not already in the session feed
+        setRecentScans((prev) => {
+          const identifier = studentInfo.studentId || studentInfo.id || studentInfo.name;
+          const exists = prev.some(
+            (s) => (s.studentId && s.studentId === studentInfo.studentId) || (s.id && s.id === studentInfo.id) || s.name === studentInfo.name
+          );
+
+          if (exists) {
+            // Already in session list, don't duplicate
+            return prev;
+          }
+          return [studentInfo, ...prev.slice(0, 49)];
+        });
       } else {
         playFeedback('error', soundEnabled);
         toast.error(data.message || 'የመገኘት ምዝገባ አልተሳካም');
@@ -258,12 +274,12 @@ const QRScanner = () => {
     }
   };
 
-  // QR Scan Callback
+  // QR Scan Callback (With 6-second cooldown lock per unique QR code)
   const handleScan = useCallback(
     async (decodedText) => {
       const now = Date.now();
-      if (decodedText === lastScannedRef.current && now - lastScanTimeRef.current < 2500) {
-        return; // debounce same QR code
+      if (decodedText === lastScannedRef.current && now - lastScanTimeRef.current < 6000) {
+        return; // debounce same QR code to prevent rapid re-scans
       }
       lastScannedRef.current = decodedText;
       lastScanTimeRef.current = now;
@@ -370,10 +386,11 @@ const QRScanner = () => {
       {
         studentId: student._id,
         firstName: student.firstName,
+        middleName: student.middleName,
         lastName: student.lastName,
-        grade: student.grade,
-        studentType: student.studentType,
-        shift: student.shift,
+        grade: student.grade || student.batch || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
       },
       true
     );
@@ -791,7 +808,7 @@ const QRScanner = () => {
                         </div>
                         <div>
                           <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-[#1657b8] dark:group-hover:text-amber-400 transition-colors">
-                            {s.firstName} {s.lastName}
+                            {[s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')}
                           </p>
                           <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
                             <span>{s.studentId ? `ID: ${s.studentId}` : s.phone || 'ተማሪ'}</span>

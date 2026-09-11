@@ -861,14 +861,14 @@ const AttendanceManagement = () => {
                         type="button"
                         onClick={() => {
                           setSelectedStudent(s);
-                          setSearchQuery(`${s.firstName} ${s.lastName}`);
+                          setSearchQuery([s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '));
                           setSearchResults([]);
                         }}
                         className="w-full p-3 text-left hover:bg-blue-50/60 dark:hover:bg-slate-700 flex items-center justify-between transition-colors cursor-pointer"
                       >
                         <div>
                           <p className="font-bold text-xs text-slate-900 dark:text-white">
-                            {s.firstName} {s.middleName || ''} {s.lastName}
+                            {[s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')}
                           </p>
                           <p className="text-[11px] text-slate-400 font-mono">{s.studentId || '-'}</p>
                         </div>
@@ -890,7 +890,7 @@ const AttendanceManagement = () => {
                     </div>
                     <div>
                       <p className="font-bold text-sm text-slate-900 dark:text-white">
-                        {selectedStudent.firstName} {selectedStudent.lastName}
+                        {[selectedStudent.firstName, selectedStudent.middleName, selectedStudent.lastName].filter(Boolean).join(' ')}
                       </p>
                       <p className="text-xs text-[#1e3a8a] dark:text-blue-300 font-mono font-bold">
                         መለያ፦ {selectedStudent.studentId || '-'} • ክፍል፦ {selectedStudent.grade || '-'}
