@@ -74,18 +74,23 @@ try {
 }
 
 // --- CORS CONFIGURATION ---
-const allowedOrigins = [
+const rawAllowedOrigins = [
   'https://sunday-school-management-system-u68.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://church-api-3l2c.onrender.com'
+  'https://church-api-3l2c.onrender.com',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()) : [])
 ];
+const allowedOrigins = Array.from(new Set(rawAllowedOrigins.filter(Boolean)));
 
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(null, true);
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
