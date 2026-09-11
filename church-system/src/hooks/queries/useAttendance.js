@@ -22,7 +22,7 @@ export function useAttendanceReport(filters = {}, enabled = true) {
         throw new Error(errData.message || 'የመገኘት መረጃን ማምጣት አልተቻለም');
       }
       const data = await res.json().catch(() => []);
-      return Array.isArray(data) ? data : data.records || data.attendance || data.data || [];
+      return Array.isArray(data) ? data : data.attendances || data.records || data.attendance || data.data || [];
     },
     enabled,
   });
