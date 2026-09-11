@@ -205,7 +205,7 @@ const ContinueRegistrationContent = () => {
         </motion.div>
 
         <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-          ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+          የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
         </footer>
       </div>
     );
@@ -432,7 +432,7 @@ const ContinueRegistrationContent = () => {
         </main>
 
         <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-          ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+          የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
         </footer>
       </div>
     );

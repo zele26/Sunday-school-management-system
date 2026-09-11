@@ -7,8 +7,8 @@ export const translations = {
     am: 'የርቀት ትምህርት መርሃ ግብር (LMS)',
   },
   sundaySchoolTitle: {
-    en: 'Debre Selam Kidus Stefanos — Tekle Sawiros Sunday School',
-    am: 'ደብረ ሰላም ቅዱስ እስጢፋኖስ — ተክለ ሳዊሮስ ሰንበት ት/ቤት',
+    en: 'Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School',
+    am: 'የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን — ተክለ ሳዊሮስ ሰንበት ት/ቤት',
   },
   spiritualMotto: {
     en: 'Spiritual Wisdom, Biblical Knowledge & Christian Life in Christ',

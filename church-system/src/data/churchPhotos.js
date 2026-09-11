@@ -70,7 +70,7 @@ export const churchPhotos = [
     title: 'የቤተክርስቲያን ታሪካዊ ቅርስና ውበት',
     category: 'history',
     categoryAm: 'ታሪክና ቅርስ',
-    description: 'የደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን ገጽታ።',
+    description: 'የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን ገጽታ።',
     featured: false,
   },
   {

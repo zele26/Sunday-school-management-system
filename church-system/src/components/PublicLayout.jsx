@@ -413,8 +413,8 @@ const PublicLayout = ({ children }) => {
                   <Image src={ChurchLogo} alt="Logo" width={40} height={40} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-extrabold text-base text-[#1657b8]">ተክለሳዊሮስ ሰንበት ትምህርት ቤት</span>
-                  <span className="text-[10px] text-amber-600 font-bold uppercase">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት</span>
+                  <span className="font-extrabold text-base text-[#1657b8]">ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት</span>
+                  <span className="text-[10px] text-amber-600 font-bold">የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን</span>
                 </div>
               </div>
               <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
@@ -494,10 +494,10 @@ const PublicLayout = ({ children }) => {
           {/* Copyright Sub-footer */}
           <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
             <p>
-              © {new Date().getFullYear()} ተክለሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
+              © {new Date().getFullYear()} ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
             </p>
             <div>
-              <span className="text-slate-500">ደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት ሰንበት ት/ቤት</span>
+              <span className="text-slate-500">የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን</span>
             </div>
           </div>
         </div>

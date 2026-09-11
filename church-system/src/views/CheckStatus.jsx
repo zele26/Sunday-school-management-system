@@ -405,8 +405,8 @@ const CheckStatusContent = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block">
-                    ደብረ ሰላም ቅዱስ እስጢፋኖስ
+                  <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block leading-normal">
+                    የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን
                   </span>
                   <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
                     ተክለ ሳዊሮስ ሰንበት ት/ቤት
@@ -589,7 +589,7 @@ const CheckStatusContent = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs font-bold text-slate-400 dark:text-slate-500 relative z-10">
-        ደብረ ሰላም ቅዱስ እስጢፋኖስ • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+        የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
       </footer>
     </div>
   );

@@ -114,7 +114,7 @@ const ChurchMembershipsManagement = () => {
     <div className="space-y-6">
       <PageHeader
         title="የቤተክርስቲያን አባልነት (Church Memberships)"
-        subtitle="የምእመናንን የደብረ ሳዊሮስ ቅዱስ ተክለሃይማኖት ይፋዊ የአባልነት መታወቂያ ያስተዳድሩ"
+        subtitle="የምእመናንን የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን ይፋዊ የአባልነት መታወቂያ ያስተዳድሩ"
         icon={Church}
         badge={<Badge variant="gold" size="sm">{memberships.length} አባላት</Badge>}
         actions={

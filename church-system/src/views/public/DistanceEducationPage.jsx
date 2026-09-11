@@ -143,7 +143,7 @@ const DistanceEducationPage = () => {
                     ⛪
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">ደብረ ሳዊሮስ ሰንበት ት/ቤት</h3>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Distance Education Center</p>
                   </div>
                 </div>

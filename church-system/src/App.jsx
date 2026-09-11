@@ -116,8 +116,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/classes" element={<Classes />} />
           <Route path="/announcements" element={<PublicAnnouncements />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/student-register" element={<StudentRegister />} />
+          <Route path="/student-register" element={<Navigate to="/register-regular" replace />} />
+          <Route path="/register-student" element={<Navigate to="/register-regular" replace />} />
           <Route path="/register-regular" element={<RegisterRegular />} />
           <Route path="/register-distance" element={<RegisterDistance />} />
           <Route path="/distance-education" element={<DistanceEducationPage />} />

@@ -226,8 +226,8 @@ const Login = () => {
               </div>
 
               <div className="space-y-2.5">
-                <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide uppercase px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block">
-                  ደብረ ሰላም ቅዱስ እስጢፋኖስ
+                <span className="text-[10px] sm:text-[11px] text-amber-300 font-bold tracking-wide px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-xs inline-block leading-normal">
+                  የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
                   ተክለ ሳዊሮስ ሰንበት ት/ቤት
@@ -361,21 +361,42 @@ const Login = () => {
                 </motion.button>
               </form>
 
-              {/* Bottom Links */}
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                <Link
-                  href="/forgot-password"
-                  className="hover:text-[#1657b8] dark:hover:text-amber-400 transition-colors py-1 font-bold"
-                >
-                  ፓስዎርድ ረስተዋል? (Forgot Password)
-                </Link>
-                <Link
-                  href="/student-register"
-                  className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-black hover:underline underline-offset-4 transition-all py-1 flex items-center gap-1"
-                >
-                  <span>አዲስ አካውንት ይመዝገቡ</span>
-                  <span>➔</span>
-                </Link>
+              {/* Bottom Links & Registration Options */}
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/forgot-password"
+                    className="text-slate-500 dark:text-slate-400 hover:text-[#1657b8] dark:hover:text-amber-400 font-bold transition-colors"
+                  >
+                    ፓስዎርድ ረስተዋል? (Forgot Password)
+                  </Link>
+                  <Link
+                    href="/check-status"
+                    className="text-slate-500 dark:text-slate-400 hover:text-[#1657b8] dark:hover:text-amber-400 font-medium transition-colors"
+                  >
+                    ሁኔታ ያረጋግጡ ➔
+                  </Link>
+                </div>
+
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+                  <span className="text-slate-600 dark:text-slate-300 font-bold text-[11px]">
+                    አዲስ ተመዝጋቢ ነዎት?
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/register-distance"
+                      className="px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 font-black text-[11px] transition-all"
+                    >
+                      🌐 የርቀት ምዝገባ
+                    </Link>
+                    <Link
+                      href="/register-regular"
+                      className="px-3 py-1.5 rounded-xl bg-blue-600/10 text-[#1657b8] dark:text-blue-300 hover:bg-blue-600/20 border border-blue-500/30 font-black text-[11px] transition-all"
+                    >
+                      🏛️ መደበኛ ምዝገባ
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -385,7 +406,7 @@ const Login = () => {
       {/* 🌟 4. Sacred Church Parish Footer */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs font-semibold text-slate-600 dark:text-slate-400 space-y-1 select-none">
         <div className="flex flex-wrap items-center justify-center gap-2 text-[#1657b8] dark:text-amber-400 font-bold">
-          <span>⛪ ደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን</span>
+          <span>⛪ የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን</span>
         </div>
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
           ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን (EOTC)

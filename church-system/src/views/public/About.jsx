@@ -30,7 +30,7 @@ const About = () => {
                   ስለ <span className="text-[#1657b8] dark:text-blue-400">ተክለ ሳዊሮስ</span> ሰንበት ት/ቤት
                 </h1>
                 <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed font-normal">
-                  ተክለሳዊሮስ ሰንበት ትምህርት ቤት በደብረ ሰላም ቅዱስ እስጢፋኖስ ቤተክርስቲያን ሥር የሚገኝ ጥንታዊ፣ ታሪካዊና መንፈሳዊ ተቋም ነው። 
+                  ተክለሳዊሮስ ሰንበት ትምህርት ቤት በማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን ሥር የሚገኝ ጥንታዊ፣ ታሪካዊና መንፈሳዊ ተቋም ነው። 
                   ከልጆች እስከ አዋቂዎች ድረስ የመጽሐፍ ቅዱስ ትምህርት፣ የቤተክርስቲያን ስርዓትና የዜማ ሥልጠና የሚሰጥበት የተቀደሰ መድረክ ነው።
                 </p>
                 <div className="pt-2 flex items-center gap-3">
