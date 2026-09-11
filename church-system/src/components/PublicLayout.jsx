@@ -382,7 +382,7 @@ const PublicLayout = ({ children }) => {
                   {isDistanceOpen ? (
                     <Link
                       href="/register-distance"
-                      className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-sm border border-white/30 backdrop-blur-xs shadow-xs hover:shadow-md text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
+                      className="px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-sm border border-amber-300/60 shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                     >
                       <span>የርቀት ምዝገባ</span>
                       <span>➔</span>

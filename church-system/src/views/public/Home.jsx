@@ -83,26 +83,18 @@ const Home = () => {
             </h1>
           </FadeIn>
 
-          {/* Scripture Verse Quote */}
-          <FadeIn delay={0.1}>
-            <p className="text-xs sm:text-sm md:text-base font-bold text-[#1e3a8a] dark:text-blue-300 italic max-w-xl mx-auto leading-relaxed">
-              «ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።»{' '}
-              <span className="font-bold text-amber-600 dark:text-amber-400 not-italic">(ምሳሌ ፳፪፥፮)</span>
-            </p>
-          </FadeIn>
-
           {/* Subtitle */}
-          <FadeIn delay={0.15}>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed font-medium">
+          <FadeIn delay={0.1}>
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium">
               የኦርቶዶክሳዊት ተዋሕዶ ሃይማኖት ትምህርትና የመንፈሳዊ ዕውቀት ይፋዊ የትምህርት ፖርታል
             </p>
           </FadeIn>
 
           {/* Dual Action CTAs */}
-          <FadeIn delay={0.2} className="pt-2 space-y-3.5">
+          <FadeIn delay={0.15} className="pt-2 space-y-3.5">
             {isAnyOpen ? (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md mx-auto">
-                {/* Primary CTA: Regular Registration */}
+                {/* Primary CTA: Regular Registration (Church Blue) */}
                 {isRegularOpen ? (
                   <Link
                     href="/register-regular"
@@ -117,14 +109,14 @@ const Home = () => {
                   </div>
                 )}
 
-                {/* Secondary CTA: Distance Registration */}
+                {/* Secondary CTA: Distance Registration (Church Gold / Yellow) */}
                 {isDistanceOpen ? (
                   <Link
                     href="/register-distance"
-                    className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-[#1e3a8a] dark:text-blue-300 bg-white dark:bg-slate-900 hover:bg-blue-50/80 dark:hover:bg-blue-950/40 active:scale-95 border-2 border-[#1e3a8a]/70 dark:border-blue-500/70 shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 min-h-[46px]"
+                    className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-slate-950 bg-amber-400 hover:bg-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 active:scale-95 shadow-md shadow-amber-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-amber-500/50 dark:border-amber-400/50 min-h-[46px]"
                   >
                     <span>የርቀት ተማሪ ምዝገባ</span>
-                    <ArrowRight className="w-4 h-4 text-[#1e3a8a] dark:text-blue-400" />
+                    <ArrowRight className="w-4 h-4 text-slate-950" />
                   </Link>
                 ) : (
                   <div className="w-full sm:flex-1 px-4 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[46px] flex items-center justify-center">
