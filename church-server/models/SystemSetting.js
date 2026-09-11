@@ -22,7 +22,4 @@ const systemSettingSchema = new mongoose.Schema({
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
-// Index for settings lookup
-systemSettingSchema.index({ key: 1 });
-
 module.exports = mongoose.models.SystemSetting || mongoose.model('SystemSetting', systemSettingSchema);

@@ -30,83 +30,96 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 selection:bg-[var(--brand-gold)] selection:text-slate-950 overflow-x-hidden">
       {/* 🌟 1. HERO SECTION - Elevated Clean Sacred Design */}
-      <section className="relative pt-10 pb-16 sm:pt-14 sm:pb-20 px-4 bg-gradient-to-b from-blue-50/40 via-white to-slate-50/40 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 border-b border-slate-200/80 dark:border-slate-800 overflow-hidden">
+      <section className="relative pt-8 pb-14 sm:pt-12 sm:pb-18 px-4 bg-gradient-to-b from-blue-50/50 via-white to-slate-50/30 dark:from-slate-900/90 dark:via-slate-950 dark:to-slate-900 border-b border-slate-200/70 dark:border-slate-800/80 overflow-hidden">
         {/* Subtle, soft ambient backdrop */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center space-y-5 sm:space-y-6">
+        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-4 sm:space-y-5">
           {/* Centered Church Logo with crisp elevation & golden accent */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-            className="relative w-32 h-32 sm:w-40 sm:h-40 mx-auto flex items-center justify-center cursor-pointer group"
+            className="relative w-28 h-28 sm:w-36 sm:h-36 mx-auto flex items-center justify-center cursor-pointer group"
           >
-            {/* White Polished Emblem Shield with crisp, elegant border and soft shadow */}
-            <div className="relative w-full h-full rounded-full p-2 bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-xl ring-4 ring-amber-400/15 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+            {/* Emblem Shield with golden ring */}
+            <div className="relative w-full h-full rounded-full p-2 bg-white dark:bg-slate-900 border-2 border-amber-400/90 shadow-lg ring-4 ring-amber-400/20 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
               <Image
                 src={ChurchLogo}
                 alt="ተክለሳዊሮስ ሰንበት ትምህርት ቤት"
-                width={160}
-                height={160}
+                width={150}
+                height={150}
                 priority
-                className="w-full h-full object-contain filter drop-shadow-sm"
+                className="w-full h-full object-contain filter drop-shadow-xs"
               />
             </div>
           </motion.div>
 
           {/* Mottos & Church Identity */}
-          <FadeIn delay={0.1} className="space-y-3.5">
-            {/* Spiritual Quote Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-800/80 text-[#1657b8] dark:text-blue-300 text-xs sm:text-sm font-semibold tracking-wide shadow-2xs">
-              <span>✨</span>
-              <span>«ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።»</span>
-              <span className="font-bold text-amber-700 dark:text-amber-400">(ምሳ. ፳፪፥፮)</span>
+          <FadeIn delay={0.1} className="space-y-3">
+            {/* Church Name Top Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium tracking-wide shadow-2xs">
+              <span className="text-amber-500 text-sm">🏛️</span>
+              <span>የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን</span>
             </div>
 
-            {/* Main Heading */}
-            <div className="space-y-1.5">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight sm:leading-tight">
-                ደብረ ሰላም ቅዱስ እስጢፋኖስ
-              </h1>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#1657b8] dark:text-blue-400 tracking-normal">
-                ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
-              </h2>
-            </div>
+            {/* Main Hero Title */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
+              <span className="bg-gradient-to-r from-[#1657b8] via-blue-600 to-[#0f4699] dark:from-blue-400 dark:via-blue-300 dark:to-blue-200 bg-clip-text text-transparent">
+                ተክለ ሳዊሮስ
+              </span>{' '}
+              ሰንበት ትምህርት ቤት
+            </h1>
 
-            {/* Clear Subtitle */}
-            <p className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-              የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ሃይማኖት ትምህርት፣ የነገረ መለኮት፣ የመጽሐፍ ቅዱስ ጥናት እና የቤተክርስቲያን ሥርዓት መማሪያ ይፋዊ የትምህርት ፖርታል
+            {/* Spiritual Quote */}
+            <p className="text-xs sm:text-sm font-semibold text-[#1657b8] dark:text-blue-300 italic max-w-xl mx-auto">
+              «ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።»{' '}
+              <span className="font-bold text-amber-600 dark:text-amber-400 not-italic">(ምሳ. ፳፪፥፮)</span>
+            </p>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed font-normal">
+              የኦርቶዶክሳዊት ተዋሕዶ ሃይማኖት ትምህርትና የመንፈሳዊ ዕውቀት ይፋዊ የትምህርት ፖርታል
             </p>
           </FadeIn>
 
-          {/* Action CTAs (Primary Register vs Secondary Distance Ed) */}
-          <FadeIn delay={0.2} className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 max-w-lg mx-auto">
-            {/* Primary CTA: Register button */}
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowRegOptions(true)}
-              className={`w-full sm:w-auto flex-1 px-7 py-3.5 rounded-2xl font-black shadow-lg transition-all text-base flex items-center justify-center gap-2 cursor-pointer border ${
-                isAnyOpen
-                  ? 'bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 border-blue-400/30'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-100 shadow-slate-900/25 border-slate-700'
-              }`}
-            >
-              <span>{isAnyOpen ? 'ይመዝገቡ (Register Now)' : 'የምዝገባ መረጃ (Registration Info)'}</span>
-              <span className="text-amber-300 font-black text-lg">➔</span>
-            </motion.button>
-
-            {/* Secondary CTA: Distance Education Outline Link */}
-            <motion.div whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto flex-1">
-              <Link
-                href="/distance-education"
-                className="w-full bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-400/10 dark:hover:bg-amber-400/20 text-amber-900 dark:text-amber-300 border-2 border-amber-500/60 hover:border-amber-500 px-6 py-3 rounded-2xl font-bold shadow-xs hover:shadow-sm transition-all text-base flex items-center justify-center gap-2 text-center"
+          {/* Action CTA: Focused Single Primary Button */}
+          <FadeIn delay={0.2} className="pt-2 space-y-3">
+            <div className="flex justify-center items-center max-w-xs mx-auto">
+              {/* Primary CTA: Register button */}
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowRegOptions(true)}
+                className={`w-full px-8 py-3.5 rounded-xl font-extrabold shadow-md transition-all text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer border ${isAnyOpen
+                    ? 'bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] text-white shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 border-blue-400/30'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-100 shadow-slate-900/20 border-slate-700'
+                  }`}
               >
-                <span>🌐</span>
-                <span>የርቀት ትምህርት (Distance Ed)</span>
+                <span>{isAnyOpen ? 'ይመዝገቡ' : 'የምዝገባ መረጃ'}</span>
+                <span className="text-amber-300 font-black text-base">➔</span>
+              </motion.button>
+            </div>
+
+            {/* Quick Helper Links: Login & Check Status */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400 pt-1 font-medium">
+              <span>ቀደም ሲል ተመዝግበዋል?</span>
+              <Link
+                href="/login"
+                className="font-bold text-[#1657b8] dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>🔐 ይግቡ</span>
+                <span>➔</span>
               </Link>
-            </motion.div>
+              <span>•</span>
+              <Link
+                href="/check-status"
+                className="font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>ሁኔታ ያረጋግጡ</span>
+                <span>➔</span>
+              </Link>
+            </div>
           </FadeIn>
         </div>
       </section>
@@ -123,7 +136,7 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ራዕይ (Vision)</h3>
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ራዕይ</h3>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
                 በኦርቶዶክሳዊት ተዋሕዶ ሃይማኖቱ የጸና፣ በምግባሩ የቀና፣ መንፈሳዊና ዘመናዊ ዕውቀትን አቀናጅቶ ለሀገርና ለቤተክርስቲያን የሚጠቅም ትውልድ ማፍራት።
               </p>
@@ -138,7 +151,7 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ተልዕኮ (Mission)</h3>
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">ተልዕኮ</h3>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
                 ጥራት ያለው ሃይማኖታዊ ትምህርት በዘመናዊ ቴክኖሎጂ ታግዞ ማዳረስ፤ ወጣቶችንና ሕፃናትን በሥርዓተ ቤተክርስቲያን አሳድጎ ለመንፈሳዊ አገልግሎት ማዘጋጀት።
               </p>
@@ -153,9 +166,9 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">እሴቶች (Core Values)</h3>
+              <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white">እሴቶች</h3>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                ተዋሕዶ ሃይማኖት፣ ቅድስና፣ ትጋት፣ ፍቅር፣ ታማኝነት፣ ወንድማማችነት እና ለቤተክርስቲያን ትውፊት ጥብቅ ተገዢነት።
+                ቅድስና፣ ትጋት፣ ፍቅር፣ ታማኝነት፣ ወንድማማችነት እና ለቤተክርስቲያን ትውፊት ጥብቅ ተገዢነት።
               </p>
             </MotionCard>
           </StaggerItem>
@@ -293,7 +306,7 @@ const Home = () => {
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
                       ቅዳሜና እሑድ ወይም በማታ በደብሩ ቅጥር ግቢ የሚሰጥ መደበኛ መንፈሳዊ ትምህርት
                     </p>
-                    
+
                     {/* Feature chips */}
                     <div className="flex flex-wrap items-center gap-2 mt-2.5">
                       <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">

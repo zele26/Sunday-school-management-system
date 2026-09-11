@@ -27,6 +27,17 @@ async function seedSaintPaulCourse() {
       ]
     });
 
+    const isForceSeed = process.env.FORCE_SEED === 'true';
+
+    // If course and modules already exist, skip re-seeding unless explicitly forced
+    if (course && !isForceSeed) {
+      const moduleCount = await Module.countDocuments({ courseId: course._id });
+      if (moduleCount >= 6) {
+        console.log(`ℹ️ Course "THEO-202" already initialized with ${moduleCount} modules. Skipping seed.`);
+        return course;
+      }
+    }
+
     const courseData = {
       code: courseCode,
       name: 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ (Saint Paul and Apostolic Ministry)',
@@ -57,7 +68,7 @@ async function seedSaintPaulCourse() {
       console.log(`✅ Created Course: ${course.name} (${course._id})`);
     } else {
       await EducationCourse.updateOne({ _id: course._id }, { $set: courseData });
-      console.log(`ℹ️ Course already exists, updated details: ${course.name}`);
+      console.log(`ℹ️ Course updated: ${course.name}`);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -613,16 +624,19 @@ async function seedSaintPaulCourse() {
           for (let qIdx = 0; qIdx < mData.quiz.questions.length; qIdx++) {
             const qData = mData.quiz.questions[qIdx];
             let qDoc = await Question.findOne({ quiz: quizDoc._id, text: qData.questionText });
+            const correctOpt = qData.options[qData.correctOptionIndex] !== undefined
+              ? qData.options[qData.correctOptionIndex]
+              : (qData.options[0] || '');
+
             const qFields = {
               quiz: quizDoc._id,
+              type: 'Multiple Choice',
               text: qData.questionText,
-              questionType: 'multiple_choice',
-              options: qData.options.map((opt, i) => ({
-                text: opt,
-                isCorrect: i === qData.correctOptionIndex,
-              })),
+              options: qData.options,
+              correctAnswer: correctOpt,
               points: Math.round(100 / mData.quiz.questions.length),
-              explanation: qData.explanation,
+              explanation: qData.explanation || '',
+              order: qIdx + 1,
             };
 
             if (!qDoc) {
@@ -644,6 +658,7 @@ async function seedSaintPaulCourse() {
           maxScore: mData.assignment.maxScore || 100,
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
           status: 'Published',
+          createdBy: adminUser ? adminUser._id : new mongoose.Types.ObjectId(),
         };
 
         if (!assignDoc) {
@@ -666,8 +681,9 @@ module.exports = seedSaintPaulCourse;
 
 // Allow direct execution
 if (require.main === module) {
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/church_system_db';
-  mongoose.connect(MONGODB_URI)
+  require('dotenv').config();
+  const connectToDatabase = require('./config/db');
+  connectToDatabase()
     .then(() => seedSaintPaulCourse())
     .then(() => {
       console.log('Finished. Disconnecting.');

@@ -17,7 +17,7 @@ const teacherSchema = new mongoose.Schema({
   gender: { type: String, enum: ['Male', 'Female', ''], default: '' },
   dateOfBirth: String,
   profilePicture: String,
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   coursesTaught: [{ type: String }],   // ✅ Changed to strings (course names)
   isActive: { type: Boolean, default: true },
   registrationDate: { type: Date, default: Date.now },

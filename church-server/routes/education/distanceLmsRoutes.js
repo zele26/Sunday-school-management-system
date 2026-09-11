@@ -425,13 +425,27 @@ router.post('/quizzes/:quizId/submit', protect, async (req, res) => {
 
     let correctCount = 0;
     const questionResults = questions.map((q) => {
-      const studentAnswer = answers[q._id.toString()];
-      const isCorrect = studentAnswer !== undefined && parseInt(studentAnswer, 10) === parseInt(q.correctAnswer, 10);
+      const studentAnswer = answers[q._id.toString()] !== undefined ? answers[q._id.toString()] : answers[q._id];
+      let isCorrect = false;
+      if (studentAnswer !== undefined && studentAnswer !== null) {
+        const sAnsStr = String(studentAnswer).trim().toLowerCase();
+        const cAnsStr = String(q.correctAnswer || '').trim().toLowerCase();
+        if (sAnsStr === cAnsStr) {
+          isCorrect = true;
+        } else if (!isNaN(Number(studentAnswer)) && Array.isArray(q.options)) {
+          const idx = parseInt(studentAnswer, 10);
+          if (q.options[idx] && String(q.options[idx]).trim().toLowerCase() === cAnsStr) {
+            isCorrect = true;
+          } else if (String(idx) === cAnsStr) {
+            isCorrect = true;
+          }
+        }
+      }
       if (isCorrect) correctCount++;
 
       return {
         questionId: q._id,
-        questionText: q.questionText,
+        questionText: q.text || q.questionText,
         options: q.options,
         studentAnswer,
         correctAnswer: q.correctAnswer,

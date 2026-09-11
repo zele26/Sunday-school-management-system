@@ -7,7 +7,8 @@ const assignmentSchema = new mongoose.Schema({
   dueDate: { type: Date },
   maxScore: { type: Number, default: 100 },
   attachmentUrl: { type: String },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['Draft', 'Published', 'Archived'], default: 'Published' },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
 });
 
