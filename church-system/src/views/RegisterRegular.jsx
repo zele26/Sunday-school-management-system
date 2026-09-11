@@ -237,75 +237,62 @@ const RegisterRegularContent = () => {
         </header>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 15 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: 'spring', damping: 22, stiffness: 300 }}
-          className="max-w-lg w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-emerald-100 dark:border-slate-800 text-center my-auto"
+          className="max-w-lg w-full bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 text-center my-auto space-y-6"
         >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.15 }}
-            className="w-20 h-20 bg-emerald-100 dark:bg-emerald-950/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
-          >
-            <svg className="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+          {/* Success Checkmark */}
+          <div className="w-18 h-18 bg-emerald-50 dark:bg-emerald-950/60 rounded-2xl flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 shadow-xs">
+            <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
             </svg>
-          </motion.div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2">ምዝገባ ተቀባይነት አግኝቷል</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">እባክዎ የሚቀጥሉትን ደረጃዎች ይከተሉ</p>
-
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-800 mb-6 text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-emerald-600 dark:text-emerald-400">የማመልከቻ ቁጥር፡</span>{' '}
-            <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">{success?.registrationNumber}</span>
-            <br />
-            <span className="text-xs text-slate-500 dark:text-slate-400">📌 ይህን ቁጥር ለክትትል ይጠቀሙ።</span>
           </div>
 
-          <div className="text-left space-y-4 mb-8">
-            <div className="flex items-start gap-3 bg-amber-50/60 dark:bg-amber-950/40 p-4 rounded-2xl border border-amber-100 dark:border-amber-800">
-              <span className="text-xl mt-0.5">1️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">ማረጋገጫ ይጠብቁ</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  አስተዳደሩ መረጃዎን ከፈተሸ በኋላ ምዝገባዎ ይጸድቃል።
-                </p>
-              </div>
-            </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              ምዝገባዎ በተሳካ ሁኔታ ተልኳል!
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+              አስተዳደሩ መረጃዎን አረጋግጦ ሲያጸድቀው በስልክ ቁጥርዎ እና በይለፍ ቃልዎ ወደ ሲስተሙ መግባት ይችላሉ።
+            </p>
+          </div>
 
-            <div className="flex items-start gap-3 bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
-              <span className="text-xl mt-0.5">2️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">የትምህርት ቤት መለያ ያገኛሉ</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  ምዝገባዎ ሲጸድቅ ትክክለኛውን የትምህርት ቤት መለያ ቁጥር ይሰጥዎታል።
-                </p>
-              </div>
+          {/* Reference Tag (Clean & Unobtrusive) */}
+          {success?.registrationNumber && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+              <span className="opacity-75">የማመልከቻ መለያ፦</span>
+              <span className="font-mono font-bold text-[#1e3a8a] dark:text-blue-400">{success.registrationNumber}</span>
             </div>
+          )}
 
-            <div className="flex items-start gap-3 bg-amber-50/60 dark:bg-amber-950/40 p-4 rounded-2xl border border-amber-100 dark:border-amber-800">
-              <span className="text-xl mt-0.5">3️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">ወደ ሲስተሙ ይግቡ</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  በስልክ ቁጥርዎ እና በይለፍ ቃልዎ በመጠቀም ወደ ሲስተሙ መግባት ይችላሉ።
-                </p>
-              </div>
+          {/* Simple Guidance Note */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80 text-left space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            <div className="flex items-start gap-2">
+              <span className="text-[#1e3a8a] dark:text-blue-400 font-bold">•</span>
+              <p><strong className="text-slate-800 dark:text-white">የማረጋገጫ ሂደት፦</strong> መረጃዎ በአስተዳደሩ ሲጸድቅ ይፋዊ የትምህርት ቤት መለያ (Student ID) ይሰጥዎታል።</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
+              <p><strong className="text-slate-800 dark:text-white">ክትትል፦</strong> በማንኛውም ጊዜ በስልክ ቁጥርዎ እና በይለፍ ቃልዎ የምዝገባዎን ሁኔታ መከታተል ይችላሉ።</p>
             </div>
           </div>
 
-          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+          {/* Action Buttons */}
+          <div className="space-y-2.5 pt-1">
+            <Link
+              href="/check-status"
+              className="block w-full bg-[#1e3a8a] hover:bg-[#163177] active:scale-98 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all text-center min-h-[46px] flex items-center justify-center"
+            >
+              የምዝገባ ሁኔታዎን ያረጋግጡ →
+            </Link>
             <Link
               href="/login"
-              className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-2xl font-black shadow-md hover:shadow-lg transition-all text-center"
+              className="block w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all text-center border border-slate-200 dark:border-slate-700 min-h-[42px] flex items-center justify-center"
             >
               ወደ መግቢያ ገጽ ይሂዱ
             </Link>
-          </motion.div>
-
-          <p className="text-xs text-slate-400 mt-4">
-            ሁኔታዎን ማየት ይፈልጋሉ? <Link href="/check-status" className="text-[#1657b8] dark:text-amber-400 font-bold underline">ሁኔታዎን ያረጋግጡ</Link>
-          </p>
+          </div>
         </motion.div>
 
         <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">

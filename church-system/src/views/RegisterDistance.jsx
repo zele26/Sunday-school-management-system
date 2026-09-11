@@ -254,81 +254,70 @@ const RegisterDistanceContent = () => {
         </header>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 15 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: 'spring', damping: 22, stiffness: 300 }}
-          className="max-w-lg w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl border border-blue-100 dark:border-slate-800 text-center my-auto"
+          className="max-w-lg w-full bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-slate-800 text-center my-auto space-y-6"
         >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', delay: 0.15 }}
-            className="w-20 h-20 bg-blue-100 dark:bg-blue-950/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"
-          >
-            <svg className="w-10 h-10 text-[#1657b8] dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+          {/* Success Icon */}
+          <div className="w-18 h-18 bg-amber-50 dark:bg-amber-950/60 rounded-2xl flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 shadow-xs">
+            <svg className="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
             </svg>
-          </motion.div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white mb-2">ምዝገባ ተቀባይነት አግኝቷል</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-6">እባክዎ የሚቀጥሉትን ደረጃዎች ይከተሉ</p>
-
-          <div className="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-4 border border-blue-200 dark:border-blue-800 mb-6 text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-semibold text-[#1657b8] dark:text-amber-400">የማመልከቻ ቁጥር፡</span>{' '}
-            <span className="font-mono font-bold text-[#1657b8] dark:text-amber-300">{result?.registrationNumber}</span>
-            <br />
-            <span className="text-xs text-slate-500 dark:text-slate-400">📌 ይህን ቁጥር ለክትትል ይጠቀሙ።</span>
           </div>
 
-          <div className="text-left space-y-4 mb-8">
-            <div className="flex items-start gap-3 bg-amber-50/60 dark:bg-amber-950/40 p-4 rounded-2xl border border-amber-100 dark:border-amber-800">
-              <span className="text-xl mt-0.5">1️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">ክፍያ ይፈጽሙ</p>
-                {paymentInfo ? (
-                  <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                    <p>ጠቅላላ፡ <span className="font-bold text-[#1657b8] dark:text-amber-400">{paymentInfo.totalAmount} ብር</span></p>
-                    <p className="text-xs mt-1">{paymentInfo.instructions}</p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">የክፍያ መረጃ እየተጫነ ነው…</p>
-                )}
-              </div>
-            </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              ምዝገባዎ ተመዝግቧል!
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+              የርቀት ትምህርት ምዝገባዎን ለማጠናቀቅ እባክዎ ክፍያ ከፍለው ደረሰኝዎን ይላኩ።
+            </p>
+          </div>
 
-            <div className="flex items-start gap-3 bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-2xl border border-blue-100 dark:border-blue-800">
-              <span className="text-xl mt-0.5">2️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">ደረሰኝ ያስገቡ</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  ክፍያውን ከፈጸሙ በኋላ ደረሰኝዎን በመላክ ምዝገባዎን ያጠናቅቁ።
-                </p>
-              </div>
+          {/* Reference Tag */}
+          {result?.registrationNumber && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+              <span className="opacity-75">የማመልከቻ መለያ፦</span>
+              <span className="font-mono font-bold text-[#1e3a8a] dark:text-amber-400">{result.registrationNumber}</span>
             </div>
+          )}
 
-            <div className="flex items-start gap-3 bg-amber-50/60 dark:bg-amber-950/40 p-4 rounded-2xl border border-amber-100 dark:border-amber-800">
-              <span className="text-xl mt-0.5">3️⃣</span>
-              <div>
-                <p className="font-bold text-slate-800 dark:text-white">ማረጋገጫ ይጠብቁ</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-                  አስተዳደሩ ከፈተሸ በኋላ ትክክለኛውን የትምህርት ቤት መለያ ቁጥር ያገኛሉ።
-                </p>
+          {/* Payment Guidance Summary */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80 text-left space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            {paymentInfo && (
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2.5">
+                <span className="font-medium">የክፍያ መጠን፦</span>
+                <span className="font-bold text-base text-[#1e3a8a] dark:text-amber-400">{paymentInfo.totalAmount || 1000} ብር</span>
               </div>
+            )}
+            <div className="space-y-1.5">
+              <p className="leading-relaxed">
+                {paymentInfo?.instructions || 'ክፍያውን በባንክ ወይም በሞባይል ባንኪንግ ከፈጸሙ በኋላ የደረሰኝ ፎቶ በማያያዝ ምዝገባዎን ያጠናቅቁ።'}
+              </p>
             </div>
           </div>
 
-          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+          {/* Action Buttons */}
+          <div className="space-y-2.5 pt-1">
             <Link
               href="/continue-registration"
-              className="block w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all text-center"
+              className="block w-full bg-[#1e3a8a] hover:bg-[#163177] active:scale-98 text-white py-3.5 rounded-xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all text-center min-h-[46px] flex items-center justify-center"
             >
-              ደረሰኝ ለመላክ ይቀጥሉ
+              የክፍያ ደረሰኝ ለመላክ ይቀጥሉ →
             </Link>
-          </motion.div>
-
-          <p className="text-xs text-slate-400 mt-4">
-            ቀድሞውኑ ከፍለዋል? <Link href="/check-status" className="text-[#1657b8] font-bold underline">ሁኔታዎን ያረጋግጡ</Link>
-          </p>
+            <Link
+              href="/check-status"
+              className="block w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all text-center border border-slate-200 dark:border-slate-700 min-h-[42px] flex items-center justify-center"
+            >
+              የምዝገባ ሁኔታዎን ያረጋግጡ
+            </Link>
+          </div>
         </motion.div>
+
+        <footer className="py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
+          ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+        </footer>
       </div>
     );
   }
