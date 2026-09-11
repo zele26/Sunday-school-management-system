@@ -148,7 +148,7 @@ export const churchPhotos = [
 ];
 
 export const photoCategories = [
-  { key: 'all', label: 'ሁሉም ፎቶዎች (All)' },
+  { key: 'all', label: 'ሁሉም' },
   { key: 'service', label: 'አገልግሎትና ቅዳሴ' },
   { key: 'students', label: 'ተማሪዎችና ክፍሎች' },
   { key: 'choir', label: 'መዘምራንና ዝማሬ' },

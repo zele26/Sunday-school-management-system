@@ -109,11 +109,11 @@ const Login = () => {
         resData = await response.json();
       } catch (parseErr) {
         if (response.status === 502 || response.status === 504 || response.status === 503) {
-          setError('የሰርቨር ግንኙነት ተቋርጧል (Backend server is currently waking up. Please wait a moment and try again).');
+          setError('የሰርቨር ግንኙነት ለጊዜው ተቋርጧል። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።');
         } else if (response.status === 404) {
-          setError('የመግቢያ አገልግሎት አልተገኘም (API endpoint not found).');
+          setError('የመግቢያ አገልግሎት አልተገኘም።');
         } else {
-          setError(`Invalid server response (HTTP ${response.status}).`);
+          setError('የሰርቨር ምላሽ ስህተት አጋጥሟል።');
         }
         return;
       }
@@ -124,15 +124,15 @@ const Login = () => {
         router.replace(destination);
       } else {
         if (response.status === 403) {
-          setError(resData?.message || 'አካውንትዎ ገና አልተረጋገጠም (Your account is pending approval).');
+          setError(resData?.message || 'አካውንትዎ ገና በአስተዳዳሪ አልተረጋገጠም።');
         } else if (response.status === 401) {
-          setError(resData?.message || 'የተሳሳተ የመግቢያ መረጃ (Invalid username or password).');
+          setError(resData?.message || 'የተሳሳተ የተጠቃሚ ስም ወይም የይለፍ ቃል።');
         } else {
-          setError(resData?.message || `Login failed (Status ${response.status})`);
+          setError(resData?.message || `መግባት አልተሳካም (ስህተት ${response.status})`);
         }
       }
     } catch (err) {
-      setError(err?.message || 'Network error. Please check your connection.');
+      setError(err?.message || 'የኔትወርክ ግንኙነት ችግር አጋጥሟል። እባክዎ ግንኙነትዎን ያረጋግጡ።');
     }
   };
 

@@ -558,7 +558,7 @@ const CheckStatusContent = () => {
                       </>
                     ) : (
                       <>
-                        <span>ሁኔታ አረጋግጥ (Check Status)</span>
+                        <span>ሁኔታ ያረጋግጡ</span>
                         <span className="text-amber-300 text-lg font-black">➔</span>
                       </>
                     )}

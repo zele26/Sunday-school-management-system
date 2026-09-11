@@ -92,9 +92,9 @@ const VerifyCertificatePage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3.5 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white rounded-2xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-6 py-3.5 bg-[#1e3a8a] hover:bg-[#163177] active:opacity-90 text-white rounded-2xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs min-h-[44px]"
             >
-              {loading ? 'በማረጋገጥ ላይ...' : 'አረጋግጥ (Verify)'}
+              {loading ? 'በማረጋገጥ ላይ...' : 'ያረጋግጡ'}
             </button>
           </form>
 
