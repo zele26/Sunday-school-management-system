@@ -91,7 +91,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
 // ---------- List students (with search, filter, pagination) ----------
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const { search, grade, studentType, page = 1, limit = 20 } = req.query;
+    const { search, grade, studentType, shift, page = 1, limit = 20 } = req.query;
     const query = {};
 
     // Search by name (Student fields) or email (User fields)
@@ -120,6 +120,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 
     if (grade) query.grade = grade;
     if (studentType) query.studentType = studentType;
+    if (shift) query.shift = shift;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await Student.countDocuments(query);
@@ -165,7 +166,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 // ---------- Export Students as CSV ----------
 router.get('/export', protect, authorize('admin'), async (req, res) => {
   try {
-    const { search, grade, studentType } = req.query;
+    const { search, grade, studentType, shift } = req.query;
     const query = {};
 
     if (search && search.trim()) {
@@ -191,6 +192,7 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
 
     if (grade) query.grade = grade;
     if (studentType) query.studentType = studentType;
+    if (shift) query.shift = shift;
 
     const students = await Student.find(query)
       .populate('userId', 'email fullName')

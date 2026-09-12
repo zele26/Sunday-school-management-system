@@ -19,6 +19,7 @@ export function useStudents(params = {}) {
       if (params.search) searchParams.append('search', params.search);
       if (params.grade) searchParams.append('grade', params.grade);
       if (params.studentType) searchParams.append('studentType', params.studentType);
+      if (params.shift) searchParams.append('shift', params.shift);
 
       const res = await apiFetch(`/api/admin/students?${searchParams.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch students');

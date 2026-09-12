@@ -68,13 +68,11 @@ const allNavSections = [
       { path: '/admin/academic-enrollments', label: 'የትምህርት ምዝገባዎች', icon: ClipboardList },
       { path: '/admin/manual-enrollment', label: 'ቀጥታ ምዝገባ', icon: UserPlus },
       { path: '/admin/students', label: 'ተማሪዎች', icon: Users },
-      { path: '/admin/add-student', label: 'ተማሪ መዝግብ', icon: UserPlus },
       { path: '/admin/teachers', label: 'መምህራን', icon: Users },
-      { path: '/admin/add-teacher', label: 'መምህር መዝግብ', icon: UserPlus },
       { path: '/admin/classes', label: 'ክፍሎች', icon: School },
       { path: '/admin/courses', label: 'ትምህርቶች', icon: BookOpen },
       { path: '/admin/attendance-reports', label: 'መገኘት', icon: BarChart3 },
-      { path: '/admin/analytics', label: 'አናሊቲክስ (Analytics)', icon: BarChart3 },
+      { path: '/admin/analytics', label: 'አናሊቲክስ', icon: BarChart3 },
       { path: '/admin/qr-scanner', label: 'የQR መቃኛ', icon: QrCode },
       { path: '/admin/resources', label: 'ማጣቀሻዎች', icon: FileText },
       { path: '/admin/resource-approval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2 },
@@ -250,18 +248,11 @@ const AdminLayout = ({ children, onLogout }) => {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-white/10 bg-black/10 shrink-0 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] text-blue-100 font-medium">
+        <div className="p-3.5 border-t border-white/10 bg-black/10 shrink-0 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[11px] text-blue-100 font-medium">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>{user?.role === 'superadmin' ? 'ሙሉ ፈቃድ' : 'የተወሰነ ፈቃድ'}</span>
+            <span>{user?.role === 'superadmin' ? 'ሙሉ ፈቃድ (Super Admin)' : 'የተወሰነ ፈቃድ (Admin)'}</span>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-[11px] text-rose-200 hover:text-white font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <span>ውጣ</span>
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
         </div>
       </aside>
 
