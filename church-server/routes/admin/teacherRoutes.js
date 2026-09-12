@@ -104,12 +104,7 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 
 // ---------- Create Teacher ----------
 router.post('/', protect, authorize('admin'), async (req, res) => {
-  // 🔥 DEBUG – Log everything
-  console.log('=========================================');
-  console.log('🔴 [POST /api/admin/teachers] Received request');
-  console.log('🔴 Content-Type:', req.headers['content-type']);
-  console.log('🔴 req.body:', JSON.stringify(req.body, null, 2));
-  console.log('=========================================');
+  console.log('🔴 [POST /api/admin/teachers] req.body:', req.body);
 
   try {
     const {
@@ -139,7 +134,9 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     console.log('  subject:', subject);
 
     // Build fullName
-    const fullName = [firstName, middleName, lastName]
+    const rawFullName = req.body.fullName || '';
+    const nameParts = rawFullName.trim().split(/\s+/);
+    const fullName = rawFullName.trim() || [firstName, middleName, lastName]
       .filter(Boolean)
       .map(s => s.trim())
       .join(' ');
@@ -205,9 +202,9 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     const teacher = await Teacher.create({
       teacherId,
       fullName,
-      firstName: firstName?.trim() || '',
-      middleName: middleName?.trim() || '',
-      lastName: lastName?.trim() || '',
+      firstName: firstName?.trim() || nameParts[0] || '',
+      middleName: middleName?.trim() || (nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : ''),
+      lastName: lastName?.trim() || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : ''),
       email: email.toLowerCase(),
       phone: phone || '',
       subject: subject || '',

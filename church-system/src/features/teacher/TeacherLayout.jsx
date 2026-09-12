@@ -37,6 +37,7 @@ const TeacherLayout = ({ children, onLogout }) => {
     { label: 'ውጤት መስጫ', path: '/teacher/grading', icon: <Award className="w-4 h-4 text-yellow-500" /> },
     { label: 'ግንኙነት', path: '/teacher/communication', icon: <MessageSquare className="w-4 h-4 text-teal-500" /> },
     { label: 'መገኘት', path: '/teacher/attendance', icon: <CalendarCheck className="w-4 h-4 text-rose-500" /> },
+    { label: 'አናሊቲክስ (Analytics)', path: '/teacher/analytics', icon: <BarChart3 className="w-4 h-4 text-emerald-500" /> },
     { label: 'ሪፖርቶች', path: '/teacher/reports', icon: <BarChart3 className="w-4 h-4 text-purple-500" /> },
     { label: 'ማጣቀሻዎች', path: '/teacher/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
     { label: 'ፈተናዎች', path: '/teacher/exams', icon: <GraduationCap className="w-4 h-4 text-blue-600" /> },

@@ -40,6 +40,7 @@ import ChurchMembershipsManagement from '../features/admin/ChurchMembershipsMana
 import AcademicEnrollmentDetails from '../features/admin/AcademicEnrollmentDetails';
 import DepartmentHub from '../features/admin/DepartmentHub';
 import AdminDistanceHub from '../features/admin/AdminDistanceHub';
+import AdminAnalyticsDashboard from '../features/admin/AdminAnalyticsDashboard';
 
 export default function AdminRoutes() {
   const adminRoutesContent = (
@@ -67,6 +68,7 @@ export default function AdminRoutes() {
       <Route path="edit-student/:id" element={<EditStudent />} />
       <Route path="qr-scanner" element={<QRScanner />} />
       <Route path="attendance-reports" element={<AttendanceReports />} />
+      <Route path="analytics" element={<AdminAnalyticsDashboard />} />
       <Route path="registrations" element={<RegistrationsManagement />} />
       <Route path="teachers" element={<TeachersManagement />} />
       <Route path="add-teacher" element={<AddTeacher />} />

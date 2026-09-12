@@ -32,6 +32,7 @@ const StudentLayout = ({ children, onLogout }) => {
     { label: 'መነሻ', path: '/dashboard', icon: <Home className="w-4 h-4" />, end: true },
     { label: 'አካዳሚክ', path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4" /> },
     { label: 'ተገኝነትና ውጤት', path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4" /> },
+    { label: 'አናሊቲክስ (Analytics)', path: '/dashboard/analytics', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
     { label: 'ማስታወቂያዎች', path: '/dashboard/announcements', icon: <Bell className="w-4 h-4" /> },
   ];
 

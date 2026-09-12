@@ -19,6 +19,7 @@ import TeacherExams from '../features/teacher/TeacherExams';
 import TeacherExamDetail from '../features/teacher/TeacherExamDetail';
 import TeacherResults from '../features/teacher/TeacherResults';
 import TeacherDistanceHub from '../features/teacher/TeacherDistanceHub';
+import TeacherAnalyticsView from '../features/teacher/TeacherAnalyticsView';
 
 export default function TeacherRoutes() {
   const teacherRoutesContent = (
@@ -34,6 +35,7 @@ export default function TeacherRoutes() {
       <Route path="students" element={<TeacherStudents />} />
       <Route path="attendance" element={<TeacherAttendance />} />
       <Route path="attendance-summary" element={<TeacherAttendanceSummary />} />
+      <Route path="analytics" element={<TeacherAnalyticsView />} />
       <Route path="resources" element={<TeacherResources />} />
       <Route path="assignments" element={<TeacherContent />} />
 

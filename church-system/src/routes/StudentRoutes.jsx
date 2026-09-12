@@ -15,6 +15,7 @@ import StudentTakeExam from '../features/student/StudentTakeExam';
 import StudentResults from '../features/student/StudentResults';
 import StudentResultDetail from '../features/student/StudentResultDetail';
 import DistanceClassroom from '../features/student/DistanceClassroom';
+import StudentAnalyticsView from '../features/student/StudentAnalyticsView';
 
 export default function StudentRoutes() {
   const studentRoutesContent = (
@@ -23,6 +24,7 @@ export default function StudentRoutes() {
       <Route path="courses" element={<StudentCourses />} />
       <Route path="distance-classroom/:courseId" element={<DistanceClassroom />} />
       <Route path="attendance" element={<StudentAttendance />} />
+      <Route path="analytics" element={<StudentAnalyticsView />} />
       <Route path="announcements" element={<StudentAnnouncements />} />
       <Route path="profile" element={<StudentProfileModule />} />
       <Route path="resources" element={<StudentResources />} />

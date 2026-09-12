@@ -74,6 +74,7 @@ const allNavSections = [
       { path: '/admin/classes', label: 'ክፍሎች', icon: School },
       { path: '/admin/courses', label: 'ትምህርቶች', icon: BookOpen },
       { path: '/admin/attendance-reports', label: 'መገኘት', icon: BarChart3 },
+      { path: '/admin/analytics', label: 'አናሊቲክስ (Analytics)', icon: BarChart3 },
       { path: '/admin/qr-scanner', label: 'የQR መቃኛ', icon: QrCode },
       { path: '/admin/resources', label: 'ማጣቀሻዎች', icon: FileText },
       { path: '/admin/resource-approval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2 },

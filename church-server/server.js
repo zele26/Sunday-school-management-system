@@ -21,6 +21,7 @@ const registrationRoutes = require('./routes/registrationRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const attendanceRoutes = require('./routes/admin/attendanceRoutes');
 const teacherAdminRoutes = require('./routes/admin/teacherRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // --- NEW CORE / EDUCATION / TEMP ROUTES (safe loading) ---
 let corePersonRoutes = null;
@@ -201,6 +202,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/registration', registrationRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Temporary migration route (from file, if exists)
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);

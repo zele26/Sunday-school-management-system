@@ -198,13 +198,50 @@ const StudentsManagement = () => {
         ),
       },
       {
-        accessorKey: 'teacher',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="መምህር" />,
-        cell: ({ row }) => (
-          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            {row.original.teacher?.fullName || <span className="text-slate-400 italic">ያልተመደበ</span>}
-          </span>
-        ),
+        id: 'teachers',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="የኮርስ መምህራን" />,
+        cell: ({ row }) => {
+          const student = row.original;
+          const courseTeacherItems = [];
+          if (Array.isArray(student.courses) && student.courses.length > 0) {
+            student.courses.forEach((c) => {
+              if (c.teacher?.fullName) {
+                courseTeacherItems.push({ courseName: c.name, teacherName: c.teacher.fullName });
+              }
+            });
+          }
+
+          if (courseTeacherItems.length > 0) {
+            return (
+              <div className="flex flex-col gap-1 max-w-[220px]">
+                {courseTeacherItems.map((item, idx) => (
+                  <div key={idx} className="text-xs leading-tight">
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{item.teacherName}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">({item.courseName})</span>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          if (Array.isArray(student.teachers) && student.teachers.length > 0) {
+            return (
+              <div className="flex flex-wrap gap-1">
+                {student.teachers.map((t, idx) => (
+                  <Badge key={idx} variant="neutral" size="sm">
+                    {t.fullName || t.name}
+                  </Badge>
+                ))}
+              </div>
+            );
+          }
+
+          if (student.teacher?.fullName) {
+            return <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{student.teacher.fullName}</span>;
+          }
+
+          return <span className="text-xs text-slate-400 italic">ያልተመደበ</span>;
+        },
       },
       {
         id: 'qrCode',

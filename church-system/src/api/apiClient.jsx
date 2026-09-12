@@ -93,7 +93,8 @@ export async function apiFetch(url, options = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const endpoint = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  const baseUrl = getApiBaseUrl();
+  const endpoint = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
   // Make the actual fetch request
   const res = await fetch(endpoint, {

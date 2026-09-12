@@ -44,6 +44,7 @@ const CoursesManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [conflictError, setConflictError] = useState(null);
+  const [showScheduleDetails, setShowScheduleDetails] = useState(false);
 
   const {
     register,
@@ -58,10 +59,10 @@ const CoursesManagement = () => {
       grade: 'Grade 7',
       bibleTheme: '',
       teacher: '',
-      dayOfWeek: 'እሑድ',
-      startTime: '08:30',
-      endTime: '10:00',
-      shift: 'የቀን',
+      dayOfWeek: '',
+      startTime: '',
+      endTime: '',
+      shift: '',
       numberOfLessons: 12,
       lessonDuration: 60,
     },
@@ -82,16 +83,17 @@ const CoursesManagement = () => {
   const handleOpenCreate = () => {
     setEditingCourse(null);
     setConflictError(null);
+    setShowScheduleDetails(false);
     reset({
       name: '',
       studentType: 'regular',
       grade: 'Grade 7',
       bibleTheme: '',
       teacher: '',
-      dayOfWeek: 'እሑድ',
-      startTime: '08:30',
-      endTime: '10:00',
-      shift: 'የቀን',
+      dayOfWeek: '',
+      startTime: '',
+      endTime: '',
+      shift: '',
       numberOfLessons: 12,
       lessonDuration: 60,
     });
@@ -101,16 +103,17 @@ const CoursesManagement = () => {
   const handleOpenEdit = (c) => {
     setEditingCourse(c);
     setConflictError(null);
+    setShowScheduleDetails(Boolean(c.dayOfWeek || c.startTime || c.schedule));
     reset({
       name: c.name || '',
       studentType: c.studentType || 'regular',
       grade: c.grade || 'Grade 7',
       bibleTheme: c.bibleTheme || '',
       teacher: c.teacher?._id || c.teacher || '',
-      dayOfWeek: c.dayOfWeek || 'እሑድ',
-      startTime: c.startTime || '08:30',
-      endTime: c.endTime || '10:00',
-      shift: c.shift || 'የቀን',
+      dayOfWeek: c.dayOfWeek || '',
+      startTime: c.startTime || '',
+      endTime: c.endTime || '',
+      shift: c.shift || '',
       numberOfLessons: c.numberOfLessons || 12,
       lessonDuration: c.lessonDuration || 60,
     });
@@ -479,70 +482,79 @@ const CoursesManagement = () => {
                 </Select>
               </div>
 
-              {/* Schedule Details */}
-              <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    የክፍል መርሃ-ግብር
+              {/* Optional Schedule Toggle */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleDetails(!showScheduleDetails)}
+                  className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-800/80 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-300"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[var(--brand-primary)]" />
+                    <span>የክፍል መርሃ-ግብር እና የሰዓት ዝርዝር (አማራጭ)</span>
                   </span>
-                </div>
+                  <span className="text-slate-400 font-bold">{showScheduleDetails ? '▲ ደብቅ' : '▼ ዘርዝር'}</span>
+                </button>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የሳምንቱ ቀን</label>
-                    <Select {...register('dayOfWeek')}>
-                      <option value="እሑድ">እሑድ</option>
-                      <option value="ቅዳሜ">ቅዳሜ</option>
-                      <option value="ሰኞ">ሰኞ</option>
-                      <option value="ማክሰኞ">ማክሰኞ</option>
-                      <option value="ረቡዕ">ረቡዕ</option>
-                      <option value="ሐሙስ">ሐሙስ</option>
-                      <option value="ዓርብ">ዓርብ</option>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">ፈረቃ</label>
-                    <Select {...register('shift')}>
-                      <option value="የቀን">የቀን</option>
-                      <option value="የማታ">የማታ</option>
-                    </Select>
-                  </div>
-                </div>
+                {showScheduleDetails && (
+                  <div className="mt-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3 animate-in fade-in duration-150">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">የሳምንቱ ቀን</label>
+                        <Select {...register('dayOfWeek')}>
+                          <option value="">አልተወሰነም / በፈለጉት ቀን</option>
+                          <option value="እሑድ">እሑድ (Sunday)</option>
+                          <option value="ቅዳሜ">ቅዳሜ (Saturday)</option>
+                          <option value="ሰኞ">ሰኞ (Monday)</option>
+                          <option value="ማክሰኞ">ማክሰኞ (Tuesday)</option>
+                          <option value="ረቡዕ">ረቡዕ (Wednesday)</option>
+                          <option value="ሐሙስ">ሐሙስ (Thursday)</option>
+                          <option value="ዓርብ">ዓርብ (Friday)</option>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">ፈረቃ</label>
+                        <Select {...register('shift')}>
+                          <option value="">አልተወሰነም</option>
+                          <option value="የቀን">የቀን (Day)</option>
+                          <option value="የማታ">የማታ (Night)</option>
+                        </Select>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የመጀመሪያ ሰዓት</label>
-                    <Input {...register('startTime')} placeholder="08:30" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 mb-1">የማብቂያ ሰዓት</label>
-                    <Input {...register('endTime')} placeholder="10:00" />
-                  </div>
-                </div>
-              </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">የመጀመሪያ ሰዓት</label>
+                        <Input {...register('startTime')} placeholder="ምሳሌ፡ 08:30" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">የማብቂያ ሰዓት</label>
+                        <Input {...register('endTime')} placeholder="ምሳሌ፡ 10:00" />
+                      </div>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    የትምህርት ብዛት
-                  </label>
-                  <Input
-                    type="number"
-                    {...register('numberOfLessons')}
-                    error={errors.numberOfLessons?.message}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    ቆይታ (ደቂቃ)
-                  </label>
-                  <Input
-                    type="number"
-                    {...register('lessonDuration')}
-                    error={errors.lessonDuration?.message}
-                  />
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">የትምህርት ብዛት</label>
+                        <Input
+                          type="number"
+                          {...register('numberOfLessons')}
+                          placeholder="12"
+                          error={errors.numberOfLessons?.message}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 mb-1">ቆይታ (ደቂቃ)</label>
+                        <Input
+                          type="number"
+                          {...register('lessonDuration')}
+                          placeholder="60"
+                          error={errors.lessonDuration?.message}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-2.5 pt-3">
