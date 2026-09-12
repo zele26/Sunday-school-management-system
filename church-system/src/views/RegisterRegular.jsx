@@ -258,23 +258,48 @@ const RegisterRegularContent = () => {
             </p>
           </div>
 
-          {/* Reference Tag (Clean & Unobtrusive) */}
-          {success?.registrationNumber && (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
-              <span className="opacity-75">የማመልከቻ መለያ፦</span>
-              <span className="font-mono font-bold text-[#1e3a8a] dark:text-blue-400">{success.registrationNumber}</span>
+          {/* Registered Credentials Reminder */}
+          <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-left space-y-1.5">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">የተመዘገበ ስልክ ቁጥር:</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">{success?.phone || success?.studentPhone || 'በቅጹ ያስገቡት ስልክ'}</span>
             </div>
-          )}
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">የመግቢያ ዘዴ:</span>
+              <span className="font-semibold text-[#1e3a8a] dark:text-blue-400">ስልክ ቁጥር + የይለፍ ቃል</span>
+            </div>
+          </div>
 
-          {/* Simple Guidance Note */}
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80 text-left space-y-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-            <div className="flex items-start gap-2">
-              <span className="text-[#1e3a8a] dark:text-blue-400 font-bold">•</span>
-              <p><strong className="text-slate-800 dark:text-white">የማረጋገጫ ሂደት፦</strong> መረጃዎ በአስተዳደሩ ሲጸድቅ ይፋዊ የትምህርት ቤት መለያ (Student ID) ይሰጥዎታል።</p>
+          {/* 3-Step Clear Roadmap */}
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80 text-left space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                ✓
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white">ምዝገባ ተልኳል</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">የአባልነት መረጃዎ ለሰንበት ትምህርት ቤቱ አስተዳደር ደርሷል።</p>
+              </div>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
-              <p><strong className="text-slate-800 dark:text-white">ክትትል፦</strong> በማንኛውም ጊዜ በስልክ ቁጥርዎ እና በይለፍ ቃልዎ የምዝገባዎን ሁኔታ መከታተል ይችላሉ።</p>
+
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                2
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white">የአስተዳደር ማረጋገጫ</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                3
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white">መግባትና መማር</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">በማንኛውም ሰዓት በስልክ ቁጥርዎ እና በይለፍ ቃልዎ ሁኔታውን መከታተል ወይም መግባት ይችላሉ።</p>
+              </div>
             </div>
           </div>
 

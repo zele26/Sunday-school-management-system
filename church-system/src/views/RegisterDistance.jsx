@@ -275,13 +275,17 @@ const RegisterDistanceContent = () => {
             </p>
           </div>
 
-          {/* Reference Tag */}
-          {result?.registrationNumber && (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
-              <span className="opacity-75">የማመልከቻ መለያ፦</span>
-              <span className="font-mono font-bold text-[#1e3a8a] dark:text-amber-400">{result.registrationNumber}</span>
+          {/* Registered Phone Reminder */}
+          <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-left space-y-1.5">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">የተመዘገበ ስልክ ቁጥር:</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">{result?.phone || result?.studentPhone || 'በቅጹ ያስገቡት ስልክ'}</span>
             </div>
-          )}
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400 font-medium">የመግቢያ ዘዴ:</span>
+              <span className="font-semibold text-[#1e3a8a] dark:text-blue-400">ስልክ ቁጥር + የይለፍ ቃል</span>
+            </div>
+          </div>
 
           {/* Payment Guidance Summary */}
           <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-700/80 text-left space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
