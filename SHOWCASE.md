@@ -30,8 +30,8 @@ I built this project to solve these practical problems, modernize church operati
 4. **Self-Service Status Tracking**  
    Applicants can check if their admission or payment slip has been approved simply by entering their phone number or registration code.
 
-5. **A Central Dashboard for Staff and Teachers**  
-   Admins can open or close registration periods, approve applicants, manage courses, and assign teachers, while teachers can record grades and attendance.
+5. **Central Role-Based Portals for Admins, Teachers & Students**  
+   Dedicated authenticated workspaces: Admins control intake switches and manage student records; Teachers record grades and take attendance; Students access distance video lectures and quizzes.
 
 ---
 
@@ -65,20 +65,86 @@ flowchart LR
 | **GitOps Continuous Delivery** | ArgoCD | Declarative Kubernetes infrastructure managed entirely in Git (`k8s-manifests/`). ArgoCD detects and eliminates configuration drift automatically. |
 | **Least-Privilege Runtime Security** | Red Hat OpenShift (`restricted-v2` SCC) | Applications run in isolated namespaces with non-root security context constraints, dropped Linux capabilities, and read-only root filesystems where applicable. |
 
-### 📈 Efficiency & Operational Benefits
+---
 
-- **100% Automated Pipeline:** Eliminates error-prone manual deployments. A push to `main` triggers linting, testing, security scans, container build, and deployment automatically.
-- **Fast Feedback Loop:** Security issues and CVEs are caught within **2–3 minutes** at build time, drastically reducing Mean Time to Remediate (MTTR).
-- **Zero Secret Exposure:** Full protection against credential leaks with Vault-managed dynamic secret leases.
-- **Drift Prevention:** ArgoCD ensures production always mirrors the exact state defined in Git.
+## 🖼️ Full System UI Showcase & Real Screenshots
+
+### 1. 🏛️ Executive Admin Dashboard & Operations
+
+#### Admin Portal Overview
+The central management hub showing live metrics, departmental status, and direct administrative actions across the Sunday School.
+
+![Admin Portal Overview](./docs/screenshots/screenshot_14_admin_portal.png)
 
 ---
 
-## 🖼️ System Walkthrough & Screenshots
+#### Admin Student Directory & Records Management
+Manage student enrollments, academic levels, emergency contacts, and profile approvals in a structured data table.
 
-### 1. Public Portal & Community
+![Admin Student Records](./docs/screenshots/screenshot_17_admin_students.png)
 
-#### Home Page
+---
+
+#### Admin Intake Controls & System Settings
+Granular master toggles to open or close regular and distance admission cycles, customize cutoff dates, and configure announcements.
+
+![Admin System Settings](./docs/screenshots/screenshot_18_admin_settings.png)
+
+---
+
+### 2. 👨‍🏫 Teacher Workspace & Gradebook
+
+#### Teacher Portal Overview
+Where Sunday school teachers access their assigned classes, student rosters, lesson plans, and mark recording tools.
+
+![Teacher Workspace](./docs/screenshots/screenshot_15_teacher_portal.png)
+
+---
+
+### 3. 🎓 Student Digital Classroom & Distance LMS
+
+#### Student Learning Dashboard & Course Stream
+Distance learning portal where students follow video lectures, download reference materials, take chapter tests, and track certificate progress.
+
+![Student Digital Classroom](./docs/screenshots/screenshot_16_student_portal.png)
+
+---
+
+### 4. 📝 Admissions & Application Management
+
+#### Regular Student Admissions Portal
+Step-by-step registration for on-campus classes with personal info, baptism details, and payment slip upload.
+
+![Regular Registration](./docs/screenshots/screenshot_08_register_regular.png)
+
+---
+
+#### Distance Student Admissions Portal
+Online intake for remote and diaspora learners to enroll in distance course batches.
+
+![Distance Registration](./docs/screenshots/screenshot_09_register_distance.png)
+
+---
+
+#### Application Status Tracker
+A simple lookup tool for students to check if their application has been reviewed and approved.
+
+![Status Tracker](./docs/screenshots/screenshot_10_check_status.png)
+
+---
+
+### 5. 📜 Certificate Verification & Security
+
+#### Public QR Certificate Verification
+Public verification page that confirms the authenticity of Sunday school diplomas by scanning or entering certificate IDs.
+
+![Certificate Verification](./docs/screenshots/screenshot_11_verify_certificate.png)
+
+---
+
+### 6. 🌐 Public Portal & Cultural Heritage
+
+#### Home Landing Page
 The main landing page with current announcements, registration status, vision/mission, and direct links to all public services.
 
 ![Home Page](./docs/screenshots/screenshot_01_home.png)
@@ -89,6 +155,13 @@ The main landing page with current announcements, registration status, vision/mi
 A dedicated history section honoring the church builder and founder who established the church and Sunday school, along with our core educational goals.
 
 ![About & Founder Page](./docs/screenshots/screenshot_02_about_founder.png)
+
+---
+
+#### Distance Education Hub
+Displays the 3-year curriculum (Batch 1: Foundations & Old Testament, Batch 2: New Testament & Liturgy, Batch 3: Patristics & Advanced Studies) with course descriptions and FAQ.
+
+![Distance Education Hub](./docs/screenshots/screenshot_03_distance_lms.png)
 
 ---
 
@@ -114,87 +187,17 @@ Organized photo archives with category filtering and full-screen view.
 ---
 
 #### Contact & Location
-Contact information with direct phone dialing, Google Map location, and a message form.
+Contact information with direct phone dialing (`+251 926 871 984`), Google Map location, and an interactive message form.
 
 ![Contact Us](./docs/screenshots/screenshot_07_contact.png)
 
 ---
 
-### 2. Distance Learning (LMS)
-
-#### Distance Education Hub
-Displays the 3-year curriculum (Batch 1: Foundations & Old Testament, Batch 2: New Testament & Liturgy, Batch 3: Patristics & Advanced Studies) with course descriptions and FAQ.
-
-![Distance Education Hub](./docs/screenshots/screenshot_03_distance_lms.png)
-
----
-
-#### Student Digital Classroom
-Where distance students access their lessons, download reference books, and track course completion.
-
-![Student Classroom](./docs/screenshots/screenshot_16_student_portal.png)
-
----
-
-### 3. Admissions & Student Registration
-
-#### Regular Student Registration
-Step-by-step registration for on-campus classes with personal info, baptism details, and payment slip upload.
-
-![Regular Registration](./docs/screenshots/screenshot_08_register_regular.png)
-
----
-
-#### Distance Student Registration
-Online intake for remote and diaspora learners to enroll in distance course batches.
-
-![Distance Registration](./docs/screenshots/screenshot_09_register_distance.png)
-
----
-
-#### Application Status Tracker
-A simple lookup tool for students to check if their application has been reviewed and approved.
-
-![Status Tracker](./docs/screenshots/screenshot_10_check_status.png)
-
----
-
-### 4. Certificate Verification & Security
-
-#### QR Certificate Verification
-Public verification page that confirms the authenticity of Sunday school diplomas by scanning or entering certificate IDs.
-
-![Certificate Verification](./docs/screenshots/screenshot_11_verify_certificate.png)
-
----
-
-### 5. Portals & Administration
-
-#### Login Gateway
-Role-based login for students, teachers, and administrators.
+#### Authentication Gateway & Password Recovery
+Secure login portal and self-service account recovery workflows.
 
 ![Login Page](./docs/screenshots/screenshot_12_login.png)
-
----
-
-#### Password Recovery
-Self-service password reset flow for users.
-
 ![Password Reset](./docs/screenshots/screenshot_13_forgot_password.png)
-
----
-
-#### Admin Dashboard
-Central control panel to toggle registration on/off, review student applications, approve receipts, and manage users.
-
-![Admin Portal](./docs/screenshots/screenshot_14_admin_portal.png)
-
----
-
-#### Teacher Workspace
-Where teachers manage class rosters, enter student grades, and share lesson resources.
-
-![Teacher Portal](./docs/screenshots/screenshot_15_teacher_portal.png)
 
 ---
 
