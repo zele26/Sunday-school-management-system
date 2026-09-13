@@ -2,8 +2,9 @@
 ### A Full-Stack Platform for Church Education & Administration
 
 **Developer:** Zelalem Fiseha Gelaye ([GitHub](https://github.com/zele26) • [LinkedIn](https://www.linkedin.com/in/zelalem-fiseha-7198b3148/))  
+**Focus:** Full-Stack Engineering & DevSecOps Practices  
 **Organization:** Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School (Addis Ababa, Ethiopia)  
-**Tech Stack:** Next.js 16, React 19, Node.js, Express, MongoDB, Tailwind CSS, Cloudinary, Docker, Jenkins
+**Tech Stack:** Next.js 16, React 19, Node.js, Express, MongoDB, Tailwind CSS, Cloudinary, Docker, Jenkins, HashiCorp Vault, Harbor, Trivy, ArgoCD, OpenShift
 
 ---
 
@@ -11,7 +12,7 @@
 
 For years, our Sunday school operated entirely on paper. Every registration season meant long lines, misplaced paper forms, manual bank receipt verification, and difficulty tracking student attendance and grades. On top of that, church members living abroad or outside the city had no way to participate in our courses.
 
-I built this project to solve these practical problems and give our church community a reliable, modern, and easy-to-use digital system.
+I built this project to solve these practical problems, modernize church operations, and establish an automated, secure **DevSecOps delivery pipeline** that ensures high availability, security, and continuous compliance.
 
 ---
 
@@ -31,6 +32,45 @@ I built this project to solve these practical problems and give our church commu
 
 5. **A Central Dashboard for Staff and Teachers**  
    Admins can open or close registration periods, approve applicants, manage courses, and assign teachers, while teachers can record grades and attendance.
+
+---
+
+## 🛡️ DevSecOps Architecture & Practices
+
+As an engineer pursuing DevSecOps, I embedded security, automation, and compliance directly into every stage of the software delivery lifecycle (SDLC) rather than treating security as an afterthought.
+
+```mermaid
+flowchart LR
+    A[👨‍💻 Code Push] -->|Webhook| B[⚙️ Jenkins CI]
+    B -->|1. SAST & SCA| C[🔍 SonarQube & npm audit]
+    C -->|2. Multi-Stage Build| D[🐳 Docker Build]
+    D -->|3. Container Scan| E[🛡️ Trivy Scanner]
+    E -->|4. Push & Gate| F[🏛️ Harbor Registry]
+    F -->|5. Sign Image| G[✍️ Cosign Signing]
+    G -->|6. GitOps Commit| H[📁 k8s-manifests Git]
+    H -->|7. Auto-Sync| I[🐙 ArgoCD]
+    I -->|8. Deploy| J[☸️ Red Hat OpenShift]
+    K[🔐 HashiCorp Vault] -->|External Secrets Operator| J
+```
+
+### 🔒 Key DevSecOps Practices Implemented
+
+| Practice Area | Tooling Used | How It Works & Why It Matters |
+|---|---|---|
+| **Shift-Left Security (SAST & SCA)** | SonarQube, `npm audit` | Code quality, static security flaws, and vulnerable dependencies are scanned automatically on every pull request and commit before build. |
+| **Container Vulnerability Scanning** | Trivy, Multi-stage Docker | Container images are scanned for OS and package-level CVEs during the build. Builds are configured to fail if critical vulnerabilities are detected. |
+| **Registry Governance & Admission Gates** | Harbor Container Registry | Private registry with "Scan on Push" policies and an automated gate that prevents deployment of images with critical vulnerabilities. |
+| **Supply Chain Security & Provenance** | Cosign (Sigstore) | Container images are cryptographically signed before deployment, ensuring only verified, untampered images run in production. |
+| **Zero-Trust Secrets Management** | HashiCorp Vault, External Secrets Operator (ESO) | Zero hardcoded credentials in Git. Database strings, JWT tokens, and Cloudinary keys are stored in Vault KV v2 and injected dynamically into OpenShift pods. |
+| **GitOps Continuous Delivery** | ArgoCD | Declarative Kubernetes infrastructure managed entirely in Git (`k8s-manifests/`). ArgoCD detects and eliminates configuration drift automatically. |
+| **Least-Privilege Runtime Security** | Red Hat OpenShift (`restricted-v2` SCC) | Applications run in isolated namespaces with non-root security context constraints, dropped Linux capabilities, and read-only root filesystems where applicable. |
+
+### 📈 Efficiency & Operational Benefits
+
+- **100% Automated Pipeline:** Eliminates error-prone manual deployments. A push to `main` triggers linting, testing, security scans, container build, and deployment automatically.
+- **Fast Feedback Loop:** Security issues and CVEs are caught within **2–3 minutes** at build time, drastically reducing Mean Time to Remediate (MTTR).
+- **Zero Secret Exposure:** Full protection against credential leaks with Vault-managed dynamic secret leases.
+- **Drift Prevention:** ArgoCD ensures production always mirrors the exact state defined in Git.
 
 ---
 
@@ -158,15 +198,11 @@ Where teachers manage class rosters, enter student grades, and share lesson reso
 
 ---
 
-## 🛠️ Tech Stack & Key Technical Decisions
+## 🛠️ Full Technology Stack
 
-- **Frontend:** Next.js 16 (Turbopack) with React 19 for fast server-side rendering and responsive client navigation.
-- **Styling & UI:** Tailwind CSS v4 and Framer Motion for clean animations, full dark/light theme support, and responsive layouts.
-- **Backend:** Node.js with Express 5 REST API handling business logic, authentication, and file processing.
-- **Database:** MongoDB with Mongoose schemas for student records, courses, attendance, and grades.
-- **File & Media Storage:** Cloudinary integration for secure payment receipt and document uploads.
-- **Bilingual Engine:** Complete Amharic and English translation support built into the frontend.
-- **DevSecOps:** Docker containerization, Nginx reverse proxy, and a Jenkins CI/CD pipeline for automated testing and deployment.
+- **Frontend:** Next.js 16 (Turbopack), React 19, Tailwind CSS v4, Framer Motion
+- **Backend:** Node.js, Express 5 REST API, MongoDB / Mongoose, JWT Auth, Cloudinary
+- **DevSecOps & Cloud:** Jenkins, GitHub Webhooks, SonarQube, Trivy, Harbor, Cosign, HashiCorp Vault, ArgoCD, Red Hat OpenShift, Docker, Nginx
 
 ---
 

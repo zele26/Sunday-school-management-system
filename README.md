@@ -18,11 +18,21 @@ A complete Sunday School Management System and Distance Learning Platform built 
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & DevSecOps Practices
 
 - **Frontend:** Next.js 16 (Turbopack), React 19, Tailwind CSS v4, Framer Motion
 - **Backend:** Node.js, Express 5, MongoDB / Mongoose, JWT Auth, Cloudinary
-- **DevOps:** Docker, Nginx, Jenkins CI/CD
+- **DevSecOps Pipeline:** Jenkins CI/CD, SonarQube (SAST), `npm audit` (SCA), Trivy container scanning, Harbor private registry, Cosign image signing, HashiCorp Vault secrets, ArgoCD GitOps, Red Hat OpenShift, Docker, Nginx
+
+---
+
+## 🛡️ DevSecOps Highlights
+- **Shift-Left Security:** Automated SAST & SCA checks on every pull request.
+- **Zero-Trust Secrets:** HashiCorp Vault integration with dynamic secrets (no credentials in Git).
+- **Container Vulnerability Gates:** Trivy & Harbor scan-on-push blocking critical CVEs.
+- **GitOps Delivery:** ArgoCD automated deployment to OpenShift with drift detection.
+
+👉 **[Read Full DevSecOps Guide & Pipeline Setup (DEVSECOPS.md)](./DEVSECOPS.md)** | **[View UI Showcase (SHOWCASE.md)](./SHOWCASE.md)**
 
 ---
 
