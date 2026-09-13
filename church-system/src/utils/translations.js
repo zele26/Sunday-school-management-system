@@ -5,8 +5,8 @@ export const translations = {
   // 🏛️ Church & Brand Identification
   // ==========================================
   sundaySchoolTitle: {
-    en: 'Debre Yibabe Kidus Tekle Sawiros Sunday School System',
-    am: 'ደብረ ይባቤ ቅዱስ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት ሥርዓት',
+    en: 'Tekle Sawiros Sunday School',
+    am: 'ተክለሳዊሮስ ሰንበት ትምህርት ቤት',
   },
   sundaySchoolShortTitle: {
     en: 'Tekle Sawiros',

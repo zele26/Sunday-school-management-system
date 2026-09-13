@@ -9,14 +9,18 @@ import { QueryProvider } from '../providers/QueryProvider';
 
 export const metadata = {
   title: {
-    default: 'ደብረ ይባቤ ቅዱስ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የመማሪያና ማስተዳደሪያ ሥርዓት',
-    template: '%s | ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት',
+    default: 'ተክለሳዊሮስ ሰንበት ትምህርት ቤት',
+    template: '%s | ተክለሳዊሮስ ሰንበት ትምህርት ቤት',
   },
-  description: 'የደብረ ይባቤ ቅዱስ ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች፣ የመምህራን እና የርቀት ትምህርት መከታተያና ማስተዳደሪያ ሥርዓት',
+  description: 'የተክለሳዊሮስ ሰንበት ትምህርት ቤት የተማሪዎች፣ የመምህራን እና የርቀት ትምህርት መከታተያና ማስተዳደሪያ ሥርዓት',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/church-logo.png', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
 };
 
@@ -25,6 +29,9 @@ export default function RootLayout({ children }) {
     <html lang="am" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/png" href="/logo.png" />
+        <link rel="shortcut icon" type="image/png" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
