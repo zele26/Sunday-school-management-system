@@ -3,6 +3,8 @@
 
 An enterprise-grade, full-stack Sunday School Management System and Distance Education LMS tailored for **Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School** (*የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን — ተክለ ሳዊሮስ ሰንበት ት/ቤት*).
 
+👉 **[View Full UI Showcase & 16 System Screenshots (SHOWCASE.md)](./SHOWCASE.md)**
+
 ---
 
 ## 🌟 Key Features
