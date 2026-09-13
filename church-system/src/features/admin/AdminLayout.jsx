@@ -36,49 +36,53 @@ import ErrorBoundary from '../../components/ErrorBoundary';
 import useAuthStore from '../../store/authStore';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
+import { useLanguage } from '../../hooks/useLanguage';
 import { Badge } from '../../components/ui/Badge';
 
 const allNavSections = [
   {
     id: 'CORE',
+    titleKey: 'adminCoreSectionTitle',
     title: 'የቤተክርስቲያንና የዋና አስተዳደር',
     items: [
-      { path: '/admin', label: 'አጠቃላይ እይታ', icon: LayoutDashboard, end: true },
-      { path: '/admin/people', label: 'ሰዎችና አባላት', icon: Users },
-      { path: '/admin/departments', label: 'ክፍላት', icon: Building2 },
-      { path: '/admin/department-memberships', label: 'የክፍል አባልነቶች', icon: Link2 },
-      { path: '/admin/church-memberships', label: 'የቤተክርስቲያን አባልነቶች', icon: Church },
-      { path: '/admin/users', label: 'ተጠቃሚዎችና ሚናዎች', icon: UserCheck },
-      { path: '/admin/approvals', label: 'ማረጋገጫዎች', icon: CheckCircle2 },
-      { path: '/admin/announcements', label: 'ማስታወቂያዎች', icon: Bell },
-      { path: '/admin/password-resets', label: 'የይለፍ ቃል ዳግም ማስጀመር', icon: KeyRound },
-      { path: '/admin/settings', label: 'ቅንብሮች', icon: Settings },
-      { path: '/admin/audit-logs', label: 'የድርጊት መዝገቦች', icon: ClipboardList },
-      { path: '/admin/complaints', label: 'አቤቱታዎች', icon: AlertTriangle },
+      { path: '/admin', labelKey: 'navOverview', label: 'አጠቃላይ እይታ', icon: LayoutDashboard, end: true },
+      { path: '/admin/people', labelKey: 'navPeople', label: 'ሰዎችና አባላት', icon: Users },
+      { path: '/admin/departments', labelKey: 'navDepartments', label: 'ክፍላት', icon: Building2 },
+      { path: '/admin/department-memberships', labelKey: 'navDeptMemberships', label: 'የክፍል አባልነቶች', icon: Link2 },
+      { path: '/admin/church-memberships', labelKey: 'navChurchMemberships', label: 'የቤተክርስቲያን አባልነቶች', icon: Church },
+      { path: '/admin/users', labelKey: 'navUsersRoles', label: 'ተጠቃሚዎችና ሚናዎች', icon: UserCheck },
+      { path: '/admin/approvals', labelKey: 'navApprovals', label: 'ማረጋገጫዎች', icon: CheckCircle2 },
+      { path: '/admin/announcements', labelKey: 'navAnnouncements', label: 'ማስታወቂያዎች', icon: Bell },
+      { path: '/admin/password-resets', labelKey: 'navPasswordResets', label: 'የይለፍ ቃል ዳግም ማስጀመር', icon: KeyRound },
+      { path: '/admin/settings', labelKey: 'navSettings', label: 'ቅንብሮች', icon: Settings },
+      { path: '/admin/audit-logs', labelKey: 'navAuditLogs', label: 'የድርጊት መዝገቦች', icon: ClipboardList },
+      { path: '/admin/complaints', labelKey: 'navComplaints', label: 'አቤቱታዎች', icon: AlertTriangle },
     ],
   },
   {
     id: 'EDUCATION',
+    titleKey: 'adminEducationSectionTitle',
     title: 'የሰንበት ትምህርት ቤት አስተዳደር',
     items: [
-      { path: '/admin/distance-hub', label: 'የርቀት ትምህርት ማዕከል', icon: Globe },
-      { path: '/admin/programs', label: 'የትምህርት መርሃ-ግብሮች', icon: BookOpen },
-      { path: '/admin/academic-years', label: 'የትምህርት ዘመናት', icon: Calendar },
-      { path: '/admin/student-profiles', label: 'የተማሪዎች የግል ማህደር', icon: GraduationCap },
-      { path: '/admin/academic-enrollments', label: 'የትምህርት ምዝገባዎች', icon: ClipboardList },
-      { path: '/admin/manual-enrollment', label: 'ቀጥታ ምዝገባ', icon: UserPlus },
-      { path: '/admin/students', label: 'ተማሪዎች', icon: Users },
-      { path: '/admin/teachers', label: 'መምህራን', icon: Users },
-      { path: '/admin/classes', label: 'ክፍሎች', icon: School },
-      { path: '/admin/courses', label: 'ትምህርቶች', icon: BookOpen },
-      { path: '/admin/attendance-reports', label: 'መገኘት', icon: BarChart3 },
-      { path: '/admin/analytics', label: 'አናሊቲክስ', icon: BarChart3 },
-      { path: '/admin/qr-scanner', label: 'የQR መቃኛ', icon: QrCode },
-      { path: '/admin/resources', label: 'ማጣቀሻዎች', icon: FileText },
-      { path: '/admin/resource-approval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2 },
-      { path: '/admin/certificates', label: 'የምስክር ወረቀቶች', icon: Award },
-      { path: '/admin/reports', label: 'ሪፖርቶች', icon: BarChart3 },
-      { path: '/admin/registrations', label: 'አዲስ ምዝገባዎች', icon: ClipboardList },
+      { path: '/admin/distance-hub', labelKey: 'navDistanceHub', label: 'የርቀት ትምህርት ማዕከል', icon: Globe },
+      { path: '/admin/programs', labelKey: 'navPrograms', label: 'የትምህርት መርሃ-ግብሮች', icon: BookOpen },
+      { path: '/admin/academic-years', labelKey: 'navAcademicYears', label: 'የትምህርት ዘመናት', icon: Calendar },
+      { path: '/admin/student-profiles', labelKey: 'navStudentProfiles', label: 'የተማሪዎች የግል ማህደር', icon: GraduationCap },
+      { path: '/admin/academic-enrollments', labelKey: 'navAcademicEnrollments', label: 'የትምህርት ምዝገባዎች', icon: ClipboardList },
+      { path: '/admin/manual-enrollment', labelKey: 'navManualEnrollment', label: 'ቀጥታ ምዝገባ', icon: UserPlus },
+      { path: '/admin/students', labelKey: 'navStudents', label: 'ተማሪዎች', icon: Users },
+      { path: '/admin/teachers', labelKey: 'navTeachers', label: 'መምህራን', icon: Users },
+      { path: '/admin/classes', labelKey: 'navClasses', label: 'ክፍሎች', icon: School },
+      { path: '/admin/courses', labelKey: 'navCourses', label: 'ትምህርቶች', icon: BookOpen },
+      { path: '/admin/attendance-reports', labelKey: 'navAttendance', label: 'መገኘት', icon: BarChart3 },
+      { path: '/admin/analytics', labelKey: 'navAnalytics', label: 'አናሊቲክስ', icon: BarChart3 },
+      { path: '/admin/qr-scanner', labelKey: 'navQrScanner', label: 'የQR መቃኛ', icon: QrCode },
+      { path: '/admin/resources', labelKey: 'navResources', label: 'ማጣቀሻዎች', icon: FileText },
+      { path: '/admin/resource-approval', labelKey: 'navResourceApproval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2 },
+      { path: '/admin/certificates', labelKey: 'navCertificates', label: 'የምስክር ወረቀቶች', icon: Award },
+      { path: '/admin/reports', labelKey: 'navReports', label: 'ሪፖርቶች', icon: BarChart3 },
+      { path: '/admin/registrations', labelKey: 'navNewRegistrations', label: 'አዲስ ምዝገባዎች', icon: ClipboardList },
     ],
   },
 ];
@@ -88,6 +92,7 @@ const AdminLayout = ({ children, onLogout }) => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const { t, isAmharic } = useLanguage();
 
   const isSuperAdmin = user?.role === 'superadmin' || user?.role === 'admin';
   const isDeptAdmin = user?.role === 'department_admin';
@@ -146,19 +151,19 @@ const AdminLayout = ({ children, onLogout }) => {
           <div className="flex items-center gap-3">
             <div className="relative w-11 h-11 flex-shrink-0">
               <div className="relative w-full h-full p-1 rounded-full bg-white border border-amber-400 flex items-center justify-center overflow-hidden shadow-sm">
-                <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
+                <Image src={ChurchLogo} alt={t('churchLogoAlt', 'Logo')} width={44} height={44} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
               </div>
             </div>
             <div className="min-w-0">
               <span className="text-sm font-extrabold tracking-tight text-white block leading-tight truncate">
                 {user?.role === 'superadmin'
-                  ? 'ዋና አስተዳደር ማዕከል'
+                  ? t('adminHubTitle', 'ዋና አስተዳደር ማዕከል')
                   : user?.role === 'department_admin'
-                    ? 'የክፍል አስተዳደር'
-                    : 'የአስተዳደር መድረክ'}
+                    ? t('deptAdminHubTitle', 'የክፍል አስተዳደር')
+                    : t('generalAdminHubTitle', 'የአስተዳደር መድረክ')}
               </span>
               <div className="text-[11px] text-amber-300 font-bold truncate">
-                ተክለ ሳዊሮስ ሰንበት ት/ቤት
+                {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ት/ቤት')}
               </div>
             </div>
           </div>
@@ -184,7 +189,7 @@ const AdminLayout = ({ children, onLogout }) => {
                 }`}
               >
                 <Layers className="w-3 h-3" />
-                <span>ሁሉም</span>
+                <span>{t('scopeAll', 'ሁሉም')}</span>
               </button>
               <button
                 type="button"
@@ -196,7 +201,7 @@ const AdminLayout = ({ children, onLogout }) => {
                 }`}
               >
                 <GraduationCap className="w-3 h-3" />
-                <span>ትምህርት</span>
+                <span>{t('scopeEducation', 'ትምህርት')}</span>
               </button>
               <button
                 type="button"
@@ -208,7 +213,7 @@ const AdminLayout = ({ children, onLogout }) => {
                 }`}
               >
                 <Church className="w-3 h-3" />
-                <span>አስተዳደር</span>
+                <span>{t('scopeCore', 'አስተዳደር')}</span>
               </button>
             </div>
           </div>
@@ -219,7 +224,7 @@ const AdminLayout = ({ children, onLogout }) => {
           {visibleSections.map((section) => (
             <div key={section.id}>
               <p className="px-3 text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <span>{section.title}</span>
+                <span>{t(section.titleKey, section.title)}</span>
               </p>
               <div className="space-y-1">
                 {section.items.map((item) => {
@@ -238,7 +243,7 @@ const AdminLayout = ({ children, onLogout }) => {
                       }
                     >
                       <Icon className="w-4 h-4 shrink-0" />
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate">{t(item.labelKey, item.label)}</span>
                     </NavLink>
                   );
                 })}
@@ -251,7 +256,11 @@ const AdminLayout = ({ children, onLogout }) => {
         <div className="p-3.5 border-t border-white/10 bg-black/10 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-2 text-[11px] text-blue-100 font-medium">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>{user?.role === 'superadmin' ? 'ሙሉ ፈቃድ (Super Admin)' : 'የተወሰነ ፈቃድ (Admin)'}</span>
+            <span>
+              {user?.role === 'superadmin'
+                ? (isAmharic ? 'ሙሉ ፈቃድ (Super Admin)' : 'Full Access (Super Admin)')
+                : (isAmharic ? 'የተወሰነ ፈቃድ (Admin)' : 'Scoped Access (Admin)')}
+            </span>
           </div>
         </div>
       </aside>
@@ -271,23 +280,28 @@ const AdminLayout = ({ children, onLogout }) => {
 
             <div className="flex items-center gap-2.5">
               <h1 className="text-base font-black text-slate-800 dark:text-white hidden sm:block">
-                ተክለ ሳዊሮስ ሰንበት ት/ቤት
+                {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}
               </h1>
               <Badge variant={user?.role === 'superadmin' ? 'gold' : 'active'} size="sm">
-                {user?.role === 'superadmin' ? '👑 ዋና አስተዳዳሪ' : user?.role === 'department_admin' ? 'የክፍል አስተዳዳሪ' : 'አስተዳዳሪ'}
+                {user?.role === 'superadmin'
+                  ? `👑 ${t('roleSuperAdmin', 'ዋና አስተዳዳሪ')}`
+                  : user?.role === 'department_admin'
+                  ? t('roleDeptAdmin', 'የክፍል አስተዳዳሪ')
+                  : t('roleAdmin', 'አስተዳዳሪ')}
               </Badge>
             </div>
           </div>
 
           {/* Header Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <LanguageToggle />
             <ThemeToggle />
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-800 transition-colors shadow-sm focus:outline-none"
+              className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-800 transition-colors shadow-sm focus:outline-none cursor-pointer"
             >
-              <span>ውጣ</span>
+              <span className="hidden sm:inline">{t('logout', 'ውጣ')}</span>
               <LogOut className="w-4 h-4" />
             </button>
           </div>

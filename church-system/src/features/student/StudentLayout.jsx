@@ -15,11 +15,14 @@ import {
 import useAuthStore from '../../store/authStore';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
+import { useLanguage } from '../../hooks/useLanguage';
 
 const StudentLayout = ({ children, onLogout }) => {
   const user = useAuthStore((state) => state.user);
   const studentName = user?.fullName || 'ተማሪ';
   const studentId = user?.studentId || '';
+  const { t, isAmharic } = useLanguage();
 
   const initials = studentName
     .split(' ')
@@ -29,11 +32,11 @@ const StudentLayout = ({ children, onLogout }) => {
     .join('') || 'ተ';
 
   const navItems = [
-    { label: 'መነሻ', path: '/dashboard', icon: <Home className="w-4 h-4" />, end: true },
-    { label: 'አካዳሚክ', path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4" /> },
-    { label: 'ተገኝነትና ውጤት', path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4" /> },
-    { label: 'አናሊቲክስ (Analytics)', path: '/dashboard/analytics', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
-    { label: 'ማስታወቂያዎች', path: '/dashboard/announcements', icon: <Bell className="w-4 h-4" /> },
+    { label: t('home', 'መነሻ'), path: '/dashboard', icon: <Home className="w-4 h-4" />, end: true },
+    { label: t('academic', 'አካዳሚክ'), path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4" /> },
+    { label: t('attendanceAndGrades', 'ተገኝነትና ውጤት'), path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4" /> },
+    { label: t('analytics', 'አናሊቲክስ (Analytics)'), path: '/dashboard/analytics', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+    { label: t('announcements', 'ማስታወቂያዎች'), path: '/dashboard/announcements', icon: <Bell className="w-4 h-4" /> },
   ];
 
   return (
@@ -52,23 +55,24 @@ const StudentLayout = ({ children, onLogout }) => {
           </div>
           <div className="flex flex-col">
             <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
-              ተክለ ሳዊሮስ
+              {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}
             </span>
             <span className="text-[10px] sm:text-[11px] text-amber-300 font-extrabold uppercase tracking-wider">
-              የተማሪዎች ፖርታል
+              {t('studentPortal', 'የተማሪዎች ፖርታል')}
             </span>
           </div>
         </Link>
 
         {/* Right Top Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px]" />
           <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px] min-w-[38px]" />
 
           {/* User Profile Pill */}
           <Link
             to="/dashboard/profile"
             className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold"
-            title="የግል መረጃ ይመልከቱ"
+            title={t('myProfile', 'የግል መረጃ ይመልከቱ')}
           >
             <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-2xs">
               {initials}
@@ -80,9 +84,9 @@ const StudentLayout = ({ children, onLogout }) => {
           <button
             onClick={onLogout}
             className="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/30 hover:border-rose-500 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer min-h-[38px]"
-            title="ከሲስተሙ ውጣ"
+            title={t('logout', 'ከሲስተሙ ውጣ')}
           >
-            <span className="hidden sm:inline">ውጣ</span>
+            <span className="hidden sm:inline">{t('logout', 'ውጣ')}</span>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>

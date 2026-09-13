@@ -5,9 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { apiFetch } from '../api/apiClient';
 import { changePasswordSchema } from '../schemas';
 import { BackButton, Card } from '../components/ui';
+import { useLanguage } from '../hooks/useLanguage';
 
 const ChangePassword = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
+  const { t, isAmharic } = useLanguage();
 
   const {
     register,
@@ -36,13 +38,22 @@ const ChangePassword = () => {
       });
       const resData = await res.json();
       if (res.ok) {
-        setMessage({ text: 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!', type: 'success' });
+        setMessage({
+          text: t('passwordChangedSuccess', 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!'),
+          type: 'success',
+        });
         reset();
       } else {
-        setMessage({ text: resData.message || 'ለውጡ አልተሳካም', type: 'error' });
+        setMessage({
+          text: resData.message || (isAmharic ? 'ለውጡ አልተሳካም' : 'Password change failed'),
+          type: 'error',
+        });
       }
     } catch (err) {
-      setMessage({ text: 'የአውታረ መረብ ስህተት', type: 'error' });
+      setMessage({
+        text: t('networkError', 'የአውታረ መረብ ስህተት'),
+        type: 'error',
+      });
     }
   };
 
@@ -55,11 +66,13 @@ const ChangePassword = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </span>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">የይለፍ ቃል ቀይር</h2>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+            {t('changePasswordTitle', 'የይለፍ ቃል ቀይር')}
+          </h2>
         </div>
         <BackButton
           href="/dashboard"
-          label="መነሻ ገጽ"
+          label={t('home', 'መነሻ')}
           variant="glass"
           className="text-xs py-1.5 px-3"
         />
@@ -69,8 +82,8 @@ const ChangePassword = () => {
         <div
           className={`p-4 rounded-2xl text-sm font-medium shadow-sm border flex items-center gap-2.5 transition-all ${
             message.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border-rose-200'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+              : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
           }`}
         >
           {message.text}
@@ -79,15 +92,17 @@ const ChangePassword = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አሁን ያለው የይለፍ ቃል</label>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
+            {t('currentPasswordLabel', 'አሁን ያለው የይለፍ ቃል')}
+          </label>
           <input
             type="password"
             placeholder="••••••••"
             {...register('currentPassword')}
-            className={`w-full px-4 py-3 bg-slate-50/50 border rounded-xl text-sm font-medium text-slate-700 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-4 py-3 bg-slate-50/50 dark:bg-slate-800 border rounded-xl text-sm font-medium text-slate-700 dark:text-white shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
               errors.currentPassword
                 ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
+                : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-indigo-500/20'
             }`}
           />
           {errors.currentPassword && (
@@ -96,15 +111,17 @@ const ChangePassword = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲስ የይለፍ ቃል</label>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
+            {t('newPasswordLabel', 'አዲስ የይለፍ ቃል')}
+          </label>
           <input
             type="password"
             placeholder="••••••••"
             {...register('newPassword')}
-            className={`w-full px-4 py-3 bg-slate-50/50 border rounded-xl text-sm font-medium text-slate-700 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-4 py-3 bg-slate-50/50 dark:bg-slate-800 border rounded-xl text-sm font-medium text-slate-700 dark:text-white shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
               errors.newPassword
                 ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
+                : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-indigo-500/20'
             }`}
           />
           {errors.newPassword && (
@@ -113,15 +130,17 @@ const ChangePassword = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider block">አዲሱን የይለፍ ቃል ያረጋግጡ</label>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
+            {t('confirmNewPasswordLabel', 'አዲሱን የይለፍ ቃል ያረጋግጡ')}
+          </label>
           <input
             type="password"
             placeholder="••••••••"
             {...register('confirmPassword')}
-            className={`w-full px-4 py-3 bg-slate-50/50 border rounded-xl text-sm font-medium text-slate-700 shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-4 py-3 bg-slate-50/50 dark:bg-slate-800 border rounded-xl text-sm font-medium text-slate-700 dark:text-white shadow-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${
               errors.confirmPassword
                 ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
+                : 'border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-indigo-500/20'
             }`}
           />
           {errors.confirmPassword && (
@@ -134,17 +153,17 @@ const ChangePassword = () => {
           disabled={isSubmitting}
           className="w-full bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white py-3.5 rounded-xl font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:pointer-events-none mt-2 cursor-pointer"
         >
-          {isSubmitting ? 'በመቀየር ላይ…' : 'የይለፍ ቃል ቀይር'}
+          {isSubmitting ? t('signingIn', 'በመቀየር ላይ…') : t('savePasswordBtn', 'የይለፍ ቃል ቀይር')}
         </button>
       </form>
 
       {message.type === 'success' && (
-        <div className="pt-2 text-center border-t border-slate-100">
+        <div className="pt-2 text-center border-t border-slate-100 dark:border-slate-800">
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
+            className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
           >
-            ወደ መነሻ ገጽ ተመለስ
+            ← {t('backToHome', 'ወደ መነሻ ገጽ ተመለስ')}
           </Link>
         </div>
       )}

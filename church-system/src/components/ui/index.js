@@ -7,6 +7,8 @@ export * from './Input';
 export * from './Select';
 export * from './ThemeProvider';
 export * from './ThemeToggle';
+export * from './LanguageToggle';
+export { LanguageProvider, useLanguageContext } from '../../providers/LanguageProvider';
 export * from './DataTable';
 export * from './Form';
 export * from './EthiopianDatePicker';

@@ -11,9 +11,13 @@ import bgImage from '../../assets/Lidetachurch.jpg';
 import { apiFetch } from '../../api/apiClient';
 import { forgotPasswordSchema } from '../../schemas';
 import { BackButton } from '../../components/ui';
+import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
+import { useLanguage } from '../../hooks/useLanguage';
 
 export default function ForgotPassword() {
   const [msg, setMsg] = useState({ type: '', text: '' });
+  const { t, isAmharic } = useLanguage();
 
   const {
     register,
@@ -42,14 +46,25 @@ export default function ForgotPassword() {
       if (res.ok) {
         setMsg({
           type: 'success',
-          text: resData.message || 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
+          text:
+            resData.message ||
+            t(
+              'requestSuccessMessage',
+              'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።'
+            ),
         });
         reset();
       } else {
-        setMsg({ type: 'error', text: resData.message || 'ጥያቄውን መላክ አልተቻለም' });
+        setMsg({
+          type: 'error',
+          text: resData.message || (isAmharic ? 'ጥያቄውን መላክ አልተቻለም' : 'Failed to send request'),
+        });
       }
     } catch {
-      setMsg({ type: 'error', text: 'የአውታረ መረብ ስህተት ተፈጥሯል' });
+      setMsg({
+        type: 'error',
+        text: t('networkError', 'የአውታረ መረብ ስህተት ተፈጥሯል'),
+      });
     }
   };
 
@@ -68,9 +83,13 @@ export default function ForgotPassword() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[450px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-400/25 via-yellow-200/20 to-transparent rounded-full blur-3xl" />
       </div>
 
-      {/* Top Header with BackButton */}
+      {/* Top Header with BackButton, LanguageToggle, ThemeToggle */}
       <header className="relative z-30 w-full max-w-5xl mx-auto flex items-center justify-between py-2">
-        <BackButton href="/login" label="ወደ መግቢያ ተመለስ" variant="glass" />
+        <BackButton href="/login" label={t('backToLogin', 'ወደ መግቢያ ተመለስ')} variant="glass" />
+        <div className="flex items-center gap-2">
+          <LanguageToggle className="bg-white/80 dark:bg-slate-800 text-xs shadow-2xs" />
+          <ThemeToggle className="bg-white/80 dark:bg-slate-800 text-xs shadow-2xs" />
+        </div>
       </header>
 
       {/* Main Card */}
@@ -86,10 +105,13 @@ export default function ForgotPassword() {
               <KeyRound className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              የይለፍ ቃል ለመቀየር
+              {t('forgotPasswordTitle', 'የይለፍ ቃል ለመቀየር')}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
-              ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ። አስተዳዳሪው መረጃዎን አረጋግጦ ጊዜያዊ ፓስዎርድ ያዘጋጅልዎታል።
+              {t(
+                'forgotPasswordSubtitle',
+                'ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ። አስተዳዳሪው መረጃዎን አረጋግጦ ጊዜያዊ ፓስዎርድ ያዘጋጅልዎታል።'
+              )}
             </p>
           </div>
 
@@ -109,12 +131,12 @@ export default function ForgotPassword() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                ኢሜይል / ስልክ ቁጥር / የተማሪ መለያ *
+                {t('identifierLabel', 'ኢሜይል / ስልክ ቁጥር / የተማሪ መለያ *')}
               </label>
               <input
                 type="text"
                 {...register('identifier')}
-                placeholder="09... ወይም ኢሜይል ወይም መለያ ቁጥር"
+                placeholder={t('identifierPlaceholder', '09... ወይም ኢሜይል ወይም መለያ ቁጥር')}
                 className={`w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
                   errors.identifier
                     ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
@@ -139,7 +161,7 @@ export default function ForgotPassword() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <span>ጥያቄ ላክ</span>
+                  <span>{t('sendRequestBtn', 'ጥያቄ ላክ')}</span>
                   <ArrowRight className="w-4 h-4 text-amber-300" />
                 </>
               )}
@@ -151,7 +173,7 @@ export default function ForgotPassword() {
               href="/login"
               className="text-xs text-[#1657b8] dark:text-amber-400 hover:underline font-bold transition-colors"
             >
-              ← ወደ መግቢያ ገጽ ተመለስ
+              ← {t('backToLogin', 'ወደ መግቢያ ተመለስ')}
             </Link>
           </div>
         </motion.div>
@@ -159,7 +181,7 @@ export default function ForgotPassword() {
 
       {/* Footer */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs font-semibold text-slate-500 dark:text-slate-400">
-        ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን
+        {t('eotcNoticeFooter', '© 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን (EOTC)')}
       </footer>
     </div>
   );

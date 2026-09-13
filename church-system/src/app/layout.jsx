@@ -4,6 +4,7 @@ import NextRouterAdapter from '../components/NextRouterAdapter';
 import { ToastContainer } from '../utils/toast';
 import { Toaster } from '../components/ui/sonner';
 import { ThemeProvider } from '../components/ui/ThemeProvider';
+import { LanguageProvider } from '../providers/LanguageProvider';
 import { QueryProvider } from '../providers/QueryProvider';
 
 export const metadata = {
@@ -34,13 +35,15 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] antialiased font-sans selection:bg-[var(--brand-gold)] selection:text-slate-950">
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-            <NextRouterAdapter>
-              <AppInitializer>
-                {children}
-                <ToastContainer />
-                <Toaster position="top-right" richColors />
-              </AppInitializer>
-            </NextRouterAdapter>
+            <LanguageProvider defaultLang="am">
+              <NextRouterAdapter>
+                <AppInitializer>
+                  {children}
+                  <ToastContainer />
+                  <Toaster position="top-right" richColors />
+                </AppInitializer>
+              </NextRouterAdapter>
+            </LanguageProvider>
           </ThemeProvider>
         </QueryProvider>
       </body>

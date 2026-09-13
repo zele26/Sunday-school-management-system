@@ -1,80 +1,182 @@
+'use client';
+
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, FeatureCard, Badge } from '../../components/ui';
-
-const batchesData = [
-  {
-    batch: 'ዙር 1 (የመጀመሪያ ዓመት)',
-    title: 'የነገረ መለኮት እና የብሉይ ኪዳን መሠረቶች',
-    badge: 'መሠረታዊ',
-    description: 'በዚህ ዙር ተማሪዎች የኦርቶዶክስ ተዋሕዶ እምነት መሠረታዊ አስተምህሮዎችን፣ የብሉይ ኪዳን መጻሕፍትን ታሪክ እና የመጀመሪያውን የክርስትና ሕይወት ሥርዓት ይማራሉ።',
-    courses: [
-      { name: 'ነገረ መለኮት እና ዶግማ ፩', hours: '45 ሰዓታት', icon: '✝️' },
-      { name: 'የብሉይ ኪዳን ጥናት', hours: '60 ሰዓታት', icon: '📜' },
-      { name: 'የቤተክርስቲያን ታሪክ ፩', hours: '40 ሰዓታት', icon: '🏛️' },
-      { name: 'የክርስትና ሥነ ምግባር', hours: '30 ሰዓታት', icon: '🕊️' },
-    ],
-  },
-  {
-    batch: 'ዙር 2 (ሁለተኛ ዓመት)',
-    title: 'የሐዲስ ኪዳን እና የሥርዓተ ቤተክርስቲያን ጥናት',
-    badge: 'መካከለኛ',
-    description: 'የወንጌላት ጥልቅ ትንታኔ፣ የቅዱስ ጳውሎስ ሐዋርያዊ አገልግሎትና መልእክታት፣ ምስጢራተ ቤተክርስቲያን እና የቅዳሴ ትርጓሜ የሚዳሰስበት ዙር ነው።',
-    courses: [
-      { name: 'የሐዲስ ኪዳን ጥናት', hours: '60 ሰዓታት', icon: '📖' },
-      { name: 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ', hours: '50 ሰዓታት', icon: '📜' },
-      { name: 'ምስጢራተ ቤተክርስቲያን', hours: '45 ሰዓታት', icon: '🕯️' },
-      { name: 'የቅዳሴና የጸሎት ትርጓሜ', hours: '40 ሰዓታት', icon: '⛪' },
-    ],
-  },
-  {
-    batch: 'ዙር 3 (ሦስተኛ ዓመት)',
-    title: 'የአበው ትምህርት እና የሥነ መለኮት ጥልቀት',
-    badge: 'ከፍተኛ',
-    description: 'የቀደምት የቤተክርስቲያን አባቶች አስተምህሮ፣ ነገረ ማርያም፣ እና የሃይማኖት አበው ትምህርት የሚቀርብበት ዙር።',
-    courses: [
-      { name: 'ነገረ ማርያም', hours: '40 ሰዓታት', icon: '👑' },
-      { name: 'ትምህርተ አበው', hours: '50 ሰዓታት', icon: '📜' },
-      { name: 'የመጽሐፍ ቅዱስ አፈታት ስልት', hours: '45 ሰዓታት', icon: '🔍' },
-      { name: 'የስብከትና የሐዋርያዊ አገልግሎት ጥበብ', hours: '35 ሰዓታት', icon: '🗣️' },
-    ],
-  },
-  {
-    batch: 'ዙር 4 (አራተኛ ዓመት / ማጠቃለያ)',
-    title: 'የቀኖና ቤተክርስቲያን እና የመመረቂያ ጥናት',
-    badge: 'ማጠቃለያ / ተመራቂ',
-    description: 'የቀኖና መጻሕፍት ጥናት፣ የዘመኑ ጥያቄዎችና ኦርቶዶክሳዊ መልሶች እንዲሁም የማጠቃለያ የምርምር ጽሑፍ ዝግጅት።',
-    courses: [
-      { name: 'ፍትሐ ነገሥት እና ቀኖና ቤተክርስቲያን', hours: '50 ሰዓታት', icon: '⚖️' },
-      { name: 'አንቀጸ ሃይማኖትና የንጽጽር ጥናት', hours: '45 ሰዓታት', icon: '🛡️' },
-      { name: 'የመመረቂያ ጽሑፍና የምርምር ሥራ', hours: '60 ሰዓታት', icon: '🎓' },
-    ],
-  },
-];
-
-const faqs = [
-  {
-    q: 'የርቀት ትምህርቱ እንዴት ነው የሚሰጠው?',
-    a: 'ትምህርቱ ሙሉ በሙሉ በበይነመረብ በኩል በድምፅ፣ በቪዲዮ እና በተሟሉ የትምህርት ሞጁሎች የሚቀርብ ሲሆን ተማሪዎች በራሳቸው ጊዜና ምቹ ሰዓት ይማራሉ።',
-  },
-  {
-    q: 'ፈተናዎችና የቤት ሥራዎች እንዴት ይወሰዳሉ?',
-    a: 'በየምዕራፉ መጨረሻ ላይ በመማሪያ መድረኩ በኩል አጫጭር ፈተናዎች እና የጽሑፍ የቤት ሥራዎች ይሰጣሉ። ውጤትዎም ወዲያውኑ ይታወቃል።',
-  },
-  {
-    q: 'ትምህርቱን ሲያጠናቅቁ ምን ዓይነት ማስረጃ ይሰጣል?',
-    a: 'እያንዳንዱን ዙር እና አጠቃላይ የ4 ዓመቱን መርሃ ግብር ያጠናቀቁ ተማሪዎች በሰንበት ትምህርት ቤቱ እና በደብሩ አስተዳደር የተረጋገጠ ሕጋዊ የዲፕሎማ የምስክር ወረቀት ይሰጣቸዋል።',
-  },
-  {
-    q: 'የክፍያ ሁኔታው እንዴት ነው?',
-    a: 'ለምዝገባና ለሞጁል ማዘጋጃ የሚሆን ተመጣጣኝ ክፍያ በባንክ ወይም በሞባይል ባንኪንግ ገቢ በማድረግ ደረሰኙን በምዝገባ ገጹ ላይ በቀላሉ በመጫን መመዝገብ ይችላሉ።',
-  },
-];
+import { useLanguage } from '../../hooks/useLanguage';
 
 const DistanceEducationPage = () => {
+  const { t, isAmharic } = useLanguage();
   const [selectedBatch, setSelectedBatch] = useState(0);
   const [openFaq, setOpenFaq] = useState(null);
+
+  const batchesData = [
+    {
+      batch: isAmharic ? 'ዙር 1 (የመጀመሪያ ዓመት)' : 'Batch 1 (Year 1)',
+      title: isAmharic
+        ? 'የነገረ መለኮት እና የብሉይ ኪዳን መሠረቶች'
+        : 'Foundations of Theology & Old Testament',
+      badge: isAmharic ? 'መሠረታዊ' : 'Foundational',
+      description: isAmharic
+        ? 'በዚህ ዙር ተማሪዎች የኦርቶዶክስ ተዋሕዶ እምነት መሠረታዊ አስተምህሮዎችን፣ የብሉይ ኪዳን መጻሕፍትን ታሪክ እና የመጀመሪያውን የክርስትና ሕይወት ሥርዓት ይማራሉ።'
+        : 'In this batch, students explore core Orthodox Tewahedo theological dogmas, Old Testament surveys, and early Christian ethical life.',
+      courses: [
+        {
+          name: isAmharic ? 'ነገረ መለኮት እና ዶግማ ፩' : 'Theology & Dogma I',
+          hours: isAmharic ? '45 ሰዓታት' : '45 Hours',
+          icon: '✝️',
+        },
+        {
+          name: isAmharic ? 'የብሉይ ኪዳን ጥናት' : 'Old Testament Studies',
+          hours: isAmharic ? '60 ሰዓታት' : '60 Hours',
+          icon: '📜',
+        },
+        {
+          name: isAmharic ? 'የቤተክርስቲያን ታሪክ ፩' : 'Church History I',
+          hours: isAmharic ? '40 ሰዓታት' : '40 Hours',
+          icon: '🏛️',
+        },
+        {
+          name: isAmharic ? 'የክርስትና ሥነ ምግባር' : 'Christian Morals & Ethics',
+          hours: isAmharic ? '30 ሰዓታት' : '30 Hours',
+          icon: '🕊️',
+        },
+      ],
+    },
+    {
+      batch: isAmharic ? 'ዙር 2 (ሁለተኛ ዓመት)' : 'Batch 2 (Year 2)',
+      title: isAmharic
+        ? 'የሐዲስ ኪዳን እና የሥርዓተ ቤተክርስቲያን ጥናት'
+        : 'New Testament & Liturgical Canons',
+      badge: isAmharic ? 'መካከለኛ' : 'Intermediate',
+      description: isAmharic
+        ? 'የወንጌላት ጥልቅ ትንታኔ፣ የቅዱስ ጳውሎስ ሐዋርያዊ አገልግሎትና መልእክታት፣ ምስጢራተ ቤተክርስቲያን እና የቅዳሴ ትርጓሜ የሚዳሰስበት ዙር ነው።'
+        : 'Deep exegesis of the Four Gospels, Pauline epistles, the Seven Sacred Sacraments, and Divine Liturgy mysteries.',
+      courses: [
+        {
+          name: isAmharic ? 'የሐዲስ ኪዳን ጥናት' : 'New Testament Exegesis',
+          hours: isAmharic ? '60 ሰዓታት' : '60 Hours',
+          icon: '📖',
+        },
+        {
+          name: isAmharic
+            ? 'ቅዱስ ጳውሎስና ሐዋርያዊ አገልግሎቱ'
+            : 'St. Paul & Apostolic Epistles',
+          hours: isAmharic ? '50 ሰዓታት' : '50 Hours',
+          icon: '📜',
+        },
+        {
+          name: isAmharic ? 'ምስጢራተ ቤተክርስቲያን' : 'Sacraments of the Church',
+          hours: isAmharic ? '45 ሰዓታት' : '45 Hours',
+          icon: '🕯️',
+        },
+        {
+          name: isAmharic ? 'የቅዳሴና የጸሎት ትርጓሜ' : 'Divine Liturgy & Prayer Insights',
+          hours: isAmharic ? '40 ሰዓታት' : '40 Hours',
+          icon: '⛪',
+        },
+      ],
+    },
+    {
+      batch: isAmharic ? 'ዙር 3 (ሦስተኛ ዓመት)' : 'Batch 3 (Year 3)',
+      title: isAmharic
+        ? 'የአበው ትምህርት እና የሥነ መለኮት ጥልቀት'
+        : 'Patristics, Mariology & Advanced Studies',
+      badge: isAmharic ? 'ከፍተኛ' : 'Advanced',
+      description: isAmharic
+        ? 'የቀደምት የቤተክርስቲያን አባቶች አስተምህሮ፣ ነገረ ማርያም፣ እና የሃይማኖት አበው ትምህርት የሚቀርብበት ዙር።'
+        : 'Patristic writings of the Holy Fathers, Mariology (Theotokos studies), and spiritual homiletics.',
+      courses: [
+        {
+          name: isAmharic ? 'ነገረ ማርያም' : 'Mariology (Theotokos)',
+          hours: isAmharic ? '40 ሰዓታት' : '40 Hours',
+          icon: '👑',
+        },
+        {
+          name: isAmharic ? 'ትምህርተ አበው' : 'Patristics (Holy Fathers)',
+          hours: isAmharic ? '50 ሰዓታት' : '50 Hours',
+          icon: '📜',
+        },
+        {
+          name: isAmharic ? 'የመጽሐፍ ቅዱስ አፈታት ስልት' : 'Biblical Hermeneutics',
+          hours: isAmharic ? '45 ሰዓታት' : '45 Hours',
+          icon: '🔍',
+        },
+        {
+          name: isAmharic
+            ? 'የስብከትና የሐዋርያዊ አገልግሎት ጥበብ'
+            : 'Apostolic Preaching & Homiletics',
+          hours: isAmharic ? '35 ሰዓታት' : '35 Hours',
+          icon: '🗣️',
+        },
+      ],
+    },
+    {
+      batch: isAmharic ? 'ዙር 4 (አራተኛ ዓመት / ማጠቃለያ)' : 'Batch 4 (Year 4 / Capstone)',
+      title: isAmharic
+        ? 'የቀኖና ቤተክርስቲያን እና የመመረቂያ ጥናት'
+        : 'Ecclesiastical Law, Apologetics & Thesis',
+      badge: isAmharic ? 'ማጠቃለያ / ተመራቂ' : 'Capstone / Graduate',
+      description: isAmharic
+        ? 'የቀኖና መጻሕፍት ጥናት፣ የዘመኑ ጥያቄዎችና ኦርቶዶክሳዊ መልሶች እንዲሁም የማጠቃለያ የምርምር ጽሑፍ ዝግጅት።'
+        : 'Study of Fetha Negest, church canons, modern apologetics, and completion of the graduation research thesis.',
+      courses: [
+        {
+          name: isAmharic
+            ? 'ፍትሐ ነገሥት እና ቀኖና ቤተክርስቲያን'
+            : 'Fetha Negest & Church Canons',
+          hours: isAmharic ? '50 ሰዓታት' : '50 Hours',
+          icon: '⚖️',
+        },
+        {
+          name: isAmharic ? 'አንቀጸ ሃይማኖትና የንጽጽር ጥናት' : 'Comparative Theology & Apologetics',
+          hours: isAmharic ? '45 ሰዓታት' : '45 Hours',
+          icon: '🛡️',
+        },
+        {
+          name: isAmharic ? 'የመመረቂያ ጽሑፍና የምርምር ሥራ' : 'Graduation Thesis & Capstone Project',
+          hours: isAmharic ? '60 ሰዓታት' : '60 Hours',
+          icon: '🎓',
+        },
+      ],
+    },
+  ];
+
+  const faqs = [
+    {
+      q: isAmharic
+        ? 'የርቀት ትምህርቱ እንዴት ነው የሚሰጠው?'
+        : 'How is the distance education delivered?',
+      a: isAmharic
+        ? 'ትምህርቱ ሙሉ በሙሉ በበይነመረብ በኩል በድምፅ፣ በቪዲዮ እና በተሟሉ የትምህርት ሞጁሎች የሚቀርብ ሲሆን ተማሪዎች በራሳቸው ጊዜና ምቹ ሰዓት ይማራሉ።'
+        : 'Instruction is delivered 100% online through comprehensive audio lectures, curated video lessons, and interactive PDF modules accessible at your self-paced schedule.',
+    },
+    {
+      q: isAmharic
+        ? 'ፈተናዎችና የቤት ሥራዎች እንዴት ይወሰዳሉ?'
+        : 'How are quizzes and assignments conducted?',
+      a: isAmharic
+        ? 'በየምዕራፉ መጨረሻ ላይ በመማሪያ መድረኩ በኩል አጫጭር ፈተናዎች እና የጽሑፍ የቤት ሥራዎች ይሰጣሉ። ውጤትዎም ወዲያውኑ ይታወቃል።'
+        : 'At the end of each module, short online assessments and written assignments are submitted directly through the LMS portal with instant grading feedback.',
+    },
+    {
+      q: isAmharic
+        ? 'ትምህርቱን ሲያጠናቅቁ ምን ዓይነት ማስረጃ ይሰጣል?'
+        : 'What credentials are provided upon graduation?',
+      a: isAmharic
+        ? 'እያንዳንዱን ዙር እና አጠቃላይ የ4 ዓመቱን መርሃ ግብር ያጠናቀቁ ተማሪዎች በሰንበት ትምህርት ቤቱ እና በደብሩ አስተዳደር የተረጋገጠ ሕጋዊ የዲፕሎማ የምስክር ወረቀት ይሰጣቸዋል።'
+        : 'Students completing the required modules and assessments earn an officially sealed diploma certificate with verifiable QR verification approved by the church administration.',
+    },
+    {
+      q: isAmharic
+        ? 'የክፍያ ሁኔታው እንዴት ነው?'
+        : 'What are the tuition and module fee procedures?',
+      a: isAmharic
+        ? 'ለምዝገባና ለሞጁል ማዘጋጃ የሚሆን ተመጣጣኝ ክፍያ በባንክ ወይም በሞባይል ባንኪንግ ገቢ በማድረግ ደረሰኙን በምዝገባ ገጹ ላይ በቀላሉ በመጫን መመዝገብ ይችላሉ።'
+        : 'A modest administrative/module fee is deposited through official designated bank accounts or mobile banking, and the deposit slip is uploaded directly through the online registration form.',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 selection:bg-amber-400 selection:text-slate-950">
@@ -86,18 +188,31 @@ const DistanceEducationPage = () => {
         <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
-              <span>🌐 ኦፊሴላዊ የርቀት ትምህርት መድረክ</span>
+              <span>🌐 {isAmharic ? 'ኦፊሴላዊ የርቀት ትምህርት መድረክ' : 'Official Distance Education LMS'}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-slate-900 dark:text-white">
-              የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ <br />
-              <span className="text-[#1657b8] dark:text-blue-400">
-                የርቀት ሃይማኖታዊ ትምህርት
-              </span>
+              {isAmharic ? (
+                <>
+                  የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ <br />
+                  <span className="text-[#1657b8] dark:text-blue-400">
+                    የርቀት ሃይማኖታዊ ትምህርት
+                  </span>
+                </>
+              ) : (
+                <>
+                  Ethiopian Orthodox Tewahedo <br />
+                  <span className="text-[#1657b8] dark:text-blue-400">
+                    Distance Theological Education
+                  </span>
+                </>
+              )}
             </h1>
 
             <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg max-w-2xl leading-relaxed">
-              ባሉበት ሆነው የመጽሐፍ ቅዱስን፣ የነገረ መለኮትን፣ የቤተክርስቲያን ታሪክን እና ሥርዓትን በሊቃውንት መምህራን የተዘጋጁ የበለጸጉ የትምህርት ሞጁሎችን በዘመናዊ የኦንላይን ፖርታል ይማሩ።
+              {isAmharic
+                ? 'ባሉበት ሆነው የመጽሐፍ ቅዱስን፣ የነገረ መለኮትን፣ የቤተክርስቲያን ታሪክን እና ሥርዓትን በሊቃውንት መምህራን የተዘጋጁ የበለጸጉ የትምህርት ሞጁሎችን በዘመናዊ የኦንላይን ፖርታል ይማሩ።'
+                : 'Study Biblical scriptures, Orthodox theology, church history, and sacred liturgy from anywhere through curated online modules prepared by renowned scholars.'}
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-2">
@@ -105,14 +220,14 @@ const DistanceEducationPage = () => {
                 href="/register-distance"
                 className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2.5"
               >
-                <span>አሁኑኑ ይመዝገቡ</span>
+                <span>{isAmharic ? 'አሁኑኑ ይመዝገቡ' : 'Enroll Now'}</span>
                 <span className="text-lg">➔</span>
               </Link>
               <Link
                 href="/login"
                 className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base flex items-center gap-2"
               >
-                <span>ወደ መማሪያ መድረክ</span>
+                <span>{isAmharic ? 'ወደ መማሪያ መድረክ' : 'Go to Classroom'}</span>
                 <span>🔐</span>
               </Link>
             </div>
@@ -120,16 +235,26 @@ const DistanceEducationPage = () => {
             {/* Trust Badges */}
             <div className="pt-6 grid grid-cols-3 gap-4 border-t border-slate-200 dark:border-slate-800 text-center lg:text-left">
               <div>
-                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">4 ዙሮች</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">የተሟላ ሥርዓተ ትምህርት</p>
+                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">
+                  {isAmharic ? '4 ዙሮች' : '4 Batches'}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isAmharic ? 'የተሟላ ሥርዓተ ትምህርት' : 'Full Curriculum'}
+                </p>
               </div>
               <div>
                 <p className="text-2xl font-black text-amber-600 dark:text-amber-400">100%</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">በራስ ምቹ ሰዓት የሚጠና</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isAmharic ? 'በራስ ምቹ ሰዓት የሚጠና' : 'Self-Paced Learning'}
+                </p>
               </div>
               <div>
-                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">ዲጂታል</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">ኦፊሴላዊ የምስክር ወረቀት</p>
+                <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400">
+                  {isAmharic ? 'ዲጂታል' : 'Certified'}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isAmharic ? 'ኦፊሴላዊ የምስክር ወረቀት' : 'Official Diploma'}
+                </p>
               </div>
             </div>
           </div>
@@ -143,27 +268,54 @@ const DistanceEducationPage = () => {
                     ⛪
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">ተክለ ሳዊሮስ ሰንበት ት/ቤት</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">የርቀት ትምህርት ማስተባበሪያ</p>
+                    <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                      {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ት/ቤት')}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      {isAmharic ? 'የርቀት ትምህርት ማስተባበሪያ' : 'Distance Learning Office'}
+                    </p>
                   </div>
                 </div>
                 <Badge variant="gold" size="sm">
-                  ክፍት ነው
+                  {isAmharic ? 'ክፍት ነው' : 'Enrollment Open'}
                 </Badge>
               </div>
 
               {/* Feature Highlights List */}
               <div className="space-y-3.5">
                 {[
-                  { icon: '🎧', title: 'የድምፅና የቪዲዮ ትምህርቶች', desc: 'በማንኛውም ሰዓትና ቦታ የሚደመጡ' },
-                  { icon: '📑', title: 'የተሟሉ የፒዲኤፍ ሞጁሎች', desc: 'ሊወርዱ የሚችሉ የጥናት ማስታወሻዎች' },
-                  { icon: '📝', title: 'የኦንላይን ፈተናዎችና ምዘናዎች', desc: 'ቀጥታ ውጤትና የማረጋገጫ ግብረ-መልስ' },
-                  { icon: '👨‍🏫', title: 'የመምህራን ቀጥታ ክትትል', desc: 'ጥያቄና መልስ እንዲሁም መንፈሳዊ ምክር' },
+                  {
+                    icon: '🎧',
+                    title: isAmharic ? 'የድምፅና የቪዲዮ ትምህርቶች' : 'Audio & Video Lessons',
+                    desc: isAmharic ? 'በማንኛውም ሰዓትና ቦታ የሚደመጡ' : 'Available 24/7 on-demand',
+                  },
+                  {
+                    icon: '📑',
+                    title: isAmharic ? 'የተሟሉ የፒዲኤፍ ሞጁሎች' : 'Structured PDF Modules',
+                    desc: isAmharic ? 'ሊወርዱ የሚችሉ የጥናት ማስታወሻዎች' : 'Downloadable reading material',
+                  },
+                  {
+                    icon: '📝',
+                    title: isAmharic ? 'የኦንላይን ፈተናዎችና ምዘናዎች' : 'Online Quizzes & Assessments',
+                    desc: isAmharic ? 'ቀጥታ ውጤትና የማረጋገጫ ግብረ-መልስ' : 'Instant score & feedback',
+                  },
+                  {
+                    icon: '👨‍🏫',
+                    title: isAmharic ? 'የመምህራን ቀጥታ ክትትል' : 'Spiritual Instructor Mentorship',
+                    desc: isAmharic ? 'ጥያቄና መልስ እንዲሁም መንፈሳዊ ምክር' : 'Q&A and spiritual guidance',
+                  },
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800">
-                    <span className="text-2xl p-1 bg-white dark:bg-slate-700 rounded-xl shadow-xs">{item.icon}</span>
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/50 dark:hover:bg-slate-800 transition-colors border border-slate-100 dark:border-slate-800"
+                  >
+                    <span className="text-2xl p-1 bg-white dark:bg-slate-700 rounded-xl shadow-xs">
+                      {item.icon}
+                    </span>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{item.title}</h4>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        {item.title}
+                      </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
                     </div>
                   </div>
@@ -173,9 +325,9 @@ const DistanceEducationPage = () => {
               <div className="pt-2">
                 <Link
                   href="/register-distance"
-                  className="w-full py-3.5 bg-[#1657b8] hover:bg-[#124796] text-white font-bold rounded-2xl transition-colors text-center text-sm shadow-sm block"
+                  className="w-full py-3.5 bg-[#1657b8] hover:bg-[#124796] text-white font-bold rounded-2xl transition-colors text-center text-sm shadow-sm block cursor-pointer"
                 >
-                  የተማሪነት ምዝገባ ጀምር ➔
+                  {isAmharic ? 'የተማሪነት ምዝገባ ጀምር ➔' : 'Start Application ➔'}
                 </Link>
               </div>
             </Card>
@@ -187,13 +339,15 @@ const DistanceEducationPage = () => {
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <span className="px-3.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-[#1657b8] dark:text-blue-400 border border-blue-100 dark:border-blue-900/60 font-bold rounded-full text-xs uppercase tracking-wider">
-            የትምህርት ጉዞዎ
+            {isAmharic ? 'የትምህርት ጉዞዎ' : 'Study Journey'}
           </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            የርቀት ትምህርቱ እንዴት ይሰራል?
+            {isAmharic ? 'የርቀት ትምህርቱ እንዴት ይሰራል?' : 'How Distance Learning Works'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
-            ቀላል እና ግልጽ በሆነ የ4 ደረጃዎች ሂደት ኦርቶዶክሳዊ እውቀትዎን ያሳድጉ።
+            {isAmharic
+              ? 'ቀላል እና ግልጽ በሆነ የ4 ደረጃዎች ሂደት ኦርቶዶክሳዊ እውቀትዎን ያሳድጉ።'
+              : 'Deepen your Orthodox spiritual knowledge through a clear 4-step learning pathway.'}
           </p>
         </div>
 
@@ -201,31 +355,43 @@ const DistanceEducationPage = () => {
           {[
             {
               step: '01',
-              title: 'በኦንላይን ይመዝገቡ',
-              desc: 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር ያግኙ።',
+              title: isAmharic ? 'በኦንላይን ይመዝገቡ' : '1. Register Online',
+              desc: isAmharic
+                ? 'የምዝገባ ቅጹን ሞልተው የደረሰኝ ፎቶ በመጫን በአጭር ጊዜ የተማሪ መለያ ቁጥር ያግኙ።'
+                : 'Fill the registration form, attach your bank receipt, and receive your Student ID.',
               icon: '✍️',
-              iconBg: 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
+              iconBg:
+                'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
             },
             {
               step: '02',
-              title: 'ሞጁሎችን ያግኙ',
-              desc: 'ወደ ተማሪ ፖርታል በመግባት የድምፅ ትምህርቶችን፣ ቪዲዮዎችን እና የንባብ ማቴሪያሎችን በምቹ ሰዓት ያንብቡ።',
+              title: isAmharic ? 'ሞጁሎችን ያግኙ' : '2. Access Modules',
+              desc: isAmharic
+                ? 'ወደ ተማሪ ፖርታል በመግባት የድምፅ ትምህርቶችን፣ ቪዲዮዎችን እና የንባብ ማቴሪያሎችን በምቹ ሰዓት ያንብቡ።'
+                : 'Sign in to access curated audio lectures, streaming videos, and interactive PDF modules.',
               icon: '📚',
-              iconBg: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
+              iconBg:
+                'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
             },
             {
               step: '03',
-              title: 'ፈተናዎችን ይውሰዱ',
-              desc: 'በየሳምንቱና በየምዕራፉ የሚሰጡ ፈተናዎችንና የቤት ሥራዎችን በፖርታሉ በቀላሉ ሰርተው ያስገቡ።',
+              title: isAmharic ? 'ፈተናዎችን ይውሰዱ' : '3. Take Assessments',
+              desc: isAmharic
+                ? 'በየሳምንቱና በየምዕራፉ የሚሰጡ ፈተናዎችንና የቤት ሥራዎችን በፖርታሉ በቀላሉ ሰርተው ያስገቡ።'
+                : 'Complete chapter quizzes and submit assignments through the portal with instant feedback.',
               icon: '📝',
-              iconBg: 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
+              iconBg:
+                'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400 border-blue-100 dark:border-blue-900',
             },
             {
               step: '04',
-              title: 'ይመረቁና ይሰርተፊኬት ይውሰዱ',
-              desc: 'የባችዎን ትምህርት ሲያጠናቅቁ በደብሩ የታተመ ኦፊሴላዊ የዲፕሎማ የምስክር ወረቀት ይቀበሉ።',
+              title: isAmharic ? 'ይመረቁና ይሰርተፊኬት ይውሰዱ' : '4. Graduate & Certify',
+              desc: isAmharic
+                ? 'የባችዎን ትምህርት ሲያጠናቅቁ በደብሩ የታተመ ኦፊሴላዊ የዲፕሎማ የምስክር ወረቀት ይቀበሉ።'
+                : 'Graduate upon completion and receive an officially sealed, QR-verifiable diploma certificate.',
               icon: '🎓',
-              iconBg: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
+              iconBg:
+                'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900',
             },
           ].map((item, idx) => (
             <FeatureCard
@@ -245,13 +411,15 @@ const DistanceEducationPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center space-y-3 max-w-2xl mx-auto">
             <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
-              ሥርዓተ ትምህርት
+              {isAmharic ? 'ሥርዓተ ትምህርት' : 'Curriculum Structure'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              የ4 ዓመታት የጥናት መርሃ ግብር
+              {isAmharic ? 'የ4 ዓመታት የጥናት መርሃ ግብር' : '4-Year Modular Curriculum'}
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
-              ከመሠረታዊ እስከ ጥልቅ የነገረ መለኮትና የቤተክርስቲያን ቀኖና ጥናቶች የተዋቀረ።
+              {isAmharic
+                ? 'ከመሠረታዊ እስከ ጥልቅ የነገረ መለኮትና የቤተክርስቲያን ቀኖና ጥናቶች የተዋቀረ።'
+                : 'Sequentially structured from foundational dogmatics to advanced patristics and ecclesiastical law.'}
             </p>
           </div>
 
@@ -261,10 +429,11 @@ const DistanceEducationPage = () => {
               <button
                 key={idx}
                 onClick={() => setSelectedBatch(idx)}
-                className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs font-bold transition-all text-center ${selectedBatch === idx
+                className={`flex-1 min-w-[140px] py-3 px-4 rounded-xl text-xs font-bold transition-all text-center cursor-pointer ${
+                  selectedBatch === idx
                     ? 'bg-[#1657b8] text-white shadow-sm font-black'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-700'
-                  }`}
+                }`}
               >
                 {b.batch}
               </button>
@@ -284,9 +453,9 @@ const DistanceEducationPage = () => {
               </div>
               <Link
                 href="/register-distance"
-                className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs shadow-sm transition-colors"
+                className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs shadow-sm transition-colors cursor-pointer"
               >
-                ይመዝገቡ ➔
+                {isAmharic ? 'ይመዝገቡ ➔' : 'Enroll in Batch ➔'}
               </Link>
             </div>
 
@@ -302,13 +471,19 @@ const DistanceEducationPage = () => {
                   className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl p-2 bg-white dark:bg-slate-700 rounded-xl shadow-xs">{course.icon}</span>
+                    <span className="text-2xl p-2 bg-white dark:bg-slate-700 rounded-xl shadow-xs">
+                      {course.icon}
+                    </span>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{course.name}</h4>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        {course.name}
+                      </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{course.hours}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-[#1657b8] dark:text-blue-400 font-bold">የተሟላ ሞጁል</span>
+                  <span className="text-xs text-[#1657b8] dark:text-blue-400 font-bold">
+                    {isAmharic ? 'የተሟላ ሞጁል' : 'Full Module'}
+                  </span>
                 </div>
               ))}
             </div>
@@ -320,13 +495,15 @@ const DistanceEducationPage = () => {
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
-            የተማሪዎች ገጽታና ምርቃት
+            {isAmharic ? 'የተማሪዎች ገጽታና ምርቃት' : 'Student Life & Graduation'}
           </span>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            የሰንበት ትምህርት ቤት ሕይወት በምስል
+            {isAmharic ? 'የሰንበት ትምህርት ቤት ሕይወት በምስል' : 'Life at Our Sunday School'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            ትምህርታቸውን ያጠናቀቁ ተማሪዎች የምስክር ወረቀት አሰጣጥና የመንፈሳዊ መድረክ ትዕይንቶች
+            {isAmharic
+              ? 'ትምህርታቸውን ያጠናቀቁ ተማሪዎች የምስክር ወረቀት አሰጣጥና የመንፈሳዊ መድረክ ትዕይንቶች'
+              : 'Graduation ceremonies, instructional sessions, and spiritual fellowship'}
           </p>
         </div>
 
@@ -335,18 +512,22 @@ const DistanceEducationPage = () => {
             <div className="relative aspect-16/10 w-full overflow-hidden">
               <Image
                 src="/church-photos/photo12.png"
-                alt="የምርቃት ሥነ-ሥርዓት"
+                alt={isAmharic ? 'የምርቃት ሥነ-ሥርዓት' : 'Graduation Ceremony'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
-                🎓 ይፋዊ የምርቃት ሥነ-ሥርዓት
+                🎓 {isAmharic ? 'ይፋዊ የምርቃት ሥነ-ሥርዓት' : 'Official Graduation'}
               </span>
             </div>
             <div className="p-5 space-y-1.5">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">የዲፕሎማ የምስክር ወረቀት አሰጣጥ</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                {isAmharic ? 'የዲፕሎማ የምስክር ወረቀት አሰጣጥ' : 'Accredited Diploma Conferral'}
+              </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                የ 4 ዓመታት የርቀትና የመደበኛ ትምህርታቸውን ላጠናቀቁ ተማሪዎች በደብሩ አስተዳደር የሚሰጥ ይፋዊ ሰርተፊኬት።
+                {isAmharic
+                  ? 'የ 4 ዓመታት የርቀትና የመደበኛ ትምህርታቸውን ላጠናቀቁ ተማሪዎች በደብሩ አስተዳደር የሚሰጥ ይፋዊ ሰርተፊኬት።'
+                  : 'Official parish-certified diplomas awarded to graduates who satisfy all curriculum modules.'}
               </p>
             </div>
           </div>
@@ -355,18 +536,22 @@ const DistanceEducationPage = () => {
             <div className="relative aspect-16/10 w-full overflow-hidden">
               <Image
                 src="/church-photos/photo6.png"
-                alt="የመንፈሳዊ መጻሕፍትና ትምህርት"
+                alt={isAmharic ? 'የመንፈሳዊ መጻሕፍትና ትምህርት' : 'Reading Materials'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
-                📚 ጥራት ያላቸው ሞጁሎች
+                📚 {isAmharic ? 'ጥራት ያላቸው ሞጁሎች' : 'Curated Modules'}
               </span>
             </div>
             <div className="p-5 space-y-1.5">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">የተሟሉ የትምህርት ማስታወሻዎች</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                {isAmharic ? 'የተሟሉ የትምህርት ማስታወሻዎች' : 'Rich Learning Materials'}
+              </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                በሊቃውንተ ቤተክርስቲያን የተዘጋጁ ጥልቀት ያላቸው የፒዲኤፍ፣ የድምፅና የቪዲዮ ትምህርቶች።
+                {isAmharic
+                  ? 'በሊቃውንተ ቤተክርስቲያን የተዘጋጁ ጥልቀት ያላቸው የፒዲኤፍ፣ የድምፅና የቪዲዮ ትምህርቶች።'
+                  : 'Scholarly theological notes, audio commentaries, and video seminars for every chapter.'}
               </p>
             </div>
           </div>
@@ -375,18 +560,22 @@ const DistanceEducationPage = () => {
             <div className="relative aspect-16/10 w-full overflow-hidden">
               <Image
                 src="/church-photos/photo16.png"
-                alt="የአባቶች ቡራኬ"
+                alt={isAmharic ? 'የአባቶች ቡራኬ' : 'Priestly Blessings'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
-                ✝️ የአባቶች ቡራኬና መመሪያ
+                ✝️ {isAmharic ? 'የአባቶች ቡራኬና መመሪያ' : 'Patristic Blessings'}
               </span>
             </div>
             <div className="p-5 space-y-1.5">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">ቀጣይነት ያለው መንፈሳዊ ምክር</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                {isAmharic ? 'ቀጣይነት ያለው መንፈሳዊ ምክር' : 'Continuous Spiritual Mentorship'}
+              </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                በቀጥታ ከአገልጋይ አባቶችና መምህራን ጋር የሚደረግ የጥያቄና መልስ እንዲሁም የመንፈሳዊ ህይወት መመሪያ።
+                {isAmharic
+                  ? 'በቀጥታ ከአገልጋይ አባቶችና መምህራን ጋር የሚደረግ የጥያቄና መልስ እንዲሁም የመንፈሳዊ ህይወት መመሪያ።'
+                  : 'Direct engagement and guidance with clergy, teachers, and senior church educators.'}
               </p>
             </div>
           </div>
@@ -397,10 +586,10 @@ const DistanceEducationPage = () => {
       <section className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         <div className="text-center space-y-3">
           <span className="px-3.5 py-1 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 font-bold rounded-full text-xs uppercase tracking-wider">
-            ተደጋጋሚ ጥያቄዎች
+            {t('faqBadge', 'ተደጋጋሚ ጥያቄዎች')}
           </span>
           <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            ስለ ርቀት ትምህርቱ የተለመዱ ጥያቄዎች
+            {t('faqTitle', 'ስለ ርቀት ትምህርቱ የተለመዱ ጥያቄዎች')}
           </h2>
         </div>
 
@@ -414,7 +603,7 @@ const DistanceEducationPage = () => {
             >
               <button
                 onClick={() => setOpenFaq(openFaq === fIdx ? null : fIdx)}
-                className="w-full p-5 text-left font-bold text-slate-900 dark:text-white flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm sm:text-base"
+                className="w-full p-5 text-left font-bold text-slate-900 dark:text-white flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm sm:text-base cursor-pointer"
               >
                 <span>{faq.q}</span>
                 <span className="text-xl text-slate-400 ml-4">
@@ -435,23 +624,27 @@ const DistanceEducationPage = () => {
       <section className="py-16 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-center px-4 sm:px-6">
         <div className="max-w-3xl mx-auto space-y-6">
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-            የመንፈሳዊ እውቀት ጉዞዎን ዛሬውኑ ይጀምሩ!
+            {isAmharic
+              ? 'የመንፈሳዊ እውቀት ጉዞዎን ዛሬውኑ ይጀምሩ!'
+              : 'Begin Your Spiritual Journey Today!'}
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            በዓለም ዙሪያ የሚገኙ በሺዎች የሚቆጠሩ ኦርቶዶክሳውያን ተማሪዎችን ይቀላቀሉ።
+            {isAmharic
+              ? 'በዓለም ዙሪያ የሚገኙ በሺዎች የሚቆጠሩ ኦርቶዶክሳውያን ተማሪዎችን ይቀላቀሉ።'
+              : 'Join thousands of Orthodox students worldwide deepening their faith.'}
           </p>
           <div className="flex flex-wrap gap-4 justify-center pt-2">
             <Link
               href="/register-distance"
-              className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
+              className="px-8 py-4 bg-[#1657b8] hover:bg-[#124796] active:opacity-90 text-white font-bold rounded-2xl shadow-sm hover:shadow-md transition-all text-base cursor-pointer"
             >
-              አሁኑኑ ይመዝገቡ ➔
+              {isAmharic ? 'አሁኑኑ ይመዝገቡ ➔' : 'Register Now ➔'}
             </Link>
             <Link
               href="/login"
-              className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base"
+              className="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:opacity-90 text-slate-950 font-black rounded-2xl shadow-sm hover:shadow-md transition-all text-base cursor-pointer"
             >
-              የተማሪዎች መግቢያ
+              {t('login', 'ይግቡ')}
             </Link>
           </div>
         </div>

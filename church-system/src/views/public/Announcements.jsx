@@ -4,13 +4,26 @@ import React from 'react';
 import { Bell, Calendar, AlertCircle } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from '../../components/motion';
 import { Card, FeatureCard } from '../../components/ui/Card';
-
-const announcements = [
-  { title: 'የ2026/2027 ትምህርት ዓመት መጀመሪያ', date: 'መስከረም 5 / 2026 ዓ.ም' },
-  { title: 'የልጆች የጸሎትና የምስጋና ቀን', date: 'ጥቅምት 2 / 2026 ዓ.ም' },
-];
+import { useLanguage } from '../../hooks/useLanguage';
 
 const PublicAnnouncements = () => {
+  const { t, isAmharic } = useLanguage();
+
+  const announcements = [
+    {
+      title: isAmharic
+        ? 'የ2026/2027 ትምህርት ዓመት መጀመሪያ'
+        : 'Commencement of the 2026/2027 Academic Year',
+      date: isAmharic ? 'መስከረም 5 / 2026 ዓ.ም' : 'September 15, 2026',
+    },
+    {
+      title: isAmharic
+        ? 'የልጆች የጸሎትና የምስጋና ቀን'
+        : 'Children & Youth Prayer & Thanksgiving Day',
+      date: isAmharic ? 'ጥቅምት 2 / 2026 ዓ.ም' : 'October 12, 2026',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-10">
@@ -24,13 +37,16 @@ const PublicAnnouncements = () => {
             <div className="relative z-10 max-w-2xl space-y-3">
               <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/30 text-xs sm:text-sm font-bold px-4 py-1.5 rounded-full">
                 <Bell className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                ወቅታዊ መረጃዎች
+                {t('announcementsBadge', 'ወቅታዊ መረጃዎች')}
               </span>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
-                ማስታወቂያዎች
+                {t('announcements', 'ማስታወቂያዎች')}
               </h1>
               <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg font-normal leading-relaxed">
-                ከሰንበት ትምህርት ቤታችን የሚወጡ አዳዲስ ማስታወቂያዎችን፣ የመርሃ ግብር ለውጦችን እና አስፈላጊ መረጃዎችን እዚህ ያገኛሉ።
+                {t(
+                  'announcementsSubheading',
+                  'ከሰንበት ትምህርት ቤታችን የሚወጡ አዳዲስ ማስታወቂያዎችን፣ የመርሃ ግብር ለውጦችን እና አስፈላጊ መረጃዎችን እዚህ ያገኛሉ።'
+                )}
               </p>
             </div>
           </section>
@@ -44,12 +60,15 @@ const PublicAnnouncements = () => {
                 icon={Bell}
                 iconBg="bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400"
                 title={a.title}
-                badge="ቀጣይ መርሃ-ግብር"
-                description={`ቀን: ${a.date}`}
+                badge={isAmharic ? 'ቀጣይ መርሃ-ግብር' : 'Upcoming Program'}
+                description={`${isAmharic ? 'ቀን: ' : 'Date: '}${a.date}`}
                 footer={
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>የተለጠፈበት ቀን፡ {a.date}</span>
+                    <span>
+                      {isAmharic ? 'የተለጠፈበት ቀን፡ ' : 'Posted Date: '}
+                      {a.date}
+                    </span>
                   </div>
                 }
               />
@@ -64,10 +83,12 @@ const PublicAnnouncements = () => {
               <AlertCircle className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              አስፈላጊ ማሳሰቢያ
+              {isAmharic ? 'አስፈላጊ ማሳሰቢያ' : 'Important Notice'}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-              ለበለጠ መረጃ እና ለተጨማሪ ጥያቄዎች በደወል ወይም በስራ ሰዓት በግንባር በመገኘት መጠየቅ ይችላሉ።
+              {isAmharic
+                ? 'ለበለጠ መረጃ እና ለተጨማሪ ጥያቄዎች በደወል ወይም በስራ ሰዓት በግንባር በመገኘት መጠየቅ ይችላሉ።'
+                : 'For more information and inquiries, you may contact our office via phone or in-person during regular service hours.'}
             </p>
           </Card>
         </FadeIn>

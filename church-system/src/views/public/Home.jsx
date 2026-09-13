@@ -13,57 +13,65 @@ import {
   AccordionContent,
 } from '../../components/ui';
 import { useRegistrationStatus } from '../../hooks/queries';
+import { useLanguage } from '../../hooks/useLanguage';
 import { Eye, Target, Award, ArrowRight, Sparkles, GraduationCap, ExternalLink, Camera } from 'lucide-react';
-
-const visionMissionValues = [
-  {
-    id: 'vision',
-    label: 'ራዕይ',
-    title: 'የሰንበት ት/ቤቱ ራዕይ',
-    icon: Eye,
-    color: 'blue',
-    bgLight: 'bg-blue-50 text-[#1e3a8a]',
-    bgDark: 'dark:bg-blue-950/60 dark:text-blue-300',
-    borderActive: 'border-[#1e3a8a] dark:border-blue-500',
-    description:
-      'በኦርቶዶክሳዊት ተዋሕዶ ሃይማኖቱ የጸና፣ በምግባሩ የቀና፣ መንፈሳዊና ዘመናዊ ዕውቀትን አቀናጅቶ ለሀገርና ለቤተክርስቲያን የሚጠቅም ትውልድ ማፍራት።',
-  },
-  {
-    id: 'mission',
-    label: 'ተልዕኮ',
-    title: 'የሰንበት ት/ቤቱ ተልዕኮ',
-    icon: Target,
-    color: 'amber',
-    bgLight: 'bg-amber-50 text-amber-800',
-    bgDark: 'dark:bg-amber-950/60 dark:text-amber-300',
-    borderActive: 'border-amber-400 dark:border-amber-500',
-    description:
-      'ጥራት ያለው ሃይማኖታዊ ትምህርት በዘመናዊ ቴክኖሎጂ ታግዞ ማዳረስ፤ ወጣቶችንና ሕፃናትን በሥርዓተ ቤተክርስቲያን አሳድጎ ለመንፈሳዊ አገልግሎት ማዘጋጀት።',
-  },
-  {
-    id: 'values',
-    label: 'እሴቶች',
-    title: 'የሰንበት ት/ቤቱ እሴቶች',
-    icon: Award,
-    color: 'emerald',
-    bgLight: 'bg-emerald-50 text-emerald-800',
-    bgDark: 'dark:bg-emerald-950/60 dark:text-emerald-300',
-    borderActive: 'border-emerald-500 dark:border-emerald-400',
-    description:
-      'ቅድስና፣ ትጋት፣ ፍቅር፣ ታማኝነት፣ ወንድማማችነት እና ለቤተክርስቲያን ቀኖናና ትውፊት ጥብቅ ተገዢነት።',
-  },
-];
 
 const Home = () => {
   const [showRegOptions, setShowRegOptions] = useState(false);
   const [activeTab, setActiveTab] = useState('vision');
   const { data: regStatus } = useRegistrationStatus();
+  const { t, isAmharic } = useLanguage();
 
   const isMasterOpen = regStatus?.isRegistrationOpen !== false;
   const isRegularOpen = isMasterOpen && regStatus?.isRegularOpen !== false;
   const isDistanceOpen = isMasterOpen && regStatus?.isDistanceOpen !== false;
   const isAnyOpen = isRegularOpen || isDistanceOpen;
-  const academicYear = regStatus?.academicYear || '2017 ዓ.ም';
+  const academicYear = regStatus?.academicYear || (isAmharic ? '2017 ዓ.ም' : '2025/26');
+
+  const visionMissionValues = [
+    {
+      id: 'vision',
+      label: t('vision', 'ራዕይ'),
+      title: t('visionTitle', 'የሰንበት ት/ቤቱ ራዕይ'),
+      icon: Eye,
+      color: 'blue',
+      bgLight: 'bg-blue-50 text-[#1e3a8a]',
+      bgDark: 'dark:bg-blue-950/60 dark:text-blue-300',
+      borderActive: 'border-[#1e3a8a] dark:border-blue-500',
+      description: t(
+        'visionDesc',
+        'በኦርቶዶክሳዊት ተዋሕዶ ሃይማኖቱ የጸና፣ በምግባሩ የቀና፣ መንፈሳዊና ዘመናዊ ዕውቀትን አቀናጅቶ ለሀገርና ለቤተክርስቲያን የሚጠቅም ትውልድ ማፍራት።'
+      ),
+    },
+    {
+      id: 'mission',
+      label: t('mission', 'ተልዕኮ'),
+      title: t('missionTitle', 'የሰንበት ት/ቤቱ ተልዕኮ'),
+      icon: Target,
+      color: 'amber',
+      bgLight: 'bg-amber-50 text-amber-800',
+      bgDark: 'dark:bg-amber-950/60 dark:text-amber-300',
+      borderActive: 'border-amber-400 dark:border-amber-500',
+      description: t(
+        'missionDesc',
+        'ጥራት ያለው ሃይማኖታዊ ትምህርት በዘመናዊ ቴክኖሎጂ ታግዞ ማዳረስ፤ ወጣቶችንና ሕፃናትን በሥርዓተ ቤተክርስቲያን አሳድጎ ለመንፈሳዊ አገልግሎት ማዘጋጀት።'
+      ),
+    },
+    {
+      id: 'values',
+      label: t('values', 'እሴቶች'),
+      title: t('valuesTitle', 'የሰንበት ት/ቤቱ እሴቶች'),
+      icon: Award,
+      color: 'emerald',
+      bgLight: 'bg-emerald-50 text-emerald-800',
+      bgDark: 'dark:bg-emerald-950/60 dark:text-emerald-300',
+      borderActive: 'border-emerald-500 dark:border-emerald-400',
+      description: t(
+        'valuesDesc',
+        'ቅድስና፣ ትጋት፣ ፍቅር፣ ታማኝነት፣ ወንድማማችነት እና ለቤተክርስቲያን ቀኖናና ትውፊት ጥብቅ ተገዢነት።'
+      ),
+    },
+  ];
 
   const activeContent = visionMissionValues.find((item) => item.id === activeTab) || visionMissionValues[0];
 
@@ -78,15 +86,15 @@ const Home = () => {
           {/* Main Hero Title */}
           <FadeIn delay={0.05}>
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
-              <span className="text-[#1e3a8a] dark:text-blue-400">ተክለ ሳዊሮስ</span>{' '}
-              <span>ሰንበት ትምህርት ቤት</span>
+              <span className="text-[#1e3a8a] dark:text-blue-400">{t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}</span>{' '}
+              <span>{t('sundaySchoolLabel', 'ሰንበት ትምህርት ቤት')}</span>
             </h1>
           </FadeIn>
 
           {/* Subtitle */}
           <FadeIn delay={0.1}>
             <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium">
-              የኦርቶዶክሳዊት ተዋሕዶ ሃይማኖት ትምህርትና የመንፈሳዊ ዕውቀት ይፋዊ የትምህርት ፖርታል
+              {t('heroSubtitle', 'የኦርቶዶክሳዊት ተዋሕዶ ሃይማኖት ትምህርትና የመንፈሳዊ ዕውቀት ይፋዊ የትምህርት ፖርታል')}
             </p>
           </FadeIn>
 
@@ -100,12 +108,12 @@ const Home = () => {
                     href="/register-regular"
                     className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-white bg-[#1e3a8a] hover:bg-[#163177] active:scale-95 shadow-md shadow-blue-900/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-blue-400/30 min-h-[46px]"
                   >
-                    <span>የመደበኛ ተማሪ ምዝገባ</span>
+                    <span>{t('regularEnrollBtn', 'የመደበኛ ተማሪ ምዝገባ')}</span>
                     <ArrowRight className="w-4 h-4 text-amber-300" />
                   </Link>
                 ) : (
                   <div className="w-full sm:flex-1 px-4 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[46px] flex items-center justify-center">
-                    መደበኛ (ተዘግቷል)
+                    {t('regularEnrollBtn', 'መደበኛ')} ({t('closedStatus', 'ተዘግቷል')})
                   </div>
                 )}
 
@@ -115,12 +123,12 @@ const Home = () => {
                     href="/register-distance"
                     className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-slate-950 bg-amber-400 hover:bg-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 active:scale-95 shadow-md shadow-amber-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-amber-500/50 dark:border-amber-400/50 min-h-[46px]"
                   >
-                    <span>የርቀት ተማሪ ምዝገባ</span>
+                    <span>{t('distanceEnrollBtn', 'የርቀት ተማሪ ምዝገባ')}</span>
                     <ArrowRight className="w-4 h-4 text-slate-950" />
                   </Link>
                 ) : (
                   <div className="w-full sm:flex-1 px-4 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[46px] flex items-center justify-center">
-                    ርቀት (ተዘግቷል)
+                    {t('distanceEnrollBtn', 'ርቀት')} ({t('closedStatus', 'ተዘግቷል')})
                   </div>
                 )}
               </div>
@@ -130,7 +138,7 @@ const Home = () => {
                   href="/check-status"
                   className="w-full px-6 py-3.5 rounded-xl font-black text-sm text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-95 shadow-md flex items-center justify-center gap-2 min-h-[46px]"
                 >
-                  <span>የምዝገባ ሁኔታ ያረጋግጡ</span>
+                  <span>{t('checkStatus', 'የምዝገባ ሁኔታ ያረጋግጡ')}</span>
                   <ArrowRight className="w-4 h-4 text-slate-950" />
                 </Link>
               </div>
@@ -138,12 +146,12 @@ const Home = () => {
 
             {/* Auxiliary Simple Inline Links */}
             <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400 pt-1 font-medium">
-              <span>ቀደም ሲል ተመዝግበዋል?</span>
+              <span>{t('alreadyRegistered', 'ቀደም ሲል ተመዝግበዋል?')}</span>
               <Link
                 href="/login"
                 className="font-bold text-[#1e3a8a] dark:text-blue-400 hover:underline inline-flex items-center gap-1"
               >
-                <span>ይግቡ</span>
+                <span>{t('login', 'ይግቡ')}</span>
                 <span>→</span>
               </Link>
               <span className="opacity-40">•</span>
@@ -151,7 +159,7 @@ const Home = () => {
                 href="/check-status"
                 className="font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1"
               >
-                <span>ሁኔታ ያረጋግጡ</span>
+                <span>{t('checkStatus', 'ሁኔታ ያረጋግጡ')}</span>
                 <span>→</span>
               </Link>
             </div>
@@ -237,20 +245,20 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 🌟 3. ASYMMETRIC 3-PHOTO BENTO COLLAGE (Replaces heavy 8-card gallery) */}
+      {/* 🌟 3. ASYMMETRIC 3-PHOTO BENTO COLLAGE */}
       <section className="py-14 sm:py-18 bg-slate-100/70 dark:bg-slate-900/50 border-y border-slate-200/80 dark:border-slate-800">
         <div className="max-w-6xl mx-auto px-4 space-y-8">
           {/* Section Header */}
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
               <Camera className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>የፎቶ ማህደር</span>
+              <span>{t('photoGalleryBadge', 'የፎቶ ማህደር')}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              የሰንበት ትምህርት ቤታችን ድባብ
+              {t('galleryAtmosphereTitle', 'የሰንበት ትምህርት ቤታችን ድባብ')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              መንፈሳዊ ትውፊት፣ የልጆች ትምህርትና የወጣቶች ኅብረት
+              {t('galleryAtmosphereDesc', 'መንፈሳዊ ትውፊት፣ የልጆች ትምህርትና የወጣቶች ኅብረት')}
             </p>
           </div>
 
@@ -267,10 +275,10 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
                 <span className="inline-block px-3 py-1 rounded-full bg-amber-500/90 text-slate-950 text-xs font-black shadow-xs">
-                  ቅዳሴና መንፈሳዊ አገልግሎት
+                  {t('photoLiturgyTitle', 'ቅዳሴና መንፈሳዊ አገልግሎት')}
                 </span>
                 <p className="text-xs sm:text-sm text-slate-200 font-medium">
-                  ጥንታዊና ሐዋርያዊ የኦርቶዶክስ ተዋሕዶ ቅዳሴና መንፈሳዊ ሥርዓት
+                  {t('photoLiturgyDesc', 'ጥንታዊና ሐዋርያዊ የኦርቶዶክስ ተዋሕዶ ቅዳሴና መንፈሳዊ ሥርዓት')}
                 </p>
               </div>
             </div>
@@ -288,7 +296,7 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
                 <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white">
                   <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-600/90 text-white text-xs font-bold shadow-xs">
-                    የሕፃናትና ወጣቶች ትምህርት
+                    {t('photoChildrenTitle', 'የሕፃናትና ወጣቶች ትምህርት')}
                   </span>
                 </div>
               </div>
@@ -304,7 +312,7 @@ const Home = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
                 <div className="absolute bottom-3.5 left-3.5 right-3.5 text-white">
                   <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-600/90 text-white text-xs font-bold shadow-xs">
-                    የወጣቶች ኅብረትና ዝማሬ
+                    {t('photoYouthTitle', 'የወጣቶች ኅብረትና ዝማሬ')}
                   </span>
                 </div>
               </div>
@@ -319,7 +327,7 @@ const Home = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#1e3a8a] dark:text-blue-400 hover:underline py-1"
             >
-              <span>ተጨማሪ የክንውን ፎቶዎችን በቴሌግራም ቻናላችን ይመልከቱ</span>
+              <span>{t('viewMorePhotosTelegram', 'ተጨማሪ የክንውን ፎቶዎችን በቴሌግራም ቻናላችን ይመልከቱ')}</span>
               <span>→</span>
             </a>
           </div>
@@ -331,43 +339,43 @@ const Home = () => {
         <FadeIn>
           <div className="text-center space-y-2.5 mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-[#1e3a8a] dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3.5 py-1.5 rounded-full border border-blue-200 dark:border-blue-800">
-              ጥያቄና መልስ
+              {t('faqBadge', 'ጥያቄና መልስ')}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              ተደጋግመው የሚጠየቁ ጥያቄዎች
+              {t('faqTitle', 'ተደጋግመው የሚጠየቁ ጥያቄዎች')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm max-w-lg mx-auto">
-              ስለ ሰንበት ትምህርት ቤታችን የምዝገባና የትምህርት አሰጣጥ ሂደት አጫጭር ማብራሪያዎች
+              {t('faqSubtitle', 'ስለ ሰንበት ትምህርት ቤታችን የምዝገባና የትምህርት አሰጣጥ ሂደት አጫጭር ማብራሪያዎች')}
             </p>
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xs">
             <Accordion type="single" collapsible className="w-full space-y-1">
               <AccordionItem value="item-1">
-                <AccordionTrigger>የመደበኛና የርቀት ትምህርት ልዩነቱ ምንድን ነው?</AccordionTrigger>
+                <AccordionTrigger>{t('faq1Q', 'የመደበኛና የርቀት ትምህርት ልዩነቱ ምንድን ነው?')}</AccordionTrigger>
                 <AccordionContent>
-                  የመደበኛ ትምህርት በቤተክርስቲያን ቅጥር ግቢ በአካል በክፍል ውስጥ ቅዳሜና እሑድ ወይም በማታ የሚሰጥ ሲሆን፤ የርቀት ትምህርት ደግሞ በየትኛውም ቦታ ሆነው በድረ-ገጻችን ፖርታል በቪዲዮና በንባብ የሚማሩበት ዘመናዊ የኦንላይን መርሃ ግብር ነው።
+                  {t('faq1A', 'የመደበኛ ትምህርት በቤተክርስቲያን ቅጥር ግቢ በአካል በክፍል ውስጥ ቅዳሜና እሑድ ወይም በማታ የሚሰጥ ሲሆን፤ የርቀት ትምህርት ደግሞ በየትኛውም ቦታ ሆነው በድረ-ገጻችን ፖርታል በቪዲዮና በንባብ የሚማሩበት ዘመናዊ የኦንላይን መርሃ ግብር ነው።')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-2">
-                <AccordionTrigger>የምዝገባ መስፈርቶች ምንድን ናቸው?</AccordionTrigger>
+                <AccordionTrigger>{t('faq2Q', 'የምዝገባ መስፈርቶች ምንድን ናቸው?')}</AccordionTrigger>
                 <AccordionContent>
-                  ዕድሜያቸው ከ 14 ዓመት በላይ የሆነ ማንኛውም የኦርቶዶክስ ተዋሕዶ አማኝ መመዝገብ ይችላል። ለመደበኛ ተማሪዎች ከ7ኛ እስከ 12ኛ ክፍል ባሉት ደረጃዎች መመደብ ሲቻል፣ ለርቀት ተማሪዎች ደግሞ ደረጃ በደረጃ የሚጠናቀቁ የኮርስ ሞጁሎች ተዘጋጅተዋል።
+                  {t('faq2A', 'ዕድሜያቸው ከ 14 ዓመት በላይ የሆነ ማንኛውም የኦርቶዶክስ ተዋሕዶ አማኝ መመዝገብ ይችላል። ለመደበኛ ተማሪዎች ከ7ኛ እስከ 12ኛ ክፍል ባሉት ደረጃዎች መመደብ ሲቻል፣ ለርቀት ተማሪዎች ደግሞ ደረጃ በደረጃ የሚጠናቀቁ የኮርስ ሞጁሎች ተዘጋጅተዋል።')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-3">
-                <AccordionTrigger>የትምህርት ማስረጃ ወይም የምስክር ወረቀት ይሰጣል?</AccordionTrigger>
+                <AccordionTrigger>{t('faq3Q', 'የትምህርት ማስረጃ ወይም የምስክር ወረቀት ይሰጣል?')}</AccordionTrigger>
                 <AccordionContent>
-                  አዎ፤ ሁሉንም አስፈላጊ ኮርሶች እና ምዘናዎች 100% አጠናቅቀው ሲያልፉ በሲስተሙ በቀጥታ በQR ኮድ የሚረጋገጥ ዲጂታልና የታተመ ይፋዊ የዲፕሎማ ምስክር ወረቀት ይሰጣል።
+                  {t('faq3A', 'አዎ፤ ሁሉንም አስፈላጊ ኮርሶች እና ምዘናዎች 100% አጠናቅቀው ሲያልፉ በሲስተሙ በቀጥታ በQR ኮድ የሚረጋገጥ ዲጂታልና የታተመ ይፋዊ የዲፕሎማ ምስክር ወረቀት ይሰጣል።')}
                 </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="item-4">
-                <AccordionTrigger>የምዝገባ ክፍያዎችን እንዴት መክፈል ይቻላል?</AccordionTrigger>
+                <AccordionTrigger>{t('faq4Q', 'የምዝገባ ክፍያዎችን እንዴት መክፈል ይቻላል?')}</AccordionTrigger>
                 <AccordionContent>
-                  በተዘጋጁት የባንክ ሂሳቦች ወይም በኦንላይን የክፍያ አማራጮች ከፍለው ደረሰኝዎን በምዝገባ ቅጹ ላይ በማያያዝ በቀላሉ ማጠናቀቅ ይችላሉ።
+                  {t('faq4A', 'በተዘጋጁት የባንክ ሂሳቦች ወይም በኦንላይን የክፍያ አማራጮች ከፍለው ደረሰኝዎን በምዝገባ ቅጹ ላይ በማያያዝ በቀላሉ ማጠናቀቅ ይችላሉ።')}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

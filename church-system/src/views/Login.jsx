@@ -15,6 +15,8 @@ import { loginSchema } from '../schemas';
 import logoImage from '../assets/ChurchLogo.png';
 import churchBg from '../assets/Lidetachurch2.jpg';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
+import { useLanguage } from '../hooks/useLanguage';
 import { BackButton } from '../components/ui';
 
 // Authentic Ethiopian Orthodox Cross (Meskel) Motif
@@ -46,6 +48,8 @@ const Login = () => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const currentUser = useAuthStore((state) => state.user);
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const [portalType, setPortalType] = useState('student'); // 'student' | 'teacher' | 'admin'
+  const { t, isAmharic } = useLanguage();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -169,16 +173,17 @@ const Login = () => {
       </div>
 
       {/* 🌟 2. Top Header Navigation Bar */}
-      <header className="relative z-30 w-full max-w-5xl mx-auto flex items-center justify-between py-2 pt-2">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
+      <header className="relative z-30 w-full max-w-5xl mx-auto flex items-center justify-between py-2 pt-2 px-2 sm:px-0">
+        <BackButton href="/" label={t('backToHome', 'ወደ ዋናው ገጽ')} variant="glass" />
 
         {/* Sacred Orthodox Invocation */}
         <div className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-amber-400/50 dark:border-amber-400/30 text-slate-800 dark:text-amber-200 text-xs font-bold shadow-xs">
           <span className="text-amber-500 dark:text-amber-400 text-sm">✝️</span>
-          <span>በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን</span>
+          <span>{t('sacredInvocation', 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን')}</span>
         </div>
 
-        <div>
+        <div className="flex items-center gap-2">
+          <LanguageToggle className="bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md hover:border-amber-400/50" />
           <ThemeToggle className="bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-700/80 shadow-xs backdrop-blur-md hover:border-amber-400/50" />
         </div>
       </header>
@@ -214,7 +219,7 @@ const Login = () => {
                 <div className="relative w-full h-full p-2 rounded-full bg-white border-2 border-amber-400 shadow-2xl flex items-center justify-center overflow-hidden ring-4 ring-amber-400/30">
                   <Image
                     src={logoImage}
-                    alt="የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት አርማ"
+                    alt={t('churchLogoAlt', 'የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት አርማ')}
                     width={144}
                     height={144}
                     priority
@@ -227,24 +232,35 @@ const Login = () => {
               {/* Church Parish Title & School Heading */}
               <div className="space-y-2">
                 <p className="text-[11px] sm:text-xs text-amber-300 font-bold tracking-wide leading-relaxed px-2">
-                  ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን
+                  {t(
+                    'churchParishTitle',
+                    'ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን'
+                  )}
                 </p>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
-                  ተክለ ሳዊሮስ ሰንበት ት/ቤት
+                  {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ት/ቤት')}
                 </h1>
                 <div className="h-1 w-16 bg-gradient-to-r from-amber-400 to-yellow-300 mx-auto rounded-full mt-2 mb-3" />
 
                 {/* Role Clarification: Refined Descriptor Badge (Non-clickable) */}
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 dark:bg-black/20 border border-white/15 text-amber-100 text-xs font-semibold backdrop-blur-xs">
                   <ShieldCheck className="w-4 h-4 text-amber-300 shrink-0" />
-                  <span>የተማሪዎች፣ የመምህራን እና የአስተዳዳሪዎች የተጠቃሚ መድረክ</span>
+                  <span>
+                    {t(
+                      'portalRoleDescriptor',
+                      'የተማሪዎች፣ የመምህራን እና የአስተዳዳሪዎች የተጠቃሚ መድረክ'
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Scripture Verse Footer */}
             <div className="text-xs text-amber-200/90 font-medium italic border-t border-white/15 pt-3.5 w-full relative z-10 leading-relaxed">
-              «ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳሌ ፳፪፥፮)
+              {t(
+                'scriptureProverbs',
+                '«ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳሌ ፳፪፥፮)'
+              )}
             </div>
           </div>
 
@@ -266,13 +282,16 @@ const Login = () => {
               <div className="space-y-1.5">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 text-xs font-black border border-blue-200 dark:border-blue-800/80 mb-1">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>እንኳን ደህና መጡ</span>
+                  <span>{t('welcomeBack', 'እንኳን ደህና መጡ')}</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                  የአባላት መግቢያ
+                  {t('memberLogin', 'የአባላት መግቢያ')}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-                  እባክዎትን ስልክ ቁጥር፣ ኢሜይል ወይም የተማሪ መለያ ቁጥርዎን ያስገቡ
+                  {t(
+                    'enterPhoneEmailOrId',
+                    'እባክዎትን ስልክ ቁጥር፣ ኢሜይል ወይም የተማሪ መለያ ቁጥርዎን ያስገቡ'
+                  )}
                 </p>
               </div>
 
@@ -281,7 +300,7 @@ const Login = () => {
                 {/* Input 1: Identifier */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                    የተጠቃሚ መለያ
+                    {t('userIdentifier', 'የተጠቃሚ መለያ')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -290,7 +309,10 @@ const Login = () => {
                     <input
                       type="text"
                       {...register('credential')}
-                      placeholder="ስልክ ቁጥር፣ ኢሜይል ወይም መለያ ቁጥር (TKD-...)"
+                      placeholder={t(
+                        'userIdentifierPlaceholder',
+                        'ስልክ ቁጥር፣ ኢሜይል ወይም መለያ ቁጥር (TKD-...)'
+                      )}
                       className={`w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
                         errors.credential
                           ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
@@ -309,13 +331,13 @@ const Login = () => {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                      የይለፍ ቃል
+                      {t('password', 'የይለፍ ቃል')}
                     </label>
                     <Link
                       href="/forgot-password"
                       className="text-xs font-bold text-[#1657b8] dark:text-amber-400 hover:underline transition-colors"
                     >
-                      የይለፍ ቃልዎን ረስተዋል?
+                      {t('forgotPasswordQuestion', 'የይለፍ ቃልዎን ረስተዋል?')}
                     </Link>
                   </div>
                   <div className="relative">
@@ -336,7 +358,11 @@ const Login = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#1657b8] dark:hover:text-amber-400 cursor-pointer transition-colors"
-                      aria-label={showPassword ? 'የይለፍ ቃል ደብቅ' : 'የይለፍ ቃል አሳይ'}
+                      aria-label={
+                        showPassword
+                          ? t('hidePassword', 'የይለፍ ቃል ደብቅ')
+                          : t('showPassword', 'የይለፍ ቃል አሳይ')
+                      }
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -357,10 +383,13 @@ const Login = () => {
                   className="w-full mt-2 bg-gradient-to-r from-[#1657b8] to-[#0f4699] hover:from-[#124796] hover:to-[#0c377a] active:opacity-90 text-white py-3.5 sm:py-4 rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-blue-600/25 hover:shadow-xl hover:shadow-blue-600/35 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer border border-blue-400/30"
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>{t('signingIn', 'በመግባት ላይ...')}</span>
+                    </div>
                   ) : (
                     <>
-                      <span>ይግቡ</span>
+                      <span>{t('login', 'ይግቡ')}</span>
                       <ArrowRight className="w-4 h-4 text-amber-300" />
                     </>
                   )}
@@ -372,13 +401,13 @@ const Login = () => {
                 <div className="p-4 bg-slate-50/90 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 space-y-3">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span className="text-slate-800 dark:text-slate-200 font-extrabold text-xs">
-                      አዲስ ተመዝጋቢ ነዎት?
+                      {t('newApplicantQuestion', 'አዲስ ተመዝጋቢ ነዎት?')}
                     </span>
                     <Link
                       href="/check-status"
                       className="text-xs font-bold text-[#1657b8] dark:text-amber-400 hover:underline flex items-center gap-1 transition-colors"
                     >
-                      <span>የምዝገባ ሁኔታ ያረጋግጡ</span>
+                      <span>{t('checkApplicationStatus', 'የምዝገባ ሁኔታ ያረጋግጡ')}</span>
                       <span>➔</span>
                     </Link>
                   </div>
@@ -389,14 +418,14 @@ const Login = () => {
                       className="px-3 py-2 rounded-xl bg-blue-600/10 text-[#1657b8] dark:text-blue-300 hover:bg-blue-600/20 border border-blue-500/30 font-bold text-xs text-center transition-all flex items-center justify-center gap-1.5"
                     >
                       <span>🏛️</span>
-                      <span>የመደበኛ ምዝገባ</span>
+                      <span>{t('regularRegistrationBtn', 'የመደበኛ ምዝገባ')}</span>
                     </Link>
                     <Link
                       href="/register-distance"
                       className="px-3 py-2 rounded-xl bg-amber-500/15 text-amber-800 dark:text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 font-bold text-xs text-center transition-all flex items-center justify-center gap-1.5"
                     >
                       <span>🌐</span>
-                      <span>የርቀት ምዝገባ</span>
+                      <span>{t('distanceRegistrationBtn', 'የርቀት ምዝገባ')}</span>
                     </Link>
                   </div>
                 </div>
@@ -408,7 +437,7 @@ const Login = () => {
 
       {/* 🌟 5. Subtle Footer Attribution */}
       <footer className="relative z-10 w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs text-slate-400 dark:text-slate-500 select-none">
-        <p>© 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን (EOTC)</p>
+        <p>{t('eotcNoticeFooter', '© 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት • የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን (EOTC)')}</p>
       </footer>
     </div>
   );

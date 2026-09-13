@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { apiFetch } from '../api/apiClient';
 import useAuthStore from '../store/authStore';
+import { useLanguage } from '../hooks/useLanguage';
 
 const ChangePasswordModal = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -11,6 +12,7 @@ const ChangePasswordModal = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [modalClosed, setModalClosed] = useState(false);
+  const { t, isAmharic } = useLanguage();
 
   const updateUser = useAuthStore((state) => state.updateUser);
 
@@ -20,10 +22,10 @@ const ChangePasswordModal = () => {
     setSuccess('');
 
     if (newPassword !== confirmPassword) {
-      return setError('አዲሱ የይለፍ ቃል እና ማረጋገጫው አይዛመዱም።');
+      return setError(t('passwordMismatch', 'አዲሱ የይለፍ ቃል እና ማረጋገጫው አይዛመዱም።'));
     }
     if (newPassword.length < 6) {
-      return setError('አዲሱ የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።');
+      return setError(t('passwordMinLength', 'አዲሱ የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት።'));
     }
 
     setLoading(true);
@@ -35,7 +37,7 @@ const ChangePasswordModal = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess('የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!');
+        setSuccess(t('passwordChangedSuccess', 'የይለፍ ቃልዎ በተሳካ ሁኔታ ተቀይሯል!'));
 
         // Update the Zustand store to clear the flag
         try {
@@ -49,10 +51,10 @@ const ChangePasswordModal = () => {
           setModalClosed(true);
         }, 1500);
       } else {
-        setError(data.message || 'ለውጡ አልተሳካም');
+        setError(data.message || (isAmharic ? 'ለውጡ አልተሳካም' : 'Password change failed'));
       }
     } catch (err) {
-      setError('የአውታረ መረብ ስህተት');
+      setError(t('networkError', 'የአውታረ መረብ ስህተት'));
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ const ChangePasswordModal = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
       {/* Container Card with Subtle Top Accent Glow */}
-      <div className="relative max-w-md w-full bg-white rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] border border-white/80 p-6 md:p-8 overflow-hidden font-sans">
+      <div className="relative max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800 p-6 md:p-8 overflow-hidden font-sans">
         
         {/* Glowing Decorative Background Orbs */}
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
@@ -82,17 +84,17 @@ const ChangePasswordModal = () => {
               </div>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
-              የመጀመሪያ የይለፍ ቃል ለውጥ
+            <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              {t('firstTimePasswordTitle', 'የመጀመሪያ የይለፍ ቃል ለውጥ')}
             </h2>
-            <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto leading-relaxed">
-              እባክዎ ለደህንነትዎ ሲባል አሁን ያለውን እና አዲሱን የይለፍ ቃል ያስገቡ
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium max-w-xs mx-auto leading-relaxed">
+              {t('firstTimePasswordSubtitle', 'እባክዎ ለደህንነትዎ ሲባል አሁን ያለውን እና አዲሱን የይለፍ ቃል ያስገቡ')}
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200/80 rounded-2xl text-rose-700 text-xs flex items-center gap-2.5 font-medium shadow-sm animate-shake">
+            <div className="mb-4 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 font-medium shadow-sm animate-shake">
               <span className="text-base leading-none">⚠️</span>
               <span>{error}</span>
             </div>
@@ -100,7 +102,7 @@ const ChangePasswordModal = () => {
 
           {/* Success Message */}
           {success && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl text-emerald-700 text-xs flex items-center gap-2.5 font-semibold shadow-sm">
+            <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2.5 font-semibold shadow-sm">
               <span className="text-base leading-none">✅</span>
               <span>{success}</span>
             </div>
@@ -111,13 +113,13 @@ const ChangePasswordModal = () => {
             
             {/* Current Password Field */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አሁን ያለው የይለፍ ቃል
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide block">
+                {t('currentPasswordLabel', 'አሁን ያለው የይለፍ ቃል')}
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 0121 9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </div>
                 <input
@@ -126,15 +128,15 @@ const ChangePasswordModal = () => {
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
                 />
               </div>
             </div>
 
             {/* New Password Field */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አዲስ የይለፍ ቃል (ቢያንስ 6 ቁምፊዎች)
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide block">
+                {t('newPasswordLabel', 'አዲስ የይለፍ ቃል')} ({t('passwordMinLength', 'ቢያንስ 6 ቁምፊዎች')})
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
@@ -148,15 +150,15 @@ const ChangePasswordModal = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
                 />
               </div>
             </div>
 
             {/* Confirm Password Field */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 tracking-wide block">
-                አዲሱን የይለፍ ቃል ያረጋግጡ
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-wide block">
+                {t('confirmNewPasswordLabel', 'አዲሱን የይለፍ ቃል ያረጋግጡ')}
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-700 transition-colors">
@@ -170,7 +172,7 @@ const ChangePasswordModal = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 text-xs md:text-sm font-medium focus:bg-white focus:border-blue-700 focus:ring-4 focus:ring-blue-700/10 shadow-inner transition-all outline-none"
                 />
               </div>
             </div>
@@ -184,11 +186,11 @@ const ChangePasswordModal = () => {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>በመቀየር ላይ…</span>
+                  <span>{t('signingIn', 'በመቀየር ላይ…')}</span>
                 </div>
               ) : (
                 <>
-                  <span>የይለፍ ቃል ቀይር</span>
+                  <span>{t('savePasswordBtn', 'የይለፍ ቃል ቀይር')}</span>
                   <span className="text-base leading-none">➔</span>
                 </>
               )}

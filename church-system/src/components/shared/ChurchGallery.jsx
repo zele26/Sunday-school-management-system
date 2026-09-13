@@ -9,17 +9,30 @@ import { FadeIn, StaggerContainer, StaggerItem, AnimatedModal } from '../motion'
 import { Badge } from '../ui/Badge';
 import { ChevronLeft, ChevronRight, X, Sparkles, ZoomIn, Camera } from 'lucide-react';
 import { cn } from '../ui/utils';
+import { useLanguage } from '../../hooks/useLanguage';
 
 export function ChurchGallery({
   limit,
   initialCategory = 'all',
   showFilters = true,
-  title = 'የሰንበት ትምህርት ቤታችን ገጽታዎች በፎቶ',
-  subtitle = 'የመንፈሳዊ አገልግሎት፣ የዝማሬ፣ የበዓላትና የተማሪዎች የኅብረት ቆይታ በምስል',
+  title,
+  subtitle,
   className,
 }) {
+  const { t, isAmharic } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [activePhoto, setActivePhoto] = useState(null);
+
+  const displayTitle =
+    title ||
+    (isAmharic
+      ? 'የሰንበት ትምህርት ቤታችን ገጽታዎች በፎቶ'
+      : 'Photo Gallery of Our Sunday School');
+  const displaySubtitle =
+    subtitle ||
+    (isAmharic
+      ? 'የመንፈሳዊ አገልግሎት፣ የዝማሬ፣ የበዓላትና የተማሪዎች የኅብረት ቆይታ በምስል'
+      : 'Moments of sacred liturgy, liturgical chants, holy feasts, and youth fellowship');
 
   const filteredPhotos = churchPhotos.filter((photo) => {
     if (selectedCategory === 'all') return true;
@@ -48,20 +61,29 @@ export function ChurchGallery({
     }
   };
 
+  const categoryLabels = {
+    all: isAmharic ? 'ሁሉም' : 'All',
+    service: isAmharic ? 'አገልግሎትና ቅዳሴ' : 'Liturgy & Service',
+    students: isAmharic ? 'ተማሪዎችና ክፍሎች' : 'Students & Classes',
+    choir: isAmharic ? 'መዘምራንና ዝማሬ' : 'Choir & Chants',
+    celebration: isAmharic ? 'በዓላትና ዝግጅቶች' : 'Feasts & Events',
+    history: isAmharic ? 'ታሪክና ቅርስ' : 'History & Heritage',
+  };
+
   return (
     <section className={cn('space-y-8', className)}>
       {/* Header */}
       <FadeIn className="text-center space-y-3 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
           <Camera className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-          <span>የፎቶ ማህደር</span>
+          <span>{t('photoGalleryBadge', 'የፎቶ ማህደር')}</span>
         </div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-          {title}
+          {displayTitle}
         </h2>
-        {subtitle && (
+        {displaySubtitle && (
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            {subtitle}
+            {displaySubtitle}
           </p>
         )}
       </FadeIn>
@@ -84,7 +106,7 @@ export function ChurchGallery({
                       : 'bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 hover:bg-slate-200/70 dark:hover:bg-slate-700/80'
                   )}
                 >
-                  {cat.label}
+                  {categoryLabels[cat.key] || cat.label}
                 </button>
               );
             })}
@@ -121,7 +143,7 @@ export function ChurchGallery({
                 {/* Top Category Badge */}
                 <div className="absolute top-3 left-3 z-10">
                   <span className="px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-md text-amber-300 text-[10px] font-bold border border-white/10 shadow-xs">
-                    {photo.categoryAm}
+                    {categoryLabels[photo.category] || photo.categoryAm}
                   </span>
                 </div>
 
@@ -144,7 +166,7 @@ export function ChurchGallery({
                   {photo.description}
                 </p>
                 <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-bold text-[#1657b8] dark:text-blue-400">
-                  <span>በሙሉ ምስል ይመልከቱ</span>
+                  <span>{isAmharic ? 'በሙሉ ምስል ይመልከቱ' : 'View Full Photo'}</span>
                   <span>➔</span>
                 </div>
               </div>
@@ -169,7 +191,7 @@ export function ChurchGallery({
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-300" />
                   <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                    {activePhoto.categoryAm}
+                    {categoryLabels[activePhoto.category] || activePhoto.categoryAm}
                   </span>
                 </div>
                 <button
@@ -215,7 +237,7 @@ export function ChurchGallery({
                     {activePhoto.title}
                   </h3>
                   <span className="text-xs text-slate-400 font-bold">
-                    {currentPhotoIndex + 1} ከ {displayPhotos.length}
+                    {currentPhotoIndex + 1} {isAmharic ? 'ከ' : 'of'} {displayPhotos.length}
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">

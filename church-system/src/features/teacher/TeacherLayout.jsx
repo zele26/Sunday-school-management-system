@@ -22,26 +22,29 @@ import {
 import useAuthStore from '../../store/authStore';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
+import { useLanguage } from '../../hooks/useLanguage';
 import { Badge } from '../../components/ui/Badge';
 
 const TeacherLayout = ({ children, onLogout }) => {
   const user = useAuthStore((state) => state.user);
   const teacherName = user?.fullName || 'መምህር';
+  const { t, isAmharic } = useLanguage();
 
   const navItems = [
-    { label: 'አጠቃላይ እይታ', path: '/teacher', icon: <LayoutDashboard className="w-4 h-4 text-blue-500" />, end: true },
-    { label: 'የርቀት ትምህርት', path: '/teacher/distance-hub', icon: <Globe className="w-4 h-4 text-sky-500" /> },
-    { label: 'የእኔ ተማሪዎች', path: '/teacher/students', icon: <Users className="w-4 h-4 text-emerald-500" /> },
-    { label: 'የእኔ ትምህርቶች', path: '/teacher/courses', icon: <BookOpen className="w-4 h-4 text-amber-500" /> },
-    { label: 'ይዘት እና ፈተናዎች', path: '/teacher/content', icon: <FileText className="w-4 h-4 text-indigo-500" /> },
-    { label: 'ውጤት መስጫ', path: '/teacher/grading', icon: <Award className="w-4 h-4 text-yellow-500" /> },
-    { label: 'ግንኙነት', path: '/teacher/communication', icon: <MessageSquare className="w-4 h-4 text-teal-500" /> },
-    { label: 'መገኘት', path: '/teacher/attendance', icon: <CalendarCheck className="w-4 h-4 text-rose-500" /> },
-    { label: 'አናሊቲክስ (Analytics)', path: '/teacher/analytics', icon: <BarChart3 className="w-4 h-4 text-emerald-500" /> },
-    { label: 'ሪፖርቶች', path: '/teacher/reports', icon: <BarChart3 className="w-4 h-4 text-purple-500" /> },
-    { label: 'ማጣቀሻዎች', path: '/teacher/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
-    { label: 'ፈተናዎች', path: '/teacher/exams', icon: <GraduationCap className="w-4 h-4 text-blue-600" /> },
-    { label: 'የይለፍ ቃል', path: '/change-password', icon: <Key className="w-4 h-4 text-slate-500" /> },
+    { label: t('dashboard', 'አጠቃላይ እይታ'), path: '/teacher', icon: <LayoutDashboard className="w-4 h-4 text-blue-500" />, end: true },
+    { label: t('distanceEducation', 'የርቀት ትምህርት'), path: '/teacher/distance-hub', icon: <Globe className="w-4 h-4 text-sky-500" /> },
+    { label: t('studentsManagement', 'የእኔ ተማሪዎች'), path: '/teacher/students', icon: <Users className="w-4 h-4 text-emerald-500" /> },
+    { label: t('coursesManagement', 'የእኔ ትምህርቶች'), path: '/teacher/courses', icon: <BookOpen className="w-4 h-4 text-amber-500" /> },
+    { label: t('learningMaterial', 'ይዘት እና ፈተናዎች'), path: '/teacher/content', icon: <FileText className="w-4 h-4 text-indigo-500" /> },
+    { label: t('gradesManagement', 'ውጤት መስጫ'), path: '/teacher/grading', icon: <Award className="w-4 h-4 text-yellow-500" /> },
+    { label: t('notificationsManagement', 'ግንኙነት'), path: '/teacher/communication', icon: <MessageSquare className="w-4 h-4 text-teal-500" /> },
+    { label: t('attendanceManagement', 'መገኘት'), path: '/teacher/attendance', icon: <CalendarCheck className="w-4 h-4 text-rose-500" /> },
+    { label: t('analytics', 'አናሊቲክስ (Analytics)'), path: '/teacher/analytics', icon: <BarChart3 className="w-4 h-4 text-emerald-500" /> },
+    { label: t('reports', 'ሪፖርቶች'), path: '/teacher/reports', icon: <BarChart3 className="w-4 h-4 text-purple-500" /> },
+    { label: t('resources', 'ማጣቀሻዎች'), path: '/teacher/resources', icon: <FolderOpen className="w-4 h-4 text-orange-500" /> },
+    { label: t('exams', 'ፈተናዎች'), path: '/teacher/exams', icon: <GraduationCap className="w-4 h-4 text-blue-600" /> },
+    { label: t('changePassword', 'የይለፍ ቃል'), path: '/change-password', icon: <Key className="w-4 h-4 text-slate-500" /> },
   ];
 
   return (
@@ -60,13 +63,14 @@ const TeacherLayout = ({ children, onLogout }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20" />
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[36px]" />
+          <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[36px] min-w-[36px]" />
           <button
             onClick={onLogout}
-            className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm"
+            className="bg-white/10 hover:bg-rose-600 text-slate-200 hover:text-white border border-white/20 hover:border-rose-500 text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            <span>ውጣ</span>
+            <span className="hidden sm:inline">{t('logout', 'ውጣ')}</span>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>

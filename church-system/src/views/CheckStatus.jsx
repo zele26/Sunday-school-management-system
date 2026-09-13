@@ -23,39 +23,61 @@ import {
 import { API_BASE_URL } from '../api/apiClient';
 import { BackButton } from '../components/ui';
 import ChurchLogo from '../assets/ChurchLogo.png';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
+import { useLanguage } from '../hooks/useLanguage';
 
-// Helper: translate raw status + studentType into a clear Amharic message
-const getStatusMessage = (status, studentType) => {
+// Helper: translate raw status + studentType into a clear bilingual message
+const getStatusMessage = (status, studentType, isAmharic) => {
   if (studentType === 'regular') {
     switch (status) {
       case 'Pending Payment':
       case 'Pending Verification':
-        return 'ማመልከቻዎ ደርሶናል፤ በአስተዳዳሪዎች ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ ሲጸድቅ ይፋዊ የተማሪ መለያ ቁጥር ይዘጋጅልዎታል።';
+        return isAmharic
+          ? 'ማመልከቻዎ ደርሶናል፤ በአስተዳዳሪዎች ማረጋገጫ በመጠበቅ ላይ ነው። ምዝገባዎ ሲጸድቅ ይፋዊ የተማሪ መለያ ቁጥር ይዘጋጅልዎታል።'
+          : 'Your application has been received and is pending review by administrators. An official Student ID will be generated upon approval.';
       case 'Approved':
-        return 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። ከታች የተሰጠዎትን የተማሪ መለያ ቁጥር እና የይለፍ ቃል ተጠቅመው ወደ ሲስተሙ መግባት ይችላሉ።';
+        return isAmharic
+          ? 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። ከታች የተሰጠዎትን የተማሪ መለያ ቁጥር እና የይለፍ ቃል ተጠቅመው ወደ ሲስተሙ መግባት ይችላሉ።'
+          : 'Congratulations! Your application has been approved. You can now log into the portal using your Student ID and password.';
       case 'Rejected':
-        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ ማብራሪያ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ።';
+        return isAmharic
+          ? 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ ማብራሪያ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ።'
+          : 'Your application was not approved. Please contact the Sunday School administration for details.';
       default:
-        return 'የምዝገባ ሁኔታዎ እየተዘመነ ነው።';
+        return isAmharic
+          ? 'የምዝገባ ሁኔታዎ እየተዘመነ ነው።'
+          : 'Your application status is being updated.';
     }
   } else {
     // distance student
     switch (status) {
       case 'Pending Payment':
-        return 'የምዝገባ ክፍያ ደረሰኝ በመጠበቅ ላይ ነው። ክፍያዎን ከፍለው ደረሰኝዎን ይጫኑ።';
+        return isAmharic
+          ? 'የምዝገባ ክፍያ ደረሰኝ በመጠበቅ ላይ ነው። ክፍያዎን ከፍለው ደረሰኝዎን ይጫኑ።'
+          : 'Pending payment deposit slip. Please complete your bank deposit and upload your receipt.';
       case 'Pending Verification':
-        return 'የክፍያ ደረሰኝዎ ደርሶናል፤ በሂሳብ ክፍል በመረጋገጥ ላይ ነው። እንደተረጋገጠ የተማሪ መለያዎ ዝግጁ ይሆናል።';
+        return isAmharic
+          ? 'የክፍያ ደረሰኝዎ ደርሶናል፤ በሂሳብ ክፍል በመረጋገጥ ላይ ነው። እንደተረጋገጠ የተማሪ መለያዎ ዝግጁ ይሆናል።'
+          : 'Your payment slip has been received and is being verified by the finance department.';
       case 'Approved':
-        return 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። የተማሪ መለያ ቁጥርዎን እና የይለፍ ቃልዎን ተጠቅመው ወደ ኦንላይን መማሪያ ፖርታል መግባት ይችላሉ።';
+        return isAmharic
+          ? 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። የተማሪ መለያ ቁጥርዎን እና የይለፍ ቃልዎን ተጠቅመው ወደ ኦንላይን መማሪያ ፖርታል መግባት ይችላሉ።'
+          : 'Congratulations! Your distance registration is approved. You may now sign in to your online LMS portal.';
       case 'Rejected':
-        return 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ መረጃ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ።';
+        return isAmharic
+          ? 'ምዝገባዎ ውድቅ ተደርጓል። እባክዎ ለተጨማሪ መረጃ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ።'
+          : 'Your distance registration was not approved. Please contact the administration.';
       default:
-        return 'የምዝገባ ሁኔታዎ እየተዘመነ ነው።';
+        return isAmharic
+          ? 'የምዝገባ ሁኔታዎ እየተዘመነ ነው።'
+          : 'Your application status is being updated.';
     }
   }
 };
 
 const CheckStatusContent = () => {
+  const { t, isAmharic } = useLanguage();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,11 +103,11 @@ const CheckStatusContent = () => {
       if (res.ok) {
         setResult(data);
       } else {
-        setError(data.message || 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል');
+        setError(data.message || t('invalidCredentials', 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል'));
       }
     } catch (err) {
       console.error('Check status error:', err);
-      setError('የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ');
+      setError(t('networkError', 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ'));
     } finally {
       setLoading(false);
     }
@@ -111,14 +133,18 @@ const CheckStatusContent = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-[#061024] flex flex-col justify-between items-center p-4 sm:p-6 font-sans">
       {/* Top Bar Navigation */}
       <header className="w-full max-w-md mx-auto flex items-center justify-between py-2">
-        <BackButton href="/" label="ወደ ዋናው ገጽ" variant="glass" />
-        <Link
-          href="/login"
-          className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors flex items-center gap-1 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs"
-        >
-          <span>የተማሪ መግቢያ</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        <BackButton href="/" label={t('backToHome', 'ወደ ዋናው ገጽ')} variant="glass" />
+        <div className="flex items-center gap-2">
+          <LanguageToggle className="bg-white/80 dark:bg-slate-800 text-xs shadow-xs" />
+          <ThemeToggle className="bg-white/80 dark:bg-slate-800 text-xs shadow-xs" />
+          <Link
+            href="/login"
+            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors flex items-center gap-1 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs"
+          >
+            <span>{t('login', 'ይግቡ')}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </header>
 
       {/* Main Single-Card Container */}
@@ -162,13 +188,19 @@ const CheckStatusContent = () => {
                 }`}
               >
                 {result.status === 'Approved'
-                  ? '✓ ምዝገባዎ ጸድቋል'
+                  ? isAmharic
+                    ? '✓ ምዝገባዎ ጸድቋል'
+                    : '✓ Approved'
                   : result.status === 'Rejected'
-                  ? '✕ ምዝገባው ውድቅ ሆኗል'
-                  : '⏳ በክለሳ ላይ ይገኛል'}
+                  ? isAmharic
+                    ? '✕ ምዝገባው ውድቅ ሆኗል'
+                    : '✕ Rejected'
+                  : isAmharic
+                  ? '⏳ በክለሳ ላይ ይገኛል'
+                  : '⏳ Pending Review'}
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                {result.fullName || 'የተማሪ መረጃ'}
+                {result.fullName || t('studentInfo', 'የተማሪ መረጃ')}
               </h2>
             </div>
 
@@ -176,7 +208,7 @@ const CheckStatusContent = () => {
             {result.status === 'Approved' && result.studentId ? (
               <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-left space-y-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                  ይፋዊ የተማሪ መለያ ቁጥር (Student ID)
+                  {t('officialStudentId', 'ይፋዊ የተማሪ መለያ ቁጥር (Student ID)')}
                 </p>
                 <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-blue-200/80 dark:border-slate-700">
                   <span className="font-mono text-base font-black text-slate-900 dark:text-white tracking-wider">
@@ -185,17 +217,17 @@ const CheckStatusContent = () => {
                   <button
                     type="button"
                     onClick={copyStudentId}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 text-xs font-semibold"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 text-xs font-semibold cursor-pointer"
                   >
                     {copiedId ? (
                       <>
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-emerald-600">ተገልብጧል</span>
+                        <span className="text-emerald-600">{t('copied', 'ተገልብጧል')}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-4 h-4" />
-                        <span>ገልብጥ</span>
+                        <span>{t('copyNumberBtn', 'ገልብጥ')}</span>
                       </>
                     )}
                   </button>
@@ -205,7 +237,7 @@ const CheckStatusContent = () => {
 
             {/* Explainer Note */}
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 text-left">
-              {getStatusMessage(result.status, result.studentType)}
+              {getStatusMessage(result.status, result.studentType, isAmharic)}
             </p>
 
             {/* Actions */}
@@ -215,7 +247,7 @@ const CheckStatusContent = () => {
                   href="/login"
                   className="w-full bg-[#1e3a8a] hover:bg-[#163177] active:scale-98 text-white py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                 >
-                  <span>ወደ መማሪያ ፖርታል ይግቡ</span>
+                  <span>{t('directLoginToPortal', 'ወደ መማሪያ ፖርታል ይግቡ ➔')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               )}
@@ -225,16 +257,16 @@ const CheckStatusContent = () => {
                   href="/continue-registration"
                   className="w-full bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
                 >
-                  <span>ደረሰኝ ያያይዙና ምዝገባዎን ያጠናቁ →</span>
+                  <span>{t('uploadReceipt', 'ደረሰኝ ያያይዙና ምዝገባዎን ያጠናቁ →')}</span>
                 </Link>
               )}
 
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                ← ሌላ ስልክ ቁጥር ለመፈተሽ
+                {isAmharic ? '← ሌላ ስልክ ቁጥር ለመፈተሽ' : '← Check another phone number'}
               </button>
             </div>
           </motion.div>
@@ -251,7 +283,7 @@ const CheckStatusContent = () => {
               <div className="w-16 h-16 mx-auto rounded-full bg-white p-1 border-2 border-amber-400 shadow-sm flex items-center justify-center overflow-hidden">
                 <Image
                   src={ChurchLogo}
-                  alt="አርማ"
+                  alt={t('churchLogoAlt', 'አርማ')}
                   width={60}
                   height={60}
                   priority
@@ -261,13 +293,13 @@ const CheckStatusContent = () => {
 
               <div>
                 <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-                  ተክለ ሳዊሮስ ሰንበት ት/ቤት
+                  {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ት/ቤት')}
                 </span>
                 <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-                  የምዝገባ ሁኔታ ማረጋገጫ
+                  {t('checkStatusTitle', 'የምዝገባ ሁኔታ ማረጋገጫ')}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  የተመዘገቡበትን ስልክ ቁጥር እና የይለፍ ቃል ያስገቡ
+                  {t('enterPhoneEmailOrId', 'የተመዘገቡበትን ስልክ ቁጥር እና የይለፍ ቃል ያስገቡ')}
                 </p>
               </div>
             </div>
@@ -285,7 +317,7 @@ const CheckStatusContent = () => {
               {/* Phone Input */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  የተመዘገቡበት ስልክ ቁጥር
+                  {t('registeredPhoneLabel', 'የተመዘገቡበት ስልክ ቁጥር')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -293,7 +325,7 @@ const CheckStatusContent = () => {
                   </div>
                   <input
                     type="tel"
-                    placeholder="09... ወይም 07..."
+                    placeholder="09... / 07..."
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -306,13 +338,13 @@ const CheckStatusContent = () => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                    የይለፍ ቃል
+                    {t('password', 'የይለፍ ቃል')}
                   </label>
                   <Link
                     href="/forgot-password"
                     className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    የይለፍ ቃል ረሱ?
+                    {t('forgotPasswordQuestion', 'የይለፍ ቃል ረሱ?')}
                   </Link>
                 </div>
                 <div className="relative">
@@ -330,8 +362,8 @@ const CheckStatusContent = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    aria-label="የይለፍ ቃል አሳይ/ደብቅ"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    aria-label={showPassword ? t('hidePassword', 'የይለፍ ቃል ደብቅ') : t('showPassword', 'የይለፍ ቃል አሳይ')}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -348,7 +380,7 @@ const CheckStatusContent = () => {
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>ሁኔታን ፈትሽ</span>
+                    <span>{t('checkStatusSubmitBtn', 'ሁኔታን ፈትሽ')}</span>
                     <Search className="w-4 h-4" />
                   </>
                 )}
@@ -358,9 +390,9 @@ const CheckStatusContent = () => {
             {/* Bottom Links */}
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-center text-xs space-y-2">
               <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400">
-                <span>አዲስ ተማሪ ነዎት?</span>
+                <span>{t('newApplicantQuestion', 'አዲስ ተማሪ ነዎት?')}</span>
                 <Link href="/" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                  አሁን ይመዝገቡ →
+                  {t('register', 'አሁን ይመዝገቡ →')}
                 </Link>
               </div>
             </div>
@@ -370,7 +402,7 @@ const CheckStatusContent = () => {
 
       {/* Clean Footer */}
       <footer className="py-3 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
-        ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
+        {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ትምህርት ቤት')}
       </footer>
     </div>
   );

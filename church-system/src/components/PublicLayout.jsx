@@ -6,11 +6,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import ChurchLogo from '../assets/ChurchLogo.png';
 import { ThemeToggle } from './ui/ThemeToggle';
+import { LanguageToggle } from './ui/LanguageToggle';
+import { useLanguage } from '../hooks/useLanguage';
 import { useRegistrationStatus } from '../hooks/queries';
 import { Send, Phone, MapPin, Clock, Compass, BookOpen, Search, LogIn, ExternalLink } from 'lucide-react';
 
 // Inspirational Bible verses & Church Announcements for the sliding ticker
-const tickerItems = [
+const tickerItemsAm = [
   {
     type: '📖 የዕለቱ ቃል',
     text: '«ልጆችን ወደ እኔ ይምጡ አትከልክሏቸው፤ የእግዚአብሔር መንግሥት እንደ እነዚህ ላሉት ናትና።» (ማር. ፲፥፲፬)',
@@ -34,11 +36,38 @@ const tickerItems = [
   },
 ];
 
+const tickerItemsEn = [
+  {
+    type: '📖 Daily Scripture',
+    text: '“Let the little children come to me, and do not hinder them, for the kingdom of God belongs to such as these.” (Mark 10:14)',
+    bg: 'from-amber-600/20 via-amber-500/10 to-transparent',
+    borderColor: 'border-amber-500/30',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+  },
+  {
+    type: '📢 Announcement',
+    text: 'Official registration for Regular & Distance Sunday School programs is now officially open! Register today.',
+    bg: 'from-emerald-600/20 via-emerald-500/10 to-transparent',
+    borderColor: 'border-emerald-500/30',
+    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  },
+  {
+    type: '🙏 Spiritual Message',
+    text: '“Through the praise of children and infants you have established a stronghold...” (Ps. 8:2) — Building a faithful generation.',
+    bg: 'from-sky-600/20 via-sky-500/10 to-transparent',
+    borderColor: 'border-sky-500/30',
+    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+  },
+];
+
 const PublicLayout = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRegDropdownOpen, setIsRegDropdownOpen] = useState(false);
   const [currentTickerIndex, setCurrentTickerIndex] = useState(0);
   const [isTickerPaused, setIsTickerPaused] = useState(false);
+  const { t, isAmharic } = useLanguage();
+
+  const tickerItems = isAmharic ? tickerItemsAm : tickerItemsEn;
 
   const { data: regStatus } = useRegistrationStatus();
   const isMasterOpen = regStatus?.isRegistrationOpen !== false;
@@ -77,19 +106,19 @@ const PublicLayout = ({ children }) => {
   }, []);
 
   const primaryNavLinks = [
-    { to: '/about', label: 'ስለ እኛ' },
-    { to: '/classes', label: 'የትምህርት ክፍሎች' },
-    { to: '/distance-education', label: 'የርቀት ትምህርት' },
-    { to: '/announcements', label: 'ማስታወቂያዎች' },
-    { to: '/contact', label: 'ያግኙን' },
+    { to: '/about', label: t('about', 'ስለ እኛ') },
+    { to: '/classes', label: t('classes', 'የትምህርት ክፍሎች') },
+    { to: '/distance-education', label: t('distanceEducation', 'የርቀት ትምህርት') },
+    { to: '/announcements', label: t('announcements', 'ማስታወቂያዎች') },
+    { to: '/contact', label: t('contact', 'ያግኙን') },
   ];
 
   const registrationLinks = [
-    { to: '/distance-education', label: 'ስለ ርቀት ትምህርት መረጃ', icon: '📖' },
-    { to: '/register-regular', label: 'የመደበኛ ተማሪ ምዝገባ', icon: '📝' },
-    { to: '/register-distance', label: 'የርቀት ተማሪ ምዝገባ', icon: '🌐' },
-    { to: '/continue-registration', label: 'ምዝገባዎን ይቀጥሉ', icon: '🔄' },
-    { to: '/check-status', label: 'ሁኔታ ያረጋግጡ', icon: '🔍' },
+    { to: '/distance-education', label: t('aboutDistanceInfo', 'ስለ ርቀት ትምህርት መረጃ'), icon: '📖' },
+    { to: '/register-regular', label: t('regularStudentRegistration', 'የመደበኛ ተማሪ ምዝገባ'), icon: '📝' },
+    { to: '/register-distance', label: t('distanceStudentRegistration', 'የርቀት ተማሪ ምዝገባ'), icon: '🌐' },
+    { to: '/continue-registration', label: t('continueRegistration', 'ምዝገባዎን ይቀጥሉ'), icon: '🔄' },
+    { to: '/check-status', label: t('checkStatus', 'ሁኔታ ያረጋግጡ'), icon: '🔍' },
   ];
 
   return (
@@ -116,9 +145,8 @@ const PublicLayout = ({ children }) => {
               <button
                 key={idx}
                 onClick={() => setCurrentTickerIndex(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  currentTickerIndex === idx ? 'w-5 bg-amber-400 shadow-xs' : 'w-1.5 bg-white/40 hover:bg-white/70'
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${currentTickerIndex === idx ? 'w-5 bg-amber-400 shadow-xs' : 'w-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
@@ -152,10 +180,10 @@ const PublicLayout = ({ children }) => {
               {/* Church Name and Subtitle */}
               <div className="flex flex-col justify-center min-w-0">
                 <span className="font-black text-base sm:text-lg lg:text-xl tracking-tight text-[#1e3a8a] dark:text-blue-300 leading-tight group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-colors duration-300 truncate">
-                  ተክለ ሳዊሮስ
+                  {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}
                 </span>
                 <span className="text-[10px] sm:text-[11px] lg:text-xs text-amber-700 dark:text-amber-400 font-extrabold tracking-wider uppercase mt-0.5 truncate flex items-center gap-1">
-                  <span>ሰንበት ትምህርት ቤት</span>
+                  <span>{t('sundaySchoolLabel', 'ሰንበት ትምህርት ቤት')}</span>
                 </span>
               </div>
             </Link>
@@ -166,11 +194,10 @@ const PublicLayout = ({ children }) => {
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 relative whitespace-nowrap min-h-[42px] flex items-center ${
-                    pathname === link.to
+                  className={`px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 relative whitespace-nowrap min-h-[42px] flex items-center ${pathname === link.to
                       ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800 shadow-2xs'
                       : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`}
+                    }`}
                 >
                   <span>{link.label}</span>
                 </Link>
@@ -181,21 +208,19 @@ const PublicLayout = ({ children }) => {
                 <button
                   type="button"
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
-                  className={`flex items-center space-x-2 space-x-reverse px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer whitespace-nowrap min-h-[42px] ${
-                    registrationLinks.some((item) => item.to === pathname)
+                  className={`flex items-center space-x-2 space-x-reverse px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer whitespace-nowrap min-h-[42px] ${registrationLinks.some((item) => item.to === pathname)
                       ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800 shadow-2xs'
                       : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`}
+                    }`}
                 >
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
-                  <span>ምዝገባና አገልግሎት</span>
+                  <span>{t('registrationAndServices', 'ምዝገባና አገልግሎት')}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isRegDropdownOpen ? 'rotate-180 text-[#1e3a8a] dark:text-amber-400' : 'text-slate-400'
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-200 ${isRegDropdownOpen ? 'rotate-180 text-[#1e3a8a] dark:text-amber-400' : 'text-slate-400'
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -209,7 +234,7 @@ const PublicLayout = ({ children }) => {
                   <div className="absolute right-0 mt-2.5 w-76 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-xs font-black text-[#1e3a8a] dark:text-blue-400 uppercase tracking-wider">
-                        የተማሪዎች አገልግሎት
+                        {t('studentServices', 'የተማሪዎች አገልግሎት')}
                       </span>
                       <span className="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold px-2 py-0.5 rounded-full border border-amber-300/40">
                         {academicYear}
@@ -221,11 +246,10 @@ const PublicLayout = ({ children }) => {
                         <Link
                           key={item.to}
                           href={item.to}
-                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group min-h-[44px] ${
-                            pathname === item.to
+                          className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group min-h-[44px] ${pathname === item.to
                               ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-3 border-[#1e3a8a]'
                               : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-400'
-                          }`}
+                            }`}
                         >
                           <span className="text-base p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-108 transition-transform shadow-2xs">
                             {item.icon}
@@ -240,20 +264,22 @@ const PublicLayout = ({ children }) => {
               </div>
             </nav>
 
-            {/* Desktop Actions (ThemeToggle + Login) */}
-            <div className="hidden lg:flex items-center space-x-3 space-x-reverse">
+            {/* Desktop Actions (LanguageToggle + ThemeToggle + Login) */}
+            <div className="hidden lg:flex items-center space-x-2.5 space-x-reverse">
+              <LanguageToggle className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 min-h-[42px]" />
               <ThemeToggle className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 min-h-[42px] min-w-[42px]" />
               <Link
                 href="/login"
                 className="px-5 py-2.5 rounded-xl bg-[#1e3a8a] hover:bg-[#163177] active:opacity-90 text-white font-black text-sm shadow-md hover:shadow-lg transition-all flex items-center space-x-2 space-x-reverse border border-blue-400/20 min-h-[42px]"
               >
                 <span className="text-base">🔐</span>
-                <span>ይግቡ</span>
+                <span>{t('login', 'ይግቡ')}</span>
               </Link>
             </div>
 
             {/* Mobile Menu Actions */}
             <div className="lg:hidden flex items-center gap-2">
+              <LanguageToggle className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 min-h-[44px]" />
               <ThemeToggle className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 min-h-[44px] min-w-[44px]" />
               <button
                 type="button"
@@ -279,17 +305,16 @@ const PublicLayout = ({ children }) => {
             {/* Primary Nav Links */}
             <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-4">
               <span className="px-3 text-[11px] font-bold text-[#1e3a8a] dark:text-blue-400 uppercase tracking-wider">
-                ዋና ገጾች
+                {t('mainPages', 'ዋና ገጾች')}
               </span>
               {primaryNavLinks.map((link) => (
                 <Link
                   key={link.to}
                   href={link.to}
-                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] flex items-center ${
-                    pathname === link.to
+                  className={`block px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] flex items-center ${pathname === link.to
                       ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-4 border-[#1e3a8a]'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -299,17 +324,16 @@ const PublicLayout = ({ children }) => {
             {/* Registration Services Links */}
             <div className="space-y-1.5 border-b border-slate-100 dark:border-slate-800 pb-4">
               <span className="px-3 text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                ምዝገባና አገልግሎቶች
+                {t('registrationAndServices', 'ምዝገባና አገልግሎቶች')}
               </span>
               {registrationLinks.map((item) => (
                 <Link
                   key={item.to}
                   href={item.to}
-                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] ${
-                    pathname === item.to
+                  className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] ${pathname === item.to
                       ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 font-bold border-l-4 border-amber-500'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
-                  }`}
+                    }`}
                 >
                   <span className="text-xl bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg">{item.icon}</span>
                   <span>{item.label}</span>
@@ -324,7 +348,7 @@ const PublicLayout = ({ children }) => {
                 className="w-full bg-[#1e3a8a] hover:bg-[#163177] text-white font-bold py-3.5 rounded-xl shadow-sm flex items-center justify-center space-x-2.5 space-x-reverse text-base transition-all duration-200 min-h-[48px]"
               >
                 <LogIn className="w-5 h-5" />
-                <span>ወደ አካውንቶ ይግቡ</span>
+                <span>{t('loginToAccount', 'ወደ አካውንቶ ይግቡ')}</span>
               </Link>
             </div>
           </div>
@@ -349,15 +373,17 @@ const PublicLayout = ({ children }) => {
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-black tracking-wide">
                 <span>✨ ዮሐንስ ፩፥፩</span>
                 <span>•</span>
-                <span>«በመጀመሪያ ቃል ነበረ»</span>
+                <span>{t('preFooterScripture', '«በመጀመሪያ ቃል ነበረ»')}</span>
               </div>
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-snug">
-                የተሟላ መንፈሳዊ ዕውቀት ለመቅሰም አሁኑኑ ይመዝገቡ!
+                {t('preFooterHeading', 'የተሟላ መንፈሳዊ ዕውቀት ለመቅሰም አሁኑኑ ይመዝገቡ!')}
               </h3>
               <p className="text-blue-100 text-sm sm:text-base leading-relaxed max-w-xl">
                 {isAnyOpen
-                  ? `የ${academicYear} የተማሪዎች ምዝገባ በይፋ ተጀምሯል፤ በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራሞቻችን ተመዝግበው ይማሩ።`
-                  : (regStatus?.generalClosedMessage || 'የተማሪዎች ምዝገባ ለጊዜው ተጠናቋል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።')}
+                  ? (isAmharic
+                    ? `የ${academicYear} የተማሪዎች ምዝገባ በይፋ ተጀምሯል፤ በመደበኛም ሆነ በርቀት ትምህርት ፕሮግራሞቻችን ተመዝግበው ይማሩ።`
+                    : `Official registration for the ${academicYear} academic session is open! Enroll in our Regular or Distance programs today.`)
+                  : (regStatus?.generalClosedMessage || t('preFooterDescClosed', 'የተማሪዎች ምዝገባ ለጊዜው ተጠናቋል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።'))}
               </p>
             </div>
 
@@ -370,12 +396,12 @@ const PublicLayout = ({ children }) => {
                       href="/register-regular"
                       className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-[#1e3a8a] font-bold text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                     >
-                      <span>የመደበኛ ምዝገባ</span>
+                      <span>{t('regularRegistrationBtn', 'የመደበኛ ምዝገባ')}</span>
                       <span>➔</span>
                     </Link>
                   ) : (
                     <div className="px-5 py-3.5 rounded-xl bg-white/20 text-white/70 font-bold text-sm text-center border border-white/20 min-h-[46px] flex items-center justify-center">
-                      መደበኛ (ተዘግቷል)
+                      {t('regularStudentRegistration', 'መደበኛ')} ({t('closedStatus', 'ተዘግቷል')})
                     </div>
                   )}
 
@@ -384,12 +410,12 @@ const PublicLayout = ({ children }) => {
                       href="/register-distance"
                       className="px-6 py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-sm border border-amber-300/60 shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                     >
-                      <span>የርቀት ምዝገባ</span>
+                      <span>{t('distanceRegistrationBtn', 'የርቀት ምዝገባ')}</span>
                       <span>➔</span>
                     </Link>
                   ) : (
                     <div className="px-5 py-3.5 rounded-xl bg-white/20 text-white/70 font-bold text-sm text-center border border-white/20 min-h-[46px] flex items-center justify-center">
-                      ርቀት (ተዘግቷል)
+                      {t('distanceStudentRegistration', 'ርቀት')} ({t('closedStatus', 'ተዘግቷል')})
                     </div>
                   )}
                 </>
@@ -398,7 +424,7 @@ const PublicLayout = ({ children }) => {
                   href="/check-status"
                   className="px-7 py-3.5 rounded-xl bg-white hover:bg-slate-100 active:scale-95 text-[#1e3a8a] font-bold text-sm shadow-md hover:shadow-lg text-center transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[46px]"
                 >
-                  <span>የምዝገባ ሁኔታ ያረጋግጡ</span>
+                  <span>{t('checkRegStatusBtn', 'የምዝገባ ሁኔታ ያረጋግጡ')}</span>
                   <span>➔</span>
                 </Link>
               )}
@@ -418,12 +444,12 @@ const PublicLayout = ({ children }) => {
                   <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-base text-[#1e3a8a] dark:text-blue-300">ተክለ ሳዊሮስ</span>
-                  <span className="text-xs text-amber-700 dark:text-amber-400 font-bold">ሰንበት ትምህርት ቤት</span>
+                  <span className="font-black text-base text-[#1e3a8a] dark:text-blue-300">{t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}</span>
+                  <span className="text-xs text-amber-700 dark:text-amber-400 font-bold">{t('sundaySchoolLabel', 'ሰንበት ትምህርት ቤት')}</span>
                 </div>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።
+                {t('churchParishFullDesc', 'የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።')}
               </p>
               <div className="pt-1">
                 <a
@@ -433,7 +459,7 @@ const PublicLayout = ({ children }) => {
                   className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-[#1e3a8a] dark:text-blue-300 text-xs font-bold border border-blue-200/80 dark:border-blue-800 transition-all shadow-2xs group"
                 >
                   <Send className="w-3.5 h-3.5 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
-                  <span>የቴሌግራም ቻናል ይቀላቀሉ</span>
+                  <span>{t('joinTelegramChannel', 'የቴሌግራም ቻናል ይቀላቀሉ')}</span>
                   <ExternalLink className="w-3 h-3 opacity-60" />
                 </a>
               </div>
@@ -443,32 +469,32 @@ const PublicLayout = ({ children }) => {
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-[#1e3a8a] dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-[#1e3a8a] dark:text-blue-400" />
-                <span>አገልግሎቶችና መመሪያዎች</span>
+                <span>{t('servicesAndGuidelinesTitle', 'አገልግሎቶችና መመሪያዎች')}</span>
               </h4>
               <ul className="space-y-2 text-xs sm:text-sm font-medium">
                 <li>
                   <Link href="/login" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የተማሪዎች መግቢያ
+                    {t('studentPortalLink', 'የተማሪዎች መግቢያ')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/check-status" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የምዝገባ ሁኔታ መከታተያ
+                    {t('applicationTrackerLink', 'የምዝገባ ሁኔታ መከታተያ')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/classes" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    ዓመታዊ የትምህርት ካላንደር
+                    {t('academicCalendarLink', 'ዓመታዊ የትምህርት ካላንደር')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/about" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የስርዓተ ትምህርት መመሪያ
+                    {t('curriculumGuideLink', 'የስርዓተ ትምህርት መመሪያ')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/about" className="hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors py-1 inline-block">
-                    የመተዳደሪያ ደንብ
+                    {t('constitutionAndRulesLink', 'የመተዳደሪያ ደንብ')}
                   </Link>
                 </li>
               </ul>
@@ -478,7 +504,7 @@ const PublicLayout = ({ children }) => {
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                <span>አድራሻና ግንኙነት</span>
+                <span>{t('contactAndAddressTitle', 'አድራሻና ግንኙነት')}</span>
               </h4>
               <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
                 <a
@@ -489,7 +515,7 @@ const PublicLayout = ({ children }) => {
                 >
                   <MapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
                   <span className="leading-relaxed">
-                    ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን፣ አዲስ አበባ
+                    {t('fullChurchAddress', 'ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን፣ አዲስ አበባ')}
                   </span>
                 </a>
 
@@ -503,7 +529,7 @@ const PublicLayout = ({ children }) => {
                 <div className="flex items-start gap-2 pt-0.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span className="leading-snug">
-                    የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከጠዋቱ 2:30 – 11:30
+                    {t('churchOfficeHours', 'የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከጠዋቱ 2:30 – 11:30')}
                   </span>
                 </div>
               </div>
@@ -513,7 +539,7 @@ const PublicLayout = ({ children }) => {
           {/* Clean One-Line Copyright Bar */}
           <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 text-center text-xs text-slate-400 dark:text-slate-500">
             <p>
-              © 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።
+              {t('copyrightNotice', '© 2026 ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት። መብቱ በሕግ የተጠበቀ ነው።')}
             </p>
           </div>
         </div>
