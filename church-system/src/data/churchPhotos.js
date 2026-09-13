@@ -145,6 +145,15 @@ export const churchPhotos = [
     description: 'የተከበሩ የቤተክርስቲያን አባቶችና ካህናት ለሰንበት ት/ቤት ተማሪዎች የሚሰጡት አባታዊ ምክር።',
     featured: true,
   },
+  {
+    id: 17,
+    src: '/church-photos/founder.jpg',
+    title: 'የደብሩና የሰንበት ት/ቤቱ መስራች',
+    category: 'history',
+    categoryAm: 'ታሪክና ቅርስ',
+    description: 'ቤተክርስቲያኑን የገነቡትና ሰንበት ትምህርት ቤቱ በስማቸው የተሰየመው ታሪካዊ ባለውለታና መስራች።',
+    featured: true,
+  },
 ];
 
 export const photoCategories = [

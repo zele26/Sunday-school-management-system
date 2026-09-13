@@ -319,6 +319,40 @@ const Home = () => {
             </div>
           </div>
 
+          {/* Founder Tribute Spotlight Card in Home */}
+          <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/10 via-white to-blue-50/30 dark:from-amber-950/30 dark:via-slate-900 dark:to-blue-950/20 border border-amber-400/30 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 justify-between shadow-2xs">
+            <div className="flex items-center gap-3.5 sm:gap-4 w-full sm:w-auto">
+              <div className="relative w-14 h-18 sm:w-16 sm:h-22 rounded-2xl overflow-hidden shrink-0 border-2 border-amber-400/60 shadow-md bg-slate-950">
+                <Image
+                  src="/church-photos/founder.jpg"
+                  alt="የደብሩና የሰንበት ት/ቤቱ መስራች"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] sm:text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>{isAmharic ? 'የደብሩና የሰንበት ት/ቤቱ መስራች' : 'Church & Sunday School Founder'}</span>
+                </span>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+                  {isAmharic ? 'ታሪካዊ አሻራና ባለውለታ' : 'Spiritual Heritage & Patron'}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+                  {isAmharic
+                    ? 'ቤተክርስቲያኑን በጽናት ያነጹና ሰንበት ትምህርት ቤቱ በስማቸው የተሰየመላቸው ታላቅ አባት።'
+                    : 'The revered builder who built the church and under whose name our Sunday School serves.'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/about"
+              className="w-full sm:w-auto text-center shrink-0 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors shadow-xs"
+            >
+              {isAmharic ? 'ታሪካቸውን ያንብቡ' : 'Read Full History'} →
+            </Link>
+          </div>
+
           {/* Understated Archive Text Link */}
           <div className="text-center pt-2">
             <a

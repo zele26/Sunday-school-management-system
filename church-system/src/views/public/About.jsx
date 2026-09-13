@@ -109,6 +109,124 @@ const About = () => {
           </section>
         </FadeIn>
 
+        {/* 🌟 Dedicated Historic Founder & Church Builder Tribute Section */}
+        <FadeIn delay={0.1}>
+          <section className="bg-gradient-to-br from-amber-500/10 via-blue-900/5 to-slate-900/5 dark:from-amber-950/20 dark:via-blue-950/30 dark:to-slate-900 rounded-3xl p-6 sm:p-10 lg:p-12 border-2 border-amber-400/40 dark:border-amber-500/30 shadow-lg relative overflow-hidden">
+            {/* Ambient gold glow */}
+            <div className="absolute top-0 right-1/4 w-80 h-80 bg-amber-400/10 dark:bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-10 w-64 h-64 bg-blue-600/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Left Column: Framed Sacred Portrait */}
+              <div className="lg:col-span-5 flex flex-col items-center">
+                <div className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-3/4 rounded-3xl overflow-hidden shadow-2xl border-4 border-amber-400/60 dark:border-amber-400/40 group bg-slate-950">
+                  <Image
+                    src="/church-photos/founder.jpg"
+                    alt={isAmharic ? 'የደብሩና የሰንበት ት/ቤቱ መስራች' : 'The Church Builder & Sunday School Founder'}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 360px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    priority
+                  />
+                  {/* Subtle Gradient & Gold Trim Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                  
+                  {/* Bottom Image Caption */}
+                  <div className="absolute bottom-4 left-4 right-4 text-center space-y-1">
+                    <span className="inline-block px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black shadow-md tracking-wide">
+                      {isAmharic ? 'መስራችና ባለውለታ' : 'Church Founder & Patron'}
+                    </span>
+                    <p className="text-[11px] sm:text-xs text-amber-200/90 font-medium drop-shadow">
+                      {isAmharic
+                        ? 'በቀኝ እጃቸው ቅዱስ መስቀልና በግራ እጃቸው ያነጹትን ቤተመቅደስ ይዘው'
+                        : 'Holding the Holy Cross & Church Sanctuary'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Historical Tribute Narrative */}
+              <div className="lg:col-span-7 space-y-5">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/20 text-amber-900 dark:text-amber-300 border border-amber-400/40 text-xs font-black uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>{isAmharic ? 'ታሪካዊ ቅርስና መስራች' : 'Historical Heritage & Founder'}</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                    {isAmharic ? (
+                      <>የደብሩና የሰንበት ት/ቤቱ <span className="text-amber-600 dark:text-amber-400">መስራችና ባለውለታ</span></>
+                    ) : (
+                      <>The Founder & <span className="text-amber-600 dark:text-amber-400">Church Builder</span></>
+                    )}
+                  </h2>
+                </div>
+
+                <p className="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+                  {isAmharic
+                    ? 'እኚህ ታላቅ አባት ቤተክርስቲያኑን በገዛ ጥረታቸው ያነጹ፣ ሰንበት ትምህርት ቤቱም በስማቸው የተሰየመላቸው ታላቅ ባለውለታና መስራች ናቸው። ለመንፈሳዊው ትውልድ ያኖሩትን የማይጠፋ የሃይማኖትና የበረከት አሻራ በታላቅ አክብሮትና ምስጋና እንዘክራለን።'
+                    : 'He is the revered patron and builder who built the church and established the foundational cornerstone for our Sunday School, which proudly bears his name. We honor his lifelong dedication, faith, and lasting spiritual legacy.'}
+                </p>
+
+                {/* 4 Feature highlight pills */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-amber-300/40 dark:border-slate-800 shadow-2xs space-y-1">
+                    <div className="text-amber-600 dark:text-amber-400 font-black text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>🏛️</span>
+                      <span>{isAmharic ? 'የቤተመቅደሱ ገንቢ' : 'Church Builder'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {isAmharic ? 'ደብሩን በጽናት ያነጹ ታላቅ ባለውለታ' : 'Built the sacred church sanctuary'}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-blue-300/40 dark:border-slate-800 shadow-2xs space-y-1">
+                    <div className="text-[#1657b8] dark:text-blue-400 font-black text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>📖</span>
+                      <span>{isAmharic ? 'የሰንበት ት/ቤቱ ስያሜ' : 'Sunday School Namesake'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {isAmharic ? 'ተቋሙ በስማቸው ተሰይሞ ይገኛል' : 'Sunday School named in his honor'}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-amber-300/40 dark:border-slate-800 shadow-2xs space-y-1">
+                    <div className="text-amber-600 dark:text-amber-400 font-black text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>✝️</span>
+                      <span>{isAmharic ? 'የተዋሕዶ እምነት ጠባቂ' : 'Devout Orthodox Patron'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {isAmharic ? 'በእምነትና በምግባር የታነጸ ህይወት' : 'A life of faithful devotion & service'}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-blue-300/40 dark:border-slate-800 shadow-2xs space-y-1">
+                    <div className="text-[#1657b8] dark:text-blue-400 font-black text-xs sm:text-sm flex items-center gap-1.5">
+                      <span>🌟</span>
+                      <span>{isAmharic ? 'የዘላለም መታሰቢያ' : 'Enduring Heritage'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {isAmharic ? 'ለትውልድ የሚተላለፍ መንፈሳዊ ቅርስ' : 'A lasting foundation for generations'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link
+                    href="/gallery"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-[#1657b8] dark:text-blue-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors"
+                  >
+                    <span>{isAmharic ? 'በፎቶ ማህደር ውስጥ ታሪካዊ ፎቶዎችን ይመልከቱ' : 'View Historical Photos in Gallery'}</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+        </FadeIn>
+
         {/* Objectives Grid Section */}
         <StaggerContainer staggerChildren={0.15} className="grid md:grid-cols-2 gap-8">
           {/* Card 1: Our Objectives */}
