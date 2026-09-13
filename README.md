@@ -1,41 +1,39 @@
-# ⛪ Tekle Sawiros Sunday School Management & Distance LMS System
-> **የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት ዘመናዊ የመረጃና የርቀት ትምህርት ማኔጅመንት ሲስተም**
+# Tekle Sawiros Sunday School Management & LMS
+> **የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት የመረጃና የርቀት ትምህርት ማኔጅመንት ሲስተም**
 
-An enterprise-grade, full-stack Sunday School Management System and Distance Education LMS tailored for **Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School** (*የማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኒዓለም ቤተክርስቲያን — ተክለ ሳዊሮስ ሰንበት ት/ቤት*).
+A complete Sunday School Management System and Distance Learning Platform built for **Mahdere Sibhat Kidist Lideta Lemaryam Debre Medhanit Medhanealem Church — Tekle Sawiros Sunday School** in Addis Ababa, Ethiopia.
 
-👉 **[View Full UI Showcase & 16 System Screenshots (SHOWCASE.md)](./SHOWCASE.md)**
-
----
-
-## 🌟 Key Features
-
-- **🌐 Public Portal & Digital Heritage:** Modern bilingual (Amharic & English) landing portal, interactive photo archives, historic founder tribute, and parish information.
-- **📝 Student Admissions & Registration:** Multi-track registration for both regular campus students and online distance learners with receipt uploads and status verification.
-- **🎓 Distance Learning Management System (LMS):** Dynamic multi-batch curriculum, video lectures, reading modules, and interactive assessments.
-- **📜 QR-Verified Digital Certification:** Instant, tamper-proof diploma certificate generation and online verification portal.
-- **🔐 Role-Based Access Control:** Secure portal access for Administrators, Teachers, and Students.
-- **🎨 State-of-the-Art UX:** Built with Next.js 16 App Router, Turbopack, Tailwind CSS, Framer Motion, and dark/light theme switching.
+👉 **[View Full UI Showcase & Screenshots (SHOWCASE.md)](./SHOWCASE.md)**
 
 ---
 
-## 🛠️ Technology Stack
+## 💡 What This System Does
 
-- **Frontend:** Next.js 16, React 19, Tailwind CSS v4, Framer Motion, Lucide Icons, React Hook Form, TanStack React Query
-- **Backend:** Node.js, Express 5, MongoDB / Mongoose, JWT Authentication, Cloudinary, Multer
-- **Security & DevSecOps:** Docker, Nginx, Harbor, Jenkins CI/CD Pipeline
-
----
-
-## 👨‍💻 System Architect & Lead Developer
-
-Developed and engineered with faith, dedication, and technical excellence by:
-
-**Zelalem Fiseha Gelaye (ዘላለም ፍስሐ ገላዬ)**  
-- 💼 **LinkedIn:** [linkedin.com/in/zelalem-fiseha-7198b3148](https://www.linkedin.com/in/zelalem-fiseha-7198b3148/)  
-- 🐙 **GitHub:** [@zele26](https://github.com/zele26)  
+- **Online Admissions:** Digital registration for on-campus and distance students with bank receipt uploads.
+- **Distance Education (LMS):** 3-year online course curriculum with study modules and video lessons.
+- **QR Certificate Verification:** Public portal to scan and verify authentic graduation certificates.
+- **Application Tracking:** Students can check their admission status anytime with their phone number.
+- **Staff & Teacher Portals:** Role-based dashboards for managing student rosters, grades, attendance, and admissions.
+- **Bilingual Interface:** Full support for both Amharic and English.
 
 ---
 
-## 📜 License & Copyright
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js 16 (Turbopack), React 19, Tailwind CSS v4, Framer Motion
+- **Backend:** Node.js, Express 5, MongoDB / Mongoose, JWT Auth, Cloudinary
+- **DevOps:** Docker, Nginx, Jenkins CI/CD
+
+---
+
+## 👨‍💻 Developer
+
+**Zelalem Fiseha Gelaye**  
+- LinkedIn: [linkedin.com/in/zelalem-fiseha-7198b3148](https://www.linkedin.com/in/zelalem-fiseha-7198b3148/)  
+- GitHub: [@zele26](https://github.com/zele26)  
+
+---
+
+## 📜 License
 
 © 2026 Tekle Sawiros Sunday School. All rights reserved.
