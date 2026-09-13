@@ -46,9 +46,9 @@ const Contact = () => {
                 icon={Phone}
                 iconClassName="bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400"
                 title={t('phoneNumberLabel', 'ስልክ ቁጥር')}
-                description="+251 11 551 2233"
+                description="+251 926 871 984"
                 onClick={() => {
-                  window.location.href = 'tel:+251115512233';
+                  window.location.href = 'tel:+251926871984';
                 }}
               />
             </StaggerItem>

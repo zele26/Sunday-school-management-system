@@ -10,8 +10,11 @@
     "clean:data": "node scripts/cleanStudentTeacherData.js",
     "test": "echo \"Backend syntax & test check passed\""
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["sunday-school", "church-management", "lms", "ethiopian-orthodox"],
+  "author": {
+    "name": "Zelalem Fiseha Gelaye",
+    "url": "https://github.com/zele26"
+  },
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

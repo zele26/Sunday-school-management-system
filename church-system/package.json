@@ -2,6 +2,10 @@
   "name": "church-system",
   "private": true,
   "version": "0.0.0",
+  "author": {
+    "name": "Zelalem Fiseha Gelaye",
+    "url": "https://github.com/zele26"
+  },
   "type": "module",
   "scripts": {
     "dev": "next dev",

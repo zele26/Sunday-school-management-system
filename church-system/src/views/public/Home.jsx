@@ -356,7 +356,7 @@ const Home = () => {
           {/* Understated Archive Text Link */}
           <div className="text-center pt-2">
             <a
-              href="https://t.me/teklesawiros"
+              href="https://web.telegram.org/k/#@teklesawirossundayschool"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#1e3a8a] dark:text-blue-400 hover:underline py-1"
