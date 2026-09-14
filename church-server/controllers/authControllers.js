@@ -368,11 +368,40 @@ exports.login = async (req, res) => {
       console.error('Failed to set refresh cookie:', cookieErr.message || cookieErr);
     }
 
-    // Fetch studentId if user is a student
+    // Fetch studentId & grade if user is linked to a student record
     let studentIdValue = null;
-    if (user.role === 'student') {
-      const student = await Student.findOne({ userId: user._id });
-      if (student) studentIdValue = student.studentId;
+    let studentProfileIdValue = user.studentProfileId || null;
+    let studentGradeValue = null;
+
+    try {
+      const rawPhone = user.phone ? String(user.phone).trim() : '';
+      const cleanPhoneDigits = rawPhone.replace(/\D/g, '').slice(-9);
+
+      const orConds = [{ userId: user._id }];
+      if (studentProfileIdValue) orConds.push({ _id: studentProfileIdValue });
+      if (user.email) orConds.push({ email: user.email.toLowerCase() });
+      if (rawPhone) {
+        orConds.push({ studentPhone: rawPhone });
+        orConds.push({ contactPhone: rawPhone });
+      }
+      if (cleanPhoneDigits && cleanPhoneDigits.length >= 8) {
+        const phoneRegex = new RegExp(cleanPhoneDigits + '$');
+        orConds.push({ studentPhone: phoneRegex });
+        orConds.push({ contactPhone: phoneRegex });
+      }
+
+      const studentDoc = await Student.findOne({ $or: orConds }).select('studentId grade batch _id userId');
+      if (studentDoc) {
+        studentIdValue = studentDoc.studentId;
+        studentProfileIdValue = studentDoc._id;
+        studentGradeValue = studentDoc.grade || studentDoc.batch || null;
+        if (!studentDoc.userId) {
+          studentDoc.userId = user._id;
+          await studentDoc.save().catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.warn('Could not resolve student link on login:', e.message);
     }
 
     res.status(200).json({
@@ -389,7 +418,8 @@ exports.login = async (req, res) => {
         departmentId: user.departmentId,
         assignedDepartments: user.assignedDepartments || [],
         studentId: studentIdValue || undefined,
-        studentProfileId: user.studentProfileId || undefined,
+        studentProfileId: studentProfileIdValue || undefined,
+        grade: studentGradeValue || undefined,
         mustChangePassword: user.mustChangePassword || false,
       },
     });

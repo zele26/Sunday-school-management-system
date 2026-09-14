@@ -2,7 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Edit, ArrowLeft, Save, User, Phone, MapPin, Heart } from 'lucide-react';
+import {
+  Edit,
+  ArrowLeft,
+  Save,
+  User,
+  Phone,
+  MapPin,
+  Heart,
+  GraduationCap,
+  CreditCard,
+  Hash,
+  Sparkles,
+} from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
@@ -13,17 +25,43 @@ import { Badge } from '../../components/ui/Badge';
 import { EthiopianDatePicker } from '../../components/ui/EthiopianDatePicker';
 import { toast } from '../../utils/toast';
 
+const COMMON_GRADES = [
+  'Grade 1',
+  'Grade 2',
+  'Grade 3',
+  'Grade 4',
+  'Grade 5',
+  'Grade 6',
+  'Grade 7',
+  'Grade 8',
+  'Grade 9',
+  'Grade 10',
+  'Grade 11',
+  'Grade 12',
+  'መሰረተ ሃይማኖት',
+  'ነገረ መለኮት',
+  'ስርዓተ ቤተክርስቲያን',
+  'ቋንቋ ግእዝ',
+  'መዝሙርና ዝማሬ',
+  'የቤተክርስቲያን ታሪክ',
+];
+
 const EditStudent = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [customGrade, setCustomGrade] = useState(false);
+
   const [form, setForm] = useState({
+    studentId: '',
+    registrationNumber: '',
+    batch: '',
     firstName: '',
     middleName: '',
     lastName: '',
     phone: '',
-    grade: '',
+    grade: 'Grade 7',
     age: '',
     shift: 'weekend',
     subcity: '',
@@ -31,6 +69,9 @@ const EditStudent = () => {
     kebele: '',
     address: '',
     studentType: 'regular',
+    educationLevel: '',
+    profession: '',
+    gender: 'Male',
     emergencyFirstName: '',
     emergencyMiddleName: '',
     emergencyLastName: '',
@@ -47,13 +88,21 @@ const EditStudent = () => {
         const res = await apiFetch(`/api/admin/students/${id}`);
         if (res.ok) {
           const data = await res.json();
-          const s = data.student;
+          const s = data.student || {};
+          const currentGrade = s.grade || 'Grade 7';
+          if (!COMMON_GRADES.includes(currentGrade) && currentGrade) {
+            setCustomGrade(true);
+          }
+
           setForm({
+            studentId: s.studentId || '',
+            registrationNumber: s.registrationNumber || '',
+            batch: s.batch || '',
             firstName: s.firstName || '',
             middleName: s.middleName || '',
             lastName: s.lastName || '',
-            phone: s.studentPhone || '',
-            grade: s.grade || '',
+            phone: s.studentPhone || s.contactPhone || '',
+            grade: currentGrade,
             age: s.age || '',
             shift: s.shift || 'weekend',
             subcity: s.subcity || '',
@@ -61,6 +110,9 @@ const EditStudent = () => {
             kebele: s.kebele || '',
             address: s.address || '',
             studentType: s.studentType || 'regular',
+            educationLevel: s.educationLevel || '',
+            profession: s.profession || '',
+            gender: s.gender || 'Male',
             emergencyFirstName: s.emergencyFirstName || s.parentName || '',
             emergencyMiddleName: s.emergencyMiddleName || '',
             emergencyLastName: s.emergencyLastName || '',
@@ -71,10 +123,10 @@ const EditStudent = () => {
             dob: s.dob ? s.dob.split('T')[0] : '',
           });
         } else {
-          toast.error('ተማሪውን መጫን አልተቻለም');
+          toast.error('ተማሪውን መጫን አልተቻለም (Failed to load student)');
         }
       } catch (err) {
-        toast.error('የግንኙነት ስህተት ተከስቷል');
+        toast.error('የግንኙነት ስህተት ተከስቷል (Connection error)');
       } finally {
         setLoading(false);
       }
@@ -89,17 +141,20 @@ const EditStudent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.age && Number(form.age) <= 14) {
-      toast.error('የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት');
+      toast.error('የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት (Age must be > 14)');
       return;
     }
 
     setSubmitting(true);
 
     const payload = {
+      studentId: form.studentId ? form.studentId.trim() : undefined,
+      registrationNumber: form.registrationNumber ? form.registrationNumber.trim() : '',
+      batch: form.batch ? form.batch.trim() : '',
       firstName: form.firstName.trim(),
       middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
-      grade: form.grade,
+      grade: form.grade ? form.grade.trim() : 'Grade 7',
       age: form.age ? Number(form.age) : undefined,
       shift: form.shift,
       subcity: form.subcity.trim(),
@@ -107,14 +162,18 @@ const EditStudent = () => {
       kebele: form.kebele.trim(),
       address: form.address.trim(),
       studentPhone: form.phone.trim(),
+      contactPhone: form.phone.trim(),
       studentType: form.studentType,
+      educationLevel: form.educationLevel,
+      profession: form.profession,
+      gender: form.gender,
       emergencyFirstName: form.emergencyFirstName.trim(),
       emergencyMiddleName: form.emergencyMiddleName.trim(),
       emergencyLastName: form.emergencyLastName.trim(),
       relationship: form.relationship.trim(),
-      contactPhone: form.contactPhone.trim(),
+      emergencyPhone: form.contactPhone.trim(),
       contactEmail: form.contactEmail.trim(),
-      contactAddress: form.contactAddress.trim(),
+      emergencyAddress: form.contactAddress.trim(),
       dob: form.dob,
     };
 
@@ -123,14 +182,15 @@ const EditStudent = () => {
         method: 'PUT',
         body: JSON.stringify(payload),
       });
+      const resData = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success('የተማሪው መረጃ በተሳካ ሁኔታ ተሻሽሏል!');
+        toast.success('የተማሪው መረጃ በተሳካ ሁኔታ ተሻሽሏል! (Student updated successfully)');
         navigate('/admin/students');
       } else {
-        toast.error('ማሻሻል አልተቻለም');
+        toast.error(resData.message || 'ማሻሻል አልተቻለም (Update failed)');
       }
     } catch (err) {
-      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል');
+      toast.error('የኔትወርክ ግንኙነት ችግር አጋጥሟል (Network error)');
     } finally {
       setSubmitting(false);
     }
@@ -140,16 +200,16 @@ const EditStudent = () => {
     return (
       <div className="py-16 text-center text-slate-400 dark:text-slate-500">
         <div className="w-8 h-8 border-2 border-[var(--brand-primary)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm font-medium">የተማሪ መረጃ በመጫን ላይ...</p>
+        <p className="text-sm font-medium">የተማሪ መረጃ በመጫን ላይ... (Loading student details...)</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
       <PageHeader
         title={`ተማሪ አሻሽል: ${form.firstName} ${form.lastName}`}
-        subtitle="የተማሪውን የግል እና የአደጋ ጊዜ መረጃዎች ያሻሽሉ"
+        subtitle="የተማሪውን መለያ ቁጥር፣ ክፍል፣ የግል እና የአደጋ ጊዜ መረጃዎች ያሻሽሉ"
         icon={Edit}
         badge={<Badge variant="active" size="sm">ማሻሻያ</Badge>}
         actions={
@@ -161,45 +221,133 @@ const EditStudent = () => {
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Section 1: Academic Identity (ID & Class) */}
+        <Card variant="default" padding="lg" className="space-y-4 border-amber-200/60 dark:border-amber-900/40 bg-gradient-to-br from-amber-50/20 via-white to-blue-50/20 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-amber-500" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">የተማሪ አካዳሚክ መለያ እና ክፍል (Student ID & Class)</h3>
+            </div>
+            <Badge variant="gold" size="sm">አካዳሚክ መረጃ</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Student ID */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+                <span>የተማሪ መለያ ቁጥር (Student ID)</span>
+              </label>
+              <Input
+                name="studentId"
+                placeholder="ምሳሌ፡ TKR-2015-0001 ወይም STU-2026-0001"
+                value={form.studentId}
+                onChange={handleChange}
+                className="font-mono font-bold"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">የተማሪው ቋሚ የሰንበት ት/ቤት መታወቂያ ቁጥር</p>
+            </div>
+
+            {/* Class / Grade Selection */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
+                  <span>ክፍል / ደረጃ (Class / Grade) *</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setCustomGrade(!customGrade)}
+                  className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-bold"
+                >
+                  {customGrade ? 'ከዝርዝር ምረጥ' : 'ልዩ ክፍል ፃፍ'}
+                </button>
+              </div>
+
+              {customGrade ? (
+                <Input
+                  name="grade"
+                  required
+                  placeholder="ምሳሌ፡ 10ኛ ክፍል ወይም ነገረ መለኮት"
+                  value={form.grade}
+                  onChange={handleChange}
+                />
+              ) : (
+                <Select name="grade" value={form.grade} onChange={handleChange}>
+                  {COMMON_GRADES.map((g) => (
+                    <option key={g} value={g}>
+                      {g.startsWith('Grade') ? `${g.replace('Grade ', '')}ኛ ክፍል (${g})` : g}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              <p className="text-[11px] text-slate-400 mt-1">የተማሪው የትምህርት ደረጃ ወይም ክፍል</p>
+            </div>
+
+            {/* Registration Number or Batch */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                <Hash className="w-3.5 h-3.5 text-slate-400" />
+                <span>{form.studentType === 'distance' ? 'ዙር / ባች (Batch)' : 'የማመልከቻ ቁጥር (Reg No)'}</span>
+              </label>
+              {form.studentType === 'distance' ? (
+                <Input
+                  name="batch"
+                  placeholder="ምሳሌ፡ Batch 1 ወይም ዙር 2"
+                  value={form.batch}
+                  onChange={handleChange}
+                />
+              ) : (
+                <Input
+                  name="registrationNumber"
+                  placeholder="ምሳሌ፡ REG-2026-0042"
+                  value={form.registrationNumber}
+                  onChange={handleChange}
+                />
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Section 2: Personal Information */}
         <Card variant="default" padding="lg" className="space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <User className="w-5 h-5 text-[var(--brand-primary)]" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">የተማሪው የግል መረጃ</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">የተማሪው የግል መረጃ (Personal Details)</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስም *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስም (First Name) *</label>
               <Input name="firstName" required value={form.firstName} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአባት ስም</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአባት ስም (Middle Name)</label>
               <Input name="middleName" value={form.middleName} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአያት ስም *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የአያት ስም (Last Name) *</label>
               <Input name="lastName" required value={form.lastName} onChange={handleChange} />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (ከ 14 በላይ)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (Age &gt; 14)</label>
               <Input type="number" name="age" min="15" max="120" placeholder="ምሳሌ፡ 18" value={form.age} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍል</label>
-              <Select name="grade" value={form.grade} onChange={handleChange}>
-                {[7, 8, 9, 10, 11, 12].map((g) => (
-                  <option key={g} value={`Grade ${g}`}>{g}ኛ ክፍል</option>
-                ))}
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ጾታ (Gender)</label>
+              <Select name="gender" value={form.gender} onChange={handleChange}>
+                <option value="Male">ወንድ (Male)</option>
+                <option value="Female">ሴት (Female)</option>
               </Select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የምዝገባ ዓይነት</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የምዝገባ ዓይነት (Student Track)</label>
               <Select name="studentType" value={form.studentType} onChange={handleChange}>
-                <option value="regular">መደበኛ</option>
-                <option value="distance">የርቀት</option>
+                <option value="regular">መደበኛ (Regular)</option>
+                <option value="distance">የርቀት (Distance / Online)</option>
               </Select>
             </div>
           </div>
@@ -209,37 +357,30 @@ const EditStudent = () => {
             <EthiopianDatePicker
               value={form.dob}
               onChange={(iso) => setForm({ ...form, dob: iso })}
-              label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር"
+              label="የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር (Date of Birth)"
             />
           </div>
 
-          {form.studentType === 'regular' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {form.studentType === 'regular' && (
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ (Shift)</label>
                 <Select name="shift" value={form.shift} onChange={handleChange}>
                   <option value="weekend">የቀን (ቅዳሜ እና እሑድ)</option>
-                  <option value="night">የማታ</option>
+                  <option value="night">የማታ (Night)</option>
                 </Select>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ</label>
-                <Input icon={Phone} name="phone" value={form.phone} onChange={handleChange} />
-              </div>
-            </div>
-          )}
-
-          {form.studentType === 'distance' && (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ</label>
+            )}
+            <div className={form.studentType !== 'regular' ? 'sm:col-span-2' : ''}>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ ቁጥር (Phone Number)</label>
               <Input icon={Phone} name="phone" value={form.phone} onChange={handleChange} />
             </div>
-          )}
+          </div>
 
           {/* Subcity, Woreda, Kebele & Address */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍለ ከተማ</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ክፍለ ከተማ (Subcity)</label>
               <Select name="subcity" value={form.subcity} onChange={handleChange}>
                 <option value="">ይምረጡ</option>
                 <option value="ቦሌ">ቦሌ</option>
@@ -257,43 +398,45 @@ const EditStudent = () => {
               </Select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ወረዳ</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ወረዳ (Woreda)</label>
               <Input name="woreda" placeholder="ምሳሌ፡ 03" value={form.woreda} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ቀበሌ / የቤት ቁጥር</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ቀበሌ / የቤት ቁጥር (Kebele / House No)</label>
               <Input name="kebele" placeholder="ቀበሌ / የቤት ቁጥር" value={form.kebele} onChange={handleChange} />
             </div>
             <div className="sm:col-span-3">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ተጨማሪ አድራሻ</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ተጨማሪ አድራሻ (Address Details)</label>
               <Input icon={MapPin} name="address" placeholder="የሰፈር ስም ወይም ልዩ ምልክት" value={form.address} onChange={handleChange} />
             </div>
           </div>
         </Card>
 
-        {/* Section 2: Emergency Contact */}
+        {/* Section 3: Emergency Contact */}
         <Card variant="default" padding="lg" className="space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <Heart className="w-5 h-5 text-rose-500" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">የአደጋ ጊዜ ተጠሪ</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">የአደጋ ጊዜ ተጠሪ (Emergency Contact)</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የተጠሪ ስም</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የተጠሪ ስም (Contact Name)</label>
               <Input name="emergencyFirstName" value={form.emergencyFirstName} onChange={handleChange} />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዝምድና</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዝምድና (Relationship)</label>
               <Select name="relationship" value={form.relationship} onChange={handleChange}>
-                <option value="Father">አባት</option>
-                <option value="Mother">እናት</option>
-                <option value="Guardian">አሳዳጊ</option>
-                <option value="Other">ሌላ</option>
+                <option value="Father">አባት (Father)</option>
+                <option value="Mother">እናት (Mother)</option>
+                <option value="Brother">ወንድም (Brother)</option>
+                <option value="Sister">እህት (Sister)</option>
+                <option value="Guardian">አሳዳጊ (Guardian)</option>
+                <option value="Other">ሌላ (Other)</option>
               </Select>
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የተጠሪ ስልክ</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የተጠሪ ስልክ (Contact Phone)</label>
               <Input icon={Phone} name="contactPhone" value={form.contactPhone} onChange={handleChange} />
             </div>
           </div>
@@ -301,11 +444,11 @@ const EditStudent = () => {
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" type="button" onClick={() => navigate('/admin/students')}>
-            ሰርዝ
+            ሰርዝ (Cancel)
           </Button>
-          <Button variant="primary" type="submit" loading={submitting} className="gap-2">
+          <Button variant="primary" type="submit" loading={submitting} className="gap-2 shadow-md">
             <Save className="w-4 h-4" />
-            <span>ለውጦችን አስቀምጥ</span>
+            <span>ለውጦችን አስቀምጥ (Save Changes)</span>
           </Button>
         </div>
       </form>

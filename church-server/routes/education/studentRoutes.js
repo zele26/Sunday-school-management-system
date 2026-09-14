@@ -10,30 +10,64 @@ const ExamResult = require('../../models/education/ExamResult');
 // All routes require a valid token
 router.use(protect);
 
-// Middleware to ensure the user is a student (auto-creates Student doc if missing)
+// Middleware to ensure the user is linked to a Student record
 const ensureStudent = async (req, res, next) => {
   try {
-    if (req.user.role !== 'student') {
-      return res.status(403).json({ message: 'Access denied. Only students can access this resource.' });
+    const rawPhone = req.user.phone ? String(req.user.phone).trim() : '';
+    const cleanPhoneDigits = rawPhone.replace(/\D/g, '').slice(-9);
+
+    const orConditions = [
+      { userId: req.user._id },
+    ];
+
+    if (req.user.studentProfileId) {
+      orConditions.push({ _id: req.user.studentProfileId });
+    }
+    if (req.user.email) {
+      orConditions.push({ email: req.user.email.toLowerCase() });
+    }
+    if (rawPhone) {
+      orConditions.push({ studentPhone: rawPhone });
+      orConditions.push({ contactPhone: rawPhone });
+      orConditions.push({ emergencyPhone: rawPhone });
+      orConditions.push({ phone: rawPhone });
+    }
+    if (cleanPhoneDigits && cleanPhoneDigits.length >= 8) {
+      const phoneRegex = new RegExp(cleanPhoneDigits + '$');
+      orConditions.push({ studentPhone: phoneRegex });
+      orConditions.push({ contactPhone: phoneRegex });
+      orConditions.push({ emergencyPhone: phoneRegex });
+      orConditions.push({ phone: phoneRegex });
     }
 
-    let student = await Student.findOne({ userId: req.user._id });
-    if (!student && req.user.email) {
-      student = await Student.findOne({ email: req.user.email.toLowerCase() });
-    }
+    // 1. Try to find student document linked to user ID, phone, email, or studentProfileId
+    let student = await Student.findOne({ $or: orConditions });
+
+    // 2. Check student capability
+    const isStudentUser =
+      req.user.role === 'student' ||
+      (Array.isArray(req.user.roles) && req.user.roles.some((r) => r && r.toLowerCase() === 'student')) ||
+      Boolean(student) ||
+      Boolean(req.user.studentProfileId) ||
+      Boolean(req.user.studentId);
 
     if (!student) {
+      if (!isStudentUser) {
+        return res.status(403).json({ success: false, message: 'Access denied. Only students can access this resource.' });
+      }
       const names = (req.user.fullName || 'Student').trim().split(/\s+/);
       student = await Student.create({
         userId: req.user._id,
         firstName: names[0] || 'Student',
         lastName: names.length > 1 ? names.slice(1).join(' ') : '',
         email: req.user.email ? req.user.email.toLowerCase() : '',
+        studentPhone: rawPhone || '',
+        contactPhone: rawPhone || '',
         grade: 'Grade 7',
         studentType: 'regular',
       });
-      console.log(`✅ Created missing Student document for user ${req.user.email}`);
-    } else if (!student.userId) {
+      console.log(`✅ Created missing Student document for user ${req.user.email || req.user.phone}`);
+    } else if (!student.userId || String(student.userId) !== String(req.user._id)) {
       student.userId = req.user._id;
       await student.save();
     }
@@ -41,7 +75,8 @@ const ensureStudent = async (req, res, next) => {
     req.student = student;
     next();
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('ensureStudent middleware error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -51,15 +86,27 @@ router.use(ensureStudent);
 router.get('/profile', async (req, res) => {
   try {
     const student = await Student.findById(req.student._id)
-      .populate('userId', 'email')
+      .populate('userId', 'email phone fullName role roles')
       .populate({
         path: 'courses',
-        populate: { path: 'teacher', select: 'fullName email' }
+        populate: { path: 'teacher', select: 'fullName email phone' }
       })
-      .populate('teacher', 'fullName email');
-    res.json(student);
+      .populate('teacher', 'fullName email phone');
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found' });
+    }
+
+    const studentObj = student.toObject({ virtuals: true });
+    if (!studentObj.studentPhone && req.user.phone) studentObj.studentPhone = req.user.phone;
+    if (!studentObj.email && req.user.email) studentObj.email = req.user.email;
+    if (!studentObj.fullName) {
+      studentObj.fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || req.user.fullName;
+    }
+
+    res.json(studentObj);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 

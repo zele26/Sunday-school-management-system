@@ -17,6 +17,7 @@ const { formatEthiopianDate } = require('../../utils/ethiopianDate');
 router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
     const {
+      studentId, batch, registrationNumber, studentType,
       firstName, middleName, lastName, dob, grade, address, contactPhone,
       email, password,
       age, subcity, woreda, kebele, shift,
@@ -33,6 +34,13 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       return res.status(400).json({ success: false, message: 'A user with this email already exists.' });
     }
 
+    if (studentId && studentId.trim()) {
+      const existingId = await Student.findOne({ studentId: studentId.trim() });
+      if (existingId) {
+        return res.status(400).json({ success: false, message: `ተማሪ መለያ (${studentId}) ቀድሞውኑ ተመዝግቧል።` });
+      }
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -47,6 +55,10 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
 
     const studentData = {
       userId: newUser._id,
+      studentId: studentId ? studentId.trim() : undefined,
+      registrationNumber: registrationNumber ? registrationNumber.trim() : '',
+      batch: batch ? batch.trim() : null,
+      studentType: studentType || 'regular',
       firstName,
       middleName: middleName || '',
       lastName,
@@ -76,6 +88,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       message: 'Student account created successfully.',
       student: {
         id: newStudent._id,
+        studentId: newStudent.studentId,
         firstName: newStudent.firstName,
         lastName: newStudent.lastName,
         email: newUser.email,
@@ -446,6 +459,7 @@ router.get('/:id', protect, authorize('admin'), async (req, res) => {
 router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const {
+      studentId, batch, registrationNumber,
       firstName, middleName, lastName, dob, grade, address, studentPhone, contactPhone,
       educationLevel, profession, gender, studentType,
       age, subcity, woreda, kebele, shift,
@@ -459,16 +473,27 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    if (firstName !== undefined) student.firstName = firstName;
-    if (middleName !== undefined) student.middleName = middleName;
-    if (lastName !== undefined) student.lastName = lastName;
+    if (studentId !== undefined && studentId.trim() && studentId.trim() !== student.studentId) {
+      const trimmedId = studentId.trim();
+      const existingConflict = await Student.findOne({ studentId: trimmedId, _id: { $ne: student._id } });
+      if (existingConflict) {
+        return res.status(400).json({ success: false, message: `ተማሪ መለያ (${trimmedId}) ቀድሞውኑ ለሌላ ተማሪ ተመዝግቧል።` });
+      }
+      student.studentId = trimmedId;
+    }
+
+    if (batch !== undefined) student.batch = batch ? batch.trim() : null;
+    if (registrationNumber !== undefined) student.registrationNumber = registrationNumber.trim();
+    if (firstName !== undefined) student.firstName = firstName.trim();
+    if (middleName !== undefined) student.middleName = middleName.trim();
+    if (lastName !== undefined) student.lastName = lastName.trim();
     if (dob !== undefined) student.dob = dob;
     if (age !== undefined) student.age = age ? Number(age) : undefined;
     if (subcity !== undefined) student.subcity = subcity;
     if (woreda !== undefined) student.woreda = woreda;
     if (kebele !== undefined) student.kebele = kebele;
     if (shift !== undefined) student.shift = shift;
-    if (grade !== undefined) student.grade = grade;
+    if (grade !== undefined) student.grade = grade.trim();
     if (address !== undefined) student.address = address;
     if (educationLevel !== undefined) student.educationLevel = educationLevel;
     if (profession !== undefined) student.profession = profession;
