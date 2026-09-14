@@ -272,3 +272,51 @@ export function hasPermission(user, requiredPermission) {
 
   return false;
 }
+
+/**
+ * Check if the user has permission to view the central Admin Overview Hub
+ */
+export function hasOverviewAccess(user) {
+  if (!user) return false;
+  if (user.role === 'superadmin' || user.role === 'admin') return true;
+
+  const perms = Array.isArray(user.permissions) ? user.permissions : [];
+  if (perms.includes('*') || perms.includes('all')) return true;
+
+  // Dedicated overview/analytics/reporting permissions
+  return hasPermission(user, [
+    PERMISSIONS.ANALYTICS_VIEW,
+    PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.AUDIT_LOGS_VIEW,
+    'system:overview',
+  ]);
+}
+
+/**
+ * Determine the first accessible route for a delegated staff user
+ */
+export function getFirstPermittedAdminRoute(user) {
+  if (!user) return '/dashboard';
+  if (hasOverviewAccess(user)) return '/admin';
+
+  // Task prioritized routing for delegated staff
+  if (hasPermission(user, PERMISSIONS.ATTENDANCE_SCAN)) return '/admin/qr-scanner';
+  if (hasPermission(user, [PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE])) return '/admin/attendance-reports';
+  if (hasPermission(user, [PERMISSIONS.REGISTRATIONS_VIEW, PERMISSIONS.REGISTRATIONS_APPROVE])) return '/admin/registrations';
+  if (hasPermission(user, [PERMISSIONS.CERTIFICATES_VIEW, PERMISSIONS.CERTIFICATES_ISSUE])) return '/admin/certificates';
+  if (hasPermission(user, [PERMISSIONS.STUDENTS_VIEW, PERMISSIONS.STUDENTS_MANAGE])) return '/admin/students';
+  if (hasPermission(user, [PERMISSIONS.TEACHERS_VIEW, PERMISSIONS.TEACHERS_MANAGE])) return '/admin/teachers';
+  if (hasPermission(user, PERMISSIONS.ACADEMIC_DISTANCE_HUB)) return '/admin/distance-hub';
+  if (hasPermission(user, PERMISSIONS.ACADEMIC_CLASSES)) return '/admin/classes';
+  if (hasPermission(user, PERMISSIONS.ACADEMIC_COURSES)) return '/admin/courses';
+  if (hasPermission(user, PERMISSIONS.ACADEMIC_ENROLLMENTS)) return '/admin/academic-enrollments';
+  if (hasPermission(user, PERMISSIONS.ANNOUNCEMENTS_MANAGE)) return '/admin/announcements';
+  if (hasPermission(user, PERMISSIONS.RESOURCES_MANAGE)) return '/admin/resources';
+  if (hasPermission(user, PERMISSIONS.DEPARTMENTS_MANAGE)) return '/admin/departments';
+  if (hasPermission(user, PERMISSIONS.MEMBERSHIPS_MANAGE)) return '/admin/church-memberships';
+  if (hasPermission(user, PERMISSIONS.USERS_MANAGE)) return '/admin/users';
+  if (hasPermission(user, PERMISSIONS.PASSWORD_RESETS_MANAGE)) return '/admin/password-resets';
+  if (hasPermission(user, PERMISSIONS.SETTINGS_MANAGE)) return '/admin/settings';
+
+  return '/dashboard';
+}

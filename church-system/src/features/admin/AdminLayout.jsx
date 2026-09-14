@@ -47,7 +47,19 @@ const allNavSections = [
     titleKey: 'adminCoreSectionTitle',
     title: 'የቤተክርስቲያንና የዋና አስተዳደር',
     items: [
-      { path: '/admin', labelKey: 'navOverview', label: 'አጠቃላይ እይታ', icon: LayoutDashboard, end: true },
+      {
+        path: '/admin',
+        labelKey: 'navOverview',
+        label: 'አጠቃላይ እይታ',
+        icon: LayoutDashboard,
+        end: true,
+        permission: [
+          PERMISSIONS.ANALYTICS_VIEW,
+          PERMISSIONS.REPORTS_VIEW,
+          PERMISSIONS.AUDIT_LOGS_VIEW,
+          'system:overview',
+        ],
+      },
       { path: '/admin/people', labelKey: 'navPeople', label: 'ሰዎችና አባላት', icon: Users, permission: PERMISSIONS.STUDENTS_VIEW },
       { path: '/admin/departments', labelKey: 'navDepartments', label: 'ክፍላት', icon: Building2, permission: PERMISSIONS.DEPARTMENTS_MANAGE },
       { path: '/admin/department-memberships', labelKey: 'navDeptMemberships', label: 'የክፍል አባልነቶች', icon: Link2, permission: PERMISSIONS.MEMBERSHIPS_MANAGE },
@@ -140,11 +152,11 @@ const AdminLayout = ({ children, onLogout }) => {
       // If no items in this section are accessible, hide the entire section
       if (section.items.length === 0) return false;
 
-      // Scope filter for Super Admin vs Dept Admin
+      // Scope filter for Super Admin vs Dept Admin / Delegated Staff
       if (isDeptAdmin) {
         return section.id === 'EDUCATION';
       }
-      if (activeScope === 'ALL') return true;
+      if (!isSuperAdmin || activeScope === 'ALL') return true;
       return section.id === activeScope;
     });
 

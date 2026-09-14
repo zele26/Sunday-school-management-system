@@ -18,6 +18,7 @@ import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useLanguage } from '../hooks/useLanguage';
 import { BackButton } from '../components/ui';
+import { getFirstPermittedAdminRoute } from '../utils/permissions';
 
 // Authentic Ethiopian Orthodox Cross (Meskel) Motif
 const EthiopianCrossIcon = ({ className = 'w-6 h-6', ...props }) => (
@@ -74,7 +75,7 @@ const Login = () => {
       (Array.isArray(userObj?.permissions) && userObj.permissions.length > 0);
 
     if (hasAdminAccess) {
-      return '/admin';
+      return getFirstPermittedAdminRoute(userObj);
     }
     if (role === 'teacher') {
       return '/teacher';

@@ -27,9 +27,13 @@ router.post('/refresh', async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         role: user.role,
+        roles: user.roles || (user.role ? [user.role] : []),
+        permissions: user.permissions || [],
         departmentId: user.departmentId,
         assignedDepartments: user.assignedDepartments || [],
+        studentProfileId: user.studentProfileId || undefined,
         mustChangePassword: user.mustChangePassword,
       }
     });
@@ -54,8 +58,11 @@ router.get('/me', protect, async (req, res) => {
       email: req.user.email,
       phone: req.user.phone,
       role: req.user.role,
+      roles: req.user.roles || (req.user.role ? [req.user.role] : []),
+      permissions: req.user.permissions || [],
       departmentId: req.user.departmentId,
       assignedDepartments: req.user.assignedDepartments || [],
+      studentProfileId: req.user.studentProfileId || undefined,
       mustChangePassword: req.user.mustChangePassword,
     },
   });

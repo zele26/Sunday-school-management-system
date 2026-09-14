@@ -36,6 +36,8 @@ import { Button } from '../../components/ui/Button';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 import { apiFetch } from '../../api/apiClient';
 import { useLanguage } from '../../hooks/useLanguage';
+import useAuthStore from '../../store/authStore';
+import { hasPermission, PERMISSIONS } from '../../utils/permissions';
 
 function formatRelativeTime(dateString, isAmharic) {
   if (!dateString) return isAmharic ? 'ዛሬ' : 'Today';
@@ -131,6 +133,8 @@ const AdminOverviewContent = () => {
     { id: 'system', label: t('catSystem', '⚙️ ሲስተምና ሪፖርቶች') },
   ], [t]);
 
+  const user = useAuthStore((state) => state.user);
+
   const allModules = useMemo(() => [
     // Academics
     {
@@ -138,6 +142,7 @@ const AdminOverviewContent = () => {
       path: '/admin/users',
       label: t('moduleUsers', 'ተጠቃሚዎች'),
       icon: Users,
+      permission: PERMISSIONS.USERS_MANAGE,
       color: 'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
       countKey: 'users',
       unit: t('unitUsers', 'ተጠቃሚዎች'),
@@ -147,6 +152,7 @@ const AdminOverviewContent = () => {
       path: '/admin/approvals',
       label: t('moduleApprovals', 'ማረጋገጫዎች'),
       icon: CheckCircle2,
+      permission: PERMISSIONS.USERS_MANAGE,
       color: 'from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
       countKey: 'pendingApprovals',
       unit: t('unitPending', 'በመጠባበቅ ላይ'),
@@ -157,6 +163,7 @@ const AdminOverviewContent = () => {
       path: '/admin/distance-hub',
       label: t('moduleDistanceHub', 'የርቀት ትምህርት ማዕከል'),
       icon: GraduationCap,
+      permission: PERMISSIONS.ACADEMIC_DISTANCE_HUB,
       color: 'from-indigo-500/20 to-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
       badge: `${stats.modules} ${t('unitModules', 'ሞጁሎች')}`,
     },
@@ -165,6 +172,7 @@ const AdminOverviewContent = () => {
       path: '/admin/classes',
       label: t('moduleClasses', 'ክፍሎች'),
       icon: School,
+      permission: PERMISSIONS.ACADEMIC_CLASSES,
       color: 'from-sky-500/20 to-sky-600/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
       countKey: 'classes',
       unit: t('unitClasses', 'ንቁ ክፍሎች'),
@@ -174,6 +182,7 @@ const AdminOverviewContent = () => {
       path: '/admin/courses',
       label: t('moduleCourses', 'ትምህርቶች'),
       icon: BookOpen,
+      permission: PERMISSIONS.ACADEMIC_COURSES,
       color: 'from-emerald-500/20 to-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
       countKey: 'courses',
       unit: t('unitCourses', 'ኮርሶች'),
@@ -183,6 +192,7 @@ const AdminOverviewContent = () => {
       path: '/admin/attendance-reports',
       label: t('moduleAttendance', 'የመገኘት ክትትል'),
       icon: ClipboardList,
+      permission: [PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE, PERMISSIONS.ATTENDANCE_SCAN],
       color: 'from-teal-500/20 to-teal-600/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
       badge: t('badgeAttendance', 'መገኘት'),
     },
@@ -193,6 +203,7 @@ const AdminOverviewContent = () => {
       path: '/admin/announcements',
       label: t('moduleAnnouncements', 'ማስታወቂያዎች'),
       icon: Bell,
+      permission: PERMISSIONS.ANNOUNCEMENTS_MANAGE,
       color: 'from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
       badge: `${stats.announcements > 0 ? stats.announcements : ''} ${t('badgeOfficial', 'ይፋዊ')}`.trim(),
     },
@@ -201,6 +212,7 @@ const AdminOverviewContent = () => {
       path: '/admin/resources',
       label: t('moduleResources', 'የትምህርት መርጃዎች'),
       icon: FileText,
+      permission: PERMISSIONS.RESOURCES_MANAGE,
       color: 'from-blue-500/20 to-blue-600/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
       badge: t('badgeResources', 'ፒዲኤፍ/ቪዲዮ'),
     },
@@ -209,6 +221,7 @@ const AdminOverviewContent = () => {
       path: '/admin/certificates',
       label: t('moduleCertificates', 'የምስክር ወረቀቶች'),
       icon: Award,
+      permission: [PERMISSIONS.CERTIFICATES_VIEW, PERMISSIONS.CERTIFICATES_ISSUE],
       color: 'from-yellow-500/20 to-yellow-600/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
       badge: `${stats.certificates > 0 ? stats.certificates : ''} ${t('badgeQRVerified', 'በQR የተረጋገጠ')}`.trim(),
     },
@@ -217,6 +230,7 @@ const AdminOverviewContent = () => {
       path: '/admin/church-memberships',
       label: t('moduleMemberships', 'የአባልነት መታወቂያዎች'),
       icon: Layers,
+      permission: PERMISSIONS.MEMBERSHIPS_MANAGE,
       color: 'from-cyan-500/20 to-cyan-600/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
       badge: t('badgeIDCards', 'መታወቂያ'),
     },
@@ -227,6 +241,7 @@ const AdminOverviewContent = () => {
       path: '/admin/reports',
       label: t('moduleReports', 'ሪፖርቶች'),
       icon: BarChart3,
+      permission: PERMISSIONS.REPORTS_VIEW,
       color: 'from-violet-500/20 to-violet-600/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
       badge: t('badgeStats', 'ስታቲስቲክስ'),
     },
@@ -235,6 +250,7 @@ const AdminOverviewContent = () => {
       path: '/admin/complaints',
       label: t('moduleComplaints', 'ቅሬታዎች'),
       icon: AlertTriangle,
+      permission: PERMISSIONS.USERS_MANAGE,
       color: 'from-rose-500/20 to-rose-600/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
       countKey: 'activeComplaints',
       unit: t('unitUnresolved', 'ያልተፈቱ'),
@@ -244,6 +260,7 @@ const AdminOverviewContent = () => {
       path: '/admin/audit-logs',
       label: t('moduleAuditLogs', 'የሲስተም እንቅስቃሴ መዝገቦች'),
       icon: ShieldAlert,
+      permission: PERMISSIONS.AUDIT_LOGS_VIEW,
       color: 'from-slate-500/20 to-slate-600/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
       badge: t('badgeSecurity', 'ደህንነት'),
     },
@@ -252,13 +269,22 @@ const AdminOverviewContent = () => {
       path: '/admin/settings',
       label: t('moduleSettings', 'መቼቶችና ማዋቀሪያ'),
       icon: Settings,
+      permission: PERMISSIONS.SETTINGS_MANAGE,
       color: 'from-neutral-500/20 to-neutral-600/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
       badge: t('badgeConfig', 'ማዋቀሪያ'),
     },
   ], [t, stats]);
 
-  const filteredModules = useMemo(() => {
+  // Filter modules based on user permissions
+  const permittedModules = useMemo(() => {
     return allModules.filter((mod) => {
+      if (!mod.permission) return true;
+      return hasPermission(user, mod.permission);
+    });
+  }, [allModules, user]);
+
+  const filteredModules = useMemo(() => {
+    return permittedModules.filter((mod) => {
       const matchesCategory =
         selectedCategory === 'all' || mod.category === selectedCategory;
       const matchesSearch =
@@ -266,7 +292,54 @@ const AdminOverviewContent = () => {
         mod.label.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery, allModules]);
+  }, [selectedCategory, searchQuery, permittedModules]);
+
+  const quickActionsList = useMemo(() => [
+    {
+      path: '/admin/qr-scanner',
+      label: t('quickQRScanner', 'የQR መገኘት መቆጣጠሪያ'),
+      icon: QrCode,
+      iconColor: 'text-emerald-600',
+      hoverStyle: 'hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 hover:border-emerald-200 dark:hover:border-emerald-900',
+      permission: PERMISSIONS.ATTENDANCE_SCAN,
+    },
+    {
+      path: '/admin/add-student',
+      label: t('quickAddStudent', 'አዲስ ተማሪ መዝግብ'),
+      icon: UserPlus,
+      iconColor: 'text-[#1657b8]',
+      hoverStyle: 'hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-[#1657b8] dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-900',
+      permission: PERMISSIONS.STUDENTS_MANAGE,
+    },
+    {
+      path: '/admin/add-teacher',
+      label: t('quickAddTeacher', 'አዲስ መምህር መድብ'),
+      icon: UserCheck,
+      iconColor: 'text-amber-600',
+      hoverStyle: 'hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 dark:hover:text-amber-300 hover:border-amber-200 dark:hover:border-amber-900',
+      permission: PERMISSIONS.TEACHERS_MANAGE,
+    },
+    {
+      path: '/admin/announcements',
+      label: t('quickPostAnnouncement', 'ማስታወቂያ ልቀቅ'),
+      icon: Bell,
+      iconColor: 'text-purple-600',
+      hoverStyle: 'hover:bg-purple-50 dark:hover:bg-purple-950/40 hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-200 dark:hover:border-purple-900',
+      permission: PERMISSIONS.ANNOUNCEMENTS_MANAGE,
+    },
+    {
+      path: '/admin/certificates',
+      label: t('moduleCertificates', 'የምስክር ወረቀቶች'),
+      icon: Award,
+      iconColor: 'text-yellow-600',
+      hoverStyle: 'hover:bg-yellow-50 dark:hover:bg-yellow-950/40 hover:text-yellow-700 dark:hover:text-yellow-300 hover:border-yellow-200 dark:hover:border-yellow-900',
+      permission: PERMISSIONS.CERTIFICATES_ISSUE,
+    },
+  ], [t]);
+
+  const permittedQuickActions = useMemo(() => {
+    return quickActionsList.filter((item) => !item.permission || hasPermission(user, item.permission));
+  }, [quickActionsList, user]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 font-sans">
@@ -285,8 +358,9 @@ const AdminOverviewContent = () => {
         />
       </FadeIn>
 
-      {/* 🌟 2. Real Actionable Attention Banner (Displays only when real pending approvals exist) */}
-      {stats.pendingApprovals > 0 && (
+      {/* 🌟 2. Real Actionable Attention Banner (Displays only when real pending approvals exist and user has permission) */}
+      {stats.pendingApprovals > 0 &&
+        (hasPermission(user, PERMISSIONS.USERS_MANAGE) || hasPermission(user, PERMISSIONS.REGISTRATIONS_APPROVE)) && (
         <FadeIn direction="up" duration={0.3}>
           <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-transparent border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
             <div className="flex items-center gap-3.5">
@@ -539,64 +613,39 @@ const AdminOverviewContent = () => {
         {/* Right Column (1 Col): Quick Action Shortcuts & Live Database Feed */}
         <div className="space-y-6">
           {/* ⚡ Quick Action Shortcuts */}
-          <Card
-            variant="default"
-            padding="md"
-            className="space-y-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
-          >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span>{t('quickActionsTitle', '⚡ ፈጣን ተግባራት')}</span>
-              </h3>
-              <span className="text-[10px] text-slate-400 font-semibold">{t('quickActionsSub', 'ፈጣን ምርጫዎች')}</span>
-            </div>
+          {permittedQuickActions.length > 0 && (
+            <Card
+              variant="default"
+              padding="md"
+              className="space-y-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{t('quickActionsTitle', '⚡ ፈጣን ተግባራት')}</span>
+                </h3>
+                <span className="text-[10px] text-slate-400 font-semibold">{t('quickActionsSub', 'ፈጣን ምርጫዎች')}</span>
+              </div>
 
-            <div className="grid grid-cols-1 gap-2 pt-1">
-              <button
-                onClick={() => navigate('/admin/add-student')}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-200 hover:text-[#1657b8] dark:hover:text-blue-400 font-bold text-xs transition-all cursor-pointer border border-transparent hover:border-blue-200 dark:hover:border-blue-900"
-              >
-                <div className="flex items-center gap-2.5">
-                  <UserPlus className="w-4 h-4 text-[#1657b8]" />
-                  <span>{t('quickAddStudent', 'አዲስ ተማሪ መዝግብ')}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => navigate('/admin/add-teacher')}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-700 dark:hover:text-amber-300 font-bold text-xs transition-all cursor-pointer border border-transparent hover:border-amber-200 dark:hover:border-amber-900"
-              >
-                <div className="flex items-center gap-2.5">
-                  <UserCheck className="w-4 h-4 text-amber-600" />
-                  <span>{t('quickAddTeacher', 'አዲስ መምህር መድብ')}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => navigate('/admin/announcements')}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-slate-700 dark:text-slate-200 hover:text-purple-700 dark:hover:text-purple-300 font-bold text-xs transition-all cursor-pointer border border-transparent hover:border-purple-200 dark:hover:border-purple-900"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-purple-600" />
-                  <span>{t('quickPostAnnouncement', 'ማስታወቂያ ልቀቅ')}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-
-              <button
-                onClick={() => navigate('/admin/qr-scanner')}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold text-xs transition-all cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900"
-              >
-                <div className="flex items-center gap-2.5">
-                  <QrCode className="w-4 h-4 text-emerald-600" />
-                  <span>{t('quickQRScanner', 'የQR መገኘት መቆጣጠሪያ')}</span>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 opacity-60" />
-              </button>
-            </div>
-          </Card>
+              <div className="grid grid-cols-1 gap-2 pt-1">
+                {permittedQuickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.path}
+                      onClick={() => navigate(action.path)}
+                      className={`w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer border border-transparent ${action.hoverStyle}`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className={`w-4 h-4 ${action.iconColor}`} />
+                        <span>{action.label}</span>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 opacity-60" />
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
 
           {/* 🕒 Real Live Recent Activity Feed */}
           <Card

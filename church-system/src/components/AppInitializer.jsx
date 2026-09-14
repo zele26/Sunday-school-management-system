@@ -23,9 +23,13 @@ export default function AppInitializer({ children }) {
             id: data.user.id,
             fullName: data.user.fullName,
             email: data.user.email,
+            phone: data.user.phone,
             role: data.user.role,
+            roles: data.user.roles || (data.user.role ? [data.user.role] : []),
+            permissions: data.user.permissions || [],
             departmentId: data.user.departmentId,
             assignedDepartments: data.user.assignedDepartments,
+            studentProfileId: data.user.studentProfileId,
             mustChangePassword: data.user.mustChangePassword,
           });
         } else {

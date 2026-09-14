@@ -2,7 +2,9 @@
 
 // src/routes/AdminRoutes.jsx
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
+import { hasOverviewAccess, getFirstPermittedAdminRoute, hasPermission, PERMISSIONS } from '../utils/permissions';
 
 import AdminOverview from '../features/admin/AdminOverview';
 import UsersManagement from '../features/admin/UsersManagement';
@@ -42,47 +44,65 @@ import DepartmentHub from '../features/admin/DepartmentHub';
 import AdminDistanceHub from '../features/admin/AdminDistanceHub';
 import AdminAnalyticsDashboard from '../features/admin/AdminAnalyticsDashboard';
 
+function AdminIndexRoute() {
+  const user = useAuthStore((state) => state.user);
+  if (hasOverviewAccess(user)) {
+    return <AdminOverview />;
+  }
+  const targetRoute = getFirstPermittedAdminRoute(user);
+  return <Navigate to={targetRoute} replace />;
+}
+
+function AdminPermissionGuard({ permission, children }) {
+  const user = useAuthStore((state) => state.user);
+  if (!permission || hasPermission(user, permission)) {
+    return children;
+  }
+  const fallback = getFirstPermittedAdminRoute(user);
+  return <Navigate to={fallback} replace />;
+}
+
 export default function AdminRoutes() {
   const adminRoutesContent = (
     <>
-      <Route index element={<AdminOverview />} />
-      <Route path="distance-hub" element={<AdminDistanceHub />} />
-      <Route path="people" element={<PeopleManagement />} />
-      <Route path="departments" element={<DepartmentsManagement />} />
-      <Route path="departments/:id/hub" element={<DepartmentHub />} />
-      <Route path="department-hub" element={<DepartmentHub />} />
-      <Route path="users" element={<UsersManagement />} />
-      <Route path="approvals" element={<ApprovalsManagement />} />
-      <Route path="add-student" element={<AddStudent />} />
-      <Route path="classes" element={<ClassesManagement />} />
-      <Route path="courses" element={<CoursesManagement />} />
-      <Route path="announcements" element={<AnnouncementsManagement />} />
-      <Route path="resources" element={<ResourcesManagement />} />
-      <Route path="attendance" element={<AttendanceManagement />} />
-      <Route path="reports" element={<ReportsManagement />} />
-      <Route path="complaints" element={<ComplaintsManagement />} />
-      <Route path="certificates" element={<CertificatesManagement />} />
-      <Route path="settings" element={<SettingsManagement />} />
-      <Route path="audit-logs" element={<AuditLogsManagement />} />
-      <Route path="students" element={<StudentsManagement />} />
-      <Route path="edit-student/:id" element={<EditStudent />} />
-      <Route path="qr-scanner" element={<QRScanner />} />
-      <Route path="attendance-reports" element={<AttendanceReports />} />
-      <Route path="analytics" element={<AdminAnalyticsDashboard />} />
-      <Route path="registrations" element={<RegistrationsManagement />} />
-      <Route path="teachers" element={<TeachersManagement />} />
-      <Route path="add-teacher" element={<AddTeacher />} />
-      <Route path="edit-teacher/:id" element={<EditTeacher />} />
-      <Route path="password-resets" element={<PasswordResets />} />
-      <Route path="resource-approval" element={<ResourceApproval />} />
-      <Route path="department-memberships" element={<DepartmentMembershipsManagement />} />
-      <Route path="student-profiles" element={<StudentProfilesManagement />} />
-      <Route path="programs" element={<ProgramsManagement />} />
-      <Route path="academic-years" element={<AcademicYearsManagement />} />
-      <Route path="academic-enrollments" element={<AcademicEnrollmentsManagement />} />
-      <Route path="manual-enrollment" element={<ManualEnrollment />} />
-      <Route path="church-memberships" element={<ChurchMembershipsManagement />} />
-      <Route path="academic-enrollments/:enrollmentId" element={<AcademicEnrollmentDetails />} />
+      <Route index element={<AdminIndexRoute />} />
+      <Route path="distance-hub" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_DISTANCE_HUB}><AdminDistanceHub /></AdminPermissionGuard>} />
+      <Route path="people" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_VIEW}><PeopleManagement /></AdminPermissionGuard>} />
+      <Route path="departments" element={<AdminPermissionGuard permission={PERMISSIONS.DEPARTMENTS_MANAGE}><DepartmentsManagement /></AdminPermissionGuard>} />
+      <Route path="departments/:id/hub" element={<AdminPermissionGuard permission={PERMISSIONS.DEPARTMENTS_MANAGE}><DepartmentHub /></AdminPermissionGuard>} />
+      <Route path="department-hub" element={<AdminPermissionGuard permission={PERMISSIONS.DEPARTMENTS_MANAGE}><DepartmentHub /></AdminPermissionGuard>} />
+      <Route path="users" element={<AdminPermissionGuard permission={PERMISSIONS.USERS_MANAGE}><UsersManagement /></AdminPermissionGuard>} />
+      <Route path="approvals" element={<AdminPermissionGuard permission={PERMISSIONS.USERS_MANAGE}><ApprovalsManagement /></AdminPermissionGuard>} />
+      <Route path="add-student" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_MANAGE}><AddStudent /></AdminPermissionGuard>} />
+      <Route path="classes" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_CLASSES}><ClassesManagement /></AdminPermissionGuard>} />
+      <Route path="courses" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_COURSES}><CoursesManagement /></AdminPermissionGuard>} />
+      <Route path="announcements" element={<AdminPermissionGuard permission={PERMISSIONS.ANNOUNCEMENTS_MANAGE}><AnnouncementsManagement /></AdminPermissionGuard>} />
+      <Route path="resources" element={<AdminPermissionGuard permission={PERMISSIONS.RESOURCES_MANAGE}><ResourcesManagement /></AdminPermissionGuard>} />
+      <Route path="attendance" element={<AdminPermissionGuard permission={[PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE]}><AttendanceManagement /></AdminPermissionGuard>} />
+      <Route path="reports" element={<AdminPermissionGuard permission={PERMISSIONS.REPORTS_VIEW}><ReportsManagement /></AdminPermissionGuard>} />
+      <Route path="complaints" element={<AdminPermissionGuard permission={PERMISSIONS.USERS_MANAGE}><ComplaintsManagement /></AdminPermissionGuard>} />
+      <Route path="certificates" element={<AdminPermissionGuard permission={[PERMISSIONS.CERTIFICATES_VIEW, PERMISSIONS.CERTIFICATES_ISSUE]}><CertificatesManagement /></AdminPermissionGuard>} />
+      <Route path="settings" element={<AdminPermissionGuard permission={PERMISSIONS.SETTINGS_MANAGE}><SettingsManagement /></AdminPermissionGuard>} />
+      <Route path="audit-logs" element={<AdminPermissionGuard permission={PERMISSIONS.AUDIT_LOGS_VIEW}><AuditLogsManagement /></AdminPermissionGuard>} />
+      <Route path="students" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_VIEW}><StudentsManagement /></AdminPermissionGuard>} />
+      <Route path="edit-student/:id" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_MANAGE}><EditStudent /></AdminPermissionGuard>} />
+      <Route path="qr-scanner" element={<AdminPermissionGuard permission={PERMISSIONS.ATTENDANCE_SCAN}><QRScanner /></AdminPermissionGuard>} />
+      <Route path="attendance-reports" element={<AdminPermissionGuard permission={[PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE]}><AttendanceReports /></AdminPermissionGuard>} />
+      <Route path="analytics" element={<AdminPermissionGuard permission={PERMISSIONS.ANALYTICS_VIEW}><AdminAnalyticsDashboard /></AdminPermissionGuard>} />
+      <Route path="registrations" element={<AdminPermissionGuard permission={[PERMISSIONS.REGISTRATIONS_VIEW, PERMISSIONS.REGISTRATIONS_APPROVE]}><RegistrationsManagement /></AdminPermissionGuard>} />
+      <Route path="teachers" element={<AdminPermissionGuard permission={PERMISSIONS.TEACHERS_VIEW}><TeachersManagement /></AdminPermissionGuard>} />
+      <Route path="add-teacher" element={<AdminPermissionGuard permission={PERMISSIONS.TEACHERS_MANAGE}><AddTeacher /></AdminPermissionGuard>} />
+      <Route path="edit-teacher/:id" element={<AdminPermissionGuard permission={PERMISSIONS.TEACHERS_MANAGE}><EditTeacher /></AdminPermissionGuard>} />
+      <Route path="password-resets" element={<AdminPermissionGuard permission={PERMISSIONS.PASSWORD_RESETS_MANAGE}><PasswordResets /></AdminPermissionGuard>} />
+      <Route path="resource-approval" element={<AdminPermissionGuard permission={PERMISSIONS.RESOURCES_MANAGE}><ResourceApproval /></AdminPermissionGuard>} />
+      <Route path="department-memberships" element={<AdminPermissionGuard permission={PERMISSIONS.MEMBERSHIPS_MANAGE}><DepartmentMembershipsManagement /></AdminPermissionGuard>} />
+      <Route path="student-profiles" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_VIEW}><StudentProfilesManagement /></AdminPermissionGuard>} />
+      <Route path="programs" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_CLASSES}><ProgramsManagement /></AdminPermissionGuard>} />
+      <Route path="academic-years" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_CLASSES}><AcademicYearsManagement /></AdminPermissionGuard>} />
+      <Route path="academic-enrollments" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_ENROLLMENTS}><AcademicEnrollmentsManagement /></AdminPermissionGuard>} />
+      <Route path="manual-enrollment" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_ENROLLMENTS}><ManualEnrollment /></AdminPermissionGuard>} />
+      <Route path="church-memberships" element={<AdminPermissionGuard permission={PERMISSIONS.MEMBERSHIPS_MANAGE}><ChurchMembershipsManagement /></AdminPermissionGuard>} />
+      <Route path="academic-enrollments/:enrollmentId" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_ENROLLMENTS}><AcademicEnrollmentDetails /></AdminPermissionGuard>} />
     </>
   );
 

@@ -159,6 +159,14 @@ const UsersManagement = () => {
     setShowEditModal(true);
   };
 
+  const onFormError = (errs) => {
+    console.warn('Form validation errors:', errs);
+    const firstMessage = Object.values(errs)[0]?.message;
+    if (firstMessage) {
+      toast.error(firstMessage);
+    }
+  };
+
   const onSaveCreate = (data) => {
     createUserMutation.mutate(
       {
@@ -662,7 +670,7 @@ const UsersManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSubmit(onSaveCreate)}>
+            <form onSubmit={handleCreateSubmit(onSaveCreate, onFormError)}>
               <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto bg-white dark:bg-slate-900">
                 {/* Basic User Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -799,7 +807,7 @@ const UsersManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit(onSaveEdit)}>
+            <form onSubmit={handleEditSubmit(onSaveEdit, onFormError)}>
               <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto bg-white dark:bg-slate-900">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
