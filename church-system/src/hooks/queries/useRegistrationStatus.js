@@ -7,8 +7,27 @@ import { toast } from '../../utils/toast';
 export const REGISTRATION_STATUS_KEY = ['registration-status'];
 export const ADMIN_REG_SETTINGS_KEY = ['admin-registration-settings'];
 
+const LOCAL_STORAGE_KEY = 'app_reg_status';
+
 /**
- * Public Hook: Fetch live registration open/closed status
+ * Helper to synchronously read cached status from localStorage for 0ms initial render
+ */
+const getCachedStatus = () => {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch (err) {
+    // ignore parsing errors
+  }
+  return undefined;
+};
+
+/**
+ * Public Hook: Fetch live registration open/closed status with 0ms instant initial rendering
  */
 export function useRegistrationStatus() {
   return useQuery({
@@ -17,7 +36,8 @@ export function useRegistrationStatus() {
       try {
         const res = await apiFetch('/api/registrations/status');
         if (!res.ok) {
-          // Graceful fallback to default open state if offline or network issue
+          const cached = getCachedStatus();
+          if (cached) return cached;
           return {
             isRegistrationOpen: true,
             isRegularOpen: true,
@@ -29,16 +49,18 @@ export function useRegistrationStatus() {
           };
         }
         const json = await res.json();
-        return json.data || {
-          isRegistrationOpen: true,
-          isRegularOpen: true,
-          isDistanceOpen: true,
-          academicYear: '2017 ዓ.ም',
-          regularClosedMessage: 'የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
-          distanceClosedMessage: 'የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
-          generalClosedMessage: 'የተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
-        };
+        const data = json.data;
+        if (data && typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+          } catch (e) {
+            // ignore localStorage quota errors
+          }
+        }
+        return data;
       } catch (e) {
+        const cached = getCachedStatus();
+        if (cached) return cached;
         return {
           isRegistrationOpen: true,
           isRegularOpen: true,
@@ -50,7 +72,8 @@ export function useRegistrationStatus() {
         };
       }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    initialData: getCachedStatus,
+    staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
   });
 }

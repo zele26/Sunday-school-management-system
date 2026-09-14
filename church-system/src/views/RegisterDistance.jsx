@@ -107,8 +107,20 @@ const RegisterDistanceContent = () => {
   const inputClass = "w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1657b8]/20 focus:border-[#1657b8] transition-all text-sm placeholder:text-slate-400";
   const labelClass = "block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1";
 
+  // ⏳ Loading State if status is not yet available in cache
+  if (isStatusLoading && !regStatus) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center p-4 font-sans">
+        <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
+          {isAmharic ? 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...' : 'Checking registration status...'}
+        </p>
+      </div>
+    );
+  }
+
   // 🔒 REGISTRATION CLOSED SCREEN
-  if (!isStatusLoading && !isDistanceOpen) {
+  if (!isDistanceOpen) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-16 px-4 flex flex-col justify-between items-center font-sans">
         <header className="w-full max-w-lg mx-auto flex items-center justify-between py-2">

@@ -11,11 +11,21 @@ const cloudinary = require('../config/cloudinary');
 
 // ---------- HELPERS ----------
 
-const getRegistrationSettings = async () => {
+let cachedSettings = null;
+let lastSettingsFetch = 0;
+const SETTINGS_CACHE_TTL = 15000; // 15 seconds
+
+const getRegistrationSettings = async (forceFresh = false) => {
+  const now = Date.now();
+  if (!forceFresh && cachedSettings && (now - lastSettingsFetch < SETTINGS_CACHE_TTL)) {
+    return cachedSettings;
+  }
   let settings = await SystemSetting.findOne({ key: 'registration' });
   if (!settings) {
     settings = await SystemSetting.create({ key: 'registration' });
   }
+  cachedSettings = settings;
+  lastSettingsFetch = now;
   return settings;
 };
 
