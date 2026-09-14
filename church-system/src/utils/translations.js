@@ -2568,6 +2568,238 @@ export const translations = {
     en: 'Admin Portal',
     am: 'የአስተዳደር መድረክ',
   },
+
+  // ==========================================
+  // ⚙️ Admin Overview Hub
+  // ==========================================
+  adminOverviewTitle: {
+    en: 'Administrator Overview Hub',
+    am: 'የአስተዳዳሪ ማጠቃለያ ማዕከል',
+  },
+  activeSystemBadge: {
+    en: 'Active System',
+    am: 'ንቁ ሲስተም',
+  },
+  pendingApprovalsAlertTitle: {
+    en: 'pending approvals require attention',
+    am: 'የሚጠበቁ ማረጋገጫዎች አሉ',
+  },
+  pendingApprovalsAlertDesc: {
+    en: 'Review and verify newly submitted student and teacher registrations.',
+    am: 'አዲስ የተመዘገቡ ተማሪዎችንና መምህራንን ገምግመው ያጽድቁ።',
+  },
+  reviewNowBtn: {
+    en: 'Review Now',
+    am: 'አሁን ገምግም',
+  },
+  totalUsersLabel: {
+    en: 'Total Users',
+    am: 'አጠቃላይ ተጠቃሚዎች',
+  },
+  pendingApprovalsLabel: {
+    en: 'Pending Approvals',
+    am: 'የሚጠበቁ ማረጋገጫዎች',
+  },
+  actionNeededBadge: {
+    en: 'Attention',
+    am: 'ትኩረት',
+  },
+  activeClassesLabel: {
+    en: 'Active Classes',
+    am: 'ንቁ ክፍሎች',
+  },
+  totalCoursesLabel: {
+    en: 'Curriculum Courses',
+    am: 'አጠቃላይ ትምህርቶች',
+  },
+  activeBadge: {
+    en: 'Active',
+    am: 'ንቁ',
+  },
+  systemStatusLabel: {
+    en: 'System Status',
+    am: 'የሲስተም ሁኔታ',
+  },
+  systemStatusHealthy: {
+    en: 'Healthy',
+    am: 'ሰላማዊ',
+  },
+  readyBadge: {
+    en: '100% Ready',
+    am: '100% ዝግጁ',
+  },
+  catAll: {
+    en: 'All',
+    am: 'ሁሉም',
+  },
+  catAcademic: {
+    en: '🎓 Academics & Students',
+    am: '🎓 አካዳሚክና ተማሪዎች',
+  },
+  catCommunication: {
+    en: '📢 Communications & Media',
+    am: '📢 ተግባቦትና ይዘት',
+  },
+  catSystem: {
+    en: '⚙️ System & Reports',
+    am: '⚙️ ሲስተምና ሪፖርቶች',
+  },
+  searchModulePlaceholder: {
+    en: 'Search module...',
+    am: 'ሞጁል ፈልግ...',
+  },
+  moduleUsers: {
+    en: 'Users Management',
+    am: 'ተጠቃሚዎች',
+  },
+  unitUsers: {
+    en: 'users',
+    am: 'ተጠቃሚዎች',
+  },
+  moduleApprovals: {
+    en: 'Approvals & Verification',
+    am: 'ማረጋገጫዎች',
+  },
+  unitPending: {
+    en: 'pending',
+    am: 'በመጠባበቅ ላይ',
+  },
+  moduleDistanceHub: {
+    en: 'Distance LMS Hub',
+    am: 'የርቀት ትምህርት ማዕከል',
+  },
+  unitModules: {
+    en: 'modules',
+    am: 'ሞጁሎች',
+  },
+  moduleClasses: {
+    en: 'Classes & Sections',
+    am: 'ክፍሎች',
+  },
+  unitClasses: {
+    en: 'active classes',
+    am: 'ንቁ ክፍሎች',
+  },
+  moduleCourses: {
+    en: 'Courses & Curriculum',
+    am: 'ትምህርቶች',
+  },
+  unitCourses: {
+    en: 'courses',
+    am: 'ኮርሶች',
+  },
+  moduleAttendance: {
+    en: 'Attendance Tracking',
+    am: 'የመገኘት ክትትል',
+  },
+  badgeAttendance: {
+    en: 'Attendance',
+    am: 'መገኘት',
+  },
+  moduleAnnouncements: {
+    en: 'Announcements',
+    am: 'ማስታወቂያዎች',
+  },
+  badgeOfficial: {
+    en: 'Official',
+    am: 'ይፋዊ',
+  },
+  moduleResources: {
+    en: 'Learning Resources',
+    am: 'የትምህርት መርጃዎች',
+  },
+  badgeResources: {
+    en: 'PDF/Video',
+    am: 'ፒዲኤፍ/ቪዲዮ',
+  },
+  moduleCertificates: {
+    en: 'Certificates',
+    am: 'የምስክር ወረቀቶች',
+  },
+  badgeQRVerified: {
+    en: 'QR Verified',
+    am: 'በQR የተረጋገጠ',
+  },
+  moduleMemberships: {
+    en: 'Membership ID Cards',
+    am: 'የአባልነት መታወቂያዎች',
+  },
+  badgeIDCards: {
+    en: 'ID Cards',
+    am: 'መታወቂያ',
+  },
+  moduleReports: {
+    en: 'Analytics & Reports',
+    am: 'ሪፖርቶች',
+  },
+  badgeStats: {
+    en: 'Statistics',
+    am: 'ስታቲስቲክስ',
+  },
+  moduleComplaints: {
+    en: 'Complaints & Inquiries',
+    am: 'ቅሬታዎች',
+  },
+  unitUnresolved: {
+    en: 'unresolved',
+    am: 'ያልተፈቱ',
+  },
+  moduleAuditLogs: {
+    en: 'System Audit Logs',
+    am: 'የሲስተም እንቅስቃሴ መዝገቦች',
+  },
+  badgeSecurity: {
+    en: 'Security',
+    am: 'ደህንነት',
+  },
+  moduleSettings: {
+    en: 'Settings & Config',
+    am: 'መቼቶችና ማዋቀሪያ',
+  },
+  badgeConfig: {
+    en: 'Configuration',
+    am: 'ማዋቀሪያ',
+  },
+  quickActionsTitle: {
+    en: '⚡ Quick Actions',
+    am: '⚡ ፈጣን ተግባራት',
+  },
+  quickActionsSub: {
+    en: 'Shortcuts',
+    am: 'ፈጣን ምርጫዎች',
+  },
+  quickAddStudent: {
+    en: 'Register New Student',
+    am: 'አዲስ ተማሪ መዝግብ',
+  },
+  quickAddTeacher: {
+    en: 'Assign New Teacher',
+    am: 'አዲስ መምህር መድብ',
+  },
+  quickPostAnnouncement: {
+    en: 'Post Announcement',
+    am: 'ማስታወቂያ ልቀቅ',
+  },
+  quickQRScanner: {
+    en: 'QR Attendance Scanner',
+    am: 'የQR መገኘት መቆጣጠሪያ',
+  },
+  recentActivityTitle: {
+    en: '🕒 Recent Activities',
+    am: '🕒 የቅርብ ጊዜ እንቅስቃሴዎች',
+  },
+  liveActivityFeed: {
+    en: 'Live Feed',
+    am: 'የቀጥታ መዝገብ',
+  },
+  openModuleBtn: {
+    en: 'Open',
+    am: 'ክፈት',
+  },
+  noRecentActivity: {
+    en: 'No recent activity yet.',
+    am: 'ምንም የቅርብ ጊዜ እንቅስቃሴ የለም።',
+  },
 };
 
 export default translations;
