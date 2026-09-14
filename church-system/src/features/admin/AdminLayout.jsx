@@ -324,11 +324,11 @@ const AdminLayout = ({ children, onLogout }) => {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Student Portal Switcher if user has student role/profile or is staff */}
+            {/* Student Portal Switcher only if user has student role or academic profile */}
             {(user?.role === 'student' ||
               (Array.isArray(user?.roles) && user.roles.includes('student')) ||
               Boolean(user?.studentProfileId) ||
-              user?.role === 'staff') && (
+              Boolean(user?.studentId)) && (
               <a
                 href="/dashboard"
                 className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors shadow-xs"

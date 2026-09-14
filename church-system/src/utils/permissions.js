@@ -318,5 +318,15 @@ export function getFirstPermittedAdminRoute(user) {
   if (hasPermission(user, PERMISSIONS.PASSWORD_RESETS_MANAGE)) return '/admin/password-resets';
   if (hasPermission(user, PERMISSIONS.SETTINGS_MANAGE)) return '/admin/settings';
 
+  if (user.role === 'teacher') return '/teacher';
+  if (
+    user.role === 'student' ||
+    (Array.isArray(user.roles) && user.roles.includes('student')) ||
+    Boolean(user.studentProfileId) ||
+    Boolean(user.studentId)
+  ) {
+    return '/dashboard';
+  }
+
   return '/dashboard';
 }
