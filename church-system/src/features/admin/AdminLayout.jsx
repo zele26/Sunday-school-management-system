@@ -39,6 +39,7 @@ import { ThemeToggle } from '../../components/ui/ThemeToggle';
 import { LanguageToggle } from '../../components/ui/LanguageToggle';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Badge } from '../../components/ui/Badge';
+import { hasPermission, PERMISSIONS } from '../../utils/permissions';
 
 const allNavSections = [
   {
@@ -47,17 +48,17 @@ const allNavSections = [
     title: 'የቤተክርስቲያንና የዋና አስተዳደር',
     items: [
       { path: '/admin', labelKey: 'navOverview', label: 'አጠቃላይ እይታ', icon: LayoutDashboard, end: true },
-      { path: '/admin/people', labelKey: 'navPeople', label: 'ሰዎችና አባላት', icon: Users },
-      { path: '/admin/departments', labelKey: 'navDepartments', label: 'ክፍላት', icon: Building2 },
-      { path: '/admin/department-memberships', labelKey: 'navDeptMemberships', label: 'የክፍል አባልነቶች', icon: Link2 },
-      { path: '/admin/church-memberships', labelKey: 'navChurchMemberships', label: 'የቤተክርስቲያን አባልነቶች', icon: Church },
-      { path: '/admin/users', labelKey: 'navUsersRoles', label: 'ተጠቃሚዎችና ሚናዎች', icon: UserCheck },
-      { path: '/admin/approvals', labelKey: 'navApprovals', label: 'ማረጋገጫዎች', icon: CheckCircle2 },
-      { path: '/admin/announcements', labelKey: 'navAnnouncements', label: 'ማስታወቂያዎች', icon: Bell },
-      { path: '/admin/password-resets', labelKey: 'navPasswordResets', label: 'የይለፍ ቃል ዳግም ማስጀመር', icon: KeyRound },
-      { path: '/admin/settings', labelKey: 'navSettings', label: 'ቅንብሮች', icon: Settings },
-      { path: '/admin/audit-logs', labelKey: 'navAuditLogs', label: 'የድርጊት መዝገቦች', icon: ClipboardList },
-      { path: '/admin/complaints', labelKey: 'navComplaints', label: 'አቤቱታዎች', icon: AlertTriangle },
+      { path: '/admin/people', labelKey: 'navPeople', label: 'ሰዎችና አባላት', icon: Users, permission: PERMISSIONS.STUDENTS_VIEW },
+      { path: '/admin/departments', labelKey: 'navDepartments', label: 'ክፍላት', icon: Building2, permission: PERMISSIONS.DEPARTMENTS_MANAGE },
+      { path: '/admin/department-memberships', labelKey: 'navDeptMemberships', label: 'የክፍል አባልነቶች', icon: Link2, permission: PERMISSIONS.MEMBERSHIPS_MANAGE },
+      { path: '/admin/church-memberships', labelKey: 'navChurchMemberships', label: 'የቤተክርስቲያን አባልነቶች', icon: Church, permission: PERMISSIONS.MEMBERSHIPS_MANAGE },
+      { path: '/admin/users', labelKey: 'navUsersRoles', label: 'ተጠቃሚዎችና ሚናዎች', icon: UserCheck, permission: PERMISSIONS.USERS_MANAGE },
+      { path: '/admin/approvals', labelKey: 'navApprovals', label: 'ማረጋገጫዎች', icon: CheckCircle2, permission: PERMISSIONS.USERS_MANAGE },
+      { path: '/admin/announcements', labelKey: 'navAnnouncements', label: 'ማስታወቂያዎች', icon: Bell, permission: PERMISSIONS.ANNOUNCEMENTS_MANAGE },
+      { path: '/admin/password-resets', labelKey: 'navPasswordResets', label: 'የይለፍ ቃል ዳግም ማስጀመር', icon: KeyRound, permission: PERMISSIONS.PASSWORD_RESETS_MANAGE },
+      { path: '/admin/settings', labelKey: 'navSettings', label: 'ቅንብሮች', icon: Settings, permission: PERMISSIONS.SETTINGS_MANAGE },
+      { path: '/admin/audit-logs', labelKey: 'navAuditLogs', label: 'የድርጊት መዝገቦች', icon: ClipboardList, permission: PERMISSIONS.AUDIT_LOGS_VIEW },
+      { path: '/admin/complaints', labelKey: 'navComplaints', label: 'አቤቱታዎች', icon: AlertTriangle, permission: PERMISSIONS.USERS_MANAGE },
     ],
   },
   {
@@ -65,24 +66,24 @@ const allNavSections = [
     titleKey: 'adminEducationSectionTitle',
     title: 'የሰንበት ትምህርት ቤት አስተዳደር',
     items: [
-      { path: '/admin/distance-hub', labelKey: 'navDistanceHub', label: 'የርቀት ትምህርት ማዕከል', icon: Globe },
-      { path: '/admin/programs', labelKey: 'navPrograms', label: 'የትምህርት መርሃ-ግብሮች', icon: BookOpen },
-      { path: '/admin/academic-years', labelKey: 'navAcademicYears', label: 'የትምህርት ዘመናት', icon: Calendar },
-      { path: '/admin/student-profiles', labelKey: 'navStudentProfiles', label: 'የተማሪዎች የግል ማህደር', icon: GraduationCap },
-      { path: '/admin/academic-enrollments', labelKey: 'navAcademicEnrollments', label: 'የትምህርት ምዝገባዎች', icon: ClipboardList },
-      { path: '/admin/manual-enrollment', labelKey: 'navManualEnrollment', label: 'ቀጥታ ምዝገባ', icon: UserPlus },
-      { path: '/admin/students', labelKey: 'navStudents', label: 'ተማሪዎች', icon: Users },
-      { path: '/admin/teachers', labelKey: 'navTeachers', label: 'መምህራን', icon: Users },
-      { path: '/admin/classes', labelKey: 'navClasses', label: 'ክፍሎች', icon: School },
-      { path: '/admin/courses', labelKey: 'navCourses', label: 'ትምህርቶች', icon: BookOpen },
-      { path: '/admin/attendance-reports', labelKey: 'navAttendance', label: 'መገኘት', icon: BarChart3 },
-      { path: '/admin/analytics', labelKey: 'navAnalytics', label: 'አናሊቲክስ', icon: BarChart3 },
-      { path: '/admin/qr-scanner', labelKey: 'navQrScanner', label: 'የQR መቃኛ', icon: QrCode },
-      { path: '/admin/resources', labelKey: 'navResources', label: 'ማጣቀሻዎች', icon: FileText },
-      { path: '/admin/resource-approval', labelKey: 'navResourceApproval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2 },
-      { path: '/admin/certificates', labelKey: 'navCertificates', label: 'የምስክር ወረቀቶች', icon: Award },
-      { path: '/admin/reports', labelKey: 'navReports', label: 'ሪፖርቶች', icon: BarChart3 },
-      { path: '/admin/registrations', labelKey: 'navNewRegistrations', label: 'አዲስ ምዝገባዎች', icon: ClipboardList },
+      { path: '/admin/distance-hub', labelKey: 'navDistanceHub', label: 'የርቀት ትምህርት ማዕከል', icon: Globe, permission: PERMISSIONS.ACADEMIC_DISTANCE_HUB },
+      { path: '/admin/programs', labelKey: 'navPrograms', label: 'የትምህርት መርሃ-ግብሮች', icon: BookOpen, permission: PERMISSIONS.ACADEMIC_CLASSES },
+      { path: '/admin/academic-years', labelKey: 'navAcademicYears', label: 'የትምህርት ዘመናት', icon: Calendar, permission: PERMISSIONS.ACADEMIC_CLASSES },
+      { path: '/admin/student-profiles', labelKey: 'navStudentProfiles', label: 'የተማሪዎች የግል ማህደር', icon: GraduationCap, permission: PERMISSIONS.STUDENTS_VIEW },
+      { path: '/admin/academic-enrollments', labelKey: 'navAcademicEnrollments', label: 'የትምህርት ምዝገባዎች', icon: ClipboardList, permission: PERMISSIONS.ACADEMIC_ENROLLMENTS },
+      { path: '/admin/manual-enrollment', labelKey: 'navManualEnrollment', label: 'ቀጥታ ምዝገባ', icon: UserPlus, permission: PERMISSIONS.ACADEMIC_ENROLLMENTS },
+      { path: '/admin/students', labelKey: 'navStudents', label: 'ተማሪዎች', icon: Users, permission: PERMISSIONS.STUDENTS_VIEW },
+      { path: '/admin/teachers', labelKey: 'navTeachers', label: 'መምህራን', icon: Users, permission: PERMISSIONS.TEACHERS_VIEW },
+      { path: '/admin/classes', labelKey: 'navClasses', label: 'ክፍሎች', icon: School, permission: PERMISSIONS.ACADEMIC_CLASSES },
+      { path: '/admin/courses', labelKey: 'navCourses', label: 'ትምህርቶች', icon: BookOpen, permission: PERMISSIONS.ACADEMIC_COURSES },
+      { path: '/admin/attendance-reports', labelKey: 'navAttendance', label: 'መገኘት', icon: BarChart3, permission: [PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE] },
+      { path: '/admin/analytics', labelKey: 'navAnalytics', label: 'አናሊቲክስ', icon: BarChart3, permission: PERMISSIONS.ANALYTICS_VIEW },
+      { path: '/admin/qr-scanner', labelKey: 'navQrScanner', label: 'የQR መቃኛ', icon: QrCode, permission: PERMISSIONS.ATTENDANCE_SCAN },
+      { path: '/admin/resources', labelKey: 'navResources', label: 'ማጣቀሻዎች', icon: FileText, permission: PERMISSIONS.RESOURCES_MANAGE },
+      { path: '/admin/resource-approval', labelKey: 'navResourceApproval', label: 'የማጣቀሻ ማረጋገጫ', icon: CheckCircle2, permission: PERMISSIONS.RESOURCES_MANAGE },
+      { path: '/admin/certificates', labelKey: 'navCertificates', label: 'የምስክር ወረቀቶች', icon: Award, permission: [PERMISSIONS.CERTIFICATES_VIEW, PERMISSIONS.CERTIFICATES_ISSUE] },
+      { path: '/admin/reports', labelKey: 'navReports', label: 'ሪፖርቶች', icon: BarChart3, permission: PERMISSIONS.REPORTS_VIEW },
+      { path: '/admin/registrations', labelKey: 'navNewRegistrations', label: 'አዲስ ምዝገባዎች', icon: ClipboardList, permission: [PERMISSIONS.REGISTRATIONS_VIEW, PERMISSIONS.REGISTRATIONS_APPROVE] },
     ],
   },
 ];
@@ -121,14 +122,31 @@ const AdminLayout = ({ children, onLogout }) => {
     navigate('/', { replace: true });
   };
 
-  // Determine which sections to render based on user role and selected scope
-  const visibleSections = allNavSections.filter((section) => {
-    if (isDeptAdmin) {
-      return section.id === 'EDUCATION';
-    }
-    if (activeScope === 'ALL') return true;
-    return section.id === activeScope;
-  });
+  // Determine which sections and items to render based on user role and permissions
+  const visibleSections = allNavSections
+    .map((section) => {
+      // Filter items within this section based on permissions
+      const permittedItems = section.items.filter((item) => {
+        if (!item.permission) return true; // General overview is always visible
+        return hasPermission(user, item.permission);
+      });
+
+      return {
+        ...section,
+        items: permittedItems,
+      };
+    })
+    .filter((section) => {
+      // If no items in this section are accessible, hide the entire section
+      if (section.items.length === 0) return false;
+
+      // Scope filter for Super Admin vs Dept Admin
+      if (isDeptAdmin) {
+        return section.id === 'EDUCATION';
+      }
+      if (activeScope === 'ALL') return true;
+      return section.id === activeScope;
+    });
 
   return (
     <div className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] flex flex-col font-sans transition-colors duration-200">

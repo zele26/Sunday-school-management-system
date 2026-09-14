@@ -185,17 +185,277 @@ router.get('/users', async (req, res) => {
   }
 });
 
-// ---------- Update User (Role, Department, Details with History Preservation) ----------
+// ---------- Permissions Catalog & Presets ----------
+const PERMISSION_CATALOG = {
+  categories: [
+    {
+      id: 'attendance',
+      titleAm: '📱 መገኘትና QR መቃኛ',
+      titleEn: 'Attendance & QR Scanner',
+      permissions: [
+        { key: 'attendance:scan', labelAm: 'የተማሪዎች QR መቃኛ', labelEn: 'Scan Student QR Attendance' },
+        { key: 'attendance:view', labelAm: 'የመገኘት መዝገቦችን ማየት', labelEn: 'View Attendance Records' },
+        { key: 'attendance:manage', labelAm: 'የመገኘት መረጃዎችን ማስተካከል', labelEn: 'Manage & Correct Attendance' },
+      ],
+    },
+    {
+      id: 'registrations',
+      titleAm: '📝 ምዝገባና ቅበላ',
+      titleEn: 'Registrations & Intake',
+      permissions: [
+        { key: 'registrations:view', labelAm: 'አዲስ ምዝገባዎችን ማየት', labelEn: 'View Registrations & Receipts' },
+        { key: 'registrations:approve', labelAm: 'ምዝገባ ማጽደቅና ውድቅ ማድረግ', labelEn: 'Approve & Reject Registrations' },
+        { key: 'registrations:settings', labelAm: 'የምዝገባ በር መክፈት/መዝጋት', labelEn: 'Open/Close Registration Intake' },
+      ],
+    },
+    {
+      id: 'students_teachers',
+      titleAm: '👥 ተማሪዎችና መምህራን',
+      titleEn: 'Students & Teachers',
+      permissions: [
+        { key: 'students:view', labelAm: 'የተማሪዎችን ዝርዝር ማየት', labelEn: 'View Students' },
+        { key: 'students:manage', labelAm: 'ተማሪዎችን መመዝገብና ማስተካከል', labelEn: 'Add & Edit Students' },
+        { key: 'teachers:view', labelAm: 'የመምህራን ዝርዝር ማየት', labelEn: 'View Teachers' },
+        { key: 'teachers:manage', labelAm: 'መምህራንን መመዝገብና ማስተካከል', labelEn: 'Add & Edit Teachers' },
+      ],
+    },
+    {
+      id: 'academic',
+      titleAm: '🎓 አካዳሚክና ትምህርቶች',
+      titleEn: 'Academic & LMS',
+      permissions: [
+        { key: 'academic:classes', labelAm: 'ክፍሎችንና ባቾችን ማስተዳደር', labelEn: 'Manage Classes & Batches' },
+        { key: 'academic:courses', labelAm: 'ኮርሶችንና ትምህርቶችን ማስተዳደር', labelEn: 'Manage Courses' },
+        { key: 'academic:distance_hub', labelAm: 'የርቀት ትምህርት ማዕከል', labelEn: 'Distance LMS Hub' },
+        { key: 'academic:enrollments', labelAm: 'የትምህርት ምዝገባዎችን ማስተዳደር', labelEn: 'Manage Enrollments' },
+      ],
+    },
+    {
+      id: 'certificates',
+      titleAm: '📜 ምስክር ወረቀት',
+      titleEn: 'Certificates',
+      permissions: [
+        { key: 'certificates:view', labelAm: 'የምስክር ወረቀቶችን ማየት', labelEn: 'View Certificates' },
+        { key: 'certificates:issue', labelAm: 'ምስክር ወረቀት ማዘጋጀትና መስጠት', labelEn: 'Issue & Generate Certificates' },
+      ],
+    },
+    {
+      id: 'announcements_resources',
+      titleAm: '📢 ማስታወቂያና ማጣቀሻ',
+      titleEn: 'Announcements & Resources',
+      permissions: [
+        { key: 'announcements:manage', labelAm: 'ይፋዊ ማስታወቂያዎችን መለጠፍ', labelEn: 'Manage Announcements' },
+        { key: 'resources:manage', labelAm: 'የትምህርት ማጣቀሻዎችን ማስተዳደር', labelEn: 'Manage Resources' },
+      ],
+    },
+    {
+      id: 'departments',
+      titleAm: '🏢 ክፍላትና አባላት',
+      titleEn: 'Departments & Memberships',
+      permissions: [
+        { key: 'departments:manage', labelAm: 'ክፍላትን ማስተዳደር', labelEn: 'Manage Departments' },
+        { key: 'memberships:manage', labelAm: 'የአባልነት መዝገቦችን ማስተዳደር', labelEn: 'Manage Memberships' },
+      ],
+    },
+    {
+      id: 'reports',
+      titleAm: '📊 ሪፖርትና አናሊቲክስ',
+      titleEn: 'Reports & Analytics',
+      permissions: [
+        { key: 'reports:view', labelAm: 'አጠቃላይ ሪፖርቶችን ማየትና ማውረድ', labelEn: 'View & Export Reports' },
+        { key: 'analytics:view', labelAm: 'የሲስተም አናሊቲክስ ማየት', labelEn: 'View Analytics' },
+      ],
+    },
+    {
+      id: 'system',
+      titleAm: '⚙️ ሲስተምና ተጠቃሚዎች',
+      titleEn: 'System Administration',
+      permissions: [
+        { key: 'users:manage', labelAm: 'ተጠቃሚዎችን ማስተዳደር', labelEn: 'Manage Users & Permissions' },
+        { key: 'password_resets:manage', labelAm: 'የይለፍ ቃል ጥያቄዎችን ማስተናገድ', labelEn: 'Manage Password Resets' },
+        { key: 'settings:manage', labelAm: 'አጠቃላይ የሲስተም ቅንብሮች', labelEn: 'Manage System Settings' },
+        { key: 'audit_logs:view', labelAm: 'የድርጊት መዝገቦችን ማየት', labelEn: 'View Audit Logs' },
+      ],
+    },
+  ],
+  presets: [
+    {
+      id: 'attendance_usher',
+      nameAm: '📱 የመገኘት አስተባባሪ (Attendance Usher)',
+      nameEn: 'Attendance Usher',
+      role: 'staff',
+      permissions: ['attendance:scan', 'attendance:view'],
+    },
+    {
+      id: 'admissions_officer',
+      nameAm: '📝 የምዝገባ ኦፊሰር (Admissions Officer)',
+      nameEn: 'Admissions Officer',
+      role: 'staff',
+      permissions: ['registrations:view', 'registrations:approve', 'students:view'],
+    },
+    {
+      id: 'academic_coordinator',
+      nameAm: '🎓 የትምህርት አስተባባሪ (Academic Coordinator)',
+      nameEn: 'Academic Coordinator',
+      role: 'staff',
+      permissions: ['academic:classes', 'academic:courses', 'academic:distance_hub', 'academic:enrollments', 'students:view', 'teachers:view'],
+    },
+    {
+      id: 'certificate_officer',
+      nameAm: '📜 የሰርተፊኬት ኦፊሰር (Certificate Officer)',
+      nameEn: 'Certificate Officer',
+      role: 'staff',
+      permissions: ['certificates:view', 'certificates:issue', 'students:view'],
+    },
+    {
+      id: 'communications_secretary',
+      nameAm: '📢 የማስታወቂያና ተግባቦት (Communications)',
+      nameEn: 'Communications Secretary',
+      role: 'staff',
+      permissions: ['announcements:manage', 'resources:manage'],
+    },
+    {
+      id: 'department_head',
+      nameAm: '🏢 የክፍል ኃላፊ (Department Head)',
+      nameEn: 'Department Head',
+      role: 'department_admin',
+      permissions: ['departments:manage', 'memberships:manage', 'announcements:manage'],
+    },
+    {
+      id: 'full_admin',
+      nameAm: '👑 ሙሉ አድሚን (Full Administrator)',
+      nameEn: 'Full Administrator',
+      role: 'admin',
+      permissions: ['*'],
+    },
+  ],
+};
+
+router.get('/permissions/catalog', (req, res) => {
+  res.json({ success: true, ...PERMISSION_CATALOG });
+});
+
+// ---------- Create New User (Admin Function with Granular Task Selection) ----------
+router.post('/users', async (req, res) => {
+  try {
+    const {
+      fullName,
+      password,
+      role = 'staff',
+      status = 'approved',
+      departmentId,
+      assignedDepartments,
+      permissions = [],
+      gender,
+      city,
+      wereda,
+      kebele,
+      notes,
+    } = req.body;
+
+    if (!fullName || !fullName.trim()) {
+      return res.status(400).json({ success: false, message: 'ሙሉ ስም ማስገባት ግዴታ ነው (Full name is required)' });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት (Password must be at least 6 characters)' });
+    }
+
+    const rawPhone = req.body.phone || req.body.phoneNumber;
+    const phone = rawPhone ? rawPhone.trim() : undefined;
+    const email = req.body.email ? req.body.email.toLowerCase().trim() : undefined;
+
+    if (!email && !phone) {
+      return res.status(400).json({ success: false, message: 'ኢሜይል ወይም ስልክ ቁጥር ግዴታ ነው (Email or phone is required)' });
+    }
+
+    // Check existing email
+    if (email && email.trim()) {
+      const existingEmail = await User.findOne({ email: email.toLowerCase().trim() });
+      if (existingEmail) {
+        return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል (Email already in use)' });
+      }
+    }
+
+    // Check existing phone
+    if (phone && phone.trim()) {
+      const existingPhone = await User.findOne({ phone: phone.trim() });
+      if (existingPhone) {
+        return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል (Phone number already in use)' });
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await User.create({
+      fullName: fullName.trim(),
+      email: email ? email.toLowerCase().trim() : undefined,
+      phone: phone ? phone.trim() : undefined,
+      password: hashedPassword,
+      role,
+      roles: [role],
+      permissions: Array.isArray(permissions) ? permissions : [],
+      status,
+      departmentId: departmentId || null,
+      assignedDepartments: Array.isArray(assignedDepartments) ? assignedDepartments : [],
+      gender: gender || '',
+      city: city || '',
+      wereda: wereda || '',
+      kebele: kebele || '',
+      mustChangePassword: false,
+      roleHistory: [
+        {
+          role,
+          status: 'Active',
+          departmentId: departmentId || null,
+          startDate: new Date(),
+          notes: notes || `Created by admin with role: ${role}`,
+          changedBy: req.user?._id || null,
+        },
+      ],
+    });
+
+    await newUser.populate('departmentId', 'name code');
+    await newUser.populate('assignedDepartments', 'name code');
+
+    res.status(201).json({
+      success: true,
+      message: 'አዲስ ተጠቃሚ በተሳካ ሁኔታ ተፈጥሯል (User created successfully)',
+      user: {
+        id: newUser._id,
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        roles: newUser.roles,
+        permissions: newUser.permissions,
+        status: newUser.status,
+        departmentId: newUser.departmentId,
+        assignedDepartments: newUser.assignedDepartments,
+        createdAt: newUser.createdAt,
+      },
+    });
+  } catch (err) {
+    console.error('Create user error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Update User (Role, Permissions, Department, Details with History Preservation) ----------
 router.put('/users/:id', async (req, res) => {
   try {
     const {
       fullName,
       email,
       phone,
+      password,
       role,
       status,
       departmentId,
       assignedDepartments,
+      permissions,
       gender,
       city,
       wereda,
@@ -214,6 +474,17 @@ router.put('/users/:id', async (req, res) => {
     if (city !== undefined) user.city = city;
     if (wereda !== undefined) user.wereda = wereda;
     if (kebele !== undefined) user.kebele = kebele;
+
+    // Optional direct password change from admin
+    if (password && password.trim().length >= 6) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password.trim(), salt);
+    }
+
+    // Handle permissions assignment
+    if (permissions !== undefined && Array.isArray(permissions)) {
+      user.permissions = permissions;
+    }
 
     // Handle department assignment
     if (departmentId !== undefined) {
@@ -305,6 +576,7 @@ router.put('/users/:id', async (req, res) => {
         phone: user.phone,
         role: user.role,
         roles: user.roles,
+        permissions: user.permissions,
         roleHistory: user.roleHistory,
         status: user.status,
         departmentId: user.departmentId,

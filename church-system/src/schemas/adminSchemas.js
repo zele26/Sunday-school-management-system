@@ -36,7 +36,19 @@ export const userEditModalSchema = z.object({
   phone: z.string().optional().or(z.literal('')),
   status: z.string().default('approved'),
   gender: z.string().optional().or(z.literal('')),
+});
+
+export const userCreateModalSchema = z.object({
+  fullName: z.string().trim().min(1, 'ሙሉ ስም ያስገቡ (Full name is required)'),
+  email: z.string().trim().email('ትክክለኛ ኢሜይል ያስገቡ').optional().or(z.literal('')),
+  phone: z.string().trim().min(1, 'ስልክ ቁጥር ያስገቡ (Phone is required)'),
+  password: z.string().min(6, 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት (Min 6 characters)'),
+  role: z.string().min(1, 'ሚና ይምረጡ (Role is required)').default('staff'),
+  departmentId: z.string().optional().or(z.literal('')),
+  status: z.string().default('approved'),
+  gender: z.string().optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
 });
 
 export const userFormSchema = z.object({

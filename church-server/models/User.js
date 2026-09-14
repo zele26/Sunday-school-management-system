@@ -29,12 +29,16 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['superadmin', 'admin', 'department_admin', 'teacher', 'student', 'member'],
+      enum: ['superadmin', 'admin', 'department_admin', 'staff', 'teacher', 'student', 'member'],
       default: 'student',
     },
     roles: [{
       type: String,
-      enum: ['superadmin', 'admin', 'department_admin', 'teacher', 'student', 'member'],
+      enum: ['superadmin', 'admin', 'department_admin', 'staff', 'teacher', 'student', 'member'],
+    }],
+    permissions: [{
+      type: String,
+      trim: true,
     }],
     roleHistory: [
       {

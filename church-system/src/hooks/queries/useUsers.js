@@ -46,7 +46,33 @@ export function useUserJourney(userId, enabled = true) {
 }
 
 /**
- * Update user details/role
+ * Create new user with role & permissions
+ */
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await apiFetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'ተጠቃሚውን መፍጠር አልተሳካም');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'አዲስ ተጠቃሚ በተሳካ ሁኔታ ተፈጥሯል!');
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'ተጠቃሚውን መፍጠር አልተሳካም');
+    },
+  });
+}
+
+/**
+ * Update user details/role/permissions
  */
 export function useUpdateUser() {
   const queryClient = useQueryClient();

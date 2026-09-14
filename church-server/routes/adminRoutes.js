@@ -14,7 +14,7 @@ const registrationRoutes = require('./admin/registrationRoutes');
 
 // ---------- Protect ALL admin routes ----------
 router.use(protect);
-router.use(authorize('admin', 'superadmin', 'department_admin'));
+router.use(authorize('admin', 'superadmin', 'department_admin', 'staff'));
 
 // ---------- Mount sub‑routers (paths are relative to /api/admin) ----------
 router.use('/teachers', teacherRoutes);       // /api/admin/teachers/...
