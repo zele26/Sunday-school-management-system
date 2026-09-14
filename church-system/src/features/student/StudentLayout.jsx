@@ -69,10 +69,24 @@ const StudentLayout = ({ children, onLogout }) => {
           <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px]" />
           <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px] min-w-[38px]" />
 
+          {/* Role Switcher to Admin if user has delegated staff/admin duties */}
+          {(['admin', 'superadmin', 'department_admin', 'staff'].includes(user?.role?.toLowerCase()) ||
+            (Array.isArray(user?.roles) && user.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
+            (Array.isArray(user?.permissions) && user.permissions.length > 0)) && (
+            <a
+              href="/admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs min-h-[38px]"
+              title={t('switchToAdmin', 'ወደ አስተዳዳሪ ክፍል ይቀይሩ (Switch to Admin Portal)')}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
+            </a>
+          )}
+
           {/* User Profile Pill */}
           <Link
             to="/dashboard/profile"
-            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold"
+            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold min-h-[38px]"
             title={t('myProfile', 'የግል መረጃ ይመልከቱ')}
           >
             <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-2xs">

@@ -42,12 +42,18 @@ export const RoleRoute = ({ allowedRoles }) => {
   if (!isLoggedIn || !user) return <Navigate to="/login" replace />;
 
   const isSuperAdmin = user.role === 'superadmin';
-  const isAdminRole = ['admin', 'superadmin', 'department_admin'].includes(user.role);
+  const isAdminRole =
+    ['admin', 'superadmin', 'department_admin', 'staff'].includes(user.role) ||
+    (Array.isArray(user.roles) && user.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
+    (Array.isArray(user.permissions) && user.permissions.length > 0);
 
   // Super admin can access anything allowed for admins or teachers
-  let hasAccess = allowedRoles.includes(user.role) || (isSuperAdmin && (allowedRoles.includes('admin') || allowedRoles.includes('teacher')));
+  let hasAccess =
+    allowedRoles.includes(user.role) ||
+    (Array.isArray(user.roles) && user.roles.some((r) => allowedRoles.includes(r))) ||
+    (isSuperAdmin && (allowedRoles.includes('admin') || allowedRoles.includes('teacher')));
 
-  // If role check includes 'admin', allow any admin type
+  // If role check includes 'admin', allow any admin/staff type
   if (allowedRoles.includes('admin') && isAdminRole) {
     hasAccess = true;
   }

@@ -100,7 +100,12 @@ function App() {
 
   const getRedirectPath = () => {
     if (!user) return '/';
-    if (['admin', 'superadmin', 'department_admin'].includes(user.role)) return '/admin';
+    const hasAdminAccess =
+      ['admin', 'superadmin', 'department_admin', 'staff'].includes(user.role) ||
+      (Array.isArray(user.roles) && user.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
+      (Array.isArray(user.permissions) && user.permissions.length > 0);
+
+    if (hasAdminAccess) return '/admin';
     if (user.role === 'teacher') return '/teacher';
     return '/dashboard';
   };

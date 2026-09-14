@@ -96,12 +96,23 @@ const authorize = (...roles) => {
       return next();
     }
 
-    // If 'admin' is permitted, also allow 'department_admin' and 'staff' (if permitted by permission)
-    if (roles.includes('admin') && (req.user.role === 'department_admin' || req.user.role === 'admin' || req.user.role === 'staff')) {
+    // If 'admin' or 'staff' is permitted, allow admin, department_admin, staff, or any user with delegated permissions
+    const hasAdminOrStaffRole =
+      req.user.role === 'department_admin' ||
+      req.user.role === 'admin' ||
+      req.user.role === 'staff' ||
+      (Array.isArray(req.user.roles) && (req.user.roles.includes('staff') || req.user.roles.includes('admin') || req.user.roles.includes('department_admin'))) ||
+      (Array.isArray(req.user.permissions) && req.user.permissions.length > 0);
+
+    if ((roles.includes('admin') || roles.includes('staff')) && hasAdminOrStaffRole) {
       return next();
     }
 
-    if (!roles.includes(req.user.role)) {
+    const userRoles = Array.isArray(req.user.roles) && req.user.roles.length > 0
+      ? req.user.roles
+      : [req.user.role];
+
+    if (!roles.some((r) => userRoles.includes(r))) {
       return res.status(403).json({
         success: false,
         message: `Role ${req.user.role} is not allowed to access this resource`,

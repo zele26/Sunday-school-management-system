@@ -65,13 +65,18 @@ const Login = () => {
     },
   });
 
-  // Helper to determine destination path based on role
-  const getDestinationPath = (role) => {
-    const normalizedRole = role?.toLowerCase() || '';
-    if (['admin', 'superadmin', 'department_admin'].includes(normalizedRole)) {
+  // Helper to determine destination path based on role and permissions
+  const getDestinationPath = (userObj) => {
+    const role = (typeof userObj === 'string' ? userObj : userObj?.role)?.toLowerCase() || '';
+    const hasAdminAccess =
+      ['admin', 'superadmin', 'department_admin', 'staff'].includes(role) ||
+      (Array.isArray(userObj?.roles) && userObj.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
+      (Array.isArray(userObj?.permissions) && userObj.permissions.length > 0);
+
+    if (hasAdminAccess) {
       return '/admin';
     }
-    if (normalizedRole === 'teacher') {
+    if (role === 'teacher') {
       return '/teacher';
     }
     return '/dashboard';
@@ -80,7 +85,7 @@ const Login = () => {
   // Redirect if already logged in and hydrated
   useEffect(() => {
     if (hasHydrated && isLoggedIn && currentUser) {
-      const destination = getDestinationPath(currentUser.role);
+      const destination = getDestinationPath(currentUser);
       router.replace(destination);
     }
   }, [hasHydrated, isLoggedIn, currentUser, router]);
@@ -124,7 +129,7 @@ const Login = () => {
 
       if (response.ok) {
         loginStore(resData.accessToken, resData.user);
-        const destination = getDestinationPath(resData.user?.role);
+        const destination = getDestinationPath(resData.user);
         router.replace(destination);
       } else {
         if (response.status === 403) {

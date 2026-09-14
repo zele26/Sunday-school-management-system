@@ -312,6 +312,21 @@ const AdminLayout = ({ children, onLogout }) => {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Student Portal Switcher if user has student role/profile or is staff */}
+            {(user?.role === 'student' ||
+              (Array.isArray(user?.roles) && user.roles.includes('student')) ||
+              Boolean(user?.studentProfileId) ||
+              user?.role === 'staff') && (
+              <a
+                href="/dashboard"
+                className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors shadow-xs"
+                title={t('goToStudentPortal', 'ወደ ተማሪ ፖርታል ይሂዱ (Go to Student Portal)')}
+              >
+                <GraduationCap className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="hidden md:inline">{t('studentPortal', 'የተማሪ ፖርታል')}</span>
+              </a>
+            )}
+
             <LanguageToggle />
             <ThemeToggle />
             <button

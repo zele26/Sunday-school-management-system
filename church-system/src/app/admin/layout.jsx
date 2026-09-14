@@ -22,8 +22,12 @@ export default function AdminRootLayout({ children }) {
     }
 
     const role = user?.role?.toLowerCase() || '';
-    const isAdminRole = ['admin', 'superadmin', 'department_admin'].includes(role);
-    if (!isAdminRole) {
+    const hasAdminAccess =
+      ['admin', 'superadmin', 'department_admin', 'staff'].includes(role) ||
+      (Array.isArray(user?.roles) && user.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
+      (Array.isArray(user?.permissions) && user.permissions.length > 0);
+
+    if (!hasAdminAccess) {
       if (role === 'teacher') {
         router.replace('/teacher');
       } else {
