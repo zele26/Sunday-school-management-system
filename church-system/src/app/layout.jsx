@@ -38,11 +38,6 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
           rel="stylesheet"
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme')||'light';var d=document.documentElement;if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches)){d.classList.add('dark')}else{d.classList.remove('dark')}}catch(e){}})()`,
-          }}
-        />
       </head>
       <body className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] antialiased font-sans selection:bg-[var(--brand-gold)] selection:text-slate-950">
         <QueryProvider>

@@ -1,6 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react';
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const ThemeContext = createContext({
   theme: 'light',
@@ -63,7 +65,9 @@ export function ThemeProvider({
         );
         document.head.appendChild(css);
         setTimeout(() => {
-          document.head.removeChild(css);
+          if (document.head.contains(css)) {
+            document.head.removeChild(css);
+          }
         }, 1);
       }
 
@@ -108,8 +112,8 @@ export function ThemeProvider({
     return () => window.removeEventListener('storage', handleStorage);
   }, [storageKey]);
 
-  // Apply theme when resolvedTheme changes
-  useEffect(() => {
+  // Apply theme synchronously before paint
+  useIsomorphicLayoutEffect(() => {
     applyTheme(resolvedTheme);
   }, [resolvedTheme, applyTheme]);
 
@@ -140,4 +144,3 @@ export function ThemeProvider({
 }
 
 export default ThemeProvider;
-

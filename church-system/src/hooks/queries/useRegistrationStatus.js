@@ -72,7 +72,6 @@ export function useRegistrationStatus() {
         };
       }
     },
-    initialData: getCachedStatus,
     staleTime: 1000 * 30, // 30 seconds
     refetchOnWindowFocus: true,
   });

@@ -11,22 +11,22 @@ export const LanguageContext = createContext(null);
 const cache = createIntlCache();
 
 export function LanguageProvider({ children, defaultLang = defaultLocale }) {
-  const [locale, setLocaleState] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('app_lang');
-        const isValid = availableLanguages.some((lang) => lang.code === stored);
-        if (isValid) {
-          return stored;
-        }
-      } catch (err) {
-        console.warn('Could not read app_lang from localStorage', err);
-      }
-    }
-    return defaultLang;
-  });
-
+  const [locale, setLocaleState] = useState(defaultLang);
   const [mounted, setMounted] = useState(false);
+
+  // Sync stored language from localStorage on client mount (safe for hydration)
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const stored = localStorage.getItem('app_lang');
+      const isValid = availableLanguages.some((lang) => lang.code === stored);
+      if (isValid && stored !== defaultLang) {
+        setLocaleState(stored);
+      }
+    } catch (err) {
+      console.warn('Could not read app_lang from localStorage', err);
+    }
+  }, [defaultLang]);
 
   useEffect(() => {
     setMounted(true);
