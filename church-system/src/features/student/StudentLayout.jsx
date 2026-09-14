@@ -50,6 +50,7 @@ const StudentLayout = ({ children, onLogout }) => {
               alt="Church Logo"
               width={44}
               height={44}
+              style={{ width: 'auto', height: 'auto' }}
               className="w-full h-full object-contain"
             />
           </div>

@@ -545,6 +545,7 @@ const RegistrationsManagement = () => {
                                   width={384}
                                   height={260}
                                   unoptimized
+                                  style={{ width: 'auto', height: 'auto' }}
                                   className="w-full max-w-sm rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:opacity-90 transition-opacity object-contain"
                                 />
                               </a>

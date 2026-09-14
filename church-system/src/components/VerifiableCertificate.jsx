@@ -216,6 +216,7 @@ const VerifiableCertificate = ({ certificate, onClose }) => {
                     width={64}
                     height={64}
                     unoptimized
+                    style={{ width: 'auto', height: 'auto' }}
                     className="w-14 h-14 sm:w-16 sm:h-16 border border-amber-400 rounded-lg p-1 bg-white shadow-xs"
                   />
                 )}

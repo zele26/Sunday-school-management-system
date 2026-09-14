@@ -514,6 +514,7 @@ const DistanceEducationPage = () => {
                 src="/church-photos/photo12.png"
                 alt={isAmharic ? 'የምርቃት ሥነ-ሥርዓት' : 'Graduation Ceremony'}
                 fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
@@ -538,6 +539,7 @@ const DistanceEducationPage = () => {
                 src="/church-photos/photo6.png"
                 alt={isAmharic ? 'የመንፈሳዊ መጻሕፍትና ትምህርት' : 'Reading Materials'}
                 fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">
@@ -562,6 +564,7 @@ const DistanceEducationPage = () => {
                 src="/church-photos/photo16.png"
                 alt={isAmharic ? 'የአባቶች ቡራኬ' : 'Priestly Blessings'}
                 fill
+                sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
               />
               <span className="absolute bottom-2 left-3 text-xs font-bold text-white bg-slate-950/70 px-2.5 py-1 rounded-lg backdrop-blur-xs">

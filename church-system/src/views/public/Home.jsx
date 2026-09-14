@@ -270,6 +270,7 @@ const Home = () => {
                 src="/church-photos/photo2.png"
                 alt="ቅዳሴና መንፈሳዊ አገልግሎት"
                 fill
+                sizes="(max-width: 768px) 100vw, 58vw"
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
@@ -291,6 +292,7 @@ const Home = () => {
                   src="/church-photos/photo3.png"
                   alt="የሕፃናትና ወጣቶች ትምህርት"
                   fill
+                  sizes="(max-width: 768px) 100vw, 42vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
@@ -307,6 +309,7 @@ const Home = () => {
                   src="/church-photos/photo1.png"
                   alt="የወጣቶች ኅብረትና ዝማሬ"
                   fill
+                  sizes="(max-width: 768px) 100vw, 42vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
@@ -327,6 +330,7 @@ const Home = () => {
                   src="/church-photos/founder.jpg"
                   alt="የደብሩና የሰንበት ት/ቤቱ መስራች"
                   fill
+                  sizes="(max-width: 640px) 56px, 64px"
                   className="object-cover"
                 />
               </div>

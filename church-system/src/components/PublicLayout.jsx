@@ -172,6 +172,7 @@ const PublicLayout = ({ children }) => {
                     width={48}
                     height={48}
                     priority
+                    style={{ width: 'auto', height: 'auto' }}
                     className="h-10 sm:h-12 w-auto object-contain group-hover:scale-105 transition-all duration-300"
                   />
                 </div>
@@ -441,7 +442,7 @@ const PublicLayout = ({ children }) => {
             <div className="space-y-4">
               <div className="flex items-center space-x-3 space-x-reverse">
                 <div className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center p-1 border border-[#1e3a8a]/20 dark:border-blue-500/30 shadow-xs overflow-hidden">
-                  <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" />
+                  <Image src={ChurchLogo} alt="Logo" width={44} height={44} className="w-full h-full object-contain" style={{ width: 'auto', height: 'auto' }} />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-black text-base text-[#1e3a8a] dark:text-blue-300">{t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}</span>

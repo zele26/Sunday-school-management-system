@@ -287,6 +287,7 @@ const CheckStatusContent = () => {
                   width={60}
                   height={60}
                   priority
+                  style={{ width: 'auto', height: 'auto' }}
                   className="w-full h-full object-contain"
                 />
               </div>

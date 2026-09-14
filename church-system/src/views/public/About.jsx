@@ -65,6 +65,7 @@ const About = () => {
                     src="/church-photos/photo1.png"
                     alt="የሰንበት ት/ቤት መዘምራን"
                     fill
+                    sizes="(max-width: 1024px) 50vw, 20vw"
                     className="object-cover hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute bottom-1.5 left-1.5 bg-slate-950/70 text-[9px] text-white px-2 py-0.5 rounded-md backdrop-blur-xs font-bold">
@@ -76,6 +77,7 @@ const About = () => {
                     src="/church-photos/photo2.png"
                     alt="የቅዳሴ አገልግሎት"
                     fill
+                    sizes="(max-width: 1024px) 50vw, 20vw"
                     className="object-cover hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute bottom-1.5 left-1.5 bg-slate-950/70 text-[9px] text-white px-2 py-0.5 rounded-md backdrop-blur-xs font-bold">
@@ -87,6 +89,7 @@ const About = () => {
                     src="/church-photos/photo3.png"
                     alt="የትምህርት ክፍል"
                     fill
+                    sizes="(max-width: 1024px) 50vw, 20vw"
                     className="object-cover hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute bottom-1.5 left-1.5 bg-slate-950/70 text-[9px] text-white px-2 py-0.5 rounded-md backdrop-blur-xs font-bold">
@@ -98,6 +101,7 @@ const About = () => {
                     src="/church-photos/photo4.png"
                     alt="የበዓል አከባበር"
                     fill
+                    sizes="(max-width: 1024px) 50vw, 20vw"
                     className="object-cover hover:scale-105 transition-transform duration-300"
                   />
                   <span className="absolute bottom-1.5 left-1.5 bg-slate-950/70 text-[9px] text-white px-2 py-0.5 rounded-md backdrop-blur-xs font-bold">
@@ -276,6 +280,7 @@ const About = () => {
                     src="/church-photos/photo10.png"
                     alt="የሕፃናት ክፍል"
                     fill
+                    sizes="(max-width: 640px) 100vw, 33vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
@@ -302,6 +307,7 @@ const About = () => {
                     src="/church-photos/photo7.png"
                     alt="የወጣቶች ክፍል"
                     fill
+                    sizes="(max-width: 640px) 100vw, 33vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
@@ -328,6 +334,7 @@ const About = () => {
                     src="/church-photos/photo5.png"
                     alt="የአዋቂዎች ክፍል"
                     fill
+                    sizes="(max-width: 640px) 100vw, 33vw"
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />

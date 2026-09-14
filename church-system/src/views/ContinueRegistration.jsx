@@ -295,6 +295,7 @@ const ContinueRegistrationContent = () => {
                       width={128}
                       height={128}
                       priority
+                      style={{ width: 'auto', height: 'auto' }}
                       className="w-full h-full object-contain rounded-full transform group-hover:scale-108 transition-transform duration-500"
                     />
                   </div>

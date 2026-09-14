@@ -149,6 +149,7 @@ const Login = () => {
           alt="የቅድስት ልደታ ለማርያም ቤተክርስቲያን"
           fill
           priority
+          sizes="100vw"
           className="object-cover object-center filter blur-[1px] scale-105 opacity-25 dark:opacity-15 brightness-105 dark:brightness-90 contrast-95 dark:contrast-105 pointer-events-none transition-all duration-300"
         />
 
@@ -189,34 +190,34 @@ const Login = () => {
       </header>
 
       {/* 🌟 3. Main Central Two-Column Split Card */}
-      <main className="relative z-10 w-full flex items-center justify-center my-auto py-6">
+      <main className="relative z-10 w-full flex items-center justify-center my-auto py-2 sm:py-6">
         <motion.div
           initial={{ opacity: 0, y: 18, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 240, damping: 24 }}
           className="max-w-4xl lg:max-w-5xl w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-3xl sm:rounded-4xl shadow-2xl shadow-blue-950/10 dark:shadow-black/70 overflow-hidden flex flex-col md:flex-row border border-slate-200/90 dark:border-slate-800 transition-colors duration-300"
         >
-          {/* Left Brand Banner (45% Width on Desktop) */}
-          <div className="md:w-5/12 bg-gradient-to-br from-[#0c326b] via-[#1657b8] to-[#0a2754] dark:from-[#092247] dark:via-[#0f3871] dark:to-[#081a36] p-8 sm:p-10 text-white flex flex-col justify-between items-center text-center relative overflow-hidden">
+          {/* Left Brand Banner (45% Width on Desktop, Compact Header on Mobile) */}
+          <div className="md:w-5/12 bg-gradient-to-br from-[#0c326b] via-[#1657b8] to-[#0a2754] dark:from-[#092247] dark:via-[#0f3871] dark:to-[#081a36] p-4 sm:p-6 md:p-8 lg:p-10 text-white flex flex-col justify-between items-center text-center relative overflow-hidden">
             {/* Ambient internal soft lighting */}
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
             {/* Top Logo & Church Header */}
-            <div className="space-y-6 my-auto py-3 w-full flex flex-col items-center relative z-10">
+            <div className="space-y-2.5 sm:space-y-4 md:space-y-6 my-auto py-1 md:py-3 w-full flex flex-col items-center relative z-10">
               {/* Circular Sunday School Logo with Golden Glow */}
-              <div className="relative w-32 h-32 sm:w-36 sm:h-36 mx-auto flex items-center justify-center group">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-32 md:h-32 lg:w-36 lg:h-36 mx-auto flex items-center justify-center group">
                 <motion.div
                   animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.7, 0.35] }}
                   transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                  className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400/50 via-yellow-300/30 to-white/20 blur-xl"
+                  className="absolute -inset-1.5 md:-inset-2 rounded-full bg-gradient-to-tr from-amber-400/50 via-yellow-300/30 to-white/20 blur-md md:blur-xl"
                 />
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 45, ease: 'linear' }}
-                  className="absolute -inset-2 rounded-full border border-dashed border-amber-300/40 pointer-events-none"
+                  className="absolute -inset-1.5 md:-inset-2 rounded-full border border-dashed border-amber-300/40 pointer-events-none"
                 />
-                <div className="relative w-full h-full p-2 rounded-full bg-white border-2 border-amber-400 shadow-2xl flex items-center justify-center overflow-hidden ring-4 ring-amber-400/30">
+                <div className="relative w-full h-full p-1.5 md:p-2 rounded-full bg-white border-2 border-amber-400 shadow-2xl flex items-center justify-center overflow-hidden ring-2 md:ring-4 ring-amber-400/30">
                   <Image
                     src={logoImage}
                     alt={t('churchLogoAlt', 'የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት አርማ')}
@@ -230,21 +231,21 @@ const Login = () => {
               </div>
 
               {/* Church Parish Title & School Heading */}
-              <div className="space-y-2">
-                <p className="text-[11px] sm:text-xs text-amber-300 font-bold tracking-wide leading-relaxed px-2">
+              <div className="space-y-1 md:space-y-2">
+                <p className="text-[10px] sm:text-[11px] md:text-xs text-amber-300 font-bold tracking-wide leading-tight px-1 sm:px-2 line-clamp-1 sm:line-clamp-none">
                   {t(
                     'churchParishTitle',
                     'ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን'
                   )}
                 </p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+                <h1 className="text-lg sm:text-2xl md:text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight">
                   {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')} {t('sundaySchoolLabel', 'ሰንበት ት/ቤት')}
                 </h1>
-                <div className="h-1 w-16 bg-gradient-to-r from-amber-400 to-yellow-300 mx-auto rounded-full mt-2 mb-3" />
+                <div className="h-0.5 md:h-1 w-10 md:w-16 bg-gradient-to-r from-amber-400 to-yellow-300 mx-auto rounded-full mt-1 mb-1 md:mt-2 md:mb-3" />
 
-                {/* Role Clarification: Refined Descriptor Badge (Non-clickable) */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 dark:bg-black/20 border border-white/15 text-amber-100 text-xs font-semibold backdrop-blur-xs">
-                  <ShieldCheck className="w-4 h-4 text-amber-300 shrink-0" />
+                {/* Role Clarification: Refined Descriptor Badge (Visible on sm+ and Desktop) */}
+                <div className="hidden sm:inline-flex items-center gap-2 px-3 py-1 md:px-3.5 md:py-1.5 rounded-xl bg-white/10 dark:bg-black/20 border border-white/15 text-amber-100 text-[11px] md:text-xs font-semibold backdrop-blur-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-300 shrink-0" />
                   <span>
                     {t(
                       'portalRoleDescriptor',
@@ -255,8 +256,8 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Scripture Verse Footer */}
-            <div className="text-xs text-amber-200/90 font-medium italic border-t border-white/15 pt-3.5 w-full relative z-10 leading-relaxed">
+            {/* Scripture Verse Footer (Visible on Desktop Sidebar) */}
+            <div className="hidden md:block text-xs text-amber-200/90 font-medium italic border-t border-white/15 pt-3.5 w-full relative z-10 leading-relaxed">
               {t(
                 'scriptureProverbs',
                 '«ልጅን በሚሄድበት መንገድ ምራው፥ በሸመገለም ጊዜ ከእርሱ ፈቀቅ አይልም።» (ምሳሌ ፳፪፥፮)'
@@ -265,7 +266,7 @@ const Login = () => {
           </div>
 
           {/* Right Form Panel (55% Width on Desktop) */}
-          <div className="md:w-7/12 p-7 sm:p-10 lg:p-12 bg-white dark:bg-slate-900 flex flex-col justify-center">
+          <div className="md:w-7/12 p-5 sm:p-8 lg:p-12 bg-white dark:bg-slate-900 flex flex-col justify-center">
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
@@ -277,17 +278,17 @@ const Login = () => {
               </motion.div>
             )}
 
-            <div className="max-w-md mx-auto w-full space-y-5">
+            <div className="max-w-md mx-auto w-full space-y-4 sm:space-y-5">
               {/* Form Title & Subtitle */}
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 text-xs font-black border border-blue-200 dark:border-blue-800/80 mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <div className="space-y-1 sm:space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 text-[11px] sm:text-xs font-black border border-blue-200 dark:border-blue-800/80 mb-0.5">
+                  <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500" />
                   <span>{t('welcomeBack', 'እንኳን ደህና መጡ')}</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                   {t('memberLogin', 'የአባላት መግቢያ')}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+                <p className="text-[11px] sm:text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">
                   {t(
                     'enterPhoneEmailOrId',
                     'እባክዎትን ስልክ ቁጥር፣ ኢሜይል ወይም የተማሪ መለያ ቁጥርዎን ያስገቡ'
@@ -296,9 +297,9 @@ const Login = () => {
               </div>
 
               {/* Controlled Authentication Form */}
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-1">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5 sm:space-y-4 pt-0.5">
                 {/* Input 1: Identifier */}
-                <div className="space-y-1.5">
+                <div className="space-y-1 sm:space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                     {t('userIdentifier', 'የተጠቃሚ መለያ')}
                   </label>
@@ -313,7 +314,7 @@ const Login = () => {
                         'userIdentifierPlaceholder',
                         'ስልክ ቁጥር፣ ኢሜይል ወይም መለያ ቁጥር (TKD-...)'
                       )}
-                      className={`w-full pl-10 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
+                      className={`w-full pl-10 pr-4 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
                         errors.credential
                           ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                           : 'border-slate-200 dark:border-slate-700 focus:border-[#1657b8] focus:ring-[#1657b8]/20'
@@ -328,7 +329,7 @@ const Login = () => {
                 </div>
 
                 {/* Input 2: Password with Integrated Forgot Password Link */}
-                <div className="space-y-1.5">
+                <div className="space-y-1 sm:space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
                       {t('password', 'የይለፍ ቃል')}
@@ -348,7 +349,7 @@ const Login = () => {
                       type={showPassword ? 'text' : 'password'}
                       {...register('password')}
                       placeholder="••••••••"
-                      className={`w-full pl-10 pr-11 py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
+                      className={`w-full pl-10 pr-11 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
                         errors.password
                           ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                           : 'border-slate-200 dark:border-slate-700 focus:border-[#1657b8] focus:ring-[#1657b8]/20'

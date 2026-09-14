@@ -77,6 +77,7 @@ export default function ForgotPassword() {
           alt="Lideta Church"
           fill
           priority
+          sizes="100vw"
           className="object-cover object-center filter blur-[2px] scale-105 opacity-25 dark:opacity-15 brightness-[1.08] dark:brightness-[0.45]"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-amber-50/70 dark:from-[#050c1a]/95 dark:via-[#09152b]/92 dark:to-[#030710]/95" />
