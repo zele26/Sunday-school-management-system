@@ -1,35 +1,3 @@
-// const mongoose = require('mongoose');
-// const dns = require('dns');
-
-// dns.setDefaultResultOrder('ipv4first');
-
-// const connectToDatabase = async () => {
-//   const MONGO_URI = process.env.MONGO_URI || '';
-//   try {
-//     if (!MONGO_URI) {
-//       console.error('❌ CRITICAL: MONGO_URI environment variable is missing!');
-//       process.exit(1);
-//     }
-
-//     console.log('Connecting to MongoDB Atlas...');
-//     await mongoose.connect(MONGO_URI, { 
-//       dbName: 'church_db', // Forced target database
-//       serverSelectionTimeoutMS: 30000 
-//     });
-
-//     console.log('Connected to MongoDB Atlas successfully! ✅');
-//     console.log(`📌 Active Database Host: ${mongoose.connection.host}`);
-//     console.log(`📌 Active Database Name: ${mongoose.connection.name}`);
-//   } catch (err) {
-//     console.error('❌ Database connection error to MongoDB Atlas:', err.message);
-//   }
-// };
-
-// module.exports = connectToDatabase;
-
-
-
-
 const mongoose = require('mongoose');
 const dns = require('dns');
 
@@ -46,10 +14,17 @@ const connectToDatabase = async () => {
       process.exit(1);
     }
 
+    // Determine environment and target database explicitly
+    const isProduction = process.env.NODE_ENV === 'production';
+    const targetDbName = process.env.DB_NAME || (isProduction ? 'church_db' : 'church_db_dev');
+
     console.log('🔗 Connecting to MongoDB Atlas...');
-    
+    console.log(`📌 Target Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📌 Target Database:    ${targetDbName}`);
+
     // Connection options for better reliability
     const options = {
+      dbName: targetDbName, // Explicitly enforce target database (overrides URI path)
       serverSelectionTimeoutMS: 30000, // Timeout after 30 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       family: 4, // Use IPv4 (helps with DNS resolution issues)
@@ -57,22 +32,14 @@ const connectToDatabase = async () => {
       minPoolSize: 2, // Maintain at least 2 socket connections
     };
 
-    // If a custom DB_NAME is provided in env, use it. Otherwise, if MONGO_URI doesn't have a path, default to church_db
-    if (process.env.DB_NAME) {
-      options.dbName = process.env.DB_NAME;
-      console.log(`📌 Using custom database: ${options.dbName}`);
-    } else if (!MONGO_URI.includes('/church_db') && !MONGO_URI.includes('/?') && !MONGO_URI.includes('/%3F')) {
-      options.dbName = process.env.NODE_ENV === 'production' ? 'church_db_prod' : 'church_db_dev';
-      console.log(`📌 Using default environment database: ${options.dbName}`);
-    }
-
     await mongoose.connect(MONGO_URI, options);
 
-    console.log('✅ Connected to MongoDB Atlas successfully!');
-    console.log(`📌 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📌 Host: ${mongoose.connection.host}`);
-    console.log(`📌 Database: ${mongoose.connection.name}`);
-    console.log(`📌 Connection State: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+    console.log('╔════════════════════════════════════════════════════════════════╗');
+    console.log('║  ✅ CONNECTED TO MONGODB ATLAS                                 ║');
+    console.log(`║  📌 Active Database Name : ${mongoose.connection.name.padEnd(35)} ║`);
+    console.log(`║  📌 Environment          : ${(process.env.NODE_ENV || 'development').padEnd(35)} ║`);
+    console.log(`║  📌 Database Host        : ${mongoose.connection.host.padEnd(35)} ║`);
+    console.log('╚════════════════════════════════════════════════════════════════╝');
     
     // Handle connection events
     mongoose.connection.on('error', (err) => {
