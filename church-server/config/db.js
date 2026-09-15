@@ -1,8 +1,4 @@
 const mongoose = require('mongoose');
-const dns = require('dns');
-
-// Force IPv4 to avoid DNS resolution issues with MongoDB Atlas
-dns.setDefaultResultOrder('ipv4first');
 
 const connectToDatabase = async () => {
   const MONGO_URI = process.env.MONGO_URI || '';
@@ -25,11 +21,9 @@ const connectToDatabase = async () => {
     // Connection options for better reliability
     const options = {
       dbName: targetDbName, // Explicitly enforce target database (overrides URI path)
-      serverSelectionTimeoutMS: 30000, // Timeout after 30 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      family: 4, // Use IPv4 (helps with DNS resolution issues)
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      minPoolSize: 2, // Maintain at least 2 socket connections
+      serverSelectionTimeoutMS: 20000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     };
 
     await mongoose.connect(MONGO_URI, options);

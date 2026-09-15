@@ -207,6 +207,11 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', announcementRoutes);
 
+// Telegram Bot & Mini App API
+const telegramRoutes = require('./routes/telegramRoutes');
+const { initTelegramBot } = require('./services/telegramBotService');
+app.use('/api/telegram', telegramRoutes);
+
 // Temporary migration route (from file, if exists)
 if (tempMigrationRoutes) app.use('/api/admin/temp', tempMigrationRoutes);
 
@@ -433,25 +438,34 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 async function start() {
-  try {
-    await connectToDatabase();
-    console.log('✅ Database connected');
+  // 1. Start HTTP Server immediately
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📡 API available at http://localhost:${PORT}/api`);
+    console.log(`🌐 Health check at http://localhost:${PORT}/api/test`);
+  });
 
-    const User = require('./models/User');
-    try { await User.collection.dropIndex('email_1'); } catch (e) {}
-    try { await User.collection.dropIndex('phone_1'); } catch (e) {}
-    await User.createIndexes();
-    console.log('✅ Sparse indexes ensured for User model');
+  // 2. Initialize Telegram Bot concurrently
+  initTelegramBot().catch((e) => console.warn('Telegram bot init error:', e.message));
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📡 API available at http://localhost:${PORT}/api`);
-      console.log(`🌐 Health check at http://localhost:${PORT}/api/test`);
-    });
-  } catch (err) {
-    console.error('❌ Failed to start server:', err);
-    process.exit(1);
-  }
+  // 3. Connect to MongoDB Atlas with resilient retry
+  const initDbAndServices = async () => {
+    try {
+      await connectToDatabase();
+      console.log('✅ Database connected');
+
+      const User = require('./models/User');
+      try { await User.collection.dropIndex('email_1'); } catch (e) {}
+      try { await User.collection.dropIndex('phone_1'); } catch (e) {}
+      await User.createIndexes();
+      console.log('✅ Sparse indexes ensured for User model');
+    } catch (err) {
+      console.warn('⚠️ Initial MongoDB Atlas connection pending. Will retry in 5s...', err.message);
+      setTimeout(initDbAndServices, 5000);
+    }
+  };
+
+  initDbAndServices();
 }
 
 process.on('unhandledRejection', (err) => console.error('❌ Unhandled Rejection:', err));

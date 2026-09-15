@@ -103,8 +103,13 @@ const userSchema = new mongoose.Schema(
     // Emergency contact (common to all roles)
     emergencyPersonName: { type: String, trim: true },
     emergencyPhone: { type: String, trim: true },
+    // Telegram Bot & Mini App Integration
+    telegramChatId: { type: String },
+    telegramUsername: { type: String, trim: true },
+    telegramPhone: { type: String, trim: true },
+    telegramLinkedAt: { type: Date },
     // Password reset
-    resetPasswordToken: { type: String, index: true },
+    resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },
   {
@@ -128,6 +133,7 @@ userSchema.index({ personId: 1 }, { sparse: true });
 userSchema.index({ departmentId: 1 }, { sparse: true });
 userSchema.index({ studentProfileId: 1 }, { sparse: true });
 userSchema.index({ teacherProfileId: 1 }, { sparse: true });
+userSchema.index({ telegramChatId: 1 }, { sparse: true });
 
 // Virtual for checking superadmin/admin capability
 userSchema.virtual('isAdmin').get(function () {

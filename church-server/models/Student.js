@@ -51,6 +51,9 @@ const studentSchema = new mongoose.Schema({
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EducationCourse' }],
   qrCode: { type: String, unique: true, sparse: true },
   studentType: { type: String, enum: ['regular', 'distance'], default: 'regular' },
+  // Telegram Bot integration
+  telegramChatId: { type: String },
+  telegramUsername: { type: String, trim: true },
 }, {
   collection: 'students',
   timestamps: true,
@@ -85,5 +88,6 @@ studentSchema.index({ studentType: 1 });
 studentSchema.index({ batch: 1 }, { sparse: true });
 studentSchema.index({ studentPhone: 1 }, { sparse: true });
 studentSchema.index({ teacher: 1 }, { sparse: true });
+studentSchema.index({ telegramChatId: 1 }, { sparse: true });
 
 module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);

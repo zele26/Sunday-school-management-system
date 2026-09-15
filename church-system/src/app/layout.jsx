@@ -1,5 +1,6 @@
 import './globals.css';
 import AppInitializer from '../components/AppInitializer';
+import TelegramWebAppInitializer from '../components/TelegramWebAppInitializer';
 import NextRouterAdapter from '../components/NextRouterAdapter';
 import { ToastContainer } from '../utils/toast';
 import { Toaster } from '../components/ui/sonner';
@@ -28,7 +29,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="am" suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <link rel="icon" type="image/png" href="/logo.png" />
         <link rel="shortcut icon" type="image/png" href="/logo.png" />
         <link rel="apple-touch-icon" href="/logo.png" />
@@ -38,17 +39,21 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Ethiopic:wght@400;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
           rel="stylesheet"
         />
+        {/* Telegram Mini App WebApp SDK */}
+        <script src="https://telegram.org/js/telegram-web-app.js" async></script>
       </head>
       <body className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] antialiased font-sans selection:bg-[var(--brand-gold)] selection:text-slate-950">
         <QueryProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <LanguageProvider defaultLang="am">
               <NextRouterAdapter>
-                <AppInitializer>
-                  {children}
-                  <ToastContainer />
-                  <Toaster position="top-right" richColors />
-                </AppInitializer>
+                <TelegramWebAppInitializer>
+                  <AppInitializer>
+                    {children}
+                    <ToastContainer />
+                    <Toaster position="top-right" richColors />
+                  </AppInitializer>
+                </TelegramWebAppInitializer>
               </NextRouterAdapter>
             </LanguageProvider>
           </ThemeProvider>
