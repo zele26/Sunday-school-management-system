@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -11,55 +11,6 @@ import { useLanguage } from '../hooks/useLanguage';
 import { useRegistrationStatus } from '../hooks/queries';
 import { Send, Phone, MapPin, Clock, Compass, BookOpen, Search, LogIn, ExternalLink } from 'lucide-react';
 
-// Inspirational Bible verses & Church Announcements for the sliding ticker
-const tickerItemsAm = [
-  {
-    type: '📖 የዕለቱ ቃል',
-    text: '«ልጆችን ወደ እኔ ይምጡ አትከልክሏቸው፤ የእግዚአብሔር መንግሥት እንደ እነዚህ ላሉት ናትና።» (ማር. ፲፥፲፬)',
-    bg: 'from-amber-600/20 via-amber-500/10 to-transparent',
-    borderColor: 'border-amber-500/30',
-    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-  },
-  {
-    type: '📢 ማስታወቂያ',
-    text: 'የ 2017 ዓ.ም አዲሱ የሰንበት ትምህርት ቤት የመደበኛ እና የርቀት ምዝገባ በይፋ ተጀምሯል! አሁኑኑ ይመዝገቡ።',
-    bg: 'from-emerald-600/20 via-emerald-500/10 to-transparent',
-    borderColor: 'border-emerald-500/30',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  },
-  {
-    type: '🙏 መንፈሳዊ መልእክት',
-    text: '«ከሕፃናትና ከሚጠቡ ልጆች አፍ ምስጋናን አዘጋጀህ...» (መዝ. ፰፥፪) — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።',
-    bg: 'from-sky-600/20 via-sky-500/10 to-transparent',
-    borderColor: 'border-sky-500/30',
-    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-  },
-];
-
-const tickerItemsEn = [
-  {
-    type: '📖 Daily Scripture',
-    text: '“Let the little children come to me, and do not hinder them, for the kingdom of God belongs to such as these.” (Mark 10:14)',
-    bg: 'from-amber-600/20 via-amber-500/10 to-transparent',
-    borderColor: 'border-amber-500/30',
-    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-  },
-  {
-    type: '📢 Announcement',
-    text: 'Official registration for Regular & Distance Sunday School programs is now officially open! Register today.',
-    bg: 'from-emerald-600/20 via-emerald-500/10 to-transparent',
-    borderColor: 'border-emerald-500/30',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  },
-  {
-    type: '🙏 Spiritual Message',
-    text: '“Through the praise of children and infants you have established a stronghold...” (Ps. 8:2) — Building a faithful generation.',
-    bg: 'from-sky-600/20 via-sky-500/10 to-transparent',
-    borderColor: 'border-sky-500/30',
-    badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
-  },
-];
-
 const PublicLayout = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRegDropdownOpen, setIsRegDropdownOpen] = useState(false);
@@ -67,14 +18,92 @@ const PublicLayout = ({ children }) => {
   const [isTickerPaused, setIsTickerPaused] = useState(false);
   const { t, isAmharic } = useLanguage();
 
-  const tickerItems = isAmharic ? tickerItemsAm : tickerItemsEn;
-
   const { data: regStatus } = useRegistrationStatus();
   const isMasterOpen = regStatus?.isRegistrationOpen !== false;
   const isRegularOpen = isMasterOpen && regStatus?.isRegularOpen !== false;
   const isDistanceOpen = isMasterOpen && regStatus?.isDistanceOpen !== false;
   const isAnyOpen = isRegularOpen || isDistanceOpen;
-  const academicYear = regStatus?.academicYear || '2017 ዓ.ም';
+  const academicYear = regStatus?.academicYear || '2019 ዓ.ም';
+
+  // Dynamically computed ticker announcements reflecting real-time registration status
+  const tickerItems = useMemo(() => {
+    let announcementText = '';
+    let announcementBg = 'from-emerald-600/20 via-emerald-500/10 to-transparent';
+    let announcementBorder = 'border-emerald-500/30';
+    let announcementBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+
+    if (isRegularOpen && isDistanceOpen) {
+      announcementText = isAmharic
+        ? `የ ${academicYear} አዲሱ የሰንበት ትምህርት ቤት የመደበኛ እና የርቀት ምዝገባ በይፋ ተጀምሯል! አሁኑኑ ይመዝገቡ።`
+        : `Official registration for ${academicYear} Regular & Distance Sunday School programs is now open! Register today.`;
+    } else if (isRegularOpen) {
+      announcementText = isAmharic
+        ? `የ ${academicYear} የመደበኛ ሰንበት ትምህርት ቤት ምዝገባ ክፍት ነው። አሁኑኑ ይመዝገቡ።`
+        : `Official registration for ${academicYear} Regular Sunday School program is now open! Register today.`;
+    } else if (isDistanceOpen) {
+      announcementText = isAmharic
+        ? `የ ${academicYear} የርቀት ሰንበት ትምህርት ቤት ምዝገባ በይፋ ክፍት ነው። አሁኑኑ ይመዝገቡ።`
+        : `Official registration for ${academicYear} Distance Sunday School program is now open! Register today.`;
+    } else {
+      // Both streams closed
+      announcementText = isAmharic
+        ? (regStatus?.generalClosedMessage || regStatus?.regularClosedMessage || 'የሰንበት ትምህርት ቤት ምዝገባ ለጊዜው ተዘግቷል። ቀጣዩ የምዝገባ ጊዜ በቅርቡ ይገለጻል።')
+        : (regStatus?.generalClosedMessage || regStatus?.regularClosedMessage || 'Sunday School registration is currently closed. Upcoming intake dates will be announced soon.');
+      announcementBg = 'from-amber-600/20 via-amber-500/10 to-transparent';
+      announcementBorder = 'border-amber-500/30';
+      announcementBadge = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    }
+
+    if (isAmharic) {
+      return [
+        {
+          type: '📖 የዕለቱ ቃል',
+          text: '«ልጆችን ወደ እኔ ይምጡ አትከልክሏቸው፤ የእግዚአብሔር መንግሥት እንደ እነዚህ ላሉት ናትና።» (ማር. ፲፥፲፬)',
+          bg: 'from-amber-600/20 via-amber-500/10 to-transparent',
+          borderColor: 'border-amber-500/30',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        },
+        {
+          type: '📢 ማስታወቂያ',
+          text: announcementText,
+          bg: announcementBg,
+          borderColor: announcementBorder,
+          badgeColor: announcementBadge,
+        },
+        {
+          type: '🙏 መንፈሳዊ መልእክት',
+          text: '«ከሕፃናትና ከሚጠቡ ልጆች አፍ ምስጋናን አዘጋጀህ...» (መዝ. ፰፥፪) — በሃይማኖትና በምግባር የታነጸ ትውልድ እንገነባለን።',
+          bg: 'from-sky-600/20 via-sky-500/10 to-transparent',
+          borderColor: 'border-sky-500/30',
+          badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        },
+      ];
+    } else {
+      return [
+        {
+          type: '📖 Daily Scripture',
+          text: '“Let the little children come to me, and do not hinder them, for the kingdom of God belongs to such as these.” (Mark 10:14)',
+          bg: 'from-amber-600/20 via-amber-500/10 to-transparent',
+          borderColor: 'border-amber-500/30',
+          badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        },
+        {
+          type: '📢 Announcement',
+          text: announcementText,
+          bg: announcementBg,
+          borderColor: announcementBorder,
+          badgeColor: announcementBadge,
+        },
+        {
+          type: '🙏 Spiritual Message',
+          text: '“Through the praise of children and infants you have established a stronghold...” (Ps. 8:2) — Building a faithful generation.',
+          bg: 'from-sky-600/20 via-sky-500/10 to-transparent',
+          borderColor: 'border-sky-500/30',
+          badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        },
+      ];
+    }
+  }, [isAmharic, isRegularOpen, isDistanceOpen, academicYear, regStatus]);
 
   const pathname = usePathname();
   const dropdownRef = useRef(null);
@@ -196,8 +225,8 @@ const PublicLayout = ({ children }) => {
                   key={link.to}
                   href={link.to}
                   className={`px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 relative whitespace-nowrap min-h-[42px] flex items-center ${pathname === link.to
-                      ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800 shadow-2xs'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800 shadow-2xs'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   <span>{link.label}</span>
@@ -210,8 +239,8 @@ const PublicLayout = ({ children }) => {
                   type="button"
                   onClick={() => setIsRegDropdownOpen(!isRegDropdownOpen)}
                   className={`flex items-center space-x-2 space-x-reverse px-3.5 xl:px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none cursor-pointer whitespace-nowrap min-h-[42px] ${registrationLinks.some((item) => item.to === pathname)
-                      ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800 shadow-2xs'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-800 shadow-2xs'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   <span className="relative flex h-2 w-2">
@@ -248,8 +277,8 @@ const PublicLayout = ({ children }) => {
                           key={item.to}
                           href={item.to}
                           className={`flex items-center space-x-3.5 space-x-reverse px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group min-h-[44px] ${pathname === item.to
-                              ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-3 border-[#1e3a8a]'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-400'
+                            ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-3 border-[#1e3a8a]'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-400'
                             }`}
                         >
                           <span className="text-base p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 group-hover:scale-108 transition-transform shadow-2xs">
@@ -313,8 +342,8 @@ const PublicLayout = ({ children }) => {
                   key={link.to}
                   href={link.to}
                   className={`block px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] flex items-center ${pathname === link.to
-                      ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-4 border-[#1e3a8a]'
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
+                    ? 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold border-l-4 border-[#1e3a8a]'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
                     }`}
                 >
                   {link.label}
@@ -332,8 +361,8 @@ const PublicLayout = ({ children }) => {
                   key={item.to}
                   href={item.to}
                   className={`flex items-center space-x-3.5 space-x-reverse px-4 py-3 rounded-xl text-base font-medium transition-all min-h-[46px] ${pathname === item.to
-                      ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 font-bold border-l-4 border-amber-500'
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 font-bold border-l-4 border-amber-500'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-[#1e3a8a] dark:hover:text-blue-300'
                     }`}
                 >
                   <span className="text-xl bg-slate-100 dark:bg-slate-800 p-1.5 rounded-lg">{item.icon}</span>
