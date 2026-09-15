@@ -559,7 +559,7 @@ const PublicLayout = ({ children }) => {
                 <div className="flex items-start gap-2 pt-0.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span className="leading-snug">
-                    {t('churchOfficeHours', 'የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከጠዋቱ 2:30 – 11:30')}
+                    {t('churchOfficeHours', 'የቢሮ ሰዓታት፦ ቅዳሜ እና እሁድ ከጠዋቱ 2:30 – ማታ 2:00')}
                   </span>
                 </div>
               </div>
