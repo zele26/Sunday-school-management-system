@@ -29,13 +29,33 @@ const getRegistrationSettings = async (forceFresh = false) => {
   return settings;
 };
 
-const generateRegNumber = async () => {
-  const last = await Registration.findOne().sort({ createdAt: -1 });
-  const count = last ? parseInt(last.registrationNumber.split('-')[2]) + 1 : 1;
-  return `REG-${new Date().getFullYear()}-${String(count).padStart(6, '0')}`;
+const normalizeEthiopianPhone = (phone) => {
+  if (!phone) return '';
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.length >= 9) {
+    return '0' + digits.slice(-9);
+  }
+  return digits;
 };
 
-const isValidPhone = (phone) => /^\d{10}$/.test(phone);
+const isValidPhone = (phone) => {
+  if (!phone) return false;
+  const normalized = normalizeEthiopianPhone(phone);
+  return /^0[79]\d{8}$/.test(normalized);
+};
+
+const generateRegNumber = async () => {
+  const year = new Date().getFullYear();
+  const count = await Registration.countDocuments();
+  const randomSuffix = Math.floor(100 + Math.random() * 900);
+  const candidate = `REG-${year}-${String(count + 1).padStart(4, '0')}-${randomSuffix}`;
+  const exists = await Registration.findOne({ registrationNumber: candidate });
+  if (exists) {
+    const extra = Math.floor(1000 + Math.random() * 9000);
+    return `REG-${year}-${String(count + 1).padStart(4, '0')}-${extra}`;
+  }
+  return candidate;
+};
 
 // ---------- PUBLIC ROUTES ----------
 
@@ -145,16 +165,19 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       });
     }
 
+    const cleanPhone = normalizeEthiopianPhone(phone);
+    const cleanEmergencyPhone = normalizeEthiopianPhone(finalEmergencyPhone);
+
     // Validate student phone
-    if (!isValidPhone(phone)) {
+    if (!isValidPhone(cleanPhone)) {
       return res.status(400).json({ success: false, message: 'ስልክ ቁጥር በትክክል 10 አሃዝ መሆን አለበት' });
     }
 
     // Validate emergency contact – must have name and phone from either set
-    if (!finalEmergencyFirstName || !finalEmergencyPhone) {
+    if (!finalEmergencyFirstName || !cleanEmergencyPhone) {
       return res.status(400).json({ success: false, message: 'የአደጋ ጊዜ ተጠሪ ስም እና ስልክ ግዴታ ነው' });
     }
-    if (!isValidPhone(finalEmergencyPhone)) {
+    if (!isValidPhone(cleanEmergencyPhone)) {
       return res.status(400).json({ success: false, message: 'የአደጋ ጊዜ ተጠሪ ስልክ በትክክል 10 አሃዝ መሆን አለበት' });
     }
 
@@ -170,10 +193,16 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       if (existingEmailUser) return res.status(400).json({ success: false, message: 'ይህ ኢሜይል ቀድሞውኑ ተመዝግቧል' });
     }
 
-    // Check duplicate phone
-    const existingReg = await Registration.findOne({ phone, status: { $ne: 'Rejected' } });
+    // Check duplicate phone (match both normalized and raw)
+    const existingReg = await Registration.findOne({
+      $or: [{ phone: cleanPhone }, { phone }],
+      status: { $ne: 'Rejected' },
+    });
     if (existingReg) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ምዝገባ አለው' });
-    const existingUser = await User.findOne({ phone });
+
+    const existingUser = await User.findOne({
+      $or: [{ phone: cleanPhone }, { phone }],
+    });
     if (existingUser) return res.status(400).json({ success: false, message: 'ይህ ስልክ ቁጥር ቀድሞውኑ ተመዝግቧል' });
 
     const salt = await bcrypt.genSalt(10);
@@ -204,7 +233,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       woreda: normalizedWoreda,
       kebele: normalizedKebele,
       shift: normalizedShift,
-      phone,
+      phone: cleanPhone,
       grade: finalGrade,
       batch,
       address: address || '',
@@ -213,12 +242,12 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       emergencyMiddleName: finalEmergencyMiddleName,
       emergencyLastName: finalEmergencyLastName,
       relationship: finalRelationship,
-      emergencyPhone: finalEmergencyPhone,
+      emergencyPhone: cleanEmergencyPhone,
       emergencyEmail: finalEmergencyEmail,
       emergencyAddress: finalEmergencyAddress,
       // Legacy fields for backward compatibility
       parentName: finalEmergencyFirstName,
-      parentPhone: finalEmergencyPhone,
+      parentPhone: cleanEmergencyPhone,
       parentEmail: finalEmergencyEmail,
       email: email?.toLowerCase() || '',
       password: hashedPassword,
@@ -251,7 +280,15 @@ const handleStatusCheck = async (req, res) => {
       return res.status(400).json({ success: false, message: 'ስልክ ቁጥር (ወይም የምዝገባ ቁጥር) እና የይለፍ ቃል ያስፈልጋል' });
     }
 
-    const query = phone ? { phone: phone.trim() } : { registrationNumber: registrationNumber.trim() };
+    let query;
+    if (registrationNumber && registrationNumber.trim()) {
+      query = { registrationNumber: registrationNumber.trim() };
+    } else {
+      const rawPhone = phone.trim();
+      const cleanPhone = normalizeEthiopianPhone(rawPhone);
+      query = { $or: [{ phone: rawPhone }, { phone: cleanPhone }] };
+    }
+
     const reg = await Registration.findOne(query);
     if (!reg) return res.status(404).json({ success: false, message: 'ምዝገባ አልተገኘም፤ እባክዎ መረጃዎን ያረጋግጡ' });
 
@@ -315,7 +352,14 @@ const handleUploadReceipt = async (req, res) => {
 
     const { registrationNumber, phone, transactionRef } = req.body;
     if (registrationNumber || phone) {
-      const query = registrationNumber ? { registrationNumber } : { phone };
+      let query;
+      if (registrationNumber && registrationNumber.trim()) {
+        query = { registrationNumber: registrationNumber.trim() };
+      } else {
+        const rawPhone = phone.trim();
+        const cleanPhone = normalizeEthiopianPhone(rawPhone);
+        query = { $or: [{ phone: rawPhone }, { phone: cleanPhone }] };
+      }
       const reg = await Registration.findOne(query);
       if (reg) {
         reg.receiptUrl = receiptUrl;
@@ -346,7 +390,14 @@ router.post('/submit-payment', async (req, res) => {
       return res.status(400).json({ success: false, message: 'የምዝገባ ቁጥር ወይም ስልክ ቁጥር ያስፈልጋል' });
     }
 
-    const query = registrationNumber ? { registrationNumber: registrationNumber.trim() } : { phone: phone.trim() };
+    let query;
+    if (registrationNumber && registrationNumber.trim()) {
+      query = { registrationNumber: registrationNumber.trim() };
+    } else {
+      const rawPhone = phone.trim();
+      const cleanPhone = normalizeEthiopianPhone(rawPhone);
+      query = { $or: [{ phone: rawPhone }, { phone: cleanPhone }] };
+    }
     const reg = await Registration.findOne(query);
     if (!reg) return res.status(404).json({ success: false, message: 'ምዝገባ አልተገኘም' });
 

@@ -80,22 +80,36 @@ const generateStudentId = async (studentType) => {
   const prefix = studentType === 'distance' ? 'TKD' : 'TKR';
   const year = getEthiopianYear();
 
-  const lastStudent = await Registration.findOne({
-    studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null },
-  })
-    .sort({ studentId: -1 })
-    .limit(1);
+  const [lastStudentDoc, lastRegDoc] = await Promise.all([
+    Student.findOne({ studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null } }).sort({ studentId: -1 }).limit(1),
+    Registration.findOne({ studentId: { $regex: `^${prefix}-`, $exists: true, $ne: null } }).sort({ studentId: -1 }).limit(1),
+  ]);
 
-  let lastNumber = 0;
-  if (lastStudent && lastStudent.studentId) {
-    const parts = lastStudent.studentId.split('-');
-    if (parts.length === 3) {
-      lastNumber = parseInt(parts[2]) || 0;
+  let maxNumber = 0;
+  [lastStudentDoc, lastRegDoc].forEach((doc) => {
+    if (doc && doc.studentId) {
+      const parts = doc.studentId.split('-');
+      if (parts.length === 3) {
+        const num = parseInt(parts[2], 10);
+        if (!isNaN(num) && num > maxNumber) {
+          maxNumber = num;
+        }
+      }
     }
+  });
+
+  let candidateNumber = maxNumber + 1;
+  let candidate = `${prefix}-${year}-${String(candidateNumber).padStart(4, '0')}`;
+
+  while (
+    (await Student.exists({ studentId: candidate })) ||
+    (await Registration.exists({ studentId: candidate }))
+  ) {
+    candidateNumber++;
+    candidate = `${prefix}-${year}-${String(candidateNumber).padStart(4, '0')}`;
   }
 
-  const newNumber = String(lastNumber + 1).padStart(4, '0');
-  return `${prefix}-${year}-${newNumber}`;
+  return candidate;
 };
 
 // ---------- List pending (protected) ----------
@@ -197,6 +211,11 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       qrCode: crypto.randomUUID(),
       studentType: reg.studentType,
     });
+
+    // Link user back to student profile
+    user.studentProfileId = student._id;
+    user.studentId = studentId;
+    await user.save({ validateBeforeSave: false });
 
     // Update registration status
     reg.status = 'Approved';
