@@ -501,6 +501,32 @@ const initTelegramBot = async () => {
       }
     });
 
+    // Detect when bot membership status updates in chat/channel/supergroup
+    botInstance.on('my_chat_member', async (update) => {
+      try {
+        if (!update || !update.chat) return;
+        const newStatus = update.new_chat_member?.status;
+        const chatId = String(update.chat.id);
+        if (newStatus === 'member' || newStatus === 'administrator') {
+          await upsertTelegramGroup(update.chat);
+        } else if (newStatus === 'left' || newStatus === 'kicked') {
+          await TelegramGroup.findOneAndUpdate(
+            { chatId },
+            { isActive: false, lastActivityAt: new Date() }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('my_chat_member notice:', err.message);
+      }
+    });
+
+    // Detect posts in channels
+    botInstance.on('channel_post', async (msg) => {
+      if (msg && msg.chat) {
+        await upsertTelegramGroup(msg.chat);
+      }
+    });
+
     // Detect when bot is removed from group
     botInstance.on('left_chat_member', async (msg) => {
       if (!msg.chat) return;
@@ -1265,6 +1291,7 @@ const sendMessageToGroups = async ({
   targetGrade = null, // e.g. 'Grade 7', 'Grade 8', or 'All Classes' / null
   targetShift = null,
   targetGroupId = null, // specific group _id or chatId
+  targetGroupIds = null, // array of group _ids or chatIds
   sendToDirectStudents = false,
 } = {}) => {
   if (!botInstance) return { success: false, message: 'Telegram Bot is not active' };
@@ -1272,7 +1299,15 @@ const sendMessageToGroups = async ({
   try {
     let groupQuery = { isActive: true };
 
-    if (targetGroupId) {
+    if (targetGroupIds && Array.isArray(targetGroupIds) && targetGroupIds.length > 0) {
+      groupQuery = {
+        $or: [
+          { _id: { $in: targetGroupIds } },
+          { chatId: { $in: targetGroupIds.map(String) } },
+        ],
+        isActive: true,
+      };
+    } else if (targetGroupId) {
       groupQuery = {
         $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
         isActive: true,
@@ -1285,6 +1320,8 @@ const sendMessageToGroups = async ({
       if (targetShift && targetShift !== 'all') {
         groupQuery.shift = { $in: [targetShift, 'all'] };
       }
+    } else if (targetShift && targetShift !== 'all') {
+      groupQuery.shift = { $in: [targetShift, 'all'] };
     }
 
     const groups = await TelegramGroup.find(groupQuery);

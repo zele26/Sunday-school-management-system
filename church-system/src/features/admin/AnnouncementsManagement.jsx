@@ -24,6 +24,9 @@ import {
   Moon,
   Sun,
   Clock,
+  CheckSquare,
+  Square,
+  ListFilter,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -60,8 +63,10 @@ const AnnouncementsManagement = () => {
   // Announcement state
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [targetingMode, setTargetingMode] = useState('grade_shift'); // 'grade_shift' | 'custom_groups'
   const [targetGrade, setTargetGrade] = useState('All Classes');
   const [targetShift, setTargetShift] = useState('all');
+  const [selectedGroupIdsForBroadcast, setSelectedGroupIdsForBroadcast] = useState([]);
   const [postToWeb, setPostToWeb] = useState(true);
   const [sendToTelegramGroups, setSendToTelegramGroups] = useState(true);
   const [sendToDirectStudents, setSendToDirectStudents] = useState(false);
@@ -77,9 +82,11 @@ const AnnouncementsManagement = () => {
   const [groupSearch, setGroupSearch] = useState('');
   const [filterGroupGrade, setFilterGroupGrade] = useState('all');
   const [filterGroupShift, setFilterGroupShift] = useState('all');
+  const [selectedGroupIds, setSelectedGroupIds] = useState([]); // for bulk actions
 
   // Quick Message Modal state
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [modalTargetMode, setModalTargetMode] = useState('grade_shift'); // 'single' | 'selected_list' | 'grade_shift'
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [directMsgGrade, setDirectMsgGrade] = useState('All Classes');
   const [directMsgShift, setDirectMsgShift] = useState('all');
@@ -164,27 +171,42 @@ const AnnouncementsManagement = () => {
           body: JSON.stringify({
             title: title.trim(),
             message: message.trim(),
-            targetType: targetGrade === 'All Classes' ? 'all' : 'grade',
-            targetGrade: targetGrade === 'All Classes' ? undefined : targetGrade,
+            targetType: targetingMode === 'grade_shift' && targetGrade !== 'All Classes' ? 'grade' : 'all',
+            targetGrade: targetingMode === 'grade_shift' && targetGrade !== 'All Classes' ? targetGrade : undefined,
           }),
         });
       }
 
       // 2. Broadcast to Telegram Groups & Direct Students if enabled
       if ((sendToTelegramGroups || sendToDirectStudents) && botStatus?.isRunning) {
-        const gradeBadge = targetGrade && targetGrade !== 'All Classes' ? ` 📍 *ለ ${targetGrade} ተማሪዎች*` : '';
-        const shiftBadge = targetShift === 'night' ? ' 🌙 *(የማታ ፈረቃ)*' : (targetShift === 'weekend' ? ' ☀️ *(የቀን/ቅዳሜና እሑድ ፈረቃ)*' : '');
-        const tgText = `📢 *${title.trim()}*${gradeBadge}${shiftBadge}\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
+        let audienceLabel = '';
+        if (targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length > 0) {
+          audienceLabel = ` 📍 *ለተመረጡ ${selectedGroupIdsForBroadcast.length} ግሩፖች*`;
+        } else if (targetGrade && targetGrade !== 'All Classes') {
+          const shiftBadge = targetShift === 'night' ? ' (የማታ)' : (targetShift === 'weekend' ? ' (የቀን)' : '');
+          audienceLabel = ` 📍 *ለ ${targetGrade}${shiftBadge} ተማሪዎች*`;
+        } else if (targetShift !== 'all') {
+          audienceLabel = targetShift === 'night' ? ' 🌙 *(ለማታ ፈረቃ ተማሪዎች)*' : ' ☀️ *(ለቀን ፈረቃ ተማሪዎች)*';
+        }
+
+        const tgText = `📢 *${title.trim()}*${audienceLabel}\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
+
+        const payload = {
+          message: tgText,
+          sendToDirectStudents,
+        };
+
+        if (targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length > 0) {
+          payload.targetGroupIds = selectedGroupIdsForBroadcast;
+        } else {
+          payload.targetGrade = targetGrade === 'All Classes' ? null : targetGrade;
+          payload.targetShift = targetShift === 'all' ? null : targetShift;
+        }
 
         const res = await apiFetch('/api/telegram/groups/send-message', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: tgText,
-            targetGrade: targetGrade === 'All Classes' ? null : targetGrade,
-            targetShift: targetShift === 'all' ? null : targetShift,
-            sendToDirectStudents,
-          }),
+          body: JSON.stringify(payload),
         });
 
         const resData = await res.json().catch(() => ({}));
@@ -199,6 +221,7 @@ const AnnouncementsManagement = () => {
 
       setTitle('');
       setMessage('');
+      setSelectedGroupIdsForBroadcast([]);
       fetchAnnouncements();
       fetchBotStatus();
       fetchGroups();
@@ -207,6 +230,26 @@ const AnnouncementsManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToggleGroupSelection = (id) => {
+    setSelectedGroupIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllGroups = () => {
+    if (selectedGroupIds.length === groups.length) {
+      setSelectedGroupIds([]);
+    } else {
+      setSelectedGroupIds(groups.map((g) => g._id));
+    }
+  };
+
+  const handleToggleCustomBroadcastGroup = (id) => {
+    setSelectedGroupIdsForBroadcast((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   const handleUpdateGroupGrade = async (groupId, newGrade) => {
@@ -276,6 +319,7 @@ const AnnouncementsManagement = () => {
       if (res.ok) {
         toast.success('ግሩፑ ተሰርዟል');
         setGroups((prev) => prev.filter((g) => g._id !== id));
+        setSelectedGroupIds((prev) => prev.filter((item) => item !== id));
         fetchBotStatus();
       } else {
         toast.error('መሰረዝ አልተቻለም');
@@ -296,10 +340,16 @@ const AnnouncementsManagement = () => {
     try {
       const payload = {
         message: directMsgText.trim(),
-        targetGroupId: selectedGroup ? selectedGroup._id : null,
-        targetGrade: selectedGroup ? null : (directMsgGrade === 'All Classes' ? null : directMsgGrade),
-        targetShift: selectedGroup ? null : (directMsgShift === 'all' ? null : directMsgShift),
       };
+
+      if (modalTargetMode === 'single' && selectedGroup) {
+        payload.targetGroupId = selectedGroup._id;
+      } else if (modalTargetMode === 'selected_list' && selectedGroupIds.length > 0) {
+        payload.targetGroupIds = selectedGroupIds;
+      } else {
+        payload.targetGrade = directMsgGrade === 'All Classes' ? null : directMsgGrade;
+        payload.targetShift = directMsgShift === 'all' ? null : directMsgShift;
+      }
 
       const res = await apiFetch('/api/telegram/groups/send-message', {
         method: 'POST',
@@ -312,6 +362,7 @@ const AnnouncementsManagement = () => {
         setShowMessageModal(false);
         setDirectMsgText('');
         setSelectedGroup(null);
+        setSelectedGroupIds([]);
         fetchGroups();
       } else {
         toast.error(data.message || 'መልእክት መላክ አልተቻለም');
@@ -340,7 +391,7 @@ const AnnouncementsManagement = () => {
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
       <PageHeader
         title="ማስታወቂያዎችና የቴሌግራም ክፍል ግሩፖች"
-        subtitle="ለተማሪዎችና ለክፍል የቴሌግራም ግሩፖች በክፍል እና በፈረቃ (የቀን/የማታ) ተለይተው የሚላኩ መልእክቶችን ያስተዳድሩ"
+        subtitle="ለሁሉም ክፍሎች፣ ለተመረጡ ክፍሎች (የቀን/የማታ) ወይም ለተመረጡ የተወሰኑ ግሩፖች መልእክት ያስተላልፉ"
         icon={Bell}
         badge={<Badge variant="gold" size="sm">የግንኙነት ማዕከል</Badge>}
         actions={
@@ -412,36 +463,136 @@ const AnnouncementsManagement = () => {
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="ምሳሌ፡ የ 7ኛ ክፍል የማታ ፈተና መርሐግብር..."
+                    placeholder="ምሳሌ፡ ለሁሉም ተማሪዎች የተላለፈ አስቸኳይ መልእክት..."
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      ዒላማ ክፍል (Target Class)
-                    </label>
-                    <Select value={targetGrade} onChange={(e) => setTargetGrade(e.target.value)}>
-                      {CLASS_GRADE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.labelAm}
-                        </option>
-                      ))}
-                    </Select>
+                {/* Targeting Selector: By Class/Shift vs Custom Selection */}
+                <div className="space-y-3 p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-850 border border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      የተቀባዮች አመራረጥ (Targeting Method)፦
+                    </span>
+
+                    <div className="flex items-center gap-1.5 text-xs bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setTargetingMode('grade_shift')}
+                        className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                          targetingMode === 'grade_shift'
+                            ? 'bg-[var(--brand-primary)] text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                        }`}
+                      >
+                        በክፍልና በፈረቃ ምረጥ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTargetingMode('custom_groups')}
+                        className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                          targetingMode === 'custom_groups'
+                            ? 'bg-[var(--brand-primary)] text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                        }`}
+                      >
+                        የተወሰኑ ግሩፖችን በእጅ ምረጥ ({selectedGroupIdsForBroadcast.length})
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      ዒላማ ፈረቃ (Target Shift)
-                    </label>
-                    <Select value={targetShift} onChange={(e) => setTargetShift(e.target.value)}>
-                      {SHIFT_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.labelAm}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
+                  {targetingMode === 'grade_shift' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                          ዒላማ ክፍል (Target Class)
+                        </label>
+                        <Select value={targetGrade} onChange={(e) => setTargetGrade(e.target.value)}>
+                          {CLASS_GRADE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.labelAm}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                          ዒላማ ፈረቃ (Target Shift)
+                        </label>
+                        <Select value={targetShift} onChange={(e) => setTargetShift(e.target.value)}>
+                          {SHIFT_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.labelAm}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Custom Groups Checkbox Picker */
+                    <div className="space-y-2 pt-1">
+                      <div className="flex justify-between items-center text-[11px] text-slate-500">
+                        <span>የሚላክላቸውን ግሩፖች ይምረጡ፦</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedGroupIdsForBroadcast.length === groups.length) {
+                              setSelectedGroupIdsForBroadcast([]);
+                            } else {
+                              setSelectedGroupIdsForBroadcast(groups.map((g) => g._id));
+                            }
+                          }}
+                          className="text-[var(--brand-primary)] font-bold hover:underline"
+                        >
+                          {selectedGroupIdsForBroadcast.length === groups.length ? 'ሁሉንም ሰርዝ' : 'ሁሉንም ምረጥ'}
+                        </button>
+                      </div>
+
+                      {groups.length === 0 ? (
+                        <p className="text-xs text-slate-400 py-2">እስካሁን የተገናኘ ግሩፕ የለም።</p>
+                      ) : (
+                        <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-100 dark:divide-slate-800">
+                          {groups.map((grp) => {
+                            const isChecked = selectedGroupIdsForBroadcast.includes(grp._id);
+                            return (
+                              <label
+                                key={grp._id}
+                                className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer select-none transition-all ${
+                                  isChecked
+                                    ? 'bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800'
+                                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => handleToggleCustomBroadcastGroup(grp._id)}
+                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                                  />
+                                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                                    {grp.title}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 text-[10px]">
+                                  <Badge variant="gold" size="xs">
+                                    {grp.assignedGrade || 'All Classes'}
+                                  </Badge>
+                                  {grp.shift === 'night' && (
+                                    <span className="text-indigo-600 font-bold">🌙 የማታ</span>
+                                  )}
+                                  {grp.shift === 'weekend' && (
+                                    <span className="text-emerald-600 font-bold">☀️ የቀን</span>
+                                  )}
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -482,11 +633,19 @@ const AnnouncementsManagement = () => {
                       className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
                     />
                     <span>
-                      👥 ወደ <strong className="text-blue-600 dark:text-blue-400">{targetGrade}</strong> (
-                      <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-                        {targetShift === 'night' ? 'የማታ' : (targetShift === 'weekend' ? 'የቀን' : 'ሁሉም ፈረቃ')}
-                      </span>
-                      ) ቴሌግራም ግሩፖች ይላክ
+                      👥 ወደ {targetingMode === 'custom_groups' ? (
+                        <strong className="text-blue-600 dark:text-blue-400">የተመረጡ {selectedGroupIdsForBroadcast.length} ቴሌግራም ግሩፖች</strong>
+                      ) : targetGrade === 'All Classes' && targetShift === 'all' ? (
+                        <strong className="text-blue-600 dark:text-blue-400">ሁሉም የቴሌግራም ግሩፖች በሙሉ</strong>
+                      ) : (
+                        <span>
+                          <strong className="text-blue-600 dark:text-blue-400">{targetGrade}</strong> (
+                          <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                            {targetShift === 'night' ? 'የማታ' : (targetShift === 'weekend' ? 'የቀን' : 'ሁሉም ፈረቃ')}
+                          </span>
+                          ) ግሩፖች
+                        </span>
+                      )} ይላክ
                     </span>
                   </label>
 
@@ -626,10 +785,10 @@ const AnnouncementsManagement = () => {
               )}
 
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
-                <p className="font-bold text-slate-700 dark:text-slate-300">🌟 የክፍልና ፈረቃ ምደባ ትእዛዛት፦</p>
-                <p className="text-[11px]">• ☀️ የቀን/ቅዳሜ፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 weekend</code></p>
-                <p className="text-[11px]">• 🌙 የማታ፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 night</code></p>
-                <p className="text-[11px]">• ✨ ሁሉም፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 all</code></p>
+                <p className="font-bold text-slate-700 dark:text-slate-300">🌟 የስርጭት አማራጮች፦</p>
+                <p className="text-[11px]">• 📢 ለሁሉም ክፍሎችና ፈረቃዎች በሙሉ መላክ</p>
+                <p className="text-[11px]">• 🎯 ለተመረጡ ክፍሎችና ፈረቃዎች (የቀን/የማታ) መላክ</p>
+                <p className="text-[11px]">• ☑️ የተወሰኑ ግሩፖችን በቼክቦክስ መርጦ መላክ</p>
               </div>
             </Card>
           </div>
@@ -677,6 +836,7 @@ const AnnouncementsManagement = () => {
                 size="sm"
                 onClick={() => {
                   setSelectedGroup(null);
+                  setModalTargetMode(selectedGroupIds.length > 0 ? 'selected_list' : 'grade_shift');
                   setDirectMsgGrade('All Classes');
                   setDirectMsgShift('all');
                   setShowMessageModal(true);
@@ -684,7 +844,11 @@ const AnnouncementsManagement = () => {
                 className="gap-2 shadow-sm"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>ለክፍል ግሩፕ መልእክት ላክ</span>
+                <span>
+                  {selectedGroupIds.length > 0
+                    ? `ለተመረጡት (${selectedGroupIds.length}) ግሩፖች መልእክት ላክ`
+                    : 'ለክፍል ግሩፖች መልእክት ላክ'}
+                </span>
               </Button>
 
               <Button
@@ -700,32 +864,52 @@ const AnnouncementsManagement = () => {
             </div>
           </div>
 
-          {/* Instructions Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-900 dark:to-slate-850 border border-blue-200/80 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
-            <h4 className="font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>የቀን እና የማታ ግሩፖችን በቀላሉ የማገናኘት መመሪያ፦</span>
-            </h4>
-            <p className="leading-relaxed">
-              አንድ ክፍል (ለምሳሌ <strong>7ኛ ክፍል</strong>) የቀን (Weekend) እና የማታ (Night) ተብሎ በሁለት ግሩፕ ከተከፈለ፦
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                ☀️ <strong>ለቀን/ቅዳሜ ግሩፕ፦</strong> በግሩፑ ውስጥ <code className="text-emerald-600 font-bold">/setclass Grade 7 weekend</code> ብለው ይጻፉ።
+          {/* Bulk Selection Bar */}
+          {selectedGroupIds.length > 0 && (
+            <div className="p-3 rounded-2xl bg-blue-500 text-white flex items-center justify-between shadow-md text-xs">
+              <div className="flex items-center gap-2">
+                <CheckSquare className="w-4 h-4" />
+                <span className="font-bold">{selectedGroupIds.length} ግሩፖች ተመርጠዋል</span>
               </div>
-              <div className="p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                🌙 <strong>ለማታ ግሩፕ፦</strong> በግሩፑ ውስጥ <code className="text-indigo-600 font-bold">/setclass Grade 7 night</code> ብለው ይጻፉ።
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedGroup(null);
+                    setModalTargetMode('selected_list');
+                    setShowMessageModal(true);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-white text-blue-700 font-bold hover:bg-blue-50 shadow-xs"
+                >
+                  ለተመረጡት መልእክት ላክ ✉️
+                </button>
+                <button
+                  onClick={() => setSelectedGroupIds([])}
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-semibold"
+                >
+                  ሰርዝ
+                </button>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Groups List Table / Cards */}
           <Card variant="default" padding="lg" className="space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                <span>የተገናኙ የቴሌግራም ግሩፖች ({groups.length})</span>
-              </h3>
+              <div className="flex items-center gap-3">
+                {groups.length > 0 && (
+                  <input
+                    type="checkbox"
+                    checked={selectedGroupIds.length === groups.length && groups.length > 0}
+                    onChange={handleSelectAllGroups}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                    title="ሁሉንም ምረጥ"
+                  />
+                )}
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span>የተገናኙ የቴሌግራም ግሩፖች ({groups.length})</span>
+                </h3>
+              </div>
             </div>
 
             {fetchingGroups ? (
@@ -745,110 +929,123 @@ const AnnouncementsManagement = () => {
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {groups.map((grp) => (
-                  <div
-                    key={grp._id}
-                    className="py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-3 rounded-xl transition-colors"
-                  >
-                    <div className="space-y-1.5 flex-1">
+                {groups.map((grp) => {
+                  const isChecked = selectedGroupIds.includes(grp._id);
+                  return (
+                    <div
+                      key={grp._id}
+                      className={`py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-3 rounded-xl transition-colors ${
+                        isChecked ? 'bg-blue-50/50 dark:bg-blue-950/20' : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-start sm:items-center gap-3 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleGroupSelection(grp._id)}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 mt-1 sm:mt-0 cursor-pointer"
+                        />
+
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                              {grp.title}
+                            </span>
+
+                            {/* Shift Badge */}
+                            {grp.shift === 'night' ? (
+                              <Badge variant="secondary" size="xs" className="gap-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
+                                <Moon className="w-3 h-3" />
+                                <span>የማታ ፈረቃ</span>
+                              </Badge>
+                            ) : grp.shift === 'weekend' ? (
+                              <Badge variant="secondary" size="xs" className="gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                                <Sun className="w-3 h-3" />
+                                <span>የቀን / ቅዳሜ ፈረቃ</span>
+                              </Badge>
+                            ) : (
+                              <Badge variant="neutral" size="xs" className="gap-1">
+                                <span>ሁሉም ፈረቃ</span>
+                              </Badge>
+                            )}
+
+                            <Badge variant={grp.isActive ? 'active' : 'secondary'} size="xs">
+                              {grp.isActive ? 'ንቁ (Active)' : 'ቦዘኔ (Inactive)'}
+                            </Badge>
+
+                            {grp.memberCount > 0 && (
+                              <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>{grp.memberCount} አባላት</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-[11px] font-mono text-slate-400">
+                            Chat ID: {grp.chatId} {grp.lastMessageSentAt && `| የመጨረሻ መልእክት፦ ${formatEthiopianDate(grp.lastMessageSentAt)}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Controls */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
-                          {grp.title}
-                        </span>
+                        {/* Class selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-bold text-slate-500">ክፍል፦</span>
+                          <Select
+                            value={grp.assignedGrade || 'All Classes'}
+                            onChange={(e) => handleUpdateGroupGrade(grp._id, e.target.value)}
+                            className="w-40 text-xs font-semibold"
+                          >
+                            {CLASS_GRADE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.labelAm}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
 
-                        {/* Shift Badge */}
-                        {grp.shift === 'night' ? (
-                          <Badge variant="secondary" size="xs" className="gap-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
-                            <Moon className="w-3 h-3" />
-                            <span>የማታ ፈረቃ</span>
-                          </Badge>
-                        ) : grp.shift === 'weekend' ? (
-                          <Badge variant="secondary" size="xs" className="gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
-                            <Sun className="w-3 h-3" />
-                            <span>የቀን / ቅዳሜ ፈረቃ</span>
-                          </Badge>
-                        ) : (
-                          <Badge variant="neutral" size="xs" className="gap-1">
-                            <span>ሁሉም ፈረቃ</span>
-                          </Badge>
-                        )}
+                        {/* Shift selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-bold text-slate-500">ፈረቃ፦</span>
+                          <Select
+                            value={grp.shift || 'all'}
+                            onChange={(e) => handleUpdateGroupShift(grp._id, e.target.value)}
+                            className="w-36 text-xs font-semibold"
+                          >
+                            {SHIFT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.labelAm}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
 
-                        <Badge variant={grp.isActive ? 'active' : 'secondary'} size="xs">
-                          {grp.isActive ? 'ንቁ (Active)' : 'ቦዘኔ (Inactive)'}
-                        </Badge>
-
-                        {grp.memberCount > 0 && (
-                          <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            <span>{grp.memberCount} አባላት</span>
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-[11px] font-mono text-slate-400">
-                        Chat ID: {grp.chatId} {grp.lastMessageSentAt && `| የመጨረሻ መልእክት፦ ${formatEthiopianDate(grp.lastMessageSentAt)}`}
-                      </p>
-                    </div>
-
-                    {/* Controls */}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Class selector */}
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-slate-500">ክፍል፦</span>
-                        <Select
-                          value={grp.assignedGrade || 'All Classes'}
-                          onChange={(e) => handleUpdateGroupGrade(grp._id, e.target.value)}
-                          className="w-40 text-xs font-semibold"
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedGroup(grp);
+                            setModalTargetMode('single');
+                            setShowMessageModal(true);
+                          }}
+                          className="gap-1.5 text-xs"
                         >
-                          {CLASS_GRADE_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.labelAm}
-                            </option>
-                          ))}
-                        </Select>
-                      </div>
+                          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                          <span>መልእክት ላክ</span>
+                        </Button>
 
-                      {/* Shift selector */}
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs font-bold text-slate-500">ፈረቃ፦</span>
-                        <Select
-                          value={grp.shift || 'all'}
-                          onChange={(e) => handleUpdateGroupShift(grp._id, e.target.value)}
-                          className="w-36 text-xs font-semibold"
+                        <button
+                          onClick={() => handleDeleteGroup(grp._id, grp.title)}
+                          className="p-2 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                          title="ግሩፑን አላቅቅ"
                         >
-                          {SHIFT_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.labelAm}
-                            </option>
-                          ))}
-                        </Select>
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedGroup(grp);
-                          setDirectMsgGrade(grp.assignedGrade || 'All Classes');
-                          setDirectMsgShift(grp.shift || 'all');
-                          setShowMessageModal(true);
-                        }}
-                        className="gap-1.5 text-xs"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-                        <span>መልእክት ላክ</span>
-                      </Button>
-
-                      <button
-                        onClick={() => handleDeleteGroup(grp._id, grp.title)}
-                        className="p-2 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="ግሩፑን አላቅቅ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Card>
@@ -863,7 +1060,11 @@ const AnnouncementsManagement = () => {
               <div className="flex items-center gap-2">
                 <Send className="w-5 h-5 text-blue-600" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {selectedGroup ? `ለ "${selectedGroup.title}" መልእክት መላኪያ` : 'ለክፍል ቴሌግራም ግሩፖች መልእክት መላኪያ'}
+                  {modalTargetMode === 'single' && selectedGroup
+                    ? `ለ "${selectedGroup.title}" መልእክት መላኪያ`
+                    : modalTargetMode === 'selected_list'
+                    ? `ለተመረጡ (${selectedGroupIds.length}) ግሩፖች መልእክት መላኪያ`
+                    : 'ለክፍል ቴሌግራም ግሩፖች መልእክት መላኪያ'}
                 </h3>
               </div>
               <button
@@ -875,7 +1076,7 @@ const AnnouncementsManagement = () => {
             </div>
 
             <form onSubmit={handleSendDirectGroupMessage} className="space-y-4">
-              {!selectedGroup && (
+              {modalTargetMode === 'grade_shift' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
@@ -901,6 +1102,26 @@ const AnnouncementsManagement = () => {
                         </option>
                       ))}
                     </Select>
+                  </div>
+                </div>
+              )}
+
+              {modalTargetMode === 'selected_list' && (
+                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs">
+                  <span className="font-bold text-blue-900 dark:text-blue-300 block mb-1">
+                    መልእክቱ ለሚከተሉት {selectedGroupIds.length} ግሩፖች ይላካል፦
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1">
+                    {groups
+                      .filter((g) => selectedGroupIds.includes(g._id))
+                      .map((g) => (
+                        <span
+                          key={g._id}
+                          className="px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium"
+                        >
+                          {g.title}
+                        </span>
+                      ))}
                   </div>
                 </div>
               )}
