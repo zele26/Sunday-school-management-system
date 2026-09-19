@@ -21,6 +21,9 @@ import {
   Radio,
   Settings,
   ShieldAlert,
+  Moon,
+  Sun,
+  Clock,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -44,6 +47,12 @@ const CLASS_GRADE_OPTIONS = [
   { value: 'Distance', labelAm: 'የርቀት ተማሪዎች (Distance / Online)', labelEn: 'Distance Students' },
 ];
 
+const SHIFT_OPTIONS = [
+  { value: 'all', labelAm: 'ሁሉም ፈረቃዎች (All Shifts)', labelEn: 'All Shifts' },
+  { value: 'weekend', labelAm: '☀️ የቀን / ቅዳሜና እሑድ (Weekend/Day)', labelEn: 'Day / Weekend' },
+  { value: 'night', labelAm: '🌙 የማታ (Night Shift)', labelEn: 'Night Shift' },
+];
+
 const AnnouncementsManagement = () => {
   const { isAmharic } = useLanguage();
   const [activeTab, setActiveTab] = useState('announcements'); // 'announcements' | 'groups'
@@ -52,6 +61,7 @@ const AnnouncementsManagement = () => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [targetGrade, setTargetGrade] = useState('All Classes');
+  const [targetShift, setTargetShift] = useState('all');
   const [postToWeb, setPostToWeb] = useState(true);
   const [sendToTelegramGroups, setSendToTelegramGroups] = useState(true);
   const [sendToDirectStudents, setSendToDirectStudents] = useState(false);
@@ -66,11 +76,13 @@ const AnnouncementsManagement = () => {
   const [syncingGroups, setSyncingGroups] = useState(false);
   const [groupSearch, setGroupSearch] = useState('');
   const [filterGroupGrade, setFilterGroupGrade] = useState('all');
+  const [filterGroupShift, setFilterGroupShift] = useState('all');
 
   // Quick Message Modal state
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [directMsgGrade, setDirectMsgGrade] = useState('All Classes');
+  const [directMsgShift, setDirectMsgShift] = useState('all');
   const [directMsgText, setDirectMsgText] = useState('');
   const [sendingDirectMsg, setSendingDirectMsg] = useState(false);
 
@@ -110,7 +122,11 @@ const AnnouncementsManagement = () => {
       const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        setGroups(data.groups || []);
+        let list = data.groups || [];
+        if (filterGroupShift && filterGroupShift !== 'all') {
+          list = list.filter((g) => g.shift === filterGroupShift || g.shift === 'all');
+        }
+        setGroups(list);
       }
     } catch (err) {
       console.warn('Fetch groups error:', err);
@@ -129,7 +145,7 @@ const AnnouncementsManagement = () => {
     if (activeTab === 'groups') {
       fetchGroups();
     }
-  }, [activeTab, filterGroupGrade]);
+  }, [activeTab, filterGroupGrade, filterGroupShift]);
 
   const handlePostAnnouncement = async (e) => {
     e.preventDefault();
@@ -157,7 +173,8 @@ const AnnouncementsManagement = () => {
       // 2. Broadcast to Telegram Groups & Direct Students if enabled
       if ((sendToTelegramGroups || sendToDirectStudents) && botStatus?.isRunning) {
         const gradeBadge = targetGrade && targetGrade !== 'All Classes' ? ` 📍 *ለ ${targetGrade} ተማሪዎች*` : '';
-        const tgText = `📢 *${title.trim()}*${gradeBadge}\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
+        const shiftBadge = targetShift === 'night' ? ' 🌙 *(የማታ ፈረቃ)*' : (targetShift === 'weekend' ? ' ☀️ *(የቀን/ቅዳሜና እሑድ ፈረቃ)*' : '');
+        const tgText = `📢 *${title.trim()}*${gradeBadge}${shiftBadge}\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
 
         const res = await apiFetch('/api/telegram/groups/send-message', {
           method: 'POST',
@@ -165,6 +182,7 @@ const AnnouncementsManagement = () => {
           body: JSON.stringify({
             message: tgText,
             targetGrade: targetGrade === 'All Classes' ? null : targetGrade,
+            targetShift: targetShift === 'all' ? null : targetShift,
             sendToDirectStudents,
           }),
         });
@@ -205,6 +223,27 @@ const AnnouncementsManagement = () => {
         );
       } else {
         toast.error('የክፍል ምደባ ማሻሻል አልተቻለም');
+      }
+    } catch (e) {
+      toast.error('የግንኙነት ስህተት');
+    }
+  };
+
+  const handleUpdateGroupShift = async (groupId, newShift) => {
+    try {
+      const res = await apiFetch(`/api/telegram/groups/${groupId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shift: newShift }),
+      });
+      if (res.ok) {
+        const shiftLabel = newShift === 'night' ? 'የማታ' : (newShift === 'weekend' ? 'የቀን/ቅዳሜ' : 'ሁሉም ፈረቃ');
+        toast.success(`የግሩፑ ፈረቃ ወደ ${shiftLabel} ተቀይሯል!`);
+        setGroups((prev) =>
+          prev.map((g) => (g._id === groupId ? { ...g, shift: newShift } : g))
+        );
+      } else {
+        toast.error('የፈረቃ ምደባ ማሻሻል አልተቻለም');
       }
     } catch (e) {
       toast.error('የግንኙነት ስህተት');
@@ -259,6 +298,7 @@ const AnnouncementsManagement = () => {
         message: directMsgText.trim(),
         targetGroupId: selectedGroup ? selectedGroup._id : null,
         targetGrade: selectedGroup ? null : (directMsgGrade === 'All Classes' ? null : directMsgGrade),
+        targetShift: selectedGroup ? null : (directMsgShift === 'all' ? null : directMsgShift),
       };
 
       const res = await apiFetch('/api/telegram/groups/send-message', {
@@ -300,7 +340,7 @@ const AnnouncementsManagement = () => {
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
       <PageHeader
         title="ማስታወቂያዎችና የቴሌግራም ክፍል ግሩፖች"
-        subtitle="ለተማሪዎችና ለክፍል የቴሌግራም ግሩፖች በክፍል ተለይተው የሚላኩ መልእክቶችን ያስተዳድሩ"
+        subtitle="ለተማሪዎችና ለክፍል የቴሌግራም ግሩፖች በክፍል እና በፈረቃ (የቀን/የማታ) ተለይተው የሚላኩ መልእክቶችን ያስተዳድሩ"
         icon={Bell}
         badge={<Badge variant="gold" size="sm">የግንኙነት ማዕከል</Badge>}
         actions={
@@ -364,25 +404,38 @@ const AnnouncementsManagement = () => {
               </h3>
 
               <form onSubmit={handlePostAnnouncement} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                      የማስታወቂያው ርዕስ *
-                    </label>
-                    <Input
-                      required
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="ምሳሌ፡ የዘመነ ጽጌ የትምህርት መርሐግብር..."
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    የማስታወቂያው ርዕስ *
+                  </label>
+                  <Input
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="ምሳሌ፡ የ 7ኛ ክፍል የማታ ፈተና መርሐግብር..."
+                  />
+                </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                       ዒላማ ክፍል (Target Class)
                     </label>
                     <Select value={targetGrade} onChange={(e) => setTargetGrade(e.target.value)}>
                       {CLASS_GRADE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.labelAm}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                      ዒላማ ፈረቃ (Target Shift)
+                    </label>
+                    <Select value={targetShift} onChange={(e) => setTargetShift(e.target.value)}>
+                      {SHIFT_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.labelAm}
                         </option>
@@ -406,7 +459,7 @@ const AnnouncementsManagement = () => {
                 </div>
 
                 {/* Distribution Channels */}
-                <div className="space-y-2 p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-800/40">
+                <div className="space-y-2.5 p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-800/40">
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     የስርጭት መስመሮች (Broadcast Channels)፦
                   </span>
@@ -429,7 +482,11 @@ const AnnouncementsManagement = () => {
                       className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
                     />
                     <span>
-                      👥 ወደ <strong className="text-blue-600 dark:text-blue-400">{targetGrade}</strong> የቴሌግራም ግሩፖች ይላክ (Send to Telegram Groups)
+                      👥 ወደ <strong className="text-blue-600 dark:text-blue-400">{targetGrade}</strong> (
+                      <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+                        {targetShift === 'night' ? 'የማታ' : (targetShift === 'weekend' ? 'የቀን' : 'ሁሉም ፈረቃ')}
+                      </span>
+                      ) ቴሌግራም ግሩፖች ይላክ
                     </span>
                   </label>
 
@@ -534,7 +591,7 @@ const AnnouncementsManagement = () => {
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-slate-500">የቴሌግራም አድራሻ፦</span>
                   <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                    {botStatus?.botUsername ? `@${botStatus.botUsername}` : '@TekleSawirosBot'}
+                    {botStatus?.botUsername ? `@${botStatus.botUsername}` : '@TekleSawirosSundaySchoolBot'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
@@ -568,11 +625,11 @@ const AnnouncementsManagement = () => {
                 </div>
               )}
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
-                <p className="font-bold text-slate-700 dark:text-slate-300">🌟 የክፍል ግሩፕ አገልግሎት፦</p>
-                <p>• 👥 በክፍል ለተመደቡ ግሩፖች ቀጥታ መልእክት መላክ</p>
-                <p>• ⚡ በግሩፑ ውስጥ <code className="font-mono text-blue-600">/setclass Grade 7</code> በማለት ማገናኘት</p>
-                <p>• 🎓 የተማሪ ፖርታልና የፈተና ውጤት ክትትል</p>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
+                <p className="font-bold text-slate-700 dark:text-slate-300">🌟 የክፍልና ፈረቃ ምደባ ትእዛዛት፦</p>
+                <p className="text-[11px]">• ☀️ የቀን/ቅዳሜ፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 weekend</code></p>
+                <p className="text-[11px]">• 🌙 የማታ፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 night</code></p>
+                <p className="text-[11px]">• ✨ ሁሉም፦ <code className="font-mono text-blue-600 bg-blue-50 dark:bg-blue-950 px-1 py-0.5 rounded">/setclass Grade 7 all</code></p>
               </div>
             </Card>
           </div>
@@ -582,7 +639,7 @@ const AnnouncementsManagement = () => {
         <div className="space-y-6">
           {/* Action Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-            <div className="flex items-center gap-3 flex-1 max-w-md">
+            <div className="flex items-center gap-3 flex-1 max-w-xl flex-wrap sm:flex-nowrap">
               <Input
                 placeholder="ግሩፕ በስም ፈልግ..."
                 value={groupSearch}
@@ -592,10 +649,21 @@ const AnnouncementsManagement = () => {
               <Select
                 value={filterGroupGrade}
                 onChange={(e) => setFilterGroupGrade(e.target.value)}
-                className="w-44 text-xs"
+                className="w-44 text-xs font-medium"
               >
                 <option value="all">ሁሉም ክፍሎች</option>
                 {CLASS_GRADE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                value={filterGroupShift}
+                onChange={(e) => setFilterGroupShift(e.target.value)}
+                className="w-40 text-xs font-medium"
+              >
+                {SHIFT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.labelAm}
                   </option>
@@ -610,6 +678,7 @@ const AnnouncementsManagement = () => {
                 onClick={() => {
                   setSelectedGroup(null);
                   setDirectMsgGrade('All Classes');
+                  setDirectMsgShift('all');
                   setShowMessageModal(true);
                 }}
                 className="gap-2 shadow-sm"
@@ -631,6 +700,25 @@ const AnnouncementsManagement = () => {
             </div>
           </div>
 
+          {/* Instructions Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-slate-900 dark:to-slate-850 border border-blue-200/80 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
+            <h4 className="font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <span>የቀን እና የማታ ግሩፖችን በቀላሉ የማገናኘት መመሪያ፦</span>
+            </h4>
+            <p className="leading-relaxed">
+              አንድ ክፍል (ለምሳሌ <strong>7ኛ ክፍል</strong>) የቀን (Weekend) እና የማታ (Night) ተብሎ በሁለት ግሩፕ ከተከፈለ፦
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                ☀️ <strong>ለቀን/ቅዳሜ ግሩፕ፦</strong> በግሩፑ ውስጥ <code className="text-emerald-600 font-bold">/setclass Grade 7 weekend</code> ብለው ይጻፉ።
+              </div>
+              <div className="p-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                🌙 <strong>ለማታ ግሩፕ፦</strong> በግሩፑ ውስጥ <code className="text-indigo-600 font-bold">/setclass Grade 7 night</code> ብለው ይጻፉ።
+              </div>
+            </div>
+          </div>
+
           {/* Groups List Table / Cards */}
           <Card variant="default" padding="lg" className="space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -638,9 +726,6 @@ const AnnouncementsManagement = () => {
                 <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>የተገናኙ የቴሌግራም ግሩፖች ({groups.length})</span>
               </h3>
-              <p className="text-xs text-slate-500">
-                ቦቱ በተጨመረባቸው ግሩፖች ውስጥ <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">/setclass Grade 7</code> ብለው መመደብ ይችላሉ።
-              </p>
             </div>
 
             {fetchingGroups ? (
@@ -655,7 +740,7 @@ const AnnouncementsManagement = () => {
                   እስካሁን የተገናኘ የቴሌግራም ግሩፕ የለም
                 </h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                  የሰንበት ት/ቤቱን የቴሌግራም ቦት (<code>@{botStatus?.botUsername || 'TekleSawirosBot'}</code>) ወደ ክፍል የቴሌግራም ግሩፕዎ ይጨምሩ። ከዚያ በግሩፑ ውስጥ <code>/setclass Grade 7</code> ብለው ሲጽፉ እዚህ ወዲያውኑ ይታያል።
+                  የሰንበት ት/ቤቱን የቴሌግራም ቦት (<code>@{botStatus?.botUsername || 'TekleSawirosSundaySchoolBot'}</code>) ወደ ክፍል የቴሌግራም ግሩፕዎ ይጨምሩ። ከዚያ በግሩፑ ውስጥ <code>/setclass Grade 7 night</code> ወይም <code>/setclass Grade 7 weekend</code> ብለው ሲጽፉ እዚህ ወዲያውኑ ይታያል።
                 </p>
               </div>
             ) : (
@@ -663,16 +748,35 @@ const AnnouncementsManagement = () => {
                 {groups.map((grp) => (
                   <div
                     key={grp._id}
-                    className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-3 rounded-xl transition-colors"
+                    className="py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 px-3 rounded-xl transition-colors"
                   >
-                    <div className="space-y-1 flex-1">
+                    <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-slate-900 dark:text-white text-sm">
                           {grp.title}
                         </span>
+
+                        {/* Shift Badge */}
+                        {grp.shift === 'night' ? (
+                          <Badge variant="secondary" size="xs" className="gap-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
+                            <Moon className="w-3 h-3" />
+                            <span>የማታ ፈረቃ</span>
+                          </Badge>
+                        ) : grp.shift === 'weekend' ? (
+                          <Badge variant="secondary" size="xs" className="gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                            <Sun className="w-3 h-3" />
+                            <span>የቀን / ቅዳሜ ፈረቃ</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="neutral" size="xs" className="gap-1">
+                            <span>ሁሉም ፈረቃ</span>
+                          </Badge>
+                        )}
+
                         <Badge variant={grp.isActive ? 'active' : 'secondary'} size="xs">
                           {grp.isActive ? 'ንቁ (Active)' : 'ቦዘኔ (Inactive)'}
                         </Badge>
+
                         {grp.memberCount > 0 && (
                           <span className="text-[11px] text-slate-500 flex items-center gap-1">
                             <Users className="w-3 h-3" />
@@ -687,15 +791,32 @@ const AnnouncementsManagement = () => {
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Class selector */}
+                      <div className="flex items-center gap-1">
                         <span className="text-xs font-bold text-slate-500">ክፍል፦</span>
                         <Select
                           value={grp.assignedGrade || 'All Classes'}
                           onChange={(e) => handleUpdateGroupGrade(grp._id, e.target.value)}
-                          className="w-44 text-xs font-semibold"
+                          className="w-40 text-xs font-semibold"
                         >
                           {CLASS_GRADE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.labelAm}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+
+                      {/* Shift selector */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-bold text-slate-500">ፈረቃ፦</span>
+                        <Select
+                          value={grp.shift || 'all'}
+                          onChange={(e) => handleUpdateGroupShift(grp._id, e.target.value)}
+                          className="w-36 text-xs font-semibold"
+                        >
+                          {SHIFT_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                               {opt.labelAm}
                             </option>
@@ -709,6 +830,7 @@ const AnnouncementsManagement = () => {
                         onClick={() => {
                           setSelectedGroup(grp);
                           setDirectMsgGrade(grp.assignedGrade || 'All Classes');
+                          setDirectMsgShift(grp.shift || 'all');
                           setShowMessageModal(true);
                         }}
                         className="gap-1.5 text-xs"
@@ -754,20 +876,32 @@ const AnnouncementsManagement = () => {
 
             <form onSubmit={handleSendDirectGroupMessage} className="space-y-4">
               {!selectedGroup && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                    ተቀባይ ክፍል (Target Class)
-                  </label>
-                  <Select value={directMsgGrade} onChange={(e) => setDirectMsgGrade(e.target.value)}>
-                    {CLASS_GRADE_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.labelAm}
-                      </option>
-                    ))}
-                  </Select>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    መልእክቱ ለዚህ ክፍል የተመደቡ የቴሌግራም ግሩፖች በሙሉ ይላካል።
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      ተቀባይ ክፍል (Target Class)
+                    </label>
+                    <Select value={directMsgGrade} onChange={(e) => setDirectMsgGrade(e.target.value)}>
+                      {CLASS_GRADE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.labelAm}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      ተቀባይ ፈረቃ (Target Shift)
+                    </label>
+                    <Select value={directMsgShift} onChange={(e) => setDirectMsgShift(e.target.value)}>
+                      {SHIFT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.labelAm}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
               )}
 

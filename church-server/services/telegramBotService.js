@@ -128,6 +128,37 @@ const normalizeGradeString = (input) => {
 };
 
 /**
+ * Helper to normalize shift string ('weekend', 'night', 'all')
+ */
+const normalizeShiftString = (input) => {
+  if (!input) return 'all';
+  const str = input.toLowerCase().trim();
+  if (str.includes('night') || str.includes('ማታ')) return 'night';
+  if (str.includes('weekend') || str.includes('day') || str.includes('ቀን') || str.includes('ቅዳሜ') || str.includes('እሑድ')) return 'weekend';
+  return 'all';
+};
+
+/**
+ * Helper to parse combined grade and shift from user input (e.g., "Grade 7 night", "7 ማታ", "8 weekend")
+ */
+const parseGradeAndShift = (input) => {
+  if (!input) return { grade: 'All Classes', shift: 'all' };
+  const str = input.trim();
+  let shift = 'all';
+
+  if (/(night|ማታ)/i.test(str)) {
+    shift = 'night';
+  } else if (/(weekend|day|ቀን|ቅዳሜ|እሑድ)/i.test(str)) {
+    shift = 'weekend';
+  }
+
+  const cleanGrade = str.replace(/(night|weekend|day|all|ማታ|ቀን|ቅዳሜ|እሑድ|ፈረቃ|ክፍል|የማታ|የቀን)/gi, '').trim();
+  const grade = normalizeGradeString(cleanGrade || str);
+
+  return { grade, shift };
+};
+
+/**
  * Upsert or update a Telegram Group record in MongoDB
  */
 const upsertTelegramGroup = async (chat, options = {}) => {
@@ -407,30 +438,49 @@ const initTelegramBot = async () => {
       const text = (msg.text || '').trim();
       if (/^\/(setclass|setgrade|linkclass|assignclass)/i.test(text)) {
         const parts = text.split(/\s+/);
-        const rawGrade = parts.slice(1).join(' ');
+        const rawArgs = parts.slice(1).join(' ');
 
-        if (!rawGrade) {
-          const helpMsg = `ℹ️ *የክፍል ምደባ ትእዛዝ (Set Class Command)*\n\nእባክዎ ክፍሉን ጨምረው ይጻፉ።\n\n*ምሳሌዎች፦*\n👉 \`/setclass Grade 7\`\n👉 \`/setclass 8\`\n👉 \`/setclass Grade 12\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n👉 \`/setclass Distance\` (ለርቀት ተማሪዎች)\n\nአሁን የተመደበለት ክፍል፦ *${group?.assignedGrade || 'All Classes'}*`;
+        if (!rawArgs) {
+          const currentShiftLabel = group?.shift === 'night' ? 'የማታ (Night)' : (group?.shift === 'weekend' ? 'የቀን (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+          const helpMsg = `ℹ️ *የክፍል እና የፈረቃ ምደባ ትእዛዝ (Set Class & Shift)*\n\nእባክዎ ክፍሉን እና ፈረቃውን (የቀን ወይም የማታ) ጨምረው ይጻፉ።\n\n*ምሳሌዎች፦*\n👉 \`/setclass Grade 7 weekend\` (ለ 7ኛ ክፍል የቀን/ቅዳሜ)\n👉 \`/setclass Grade 7 night\` (ለ 7ኛ ክፍል የማታ)\n👉 \`/setclass 8 ማታ\`\n👉 \`/setclass Grade 12 all\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n\nአሁን የተመደበለት፦ *${group?.assignedGrade || 'All Classes'}* (${currentShiftLabel})`;
           await safeSendMessage(msg.chat.id, helpMsg, { parse_mode: 'Markdown' });
           return;
         }
 
-        const normalized = normalizeGradeString(rawGrade);
+        const { grade: normalizedGrade, shift: normalizedShift } = parseGradeAndShift(rawArgs);
         if (group) {
-          group.assignedGrade = normalized;
+          group.assignedGrade = normalizedGrade;
+          group.shift = normalizedShift;
           group.lastActivityAt = new Date();
           await group.save();
         }
 
-        const successMsg = `✅ *የቴሌግራም ግሩፕ ከክፍል ጋር ተገናኝቷል!*\n\n🏛️ *ግሩፕ፦* ${msg.chat.title}\n🎓 *የተመደበለት ክፍል፦* *${normalized}*\n\n📢 ከአስተዳዳሪው ወይም ከመምህራን ለ *${normalized}* የሚላኩ መልእክቶችና ማስታወቂያዎች በቀጥታ ወደዚህ ግሩፕ ይደርሳሉ።`;
+        const shiftAm = normalizedShift === 'night' ? 'የማታ (Night)' : (normalizedShift === 'weekend' ? 'የቀን / ቅዳሜና እሑድ (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+        const successMsg = `✅ *የቴሌግራም ግሩፕ ከክፍልና ከፈረቃ ጋር ተገናኝቷል!*\n\n🏛️ *ግሩፕ፦* ${msg.chat.title}\n🎓 *ክፍል፦* *${normalizedGrade}*\n⏰ *ፈረቃ፦* *${shiftAm}*\n\n📢 ከአስተዳዳሪው ወይም ከመምህራን ለዚህ ክፍልና ፈረቃ የሚላኩ መልእክቶችና ማስታወቂያዎች በቀጥታ ወደዚህ ግሩፕ ይደርሳሉ።`;
         await safeSendMessage(msg.chat.id, successMsg, { parse_mode: 'Markdown' });
+        return;
+      }
+
+      // Handle /setshift command directly
+      if (/^\/(setshift)/i.test(text)) {
+        const parts = text.split(/\s+/);
+        const rawShift = parts.slice(1).join(' ');
+        const normalizedShift = normalizeShiftString(rawShift);
+        if (group) {
+          group.shift = normalizedShift;
+          group.lastActivityAt = new Date();
+          await group.save();
+        }
+        const shiftAm = normalizedShift === 'night' ? 'የማታ (Night)' : (normalizedShift === 'weekend' ? 'የቀን / ቅዳሜና እሑድ (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+        await safeSendMessage(msg.chat.id, `✅ የግሩፑ ፈረቃ ወደ *${shiftAm}* ተቀይሯል!`, { parse_mode: 'Markdown' });
         return;
       }
 
       // 3. Handle /groupinfo or /classinfo command
       if (/^\/(groupinfo|classinfo|groupstatus)/i.test(text)) {
         const currentGrade = group?.assignedGrade || 'All Classes';
-        const infoMsg = `📋 *የግሩፕ መረጃ (Group Info)*\n\n🏛️ *የግሩፕ ስም፦* ${msg.chat.title}\n🆔 *Chat ID፦* \`${msg.chat.id}\`\n🎓 *የተመደበለት ክፍል፦* *${currentGrade}*\n👥 *የአባላት ብዛት፦* ${group?.memberCount || 'ያልታወቀ'}\n⚡ *ሁኔታ፦* ${group?.isActive ? '✅ ንቁ (Active)' : '❌ ቦዘኔ (Inactive)'}\n\n💡 _ክፍሉን ለመቀየር_ \`/setclass Grade 7\` _ብለው ይጻፉ ወይም በአስተዳዳሪው ፖርታል ያስተካክሉ።_`;
+        const currentShiftLabel = group?.shift === 'night' ? '🌙 የማታ (Night)' : (group?.shift === 'weekend' ? '☀️ የቀን / ቅዳሜና እሑድ (Weekend/Day)' : '✨ ሁሉም ፈረቃዎች (All Shifts)');
+        const infoMsg = `📋 *የግሩፕ መረጃ (Group Info)*\n\n🏛️ *የግሩፕ ስም፦* ${msg.chat.title}\n🆔 *Chat ID፦* \`${msg.chat.id}\`\n🎓 *የተመደበለት ክፍል፦* *${currentGrade}*\n⏰ *የተመደበለት ፈረቃ፦* *${currentShiftLabel}*\n👥 *የአባላት ብዛት፦* ${group?.memberCount || 'ያልታወቀ'}\n⚡ *ሁኔታ፦* ${group?.isActive ? '✅ ንቁ (Active)' : '❌ ቦዘኔ (Inactive)'}\n\n💡 _ክፍሉን ወይም ፈረቃውን ለመቀየር_ \`/setclass Grade 7 night\` _ብለው ይጻፉ ወይም በአስተዳዳሪው ፖርታል ያስተካክሉ።_`;
         await safeSendMessage(msg.chat.id, infoMsg, { parse_mode: 'Markdown' });
         return;
       }
@@ -1316,6 +1366,8 @@ module.exports = {
   sendMessageToGroups,
   upsertTelegramGroup,
   normalizeGradeString,
+  normalizeShiftString,
+  parseGradeAndShift,
   getBotStatus,
   findLinkedStudent,
 };
