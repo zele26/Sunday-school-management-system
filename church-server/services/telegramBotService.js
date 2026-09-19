@@ -159,6 +159,40 @@ const parseGradeAndShift = (input) => {
 };
 
 /**
+ * Check if a user is an authorized admin in a Telegram group or system admin
+ */
+const isAuthorizedAdmin = async (chatId, userId) => {
+  if (!userId) return false;
+  try {
+    // 1. Check if user is in env TELEGRAM_ADMIN_IDS
+    const adminIds = (process.env.TELEGRAM_ADMIN_IDS || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    if (adminIds.includes(String(userId))) return true;
+
+    // 2. Check if user is an Admin/Superadmin in Sunday School DB
+    const dbUser = await User.findOne({ telegramChatId: String(userId) }).catch(() => null);
+    if (dbUser && (dbUser.role === 'admin' || dbUser.role === 'superadmin' || dbUser.roles?.includes('admin') || dbUser.roles?.includes('superadmin') || dbUser.role === 'teacher')) {
+      return true;
+    }
+
+    // 3. If in a group, verify if user is Group Creator / Owner or Group Administrator in Telegram
+    if (botInstance && chatId && (String(chatId).startsWith('-') || String(chatId).startsWith('-100'))) {
+      const member = await botInstance.getChatMember(chatId, userId).catch(() => null);
+      if (member && (member.status === 'creator' || member.status === 'administrator')) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.warn('isAuthorizedAdmin check notice:', err.message);
+    return false;
+  }
+};
+
+/**
  * Upsert or update a Telegram Group record in MongoDB
  */
 const upsertTelegramGroup = async (chat, options = {}) => {
@@ -434,9 +468,25 @@ const initTelegramBot = async () => {
       // 1. Auto-discover / update group record
       const group = await upsertTelegramGroup(msg.chat);
 
-      // 2. Handle /setclass or /setgrade command inside group
       const text = (msg.text || '').trim();
-      if (/^\/(setclass|setgrade|linkclass|assignclass)/i.test(text)) {
+
+      // Check if this is an administrative command
+      const isSetClassCmd = /^\/(setclass|setgrade|linkclass|assignclass)/i.test(text);
+      const isSetShiftCmd = /^\/(setshift)/i.test(text);
+      const isGroupInfoCmd = /^\/(groupinfo|classinfo|groupstatus)/i.test(text);
+
+      if (isSetClassCmd || isSetShiftCmd || isGroupInfoCmd) {
+        // Enforce admin permission: only Group Creator / Admin or Sunday School Admin can configure
+        const isAuthorized = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAuthorized) {
+          const warnMsg = `⛔ *ይቅርታ! ይህን ትእዛዝ የማስፈጸም ፈቃድ የተሰጠው ለግሩፑ አስተዳዳሪ (Group Admin) ብቻ ነው።*\n\n_የክፍል እና የፈረቃ ምደባ ማስተካከል የሚችሉት የግሩፑ አስተዳዳሪዎች ብቻ ናቸው።_`;
+          await safeSendMessage(msg.chat.id, warnMsg, { parse_mode: 'Markdown' });
+          return;
+        }
+      }
+
+      // 2. Handle /setclass or /setgrade command inside group
+      if (isSetClassCmd) {
         const parts = text.split(/\s+/);
         const rawArgs = parts.slice(1).join(' ');
 
@@ -462,7 +512,7 @@ const initTelegramBot = async () => {
       }
 
       // Handle /setshift command directly
-      if (/^\/(setshift)/i.test(text)) {
+      if (isSetShiftCmd) {
         const parts = text.split(/\s+/);
         const rawShift = parts.slice(1).join(' ');
         const normalizedShift = normalizeShiftString(rawShift);
@@ -477,7 +527,7 @@ const initTelegramBot = async () => {
       }
 
       // 3. Handle /groupinfo or /classinfo command
-      if (/^\/(groupinfo|classinfo|groupstatus)/i.test(text)) {
+      if (isGroupInfoCmd) {
         const currentGrade = group?.assignedGrade || 'All Classes';
         const currentShiftLabel = group?.shift === 'night' ? '🌙 የማታ (Night)' : (group?.shift === 'weekend' ? '☀️ የቀን / ቅዳሜና እሑድ (Weekend/Day)' : '✨ ሁሉም ፈረቃዎች (All Shifts)');
         const infoMsg = `📋 *የግሩፕ መረጃ (Group Info)*\n\n🏛️ *የግሩፕ ስም፦* ${msg.chat.title}\n🆔 *Chat ID፦* \`${msg.chat.id}\`\n🎓 *የተመደበለት ክፍል፦* *${currentGrade}*\n⏰ *የተመደበለት ፈረቃ፦* *${currentShiftLabel}*\n👥 *የአባላት ብዛት፦* ${group?.memberCount || 'ያልታወቀ'}\n⚡ *ሁኔታ፦* ${group?.isActive ? '✅ ንቁ (Active)' : '❌ ቦዘኔ (Inactive)'}\n\n💡 _ክፍሉን ወይም ፈረቃውን ለመቀየር_ \`/setclass Grade 7 night\` _ብለው ይጻፉ ወይም በአስተዳዳሪው ፖርታል ያስተካክሉ።_`;
@@ -543,6 +593,14 @@ const initTelegramBot = async () => {
     botInstance.onText(/\/start|\/menu/, async (msg) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+
+        if (isGroup) {
+          // In groups, only group admins or owners can trigger bot menu
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const firstName = msg.from.first_name || 'ወዳጃችን';
         const student = await findLinkedStudent(chatId).catch(() => null);
 
@@ -981,7 +1039,14 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/announcements|📢 ማስታወቂያዎች/, (msg) => handleAnnouncements(msg.chat.id));
+    botInstance.onText(/\/announcements|📢 ማስታወቂያዎች/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handleAnnouncements(msg.chat.id);
+    });
 
     // ---------- 8. /portal & "🎓 የተማሪዎች ፖርታል" ----------
     const handlePortal = async (chatId) => {
@@ -1011,12 +1076,25 @@ const initTelegramBot = async () => {
       });
     };
 
-    botInstance.onText(/\/portal|🎓 የተማሪዎች ፖርታል/, (msg) => handlePortal(msg.chat.id));
+    botInstance.onText(/\/portal|🎓 የተማሪዎች ፖርታል/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handlePortal(msg.chat.id);
+    });
 
     // ---------- 9. /verify & Certificate / ID Verification ----------
     botInstance.onText(/\/verify(?:\s+(.+))?|🔍 መታወቂያ \/ ሰርተፊኬት/, async (msg, match) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const certInput = match && match[1] ? match[1].trim() : null;
 
         if (!certInput) {
@@ -1094,6 +1172,12 @@ const initTelegramBot = async () => {
     botInstance.onText(/\/status(?:\s+(.+))?/, async (msg, match) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const regInput = match && match[1] ? match[1].trim() : null;
 
         if (!regInput) {
@@ -1168,15 +1252,31 @@ const initTelegramBot = async () => {
       });
     };
 
-    botInstance.onText(/\/help|❓ እርዳታ/, (msg) => handleHelp(msg.chat.id));
+    botInstance.onText(/\/help|❓ እርዳታ/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handleHelp(msg.chat.id);
+    });
 
     // Handle inline button callbacks
     botInstance.on('callback_query', async (query) => {
       const chatId = query.message?.chat?.id;
+      const isGroup = query.message?.chat?.type === 'group' || query.message?.chat?.type === 'supergroup';
       const data = query.data;
       if (!chatId) return;
 
       try {
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, query.from?.id);
+          if (!isAdmin) {
+            await botInstance.answerCallbackQuery(query.id, { text: 'ይህ አገልግሎት ለአስተዳዳሪዎች ብቻ የተፈቀደ ነው።', show_alert: true }).catch(() => {});
+            return;
+          }
+        }
+
         await botInstance.answerCallbackQuery(query.id).catch(() => {});
         if (data === 'cmd_profile') handleProfile(chatId);
         else if (data === 'cmd_attendance') handleAttendance(chatId);
