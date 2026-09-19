@@ -24,6 +24,11 @@ import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { EthiopianDatePicker } from '../../components/ui/EthiopianDatePicker';
 import { toast } from '../../utils/toast';
+import {
+  EDUCATION_LEVEL_OPTIONS,
+  PROFESSION_OPTIONS,
+  RELATIONSHIP_OPTIONS,
+} from '../../constants/registrationOptions';
 
 const COMMON_GRADES = [
   'Grade 1',
@@ -362,6 +367,31 @@ const EditStudent = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዓለማዊ የትምህርት ደረጃ (Education Level)</label>
+              <Select name="educationLevel" value={form.educationLevel} onChange={handleChange}>
+                <option value="">ይምረጡ (Select)</option>
+                {EDUCATION_LEVEL_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm} ({opt.labelEn})
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የሥራ ዘርፍ / ሙያ (Profession)</label>
+              <Select name="profession" value={form.profession} onChange={handleChange}>
+                <option value="">ይምረጡ (Select)</option>
+                {PROFESSION_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm} ({opt.labelEn})
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {form.studentType === 'regular' && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">የመማሪያ ፈረቃ (Shift)</label>
@@ -427,12 +457,11 @@ const EditStudent = () => {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዝምድና (Relationship)</label>
               <Select name="relationship" value={form.relationship} onChange={handleChange}>
-                <option value="Father">አባት (Father)</option>
-                <option value="Mother">እናት (Mother)</option>
-                <option value="Brother">ወንድም (Brother)</option>
-                <option value="Sister">እህት (Sister)</option>
-                <option value="Guardian">አሳዳጊ (Guardian)</option>
-                <option value="Other">ሌላ (Other)</option>
+                {RELATIONSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm} ({opt.labelEn})
+                  </option>
+                ))}
               </Select>
             </div>
             <div>

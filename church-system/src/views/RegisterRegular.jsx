@@ -11,6 +11,7 @@ import { useRegistrationStatus } from '../hooks/queries';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useLanguage } from '../hooks/useLanguage';
+import { EDUCATION_LEVEL_OPTIONS, PROFESSION_OPTIONS, RELATIONSHIP_OPTIONS } from '../constants/registrationOptions';
 
 const RegisterRegularContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form'
@@ -88,11 +89,11 @@ const RegisterRegularContent = () => {
       if (res.ok) {
         setSuccess(resData.registration);
       } else {
-        setServerError(resData.message || (isAmharic ? 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ' : 'Registration failed. Please check your information.'));
+        setServerError(resData.message || t('regFailedCheckInfo', 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ'));
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setServerError(isAmharic ? 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ' : 'Network error occurred. Please try again.');
+      setServerError(t('networkErrorRetry', 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ'));
     }
   };
 
@@ -105,7 +106,7 @@ const RegisterRegularContent = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center p-4 font-sans">
         <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
-          {isAmharic ? 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...' : 'Checking registration status...'}
+          {t('checkingRegistrationStatus', 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...')}
         </p>
       </div>
     );
@@ -302,7 +303,7 @@ const RegisterRegularContent = () => {
           <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-left space-y-1.5">
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-slate-500 dark:text-slate-400 font-medium">
-                {isAmharic ? 'የተመዘገበ ስልክ ቁጥር:' : 'Registered Phone:'}
+                {t('registeredPhoneLabel', 'የተመዘገበ ስልክ ቁጥር:')}
               </span>
               <span className="font-mono font-bold text-slate-900 dark:text-white">
                 {success?.phone || success?.studentPhone || (isAmharic ? 'በቅጹ ያስገቡት ስልክ' : 'Submitted Phone')}
@@ -310,10 +311,10 @@ const RegisterRegularContent = () => {
             </div>
             <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-slate-500 dark:text-slate-400 font-medium">
-                {isAmharic ? 'የመግቢያ ዘዴ:' : 'Login Method:'}
+                {t('loginMethodLabel', 'የመግቢያ ዘዴ:')}
               </span>
               <span className="font-semibold text-[#1e3a8a] dark:text-blue-400">
-                {isAmharic ? 'ስልክ ቁጥር + የይለፍ ቃል' : 'Phone Number + Password'}
+                {t('phoneAndPasswordMethod', 'ስልክ ቁጥር + የይለፍ ቃል')}
               </span>
             </div>
           </div>
@@ -326,10 +327,10 @@ const RegisterRegularContent = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-900 dark:text-white">
-                  {isAmharic ? 'ምዝገባ ተልኳል' : 'Application Submitted'}
+                  {t('roadmapStep1Title', 'ምዝገባ ተልኳል')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAmharic ? 'የአባልነት መረጃዎ ለሰንበት ትምህርት ቤቱ አስተዳደር ደርሷል።' : 'Your registration details have been received by administration.'}
+                  {t('roadmapStep1Desc', 'የአባልነት መረጃዎ ለሰንበት ትምህርት ቤቱ አስተዳደር ደርሷል።')}
                 </p>
               </div>
             </div>
@@ -340,10 +341,10 @@ const RegisterRegularContent = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-900 dark:text-white">
-                  {isAmharic ? 'የአስተዳደር ማረጋገጫ' : 'Administrative Verification'}
+                  {t('roadmapStep2Title', 'የአስተዳደር ማረጋገጫ')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAmharic ? 'መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።' : 'Upon approval, your official Student ID will be issued.'}
+                  {t('roadmapStep2Desc', 'መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።')}
                 </p>
               </div>
             </div>
@@ -354,10 +355,10 @@ const RegisterRegularContent = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-900 dark:text-white">
-                  {isAmharic ? 'መግባትና መማር' : 'Login & Learn'}
+                  {t('roadmapStep3Title', 'ወደ ትምህርት መግባት')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {isAmharic ? 'በማንኛውም ሰዓት በስልክ ቁጥርዎ እና በይለፍ ቃልዎ ሁኔታውን መከታተል ወይም መግባት ይችላሉ።' : 'You can log in or check status anytime with your phone and password.'}
+                  {t('roadmapStep3Desc', 'በተማሪ መለያ ቁጥርዎ ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።')}
                 </p>
               </div>
             </div>
@@ -412,7 +413,7 @@ const RegisterRegularContent = () => {
             {t('regularRegistrationTitle', 'የመደበኛ ተማሪ ምዝገባ')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            {isAmharic ? 'እባክዎ ከታች ያለውን ቅጽ በትክክል ይሙሉ' : 'Please fill out the application form carefully'}
+            {t('fillFormCarefully', 'እባክዎ ከታች ያለውን ቅጽ በትክክል ይሙሉ')}
           </p>
         </div>
 
@@ -450,7 +451,7 @@ const RegisterRegularContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የመጀመሪያ ስም' : 'First Name'}
+                  placeholder={t('firstNamePlaceholder', 'የመጀመሪያ ስም')}
                   {...register('firstName')}
                   className={`${inputClass} ${errors.firstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -462,7 +463,7 @@ const RegisterRegularContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአባት ስም' : "Father's Name"}
+                  placeholder={t('middleNamePlaceholder', 'የአባት ስም')}
                   {...register('middleName')}
                   className={`${inputClass} ${errors.middleName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -474,7 +475,7 @@ const RegisterRegularContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአያት ስም' : "Grandfather's Name"}
+                  placeholder={t('lastNamePlaceholder', 'የአያት ስም')}
                   {...register('lastName')}
                   className={`${inputClass} ${errors.lastName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -489,28 +490,29 @@ const RegisterRegularContent = () => {
                   className={`${inputClass} ${errors.educationLevel ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 >
                   <option value="">{t('selectEducationLevel', '-- የትምህርት ደረጃ ይምረጡ --')}</option>
-                  <option value="Grade 7">{isAmharic ? '7ኛ ክፍል' : 'Grade 7'}</option>
-                  <option value="Grade 8">{isAmharic ? '8ኛ ክፍል' : 'Grade 8'}</option>
-                  <option value="Grade 9">{isAmharic ? '9ኛ ክፍል' : 'Grade 9'}</option>
-                  <option value="Grade 10">{isAmharic ? '10ኛ ክፍል' : 'Grade 10'}</option>
-                  <option value="Grade 11">{isAmharic ? '11ኛ ክፍል' : 'Grade 11'}</option>
-                  <option value="Grade 12">{isAmharic ? '12ኛ ክፍል' : 'Grade 12'}</option>
-                  <option value="Diploma">{isAmharic ? 'ዲፕሎማ' : 'Diploma'}</option>
-                  <option value="Degree">{isAmharic ? 'ዲግሪ' : 'Bachelor Degree'}</option>
-                  <option value="Masters">{isAmharic ? 'ማስተርስ' : "Master's Degree"}</option>
+                  {EDUCATION_LEVEL_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
                 </select>
                 {errors.educationLevel && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.educationLevel.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('professionLabel', 'ሙያ')} <span className="text-rose-500">*</span>
+                  {t('professionLabel', 'የሥራ ዘርፍ / ሙያ')} <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder={isAmharic ? 'ሙያ' : 'Profession / Field'}
+                <select
                   {...register('profession')}
                   className={`${inputClass} ${errors.profession ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
+                >
+                  <option value="">{t('selectProfession', '-- የሥራ ዘርፍ / ሙያ ይምረጡ --')}</option>
+                  {PROFESSION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
+                </select>
                 {errors.profession && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.profession.message}</p>}
               </div>
               <div>
@@ -551,7 +553,7 @@ const RegisterRegularContent = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5 ml-1">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {t('ageLabel', 'ዕድሜ')} <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">({isAmharic ? 'ከ 14 ዓመት በላይ' : 'Age 14+'})</span>
+                    {t('ageLabel', 'ዕድሜ')} <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">({t('ageMinNote', 'ከ 14 ዓመት በላይ')})</span>
                   </label>
                   {watch('age') && watch('dateOfBirth') && (
                     <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
@@ -561,7 +563,7 @@ const RegisterRegularContent = () => {
                 </div>
                 <input
                   type="number"
-                  placeholder={isAmharic ? 'ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)' : 'e.g. 18 (Auto-calculated from DOB)'}
+                  placeholder={t('agePlaceholder', 'ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)')}
                   min="15"
                   max="120"
                   {...register('age')}
@@ -584,7 +586,7 @@ const RegisterRegularContent = () => {
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('emailLabel', 'ኢሜይል')} <span className="text-slate-400">({isAmharic ? 'አማራጭ' : 'Optional'})</span>
+                  {t('emailLabel', 'ኢሜይል')} <span className="text-slate-400">({t('emailOptional', 'አማራጭ')})</span>
                 </label>
                 <input
                   type="email"
@@ -641,10 +643,10 @@ const RegisterRegularContent = () => {
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-bold">📍</div>
               <div>
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white">
-                  {isAmharic ? 'የመኖሪያ አድራሻ መረጃ' : 'Residential Address Information'}
+                  {t('residentialAddressSection', 'የመኖሪያ አድራሻ መረጃ')}
                 </h2>
                 <p className="text-xs text-slate-400">
-                  {isAmharic ? 'ክፍለ ከተማ፣ ወረዳ እና ቀበሌ' : 'Subcity, Woreda and House Number'}
+                  {t('residentialAddressSubtitle', 'ክፍለ ከተማ፣ ወረዳ እና ቀበሌ')}
                 </p>
               </div>
             </div>
@@ -652,7 +654,7 @@ const RegisterRegularContent = () => {
               <div>
                 <label className={labelClass}>{t('subcityLabel', 'ክፍለ ከተማ')}</label>
                 <select {...register('subcity')} className={inputClass}>
-                  <option value="">{isAmharic ? 'ክፍለ ከተማ ይምረጡ' : '-- Select Sub-city --'}</option>
+                  <option value="">{t('selectSubcity', '-- ክፍለ ከተማ ይምረጡ --')}</option>
                   <option value="Bole">{isAmharic ? 'ቦሌ' : 'Bole'}</option>
                   <option value="Arada">{isAmharic ? 'አራዳ' : 'Arada'}</option>
                   <option value="Kirkos">{isAmharic ? 'ቂርቆስ' : 'Kirkos'}</option>
@@ -671,7 +673,7 @@ const RegisterRegularContent = () => {
                 <label className={labelClass}>{t('woredaLabel', 'ወረዳ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ወረዳ (ምሳሌ፡ 03)' : 'Woreda (e.g. 03)'}
+                  placeholder={t('woredaPlaceholder', 'ወረዳ (ምሳሌ፡ 03)')}
                   {...register('woreda')}
                   className={inputClass}
                 />
@@ -680,7 +682,7 @@ const RegisterRegularContent = () => {
                 <label className={labelClass}>{t('kebeleLabel', 'ቀበሌ / የቤት ቁጥር')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ቀበሌ / የቤት ቁጥር' : 'Kebele / House No.'}
+                  placeholder={t('kebelePlaceholder', 'ቀበሌ / የቤት ቁጥር')}
                   {...register('kebele')}
                   className={inputClass}
                 />
@@ -689,7 +691,7 @@ const RegisterRegularContent = () => {
                 <label className={labelClass}>{t('residentialAddressLabel', 'ተጨማሪ አድራሻ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የሰፈር ስም ወይም ልዩ ምልክት' : 'Neighborhood / Landmark'}
+                  placeholder={t('residentialAddressPlaceholder', 'የሰፈር ስም ወይም ልዩ ምልክት')}
                   {...register('address')}
                   className={inputClass}
                 />
@@ -708,30 +710,30 @@ const RegisterRegularContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
-                  {t('emergencyFirstNameLabel', 'ስም')} <span className="text-rose-500">*</span>
+                  {t('emergencyFirstNameLabel', 'የተጠሪ ስም')} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ስም' : 'First Name'}
+                  placeholder={t('emergencyFirstNamePlaceholder', 'የተጠሪ ስም')}
                   {...register('emergencyFirstName')}
                   className={`${inputClass} ${errors.emergencyFirstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
                 {errors.emergencyFirstName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyFirstName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>{t('emergencyMiddleNameLabel', 'የአባት ስም')}</label>
+                <label className={labelClass}>{t('emergencyMiddleNameLabel', 'የተጠሪ የአባት ስም')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአባት ስም' : "Father's Name"}
+                  placeholder={t('emergencyMiddleNamePlaceholder', 'የተጠሪ የአባት ስም')}
                   {...register('emergencyMiddleName')}
                   className={inputClass}
                 />
               </div>
               <div>
-                <label className={labelClass}>{t('emergencyLastNameLabel', 'የአያት ስም')}</label>
+                <label className={labelClass}>{t('emergencyLastNameLabel', 'የተጠሪ የአያት ስም')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአያት ስም' : "Grandfather's Name"}
+                  placeholder={t('emergencyLastNamePlaceholder', 'የተጠሪ የአያት ስም')}
                   {...register('emergencyLastName')}
                   className={inputClass}
                 />
@@ -741,18 +743,16 @@ const RegisterRegularContent = () => {
                   {t('relationshipLabel', 'ዝምድና')} <span className="text-rose-500">*</span>
                 </label>
                 <select {...register('relationship')} className={inputClass}>
-                  <option value="Father">{t('relFather', 'አባት')}</option>
-                  <option value="Mother">{t('relMother', 'እናት')}</option>
-                  <option value="Brother">{isAmharic ? 'ወንድም' : 'Brother'}</option>
-                  <option value="Sister">{isAmharic ? 'እህት' : 'Sister'}</option>
-                  <option value="Guardian">{t('relGuardian', 'ሞግዚት / አሳዳጊ')}</option>
-                  <option value="Spouse">{t('relSpouse', 'የትዳር አጋር')}</option>
-                  <option value="Relative">{t('relOther', 'ሌላ ዘመድ')}</option>
+                  {RELATIONSHIP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('emergencyPhoneLabel', 'ስልክ ቁጥር')} <span className="text-rose-500">*</span>
+                  {t('emergencyPhoneLabel', 'የተጠሪ ስልክ ቁጥር')} <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -763,7 +763,7 @@ const RegisterRegularContent = () => {
                 {errors.emergencyPhone && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyPhone.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>{t('emergencyEmailLabel', 'ኢሜይል')}</label>
+                <label className={labelClass}>{t('emergencyEmailLabel', 'የተጠሪ ኢሜይል')}</label>
                 <input
                   type="email"
                   placeholder="email@example.com"
@@ -773,10 +773,10 @@ const RegisterRegularContent = () => {
                 {errors.emergencyEmail && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyEmail.message}</p>}
               </div>
               <div className="md:col-span-2">
-                <label className={labelClass}>{t('emergencyAddressLabel', 'አድራሻ')}</label>
+                <label className={labelClass}>{t('emergencyAddressLabel', 'የተጠሪ አድራሻ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'አድራሻ' : 'Address'}
+                  placeholder={t('emergencyAddressLabel', 'የተጠሪ አድራሻ')}
                   {...register('emergencyAddress')}
                   className={inputClass}
                 />
@@ -800,7 +800,7 @@ const RegisterRegularContent = () => {
                   </label>
                   <input
                     type="password"
-                    placeholder={isAmharic ? 'ቢያንስ 6 ፊደላት/ቁጥሮች' : 'At least 6 characters'}
+                    placeholder={t('passwordPlaceholder', 'ቢያንስ 6 ፊደላት/ቁጥሮች')}
                     {...register('password')}
                     className={`${inputClass} ${errors.password ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                   />
@@ -812,7 +812,7 @@ const RegisterRegularContent = () => {
                   </label>
                   <input
                     type="password"
-                    placeholder={isAmharic ? 'የይለፍ ቃሉን በድጋሚ ያስገቡ' : 'Re-enter your password'}
+                    placeholder={t('confirmPasswordPlaceholder', 'የይለፍ ቃሉን በድጋሚ ያስገቡ')}
                     {...register('confirmPassword')}
                     className={`${inputClass} ${errors.confirmPassword ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                   />
@@ -822,15 +822,7 @@ const RegisterRegularContent = () => {
               <div className="bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-xl border border-blue-100/60 dark:border-blue-900/40 flex items-start gap-3">
                 <span className="text-xl">📌</span>
                 <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-0.5">
-                  {isAmharic ? (
-                    <>
-                      በመለያዎ ወደ ሲስተሙ ለመግባት ከላይ ያስገቡትን <span className="text-blue-700 dark:text-blue-300 font-bold">ስልክ ቁጥር</span> እና ይህንን <span className="text-blue-700 dark:text-blue-300 font-bold">የይለፍ ቃል</span> ይጠቀሙ።
-                    </>
-                  ) : (
-                    <>
-                      To log in to your account, use your submitted <span className="text-blue-700 dark:text-blue-300 font-bold">Phone Number</span> and this <span className="text-blue-700 dark:text-blue-300 font-bold">Password</span>.
-                    </>
-                  )}
+                  {t('loginCredentialNotice', 'በመለያዎ ወደ ሲስተሙ ለመግባት ከላይ ያስገቡትን ስልክ ቁጥር እና ይህንን የይለፍ ቃል ይጠቀሙ።')}
                 </p>
               </div>
             </div>

@@ -59,17 +59,17 @@ const ContinueRegistrationContent = () => {
 
       if (res.ok) {
         if (data.studentType !== 'distance') {
-          setError(isAmharic ? 'ይህ የመደበኛ ተማሪ ምዝገባ ነው። ክፍያ አያስፈልገውም።' : 'This is a regular student application. No payment is required.');
+          setError(t('regularStudentNoPaymentRequired', 'ይህ የመደበኛ ተማሪ ምዝገባ ነው። ክፍያ አያስፈልገውም።'));
           setIsLoggingIn(false);
           return;
         }
         setRegistration(data);
       } else {
-        setError(data.message || (isAmharic ? 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል' : 'Invalid phone number or password'));
+        setError(data.message || t('invalidPhoneOrPassword', 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል'));
       }
     } catch (err) {
       console.error('Login error in continue-registration:', err);
-      setError(isAmharic ? 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ' : 'Network error occurred. Please try again.');
+      setError(t('networkErrorRetry', 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ'));
     } finally {
       setIsLoggingIn(false);
     }
@@ -81,7 +81,7 @@ const ContinueRegistrationContent = () => {
 
     // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError(isAmharic ? 'የፋይሉ መጠን ከ 5MB መብለጥ የለበትም' : 'File size must not exceed 5MB');
+      setError(t('fileSizeExceeds5mb', 'የፋይሉ መጠን ከ 5MB መብለጥ የለበትም'));
       return;
     }
 
@@ -108,13 +108,13 @@ const ContinueRegistrationContent = () => {
 
       if (res.ok) {
         setReceiptUrl(data.receiptUrl);
-        setMessage(isAmharic ? 'የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል' : 'Payment receipt uploaded successfully');
+        setMessage(t('paymentReceiptUploadedSuccess', 'የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል'));
       } else {
-        setError(data.message || (isAmharic ? 'ደረሰኝ መጫን አልተሳካም' : 'Failed to upload receipt'));
+        setError(data.message || t('failedToUploadReceipt', 'ደረሰኝ መጫን አልተሳካም'));
       }
     } catch (err) {
       console.error('Receipt upload error:', err);
-      setError(isAmharic ? 'የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት' : 'Network error occurred during receipt upload');
+      setError(t('networkErrorDuringUpload', 'የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት'));
     } finally {
       setUploading(false);
     }
@@ -123,11 +123,11 @@ const ContinueRegistrationContent = () => {
   const handleFinalSubmit = async (e) => {
     e?.preventDefault();
     if (!transactionRef.trim()) {
-      setError(isAmharic ? 'እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ' : 'Please enter the transaction reference / FT number');
+      setError(t('pleaseEnterTransactionRef', 'እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ'));
       return;
     }
     if (!receiptUrl) {
-      setError(isAmharic ? 'እባክዎ የደረሰኝ ፎቶ ይጫኑ' : 'Please upload your payment receipt');
+      setError(t('pleaseUploadReceipt', 'እባክዎ የደረሰኝ ፎቶ ይጫኑ'));
       return;
     }
 
@@ -151,11 +151,11 @@ const ContinueRegistrationContent = () => {
       if (res.ok) {
         setSubmitted(true);
       } else {
-        setError(data.message || (isAmharic ? 'ክፍያ ማረጋገጥ አልተሳካም' : 'Payment submission failed'));
+        setError(data.message || t('paymentSubmissionFailed', 'ክፍያ ማረጋገጥ አልተሳካም'));
       }
     } catch (err) {
       console.error('Final submit payment error:', err);
-      setError(isAmharic ? 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ' : 'Network error occurred. Please try again.');
+      setError(t('networkErrorRetry', 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ'));
     } finally {
       setIsSubmitting(false);
     }

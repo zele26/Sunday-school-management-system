@@ -183,15 +183,51 @@ const StudentsManagement = () => {
     });
   };
 
-  const handleDownload = () => {
-    const token = useAuthStore.getState().accessToken;
-    const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (gradeFilter) params.append('grade', gradeFilter);
-    if (typeFilter) params.append('studentType', typeFilter);
-    if (shiftFilter) params.append('shift', shiftFilter);
-    if (token) params.append('token', token);
-    window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleDownload = async () => {
+    try {
+      setIsExporting(true);
+      const token = useAuthStore.getState().accessToken;
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (gradeFilter) params.append('grade', gradeFilter);
+      if (typeFilter) params.append('studentType', typeFilter);
+      if (shiftFilter) params.append('shift', shiftFilter);
+      if (token) params.append('token', token);
+
+      const url = `${API_BASE_URL}/api/admin/students/export?${params.toString()}`;
+      
+      const response = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to export students CSV');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `የተማሪዎች_ዝርዝር_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.warn('Direct CSV download failed, opening in new tab:', err);
+      const token = useAuthStore.getState().accessToken;
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (gradeFilter) params.append('grade', gradeFilter);
+      if (typeFilter) params.append('studentType', typeFilter);
+      if (shiftFilter) params.append('shift', shiftFilter);
+      if (token) params.append('token', token);
+      window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const openProfileModal = (student) => {
@@ -561,10 +597,11 @@ const StudentsManagement = () => {
               variant="outline"
               size="sm"
               onClick={handleDownload}
+              disabled={isExporting}
               className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xs px-3.5 py-2 font-semibold gap-1.5"
             >
-              <Download className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-              <span>መረጃ ላክ (CSV)</span>
+              <Download className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${isExporting ? 'animate-bounce' : ''}`} />
+              <span>{isExporting ? 'በማውረድ ላይ...' : 'መረጃ ላክ (CSV)'}</span>
             </Button>
 
             {/* Secondary Action 1: Batch QR Generation */}

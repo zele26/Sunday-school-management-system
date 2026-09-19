@@ -22,7 +22,7 @@ export const regularRegistrationSchema = z.object({
   profession: z
     .string()
     .trim()
-    .min(1, 'ሙያ ያስገቡ'),
+    .min(1, 'የሥራ ዘርፍ / ሙያ ይምረጡ'),
   gender: z
     .string()
     .default('Male'),
@@ -141,7 +141,7 @@ export const distanceRegistrationSchema = z.object({
   profession: z
     .string()
     .trim()
-    .min(1, 'ሙያ ያስገቡ'),
+    .min(1, 'የሥራ ዘርፍ / ሙያ ይምረጡ'),
   gender: z
     .string()
     .default('Male'),

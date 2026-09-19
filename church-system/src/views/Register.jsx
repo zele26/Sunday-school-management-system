@@ -5,9 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import bgImage from '../assets/Lidetachurch.jpg';
 import { API_BASE_URL } from '../api/apiClient';
-import { Card } from '../components/ui';
+import { Card, BackButton } from '../components/ui';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { LanguageToggle } from '../components/ui/LanguageToggle';
+import { useLanguage } from '../hooks/useLanguage';
 
 const Register = () => {
+  const { t, isAmharic } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -42,16 +46,16 @@ const Register = () => {
     setSuccess('');
 
     if (!formData.fullName.trim()) {
-      return setError('እባክዎ ሙሉ ስምዎን ያስገቡ');
+      return setError(t('enterFullName', 'እባክዎ ሙሉ ስምዎን ያስገቡ'));
     }
     if (!validateEmail(formData.email.trim())) {
-      return setError('እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ');
+      return setError(t('enterValidEmail', 'እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ'));
     }
     if (formData.password.length < 6) {
-      return setError('የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት');
+      return setError(t('passwordMin6', 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት'));
     }
     if (formData.password !== formData.confirmPassword) {
-      return setError('የይለፍ ቃሎቹ አይመሳሰሉም');
+      return setError(t('passwordsDoNotMatch', 'የይለፍ ቃሎቹ አይመሳሰሉም'));
     }
 
     setLoading(true);
@@ -82,7 +86,7 @@ const Register = () => {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        setSuccess(data.message || 'ምዝገባዎ በተሳካ ሁኔታ ተከናውኗል! በአስተዳዳሪው ሲረጋገጥ ማሳወቂያ ይደርስዎታል።');
+        setSuccess(data.message || t('teacherRegSuccess', 'ምዝገባዎ በተሳካ ሁኔታ ተከናውኗል! በአስተዳዳሪው ሲረጋገጥ ማሳወቂያ ይደርስዎታል።'));
         setFormData({
           role: 'teacher',
           fullName: '',
@@ -99,10 +103,10 @@ const Register = () => {
           experience: '',
         });
       } else {
-        setError(data.message || 'ምዝገባው አልተሳካም። እባክዎ እንደገና ይሞክሩ።');
+        setError(data.message || t('teacherRegFailed', 'ምዝገባው አልተሳካም። እባክዎ እንደገና ይሞክሩ።'));
       }
     } catch (err) {
-      setError('የኔትወርክ ችግር አጋጥሟል። እባክዎ እንደገና ይሞክሩ።');
+      setError(t('networkErrorRetry', 'የኔትወርክ ችግር አጋጥሟል። እባክዎ እንደገና ይሞክሩ።'));
     } finally {
       setLoading(false);
     }
@@ -111,22 +115,24 @@ const Register = () => {
   const teacherSpecificFields = () => {
     return (
       <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
-        <div className="text-xs text-indigo-300 font-bold md:col-span-2">📚 የመምህርነት መረጃ (አማራጭ)</div>
+        <div className="text-xs text-indigo-300 font-bold md:col-span-2">
+          {t('teacherInfoOptional', '📚 የመምህርነት መረጃ (አማራጭ)')}
+        </div>
         <input
           type="text"
           name="subject"
-          placeholder="የሚያስተምሩት የትምህርት ዓይነት"
+          placeholder={t('subjectTaughtPlaceholder', 'የሚያስተምሩት የትምህርት ዓይነት')}
           value={formData.subject}
           onChange={handleChange}
-          className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+          className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
         />
         <input
           type="text"
           name="experience"
-          placeholder="የማስተማር ልምድ (በዓመታት)"
+          placeholder={t('teachingExperiencePlaceholder', 'የማስተማር ልምድ (በዓመታት)')}
           value={formData.experience}
           onChange={handleChange}
-          className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+          className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
         />
       </div>
     );
@@ -148,14 +154,22 @@ const Register = () => {
       </div>
 
       <Card variant="glass" padding="none" className="max-w-3xl w-full bg-slate-900/85 text-white rounded-3xl shadow-2xl p-6 sm:p-10 relative z-10 border border-slate-700/50 backdrop-blur-md my-auto max-h-[90vh] overflow-y-auto">
-        <div className="mb-6 border-b border-slate-800 pb-4 flex justify-between items-center">
+        <div className="mb-6 border-b border-slate-800 pb-4 flex flex-wrap justify-between items-center gap-2">
           <div>
-            <h2 className="text-2xl font-bold text-white">አዲስ መምህር መመዝገቢያ</h2>
-            <p className="text-xs text-slate-400 mt-1">ለመምህራን ብቻ</p>
+            <h2 className="text-2xl font-bold text-white">
+              {t('teacherRegistrationTitle', 'አዲስ መምህር መመዝገቢያ')}
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              {t('forTeachersOnly', 'ለመምህራን ብቻ')}
+            </p>
           </div>
-          <Link href="/login" className="text-xs text-indigo-400 hover:underline font-bold">
-            ← ወደ መግቢያ ተመለስ
-          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageToggle className="bg-slate-800 text-xs text-white border-slate-700" />
+            <ThemeToggle className="bg-slate-800 text-xs text-white border-slate-700" />
+            <Link href="/login" className="text-xs text-indigo-400 hover:underline font-bold ml-2">
+              {t('backToLogin', '← ወደ መግቢያ ተመለስ')}
+            </Link>
+          </div>
         </div>
 
         {error && (
@@ -172,35 +186,111 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Role Selection – fixed to teacher */}
           <div className="md:col-span-2">
-            <label className="text-xs font-semibold text-slate-300 block mb-1">የተጠቃሚ ሚና</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">
+              {t('userRole', 'የተጠቃሚ ሚና')}
+            </label>
             <select
               name="role"
               value={formData.role}
               onChange={handleChange}
               className="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-indigo-300 font-bold text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="teacher">መምህር</option>
+              <option value="teacher">{t('roleTeacher', 'መምህር')}</option>
             </select>
-            <p className="text-xs text-slate-500 mt-1">
-              ተማሪዎች በአስተዳዳሪው ወይም በተማሪዎች ምዝገባ ገጽ በኩል ይመዘገባሉ።
+            <p className="text-xs text-slate-400 mt-1">
+              {t('studentRegNoticeTeacher', 'ተማሪዎች በአስተዳዳሪው ወይም በተማሪዎች ምዝገባ ገጽ በኩል ይመዘገባሉ።')}
             </p>
           </div>
 
-          <input type="text" name="fullName" placeholder="ሙሉ ስም *" value={formData.fullName} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="email" name="email" placeholder="ኢሜይል *" value={formData.email} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="password" name="password" placeholder="የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)" value={formData.password} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="password" name="confirmPassword" placeholder="የይለፍ ቃል ያረጋግጡ *" value={formData.confirmPassword} onChange={handleChange} required className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input
+            type="text"
+            name="fullName"
+            placeholder={t('fullNameRequiredPlaceholder', 'ሙሉ ስም *')}
+            value={formData.fullName}
+            onChange={handleChange}
+            required
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder={t('emailRequiredPlaceholder', 'ኢሜይል *')}
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder={t('passwordMin6Placeholder', 'የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)')}
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder={t('confirmPasswordRequiredPlaceholder', 'የይለፍ ቃል ያረጋግጡ *')}
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
 
-          <input type="text" name="phoneNumber" placeholder="ስልክ ቁጥር" value={formData.phoneNumber} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="text" name="city" placeholder="ከተማ" value={formData.city} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="text" name="wereda" placeholder="ወረዳ" value={formData.wereda} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="text" name="kebele" placeholder="ቀበሌ" value={formData.kebele} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input
+            type="text"
+            name="phoneNumber"
+            placeholder={t('phonePlaceholder', 'ስልክ ቁጥር')}
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="text"
+            name="city"
+            placeholder={t('cityPlaceholder', 'ከተማ')}
+            value={formData.city}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="text"
+            name="wereda"
+            placeholder={t('woredaPlaceholder', 'ወረዳ')}
+            value={formData.wereda}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="text"
+            name="kebele"
+            placeholder={t('kebelePlaceholder', 'ቀበሌ')}
+            value={formData.kebele}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
 
           <div className="md:col-span-2 pt-2 border-t border-slate-800 text-xs text-indigo-300 font-bold">
-            የአደጋ ጊዜ ተጠሪ
+            {t('emergencyContactSection', 'የአደጋ ጊዜ ተጠሪ')}
           </div>
-          <input type="text" name="emergencyPersonName" placeholder="የተጠሪ ስም" value={formData.emergencyPersonName} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
-          <input type="text" name="emergencyPhone" placeholder="የተጠሪ ስልክ" value={formData.emergencyPhone} onChange={handleChange} className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input
+            type="text"
+            name="emergencyPersonName"
+            placeholder={t('emergencyPersonNamePlaceholder', 'የተጠሪ ስም')}
+            value={formData.emergencyPersonName}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
+          <input
+            type="text"
+            name="emergencyPhone"
+            placeholder={t('emergencyPhonePlaceholder', 'የተጠሪ ስልክ')}
+            value={formData.emergencyPhone}
+            onChange={handleChange}
+            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+          />
 
           {/* Teacher-specific fields */}
           {teacherSpecificFields()}
@@ -208,18 +298,21 @@ const Register = () => {
           <button
             type="submit"
             disabled={loading}
-            className="md:col-span-2 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center disabled:opacity-50"
+            className="md:col-span-2 mt-4 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              'ይመዝገቡ'
+              t('registerBtn', 'ይመዝገቡ')
             )}
           </button>
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-400">
-          አካውንት አለዎት? <Link href="/login" className="text-indigo-400 hover:underline font-bold">ይግቡ</Link>
+          {t('haveAccountQuestion', 'አካውንት አለዎት? ')}{' '}
+          <Link href="/login" className="text-indigo-400 hover:underline font-bold">
+            {t('login', 'ይግቡ')}
+          </Link>
         </p>
       </Card>
     </div>

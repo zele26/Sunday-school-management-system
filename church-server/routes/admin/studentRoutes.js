@@ -74,7 +74,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       emergencyFirstName: emergencyFirstName || '',
       emergencyMiddleName: emergencyMiddleName || '',
       emergencyLastName: emergencyLastName || '',
-      relationship: relationship || '',
+      relationship: relationship || 'Father',
       contactPhone: emergencyPhone || '',
       contactAddress: emergencyAddress || '',
       contactEmail: emergencyEmail || '',
@@ -214,41 +214,140 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       .sort({ registrationDate: -1 })
       .lean();
 
+    const fields = [
+      'የተማሪ መለያ',
+      'የምዝገባ ቁጥር',
+      'የተማሪ ዓይነት',
+      'ባች / ምድብ',
+      'ስም',
+      'የአባት ስም',
+      'የአያት ስም',
+      'ሙሉ ስም',
+      'ዕድሜ',
+      'ጾታ',
+      'ክፍለ ከተማ',
+      'ወረዳ',
+      'ቀበሌ',
+      'ፈረቃ',
+      'የትምህርት ደረጃ',
+      'የሥራ ዘርፍ / ሙያ',
+      'ክፍል',
+      'የትውልድ ቀን',
+      'አድራሻ',
+      'የተማሪ ስልክ ቁጥር',
+      'የመግቢያ ኢሜይል',
+      'የተመደበ መምህር',
+      'የመምህር ኢሜይል',
+      'የተመዘገቡ ኮርሶች',
+      'የአስቸኳይ ጊዜ ተጠሪ ስም',
+      'የአስቸኳይ ጊዜ ተጠሪ የአባት ስም',
+      'የአስቸኳይ ጊዜ ተጠሪ የአያት ስም',
+      'ዝምድና',
+      'የአስቸኳይ ጊዜ ስልክ',
+      'የአስቸኳይ ጊዜ ኢሜይል',
+      'የአስቸኳይ ጊዜ አድራሻ',
+      'የተመዘገበበት ቀን',
+    ];
+
+    const getRelationshipAmharic = (rel) => {
+      switch (rel) {
+        case 'Father': return 'አባት';
+        case 'Mother': return 'እናት';
+        case 'Brother': return 'ወንድም';
+        case 'Sister': return 'እህት';
+        case 'Guardian': return 'ሞግዚት / አሳዳጊ';
+        case 'Spouse': return 'የትዳር አጋር';
+        case 'Relative': return 'ሌላ ዘመድ';
+        case 'Other': return 'ሌላ';
+        default: return rel || '';
+      }
+    };
+
+    const getEducationLevelAmharic = (edu) => {
+      if (!edu) return '';
+      switch (edu) {
+        case 'Grade 7': return '7ኛ ክፍል';
+        case 'Grade 8': return '8ኛ ክፍል';
+        case 'Grade 9': return '9ኛ ክፍል';
+        case 'Grade 10': return '10ኛ ክፍል';
+        case 'Grade 11': return '11ኛ ክፍል';
+        case 'Grade 12': return '12ኛ ክፍል (የሁለተኛ ደረጃ ማጠናቀቂያ)';
+        case 'Certificate': return 'ሠርተፊኬት / የሙያ ማረጋገጫ';
+        case 'Diploma': return 'ኮሌጅ ዲፕሎማ';
+        case 'Degree': return 'የመጀመሪያ ዲግሪ';
+        case 'Masters': return 'ሁለተኛ ዲግሪ / ማስተርስ';
+        case 'PhD': return 'ዶክትሬት ዲግሪ (PhD)';
+        case 'Traditional': return 'የአብነት / የቤተክርስቲያን ትምህርት';
+        case 'Below Grade 7': return 'ከ 7ኛ ክፍል በታች / መሠረታዊ ትምህርት';
+        case 'Other': return 'ሌላ';
+        default: return edu;
+      }
+    };
+
+    const getProfessionAmharic = (prof) => {
+      if (!prof) return '';
+      switch (prof) {
+        case 'Student': return 'ተማሪ';
+        case 'Government Employee': return 'የመንግሥት ሠራተኛ';
+        case 'Private Employee': return 'የግል ድርጅት ሠራተኛ';
+        case 'NGO Employee': return 'የመንግሥታዊ ያልሆነ ድርጅት (NGO) ሠራተኛ';
+        case 'Business / Merchant': return 'የንግድ ሥራ / ነጋዴ';
+        case 'Health Professional': return 'የጤና ባለሙያ';
+        case 'Teacher / Lecturer': return 'መምህር / አስተማሪ / ሌክቸረር';
+        case 'Engineering & Tech': return 'ኢንጂነሪንግ / አይቲ እና ቴክኖሎጂ';
+        case 'Accounting & Finance': return 'የሂሳብ፣ ፋይናንስ እና ባንክ ባለሙያ';
+        case 'Legal Professional': return 'የሕግ ባለሙያ';
+        case 'Agriculture': return 'ግብርና / የእንስሳት እርባታ';
+        case 'Construction & Technical': return 'ኮንስትራክሽን እና ቴክኒክ ሙያ';
+        case 'Transport & Logistics': return 'የትራንስፖርት እና ሎጂስቲክስ';
+        case 'Arts & Journalism': return 'ኪነ-ጥበብ፣ ሚዲያ እና ጋዜጠኝነት';
+        case 'Tourism & Hotel': return 'ሆቴል እና ቱሪዝም';
+        case 'Daily Laborer': return 'የቀን ሠራተኛ / ጉልበት ሥራ';
+        case 'Homemaker': return 'የቤት እመቤት / የቤት አስተዳዳሪ';
+        case 'Self Employed': return 'የግል ሥራ / ፍሪላንሰር';
+        case 'Church Servant / Clergy': return 'የቤተክርስቲያን አገልጋይ';
+        case 'Job Seeker': return 'ሥራ ፈላጊ / በሥራ ላይ ያልተሰማራ';
+        case 'Retired': return 'የጡረታ ባለመብት';
+        case 'Other': return 'ሌላ የሥራ ዘርፍ';
+        default: return prof;
+      }
+    };
+
     const csvData = students.map(s => ({
-      'School ID': s.studentId || 'N/A',
-      'Registration No': s.registrationNumber || '',
-      'Student Type': s.studentType || 'regular',
-      'Batch': s.batch || '',
-      'First Name': s.firstName || '',
-      'Middle Name': s.middleName || '',
-      'Last Name': s.lastName || '',
-      'Age': s.age || '',
-      'Gender': s.gender || 'Male',
-      'Subcity': s.subcity || '',
-      'Woreda': s.woreda || '',
-      'Kebele': s.kebele || '',
-      'Shift': s.shift === 'night' ? 'የማታ (Night)' : (s.shift === 'weekend' ? 'የቀን (Weekend)' : (s.shift || '')),
-      'Education Level': s.educationLevel || '',
-      'Profession': s.profession || '',
-      'Grade': s.grade || '',
-      'Date of Birth': s.dob ? formatEthiopianDate(s.dob) : '',
-      'Address': s.address || '',
-      'Student Phone': s.studentPhone || '',
-      'Email (login)': s.userId?.email || s.email || '',
-      'Assigned Teacher': s.teacher?.fullName || '',
-      'Teacher Email': s.teacher?.email || '',
-      'Courses': s.courses?.map(c => c.name).join('; ') || '',
-      'Emergency First Name': s.emergencyFirstName || s.parentName || '',
-      'Emergency Middle Name': s.emergencyMiddleName || '',
-      'Emergency Last Name': s.emergencyLastName || '',
-      'Relationship': s.relationship || 'Father',
-      'Emergency Phone': s.emergencyPhone || s.contactPhone || s.parentPhone || '',
-      'Emergency Email': s.emergencyEmail || s.contactEmail || s.parentEmail || '',
-      'Emergency Address': s.emergencyAddress || s.contactAddress || '',
-      'Registration Date': s.registrationDate ? formatEthiopianDate(s.registrationDate) : '',
+      'የተማሪ መለያ': s.studentId || 'N/A',
+      'የምዝገባ ቁጥር': s.registrationNumber || '',
+      'የተማሪ ዓይነት': s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ',
+      'ባች / ምድብ': s.batch || '',
+      'ስም': s.firstName || '',
+      'የአባት ስም': s.middleName || '',
+      'የአያት ስም': s.lastName || '',
+      'ሙሉ ስም': [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || s.fullName || '',
+      'ዕድሜ': s.age || '',
+      'ጾታ': s.gender === 'Female' ? 'ሴት' : (s.gender === 'Male' ? 'ወንድ' : (s.gender || '')),
+      'ክፍለ ከተማ': s.subcity || '',
+      'ወረዳ': s.woreda || '',
+      'ቀበሌ': s.kebele || '',
+      'ፈረቃ': s.shift === 'night' ? 'የማታ' : (s.shift === 'weekend' ? 'የቀን / ሳምንት መጨረሻ' : (s.shift || '')),
+      'የትምህርት ደረጃ': getEducationLevelAmharic(s.educationLevel),
+      'የሥራ ዘርፍ / ሙያ': getProfessionAmharic(s.profession),
+      'ክፍል': s.grade || '',
+      'የትውልድ ቀን': s.dob ? formatEthiopianDate(s.dob) : '',
+      'አድራሻ': s.address || '',
+      'የተማሪ ስልክ ቁጥር': s.studentPhone || '',
+      'የመግቢያ ኢሜይል': s.userId?.email || s.email || '',
+      'የተመደበ መምህር': s.teacher?.fullName || '',
+      'የመምህር ኢሜይል': s.teacher?.email || '',
+      'የተመዘገቡ ኮርሶች': s.courses?.map(c => c.name).join('; ') || '',
+      'የአስቸኳይ ጊዜ ተጠሪ ስም': s.emergencyFirstName || s.parentName || '',
+      'የአስቸኳይ ጊዜ ተጠሪ የአባት ስም': s.emergencyMiddleName || '',
+      'የአስቸኳይ ጊዜ ተጠሪ የአያት ስም': s.emergencyLastName || '',
+      'ዝምድና': getRelationshipAmharic(s.relationship),
+      'የአስቸኳይ ጊዜ ስልክ': s.emergencyPhone || s.contactPhone || s.parentPhone || '',
+      'የአስቸኳይ ጊዜ ኢሜይል': s.emergencyEmail || s.contactEmail || s.parentEmail || '',
+      'የአስቸኳይ ጊዜ አድራሻ': s.emergencyAddress || s.contactAddress || '',
+      'የተመዘገበበት ቀን': s.registrationDate ? formatEthiopianDate(s.registrationDate) : '',
     }));
 
-    const fields = Object.keys(csvData[0] || {});
     const parser = new Parser({ fields });
     const csv = parser.parse(csvData);
 
@@ -256,7 +355,7 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
     const utf8Csv = '\uFEFF' + csv;
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=students.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=students_export.csv');
     res.status(200).send(utf8Csv);
   } catch (err) {
     console.error('Export error:', err);

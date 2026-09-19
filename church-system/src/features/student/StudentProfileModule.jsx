@@ -25,6 +25,7 @@ import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { useLanguage } from '../../hooks/useLanguage';
 import { FadeIn } from '../../components/motion';
 import { Card, Badge, Button } from '../../components/ui';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel } from '../../constants/registrationOptions';
 
 const StudentProfile = () => {
   const { t, isAmharic } = useLanguage();
@@ -329,13 +330,17 @@ const StudentProfile = () => {
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
                 {isAmharic ? 'የትምህርት ደረጃ' : 'Education Level'}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.educationLevel || '-'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {getEducationLevelLabel(profile.educationLevel, isAmharic) || profile.educationLevel || '-'}
+              </span>
             </div>
             <div>
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
-                {isAmharic ? 'የሥራ መስክ / ሙያ' : 'Profession'}
+                {isAmharic ? 'የሥራ ዘርፍ / ሙያ' : 'Profession / Field'}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.profession || '-'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {getProfessionLabel(profile.profession, isAmharic) || profile.profession || '-'}
+              </span>
             </div>
             {studentType === 'regular' && (
               <div>
@@ -417,7 +422,7 @@ const StudentProfile = () => {
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
                 {isAmharic ? 'ዝምድና' : 'Relationship'}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.relationship || '-'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{getRelationshipLabel(profile.relationship, isAmharic) || profile.relationship || '-'}</span>
             </div>
             <div>
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">

@@ -188,16 +188,10 @@ const CheckStatusContent = () => {
                 }`}
               >
                 {result.status === 'Approved'
-                  ? isAmharic
-                    ? '✓ ምዝገባዎ ጸድቋል'
-                    : '✓ Approved'
+                  ? t('statusApprovedBadge', '✓ ምዝገባዎ ጸድቋል')
                   : result.status === 'Rejected'
-                  ? isAmharic
-                    ? '✕ ምዝገባው ውድቅ ሆኗል'
-                    : '✕ Rejected'
-                  : isAmharic
-                  ? '⏳ በክለሳ ላይ ይገኛል'
-                  : '⏳ Pending Review'}
+                  ? t('statusRejectedBadge', '✕ ምዝገባው ውድቅ ሆኗል')
+                  : t('statusPendingBadge', '⏳ በክለሳ ላይ ይገኛል')}
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 {result.fullName || t('studentInfo', 'የተማሪ መረጃ')}
@@ -266,7 +260,7 @@ const CheckStatusContent = () => {
                 onClick={resetForm}
                 className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                {isAmharic ? '← ሌላ ስልክ ቁጥር ለመፈተሽ' : '← Check another phone number'}
+                {t('checkAnotherPhone', '← ሌላ ስልክ ቁጥር ለመፈተሽ')}
               </button>
             </div>
           </motion.div>
