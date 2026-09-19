@@ -9,6 +9,7 @@ const Course = require('../models/education/Course');
 const ExamResult = require('../models/education/ExamResult');
 const Announcement = require('../models/Announcement');
 const Certificate = require('../models/education/Certificate');
+const TelegramGroup = require('../models/TelegramGroup');
 const { formatEthiopianDate } = require('../utils/ethiopianDate');
 
 let botInstance = null;
@@ -109,6 +110,66 @@ const buildPortalInlineButton = (text = '🎓 የተማሪዎች ፖርታል �
     return { text, callback_data: 'cmd_portal' };
   }
   return { text, url: fullUrl };
+};
+
+/**
+ * Helper to normalize grade strings (e.g., '7', 'grade 7', 'የ 7ኛ ክፍል' -> 'Grade 7')
+ */
+const normalizeGradeString = (input) => {
+  if (!input) return 'All Classes';
+  const str = input.trim();
+  if (/^(all|ሁሉም|all classes)$/i.test(str)) return 'All Classes';
+  if (/^(distance|የርቀት|ርቀት)$/i.test(str)) return 'Distance';
+  const match = str.match(/\d+/);
+  if (match) {
+    return `Grade ${match[0]}`;
+  }
+  return str;
+};
+
+/**
+ * Upsert or update a Telegram Group record in MongoDB
+ */
+const upsertTelegramGroup = async (chat, options = {}) => {
+  if (!chat || (chat.type !== 'group' && chat.type !== 'supergroup' && chat.type !== 'channel')) {
+    return null;
+  }
+  try {
+    const chatId = String(chat.id);
+    const title = chat.title || 'Telegram Group';
+    const type = chat.type;
+
+    let group = await TelegramGroup.findOne({ chatId });
+    if (!group) {
+      group = new TelegramGroup({
+        chatId,
+        title,
+        type,
+        assignedGrade: options.assignedGrade || 'All Classes',
+        isActive: true,
+        lastActivityAt: new Date(),
+      });
+    } else {
+      group.title = title;
+      group.type = type;
+      group.isActive = true;
+      group.lastActivityAt = new Date();
+      if (options.assignedGrade) {
+        group.assignedGrade = options.assignedGrade;
+      }
+    }
+
+    if (botInstance) {
+      const count = await botInstance.getChatMemberCount(chatId).catch(() => null);
+      if (count) group.memberCount = count;
+    }
+
+    await group.save();
+    return group;
+  } catch (err) {
+    console.warn('⚠️ Telegram group upsert notice:', err.message);
+    return null;
+  }
 };
 
 /**
@@ -331,6 +392,75 @@ const initTelegramBot = async () => {
 
     botInstance.on('error', (error) => {
       console.warn('Telegram Bot general notice:', error.message);
+    });
+
+    // ---------- Group Activity & Auto-Discovery Listeners ----------
+    botInstance.on('message', async (msg) => {
+      if (!msg.chat) return;
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (!isGroup) return;
+
+      // 1. Auto-discover / update group record
+      const group = await upsertTelegramGroup(msg.chat);
+
+      // 2. Handle /setclass or /setgrade command inside group
+      const text = (msg.text || '').trim();
+      if (/^\/(setclass|setgrade|linkclass|assignclass)/i.test(text)) {
+        const parts = text.split(/\s+/);
+        const rawGrade = parts.slice(1).join(' ');
+
+        if (!rawGrade) {
+          const helpMsg = `ℹ️ *የክፍል ምደባ ትእዛዝ (Set Class Command)*\n\nእባክዎ ክፍሉን ጨምረው ይጻፉ።\n\n*ምሳሌዎች፦*\n👉 \`/setclass Grade 7\`\n👉 \`/setclass 8\`\n👉 \`/setclass Grade 12\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n👉 \`/setclass Distance\` (ለርቀት ተማሪዎች)\n\nአሁን የተመደበለት ክፍል፦ *${group?.assignedGrade || 'All Classes'}*`;
+          await safeSendMessage(msg.chat.id, helpMsg, { parse_mode: 'Markdown' });
+          return;
+        }
+
+        const normalized = normalizeGradeString(rawGrade);
+        if (group) {
+          group.assignedGrade = normalized;
+          group.lastActivityAt = new Date();
+          await group.save();
+        }
+
+        const successMsg = `✅ *የቴሌግራም ግሩፕ ከክፍል ጋር ተገናኝቷል!*\n\n🏛️ *ግሩፕ፦* ${msg.chat.title}\n🎓 *የተመደበለት ክፍል፦* *${normalized}*\n\n📢 ከአስተዳዳሪው ወይም ከመምህራን ለ *${normalized}* የሚላኩ መልእክቶችና ማስታወቂያዎች በቀጥታ ወደዚህ ግሩፕ ይደርሳሉ።`;
+        await safeSendMessage(msg.chat.id, successMsg, { parse_mode: 'Markdown' });
+        return;
+      }
+
+      // 3. Handle /groupinfo or /classinfo command
+      if (/^\/(groupinfo|classinfo|groupstatus)/i.test(text)) {
+        const currentGrade = group?.assignedGrade || 'All Classes';
+        const infoMsg = `📋 *የግሩፕ መረጃ (Group Info)*\n\n🏛️ *የግሩፕ ስም፦* ${msg.chat.title}\n🆔 *Chat ID፦* \`${msg.chat.id}\`\n🎓 *የተመደበለት ክፍል፦* *${currentGrade}*\n👥 *የአባላት ብዛት፦* ${group?.memberCount || 'ያልታወቀ'}\n⚡ *ሁኔታ፦* ${group?.isActive ? '✅ ንቁ (Active)' : '❌ ቦዘኔ (Inactive)'}\n\n💡 _ክፍሉን ለመቀየር_ \`/setclass Grade 7\` _ብለው ይጻፉ ወይም በአስተዳዳሪው ፖርታል ያስተካክሉ።_`;
+        await safeSendMessage(msg.chat.id, infoMsg, { parse_mode: 'Markdown' });
+        return;
+      }
+    });
+
+    // Detect when bot is added to a group
+    botInstance.on('new_chat_members', async (msg) => {
+      if (!msg.chat || (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup')) return;
+      const botUser = botInfo;
+      const isBotAdded = msg.new_chat_members?.some(
+        (member) => member.id === botUser?.id || member.username === botUser?.username
+      );
+
+      if (isBotAdded) {
+        await upsertTelegramGroup(msg.chat);
+        const welcomeGroupMsg = `🕊️ *ሰላም ለሁላችሁ!* 🕊️\n\nየ *ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት* ይፋዊ የቴሌግራም ቦት ወደዚህ ግሩፕ ተቀላቅሏል! ⛪\n\nይህን ግሩፕ ከተማሪዎች ክፍል ጋር ለማገናኘት፡\n👉 \`/setclass Grade 7\` (ለምሳሌ ለ 7ኛ ክፍል)\n👉 \`/setclass Grade 8\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n\nወይም በአስተዳዳሪው ፖርታል (Admin Dashboard) ውስጥ በቀላሉ መመደብ ይችላሉ።\n\nመልካም የትምህርት ጊዜ! ✨`;
+        await safeSendMessage(msg.chat.id, welcomeGroupMsg, { parse_mode: 'Markdown' });
+      }
+    });
+
+    // Detect when bot is removed from group
+    botInstance.on('left_chat_member', async (msg) => {
+      if (!msg.chat) return;
+      const botUser = botInfo;
+      if (msg.left_chat_member?.id === botUser?.id) {
+        await TelegramGroup.findOneAndUpdate(
+          { chatId: String(msg.chat.id) },
+          { isActive: false, lastActivityAt: new Date() }
+        ).catch(() => {});
+      }
     });
 
     // ---------- 1. /start & /menu Commands ----------
@@ -1078,18 +1208,90 @@ const broadcastToStudents = async (messageText, { filterGrade = null, filterShif
 };
 
 /**
+ * Send targeted message to Telegram Groups matching student class/grade
+ */
+const sendMessageToGroups = async ({
+  messageText,
+  targetGrade = null, // e.g. 'Grade 7', 'Grade 8', or 'All Classes' / null
+  targetShift = null,
+  targetGroupId = null, // specific group _id or chatId
+  sendToDirectStudents = false,
+} = {}) => {
+  if (!botInstance) return { success: false, message: 'Telegram Bot is not active' };
+
+  try {
+    let groupQuery = { isActive: true };
+
+    if (targetGroupId) {
+      groupQuery = {
+        $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
+        isActive: true,
+      };
+    } else if (targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes') {
+      // Matches specific grade OR groups configured for "All Classes"
+      groupQuery.assignedGrade = {
+        $in: [targetGrade, 'All Classes', 'All', 'ሁሉም ክፍሎች', null, ''],
+      };
+      if (targetShift && targetShift !== 'all') {
+        groupQuery.shift = { $in: [targetShift, 'all'] };
+      }
+    }
+
+    const groups = await TelegramGroup.find(groupQuery);
+    let sentGroups = 0;
+    let failedGroups = 0;
+
+    for (const grp of groups) {
+      try {
+        await safeSendMessage(grp.chatId, messageText, { parse_mode: 'Markdown' });
+        grp.lastMessageSentAt = new Date();
+        grp.lastActivityAt = new Date();
+        await grp.save().catch(() => {});
+        sentGroups++;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      } catch (e) {
+        console.warn(`Failed to send to Telegram group ${grp.title} (${grp.chatId}):`, e.message);
+        failedGroups++;
+      }
+    }
+
+    let directResult = null;
+    if (sendToDirectStudents) {
+      directResult = await broadcastToStudents(messageText, {
+        filterGrade: targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes' ? targetGrade : null,
+        filterShift: targetShift && targetShift !== 'all' ? targetShift : null,
+      });
+    }
+
+    return {
+      success: true,
+      totalGroups: groups.length,
+      sentGroups,
+      failedGroups,
+      directStudents: directResult || null,
+      message: `መልእክቱ ለ ${sentGroups} የቴሌግራም ግሩፖች ${directResult ? `እና ለ ${directResult.sent} ተማሪዎች ` : ''}በተሳካ ሁኔታ ተልኳል!`,
+    };
+  } catch (err) {
+    console.error('sendMessageToGroups error:', err);
+    return { success: false, message: err.message };
+  }
+};
+
+/**
  * Get bot operational status
  */
 const getBotStatus = async () => {
   const isConfigured = Boolean(process.env.TELEGRAM_BOT_TOKEN && !process.env.TELEGRAM_BOT_TOKEN.includes('your_token'));
   let linkedStudentsCount = 0;
   let linkedUsersCount = 0;
+  let connectedGroupsCount = 0;
 
   try {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       linkedStudentsCount = await Student.countDocuments({ telegramChatId: { $exists: true, $ne: null } }).maxTimeMS(2000).catch(() => 0);
       linkedUsersCount = await User.countDocuments({ telegramChatId: { $exists: true, $ne: null } }).maxTimeMS(2000).catch(() => 0);
+      connectedGroupsCount = await TelegramGroup.countDocuments({ isActive: true }).maxTimeMS(2000).catch(() => 0);
     }
   } catch (e) {}
 
@@ -1101,6 +1303,7 @@ const getBotStatus = async () => {
     botLink: botInfo?.username ? `https://t.me/${botInfo.username}` : null,
     linkedStudentsCount,
     linkedUsersCount,
+    connectedGroupsCount,
     webAppUrl: getWebAppUrl(),
   };
 };
@@ -1110,6 +1313,10 @@ module.exports = {
   getBotInstance: () => botInstance,
   validateTelegramInitData,
   broadcastToStudents,
+  sendMessageToGroups,
+  upsertTelegramGroup,
+  normalizeGradeString,
   getBotStatus,
   findLinkedStudent,
 };
+
