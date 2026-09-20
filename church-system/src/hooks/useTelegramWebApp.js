@@ -28,7 +28,8 @@ export function useTelegramWebApp() {
       window.location.hash.includes('tgWebAppData')
     );
     const token = localStorage.getItem('token');
-    return isTg && !token;
+    const isManuallyLoggedOut = sessionStorage.getItem('tg_manual_logout') === 'true';
+    return isTg && !token && !isManuallyLoggedOut;
   });
   const [authError, setAuthError] = useState(null);
   const [themeParams, setThemeParams] = useState({});
@@ -59,6 +60,9 @@ export function useTelegramWebApp() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success && data.accessToken && data.user) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('tg_manual_logout');
+        }
         login(data.accessToken, data.user);
         try {
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
@@ -101,6 +105,7 @@ export function useTelegramWebApp() {
 
         const hasInitData = Boolean(tg.initData && tg.initData.length > 0);
         const hasTgUser = Boolean(tg.initDataUnsafe?.user);
+        const isManuallyLoggedOut = sessionStorage.getItem('tg_manual_logout') === 'true';
 
         setIsTelegram(true);
         if (hasTgUser) {
@@ -110,9 +115,12 @@ export function useTelegramWebApp() {
           setThemeParams(tg.themeParams);
         }
 
-        // Auto-authenticate if not logged in
-        if (!isLoggedIn && (hasInitData || hasTgUser)) {
+        // Auto-authenticate ONLY if not logged in and NOT manually logged out
+        if (!isLoggedIn && (hasInitData || hasTgUser) && !isManuallyLoggedOut) {
           authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
+        } else if (isManuallyLoggedOut) {
+          setIsAuthenticating(false);
+          setAuthError('not_linked');
         }
 
         return true;

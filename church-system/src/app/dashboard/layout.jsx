@@ -55,8 +55,19 @@ export default function DashboardRootLayout({ children }) {
   }
 
   const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('tg_manual_logout', 'true');
+    }
     logout();
-    router.replace('/login');
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.close) {
+      try {
+        window.Telegram.WebApp.close();
+      } catch (e) {
+        router.replace('/login');
+      }
+    } else {
+      router.replace('/login');
+    }
   };
 
   return <StudentLayout onLogout={handleLogout}>{children}</StudentLayout>;

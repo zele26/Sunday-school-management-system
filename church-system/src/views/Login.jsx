@@ -137,6 +137,9 @@ const Login = () => {
       }
 
       if (response.ok) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('tg_manual_logout');
+        }
         loginStore(resData.accessToken, resData.user);
         const destination = getDestinationPath(resData.user);
         router.replace(destination);
