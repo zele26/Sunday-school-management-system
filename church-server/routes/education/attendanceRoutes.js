@@ -185,6 +185,29 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
           teacherName = course.teacher.fullName;
         }
       }
+    } else if (req.body.grade) {
+      const targetGrade = req.body.grade;
+      const sGrade = (student.grade || student.batch || '').toString().trim().toLowerCase();
+      const norm = (str) => {
+        const m = str.match(/\d+/);
+        if (m) return (str.includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+        return str.replace(/\s+/g, '');
+      };
+      if (sGrade && norm(sGrade) !== norm(targetGrade.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          notAssigned: true,
+          message: `⚠️ ይህ ተማሪ ለተመረጠው ክፍል አልተመደበም። የተማሪው ክፍል፦ ${formatGradeAmharic(student.grade || student.batch)} | የተመረጠው ክፍል፦ ${formatGradeAmharic(targetGrade)}`,
+          student: {
+            id: student._id,
+            name: getStudentFullName(student),
+            grade: student.grade || student.batch || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            studentId: student.studentId || '',
+          },
+        });
+      }
     }
 
     const today = new Date();
@@ -348,6 +371,29 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
           teacher = course.teacher._id;
           teacherName = course.teacher.fullName;
         }
+      }
+    } else if (req.body.grade) {
+      const targetGrade = req.body.grade;
+      const sGrade = (student.grade || student.batch || '').toString().trim().toLowerCase();
+      const norm = (str) => {
+        const m = str.match(/\d+/);
+        if (m) return (str.includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+        return str.replace(/\s+/g, '');
+      };
+      if (sGrade && norm(sGrade) !== norm(targetGrade.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          notAssigned: true,
+          message: `⚠️ ይህ ተማሪ ለተመረጠው ክፍል አልተመደበም። የተማሪው ክፍል፦ ${formatGradeAmharic(student.grade || student.batch)} | የተመረጠው ክፍል፦ ${formatGradeAmharic(targetGrade)}`,
+          student: {
+            id: student._id,
+            name: getStudentFullName(student),
+            grade: student.grade || student.batch || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            studentId: student.studentId || '',
+          },
+        });
       }
     }
 

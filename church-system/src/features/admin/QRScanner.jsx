@@ -1,7 +1,7 @@
 'use client';
 
 // src/features/admin/QRScanner.jsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -33,6 +33,7 @@ import {
   Moon,
   Globe,
   Building,
+  GraduationCap,
   FlipHorizontal,
   Zap,
   Download,
@@ -111,13 +112,78 @@ const QRScanner = () => {
   const [facingMode, setFacingMode] = useState('environment'); // 'environment' (back) | 'user' (front)
   const [torchEnabled, setTorchEnabled] = useState(false);
 
-  // Mode & Shift selection (Regular vs Distance, Night vs Weekend)
+  // Mode & Shift & Grade selection
   const [studentTypeFilter, setStudentTypeFilter] = useState(''); // '' | 'regular' | 'distance'
   const [shiftFilter, setShiftFilter] = useState(''); // '' | 'weekend' | 'night'
+  const [gradeFilter, setGradeFilter] = useState(''); // '' | 'Grade 7' | 'Grade 8' | 'Batch 1' etc.
 
   // Course selection
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
+
+  // Compute available Grade/Batch options based on Study Mode
+  const availableGradeOptions = useMemo(() => {
+    if (studentTypeFilter === 'distance') {
+      return [
+        { value: 'Batch 1', label: 'ዙር 1 (የርቀት)' },
+        { value: 'Batch 2', label: 'ዙር 2 (የርቀት)' },
+        { value: 'Batch 3', label: 'ዙር 3 (የርቀት)' },
+        { value: 'Batch 4', label: 'ዙር 4 (የርቀት)' },
+      ];
+    }
+    if (studentTypeFilter === 'regular') {
+      return [
+        { value: 'Grade 7', label: '7ኛ ክፍል' },
+        { value: 'Grade 8', label: '8ኛ ክፍል' },
+        { value: 'Grade 9', label: '9ኛ ክፍል' },
+        { value: 'Grade 10', label: '10ኛ ክፍል' },
+        { value: 'Grade 11', label: '11ኛ ክፍል' },
+        { value: 'Grade 12', label: '12ኛ ክፍል' },
+      ];
+    }
+    return [
+      { value: 'Grade 7', label: '7ኛ ክፍል' },
+      { value: 'Grade 8', label: '8ኛ ክፍል' },
+      { value: 'Grade 9', label: '9ኛ ክፍል' },
+      { value: 'Grade 10', label: '10ኛ ክፍል' },
+      { value: 'Grade 11', label: '11ኛ ክፍል' },
+      { value: 'Grade 12', label: '12ኛ ክፍል' },
+      { value: 'Batch 1', label: 'ዙር 1 (የርቀት)' },
+      { value: 'Batch 2', label: 'ዙር 2 (የርቀት)' },
+      { value: 'Batch 3', label: 'ዙር 3 (የርቀት)' },
+      { value: 'Batch 4', label: 'ዙር 4 (የርቀት)' },
+    ];
+  }, [studentTypeFilter]);
+
+  // Compute filtered courses dynamically based on Study Mode and selected Class / Grade
+  const filteredCourses = useMemo(() => {
+    return courses.filter((c) => {
+      // 1. Study Mode filter
+      if (studentTypeFilter && c.studentType && c.studentType !== studentTypeFilter) {
+        return false;
+      }
+      // 2. Class / Grade filter
+      if (gradeFilter && c.grade) {
+        const norm = (str) => {
+          const m = str.match(/\d+/);
+          if (m) return (str.toLowerCase().includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+          return str.toLowerCase().replace(/\s+/g, '');
+        };
+        if (norm(c.grade) !== norm(gradeFilter)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [courses, studentTypeFilter, gradeFilter]);
+
+  // Auto-reset selectedCourseId if no longer in filtered courses
+  useEffect(() => {
+    if (selectedCourseId && filteredCourses.length > 0) {
+      const exists = filteredCourses.some((c) => c._id === selectedCourseId);
+      if (!exists) setSelectedCourseId('');
+    }
+  }, [filteredCourses, selectedCourseId]);
 
   // Late detection
   const [useLateDetection, setUseLateDetection] = useState(false);
@@ -178,6 +244,7 @@ const QRScanner = () => {
         });
         if (studentTypeFilter) params.append('studentType', studentTypeFilter);
         if (studentTypeFilter === 'regular' && shiftFilter) params.append('shift', shiftFilter);
+        if (gradeFilter) params.append('grade', gradeFilter);
 
         const res = await apiFetch(`/api/admin/students?${params.toString()}`);
         if (res.ok) {
@@ -190,7 +257,7 @@ const QRScanner = () => {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm, studentTypeFilter, shiftFilter]);
+  }, [searchTerm, studentTypeFilter, shiftFilter, gradeFilter]);
 
   // Determine status based on late detection rules
   const determineStatus = () => {
@@ -216,6 +283,7 @@ const QRScanner = () => {
           courseId: selectedCourseId || undefined,
           studentType: studentTypeFilter || undefined,
           shift: studentTypeFilter === 'regular' ? shiftFilter || undefined : undefined,
+          grade: gradeFilter || undefined,
           status,
         }),
       });
@@ -455,9 +523,9 @@ const QRScanner = () => {
         }
       />
 
-      {/* 🌟 2. Top Controls & Mode / Shift Settings Bar */}
+      {/* 🌟 2. Top Controls & Mode / Class / Shift Settings Bar */}
       <Card variant="default" padding="md" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           {/* 1. Study Mode Selector (Regular vs Distance) */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -467,18 +535,56 @@ const QRScanner = () => {
             <select
               value={studentTypeFilter}
               onChange={(e) => {
-                setStudentTypeFilter(e.target.value);
-                if (e.target.value !== 'regular') setShiftFilter('');
+                const val = e.target.value;
+                setStudentTypeFilter(val);
+                if (val !== 'regular') setShiftFilter('');
+                // If current gradeFilter incompatible, reset
+                if (val === 'distance' && !gradeFilter.toLowerCase().includes('batch')) setGradeFilter('');
+                if (val === 'regular' && gradeFilter.toLowerCase().includes('batch')) setGradeFilter('');
               }}
               className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
             >
-              <option value="">🏛️ ሁሉም ተማሪዎች</option>
-              <option value="regular">🏛️ መደበኛ ተማሪዎች</option>
-              <option value="distance">🌐 የርቀት ተማሪዎች</option>
+              <option value="">🏛️ ሁሉም ዘርፎች</option>
+              <option value="regular">🏛️ መደበኛ</option>
+              <option value="distance">🌐 የርቀት</option>
             </select>
           </div>
 
-          {/* 2. Shift Selector (If Regular: Weekend vs Night) */}
+          {/* 2. Class / Grade Selector */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
+                <span>ክፍል / ባች</span>
+              </span>
+              {gradeFilter && (
+                <button
+                  type="button"
+                  onClick={() => setGradeFilter('')}
+                  className="text-[10px] text-rose-500 hover:underline font-bold"
+                >
+                  አጽዳ
+                </button>
+              )}
+            </label>
+            <select
+              value={gradeFilter}
+              onChange={(e) => {
+                setGradeFilter(e.target.value);
+                setSelectedCourseId('');
+              }}
+              className="w-full p-2.5 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
+            >
+              <option value="">🏫 ሁሉም ክፍሎች</option>
+              {availableGradeOptions.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Shift Selector (If Regular: Weekend vs Night) */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               {shiftFilter === 'night' ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
@@ -496,36 +602,32 @@ const QRScanner = () => {
             </select>
           </div>
 
-          {/* 3. Course Selector */}
+          {/* 4. Cascaded Course Selector */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
-                <span>የክፍለ ጊዜ / ኮርስ</span>
+                <span>የትምህርት ዓይነት</span>
               </span>
-              {courses.length > 0 && (
-                <span className="text-[10px] font-semibold text-slate-400 font-mono">
-                  ({courses.length} ኮርሶች)
-                </span>
-              )}
+              <span className="text-[10px] font-semibold text-slate-400 font-mono">
+                ({filteredCourses.length} ኮርሶች)
+              </span>
             </label>
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
               className="w-full p-2.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
             >
-              <option value="">🏛️ አጠቃላይ መገኘት (General Attendance)</option>
-              {courses
-                .filter((c) => !studentTypeFilter || !c.studentType || c.studentType === studentTypeFilter)
-                .map((c) => (
-                  <option key={c._id} value={c._id}>
-                    📖 {c.name} {c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''} {c.shift ? `(${c.shift})` : ''}
-                  </option>
-                ))}
+              <option value="">🏛️ አጠቃላይ መገኘት (General)</option>
+              {filteredCourses.map((c) => (
+                <option key={c._id} value={c._id}>
+                  📖 {c.name} {!gradeFilter && c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''} {c.shift ? `(${c.shift})` : ''}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* 4. Sound & Late Toggle */}
+          {/* 5. Sound & Late Toggle */}
           <div className="flex items-center gap-2">
             <button
               type="button"
