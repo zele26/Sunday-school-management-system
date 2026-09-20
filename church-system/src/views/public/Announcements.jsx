@@ -1,28 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, AlertCircle } from 'lucide-react';
 import { FadeIn, StaggerContainer, StaggerItem } from '../../components/motion';
 import { Card, FeatureCard } from '../../components/ui/Card';
 import { useLanguage } from '../../hooks/useLanguage';
+import { apiFetch } from '../../api/apiClient';
+import { formatEthiopianDate } from '../../utils/ethiopianDate';
 
 const PublicAnnouncements = () => {
   const { t, isAmharic } = useLanguage();
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const announcements = [
-    {
-      title: isAmharic
-        ? 'የ2026/2027 ትምህርት ዓመት መጀመሪያ'
-        : 'Commencement of the 2026/2027 Academic Year',
-      date: isAmharic ? 'መስከረም 5 / 2026 ዓ.ም' : 'September 15, 2026',
-    },
-    {
-      title: isAmharic
-        ? 'የልጆች የጸሎትና የምስጋና ቀን'
-        : 'Children & Youth Prayer & Thanksgiving Day',
-      date: isAmharic ? 'ጥቅምት 2 / 2026 ዓ.ም' : 'October 12, 2026',
-    },
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await apiFetch('/api/announcements');
+        if (res.ok && isMounted) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setAnnouncements(data);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load public announcements:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchAnnouncements();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 py-12 px-4 sm:px-6 lg:px-8">
@@ -53,28 +65,59 @@ const PublicAnnouncements = () => {
         </FadeIn>
 
         {/* Announcements List with Reusable FeatureCard */}
-        <StaggerContainer staggerChildren={0.12} className="space-y-4">
-          {announcements.map((a) => (
-            <StaggerItem key={a.title}>
-              <FeatureCard
-                icon={Bell}
-                iconBg="bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400"
-                title={a.title}
-                badge={isAmharic ? 'ቀጣይ መርሃ-ግብር' : 'Upcoming Program'}
-                description={`${isAmharic ? 'ቀን: ' : 'Date: '}${a.date}`}
-                footer={
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>
-                      {isAmharic ? 'የተለጠፈበት ቀን፡ ' : 'Posted Date: '}
-                      {a.date}
-                    </span>
-                  </div>
-                }
-              />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+        {loading ? (
+          <div className="py-16 text-center text-slate-400">
+            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-xs font-semibold">
+              {isAmharic ? 'ማስታወቂያዎች በመጫን ላይ ናቸው...' : 'Loading announcements...'}
+            </p>
+          </div>
+        ) : announcements.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-12 text-center space-y-3 shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500 flex items-center justify-center mx-auto">
+              <Bell className="w-6 h-6" />
+            </div>
+            <p className="text-base font-bold text-slate-800 dark:text-slate-200">
+              {isAmharic ? 'ምንም አዲስ ይፋዊ ማስታወቂያ የለም' : 'No active public announcements'}
+            </p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              {isAmharic
+                ? 'አዳዲስ ይፋዊ ማስታወቂያዎች ሲለጠፉ እዚህ ይዘረዘራሉ።'
+                : 'New announcements published by administration will appear here.'}
+            </p>
+          </div>
+        ) : (
+          <StaggerContainer staggerChildren={0.12} className="space-y-4">
+            {announcements.map((a) => (
+              <StaggerItem key={a._id || a.title}>
+                <FeatureCard
+                  icon={Bell}
+                  iconBg={
+                    a.priority === 'urgent'
+                      ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'
+                      : 'bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-blue-400'
+                  }
+                  title={a.title}
+                  badge={
+                    a.priority === 'urgent'
+                      ? (isAmharic ? 'አስቸኳይ ማስታወቂያ' : 'Urgent Notice')
+                      : (isAmharic ? 'ይፋዊ መረጃ' : 'Official Notice')
+                  }
+                  description={a.content || a.message || ''}
+                  footer={
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>
+                        {isAmharic ? 'የተለጠፈበት ቀን፡ ' : 'Posted Date: '}
+                        {a.createdAt ? formatEthiopianDate(a.createdAt) : ''}
+                      </span>
+                    </div>
+                  }
+                />
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
+        )}
 
         {/* Notice Callout with Reusable Card */}
         <FadeIn delay={0.25}>

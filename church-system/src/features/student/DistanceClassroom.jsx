@@ -91,13 +91,27 @@ const DistanceClassroom = () => {
     }
   };
 
-  const selectQuiz = (quiz) => {
+  const selectQuiz = async (quiz) => {
     setActiveQuiz(quiz);
     setActiveLesson(null);
     setActiveAssignment(null);
     setActiveTab('quiz');
     setQuizAnswers({});
     setQuizResult(null);
+
+    if (!quiz.questions || quiz.questions.length === 0) {
+      try {
+        const res = await apiFetch(`/api/quizzes/${quiz._id}/take`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.questions && data.questions.length > 0) {
+            setActiveQuiz((prev) => (prev ? { ...prev, questions: data.questions } : prev));
+          }
+        }
+      } catch (err) {
+        console.warn('Fallback quiz questions fetch notice:', err);
+      }
+    }
   };
 
   const selectAssignment = (assignment) => {
@@ -533,22 +547,47 @@ const DistanceClassroom = () => {
                     </ul>
                   </div>
 
-                  <div className="space-y-4">
-                    <p className="text-sm font-bold text-white">1. በዚህ ትምህርት ውስጥ የተማርነውን ዋና መንፈሳዊ ጭብጥ ይምረጡ፡</p>
-                    <div className="space-y-2">
-                      {['ሀ. የቅድስት ቤተክርስቲያን ነገረ መለኮትና የሃይማኖት ምስጢራት', 'ለ. የታሪክና የዘመን አቆጣጠር ጥናት', 'ሐ. የሥርዓተ አምልኮ ሥነ-ሥርዓት'].map((opt, idx) => (
-                        <label key={idx} className="flex items-center gap-3 p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-amber-400/50 cursor-pointer text-xs">
-                          <input
-                            type="radio"
-                            name="sampleQ"
-                            value={idx}
-                            onChange={() => setQuizAnswers({ ...quizAnswers, 'q1': idx })}
-                            className="text-amber-400 focus:ring-amber-400"
-                          />
-                          <span>{opt}</span>
-                        </label>
-                      ))}
-                    </div>
+                  <div className="space-y-6">
+                    {activeQuiz.questions && activeQuiz.questions.length > 0 ? (
+                      activeQuiz.questions.map((q, qIdx) => (
+                        <div key={q._id || qIdx} className="space-y-3 p-4 bg-slate-950/70 rounded-2xl border border-slate-800">
+                          <p className="text-sm font-bold text-white leading-relaxed">
+                            {qIdx + 1}. {q.text || q.questionText || q.title || q.question}
+                          </p>
+                          <div className="space-y-2">
+                            {(q.options || []).map((opt, oIdx) => {
+                              const optLabel = typeof opt === 'object' ? (opt.text || opt.title || '') : String(opt);
+                              const optVal = typeof opt === 'object' ? (opt._id || opt.text || oIdx) : opt;
+                              const isChecked = quizAnswers[q._id || qIdx] === optVal || quizAnswers[q._id || qIdx] === oIdx;
+                              return (
+                                <label
+                                  key={oIdx}
+                                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer text-xs transition-all ${
+                                    isChecked
+                                      ? 'bg-amber-400/10 border-amber-400/80 text-amber-200 shadow-sm'
+                                      : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`quiz_q_${q._id || qIdx}`}
+                                    value={optVal}
+                                    checked={isChecked}
+                                    onChange={() => setQuizAnswers(prev => ({ ...prev, [q._id || qIdx]: optVal }))}
+                                    className="text-amber-400 focus:ring-amber-400"
+                                  />
+                                  <span>{optLabel}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-6 bg-slate-950 rounded-2xl border border-slate-800 text-center text-slate-400 text-xs">
+                        ለዚህ ሞጁል የተዘጋጁ የፈተና ጥያቄዎች ገና አልተካተቱም።
+                      </div>
+                    )}
                   </div>
 
                   <button

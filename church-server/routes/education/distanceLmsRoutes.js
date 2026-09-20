@@ -224,8 +224,9 @@ router.get('/courses/:courseId/learn', protect, async (req, res) => {
         status: isCompleted ? 'completed' : (isUnlocked ? 'in_progress' : 'locked'),
         progressPct: modProg?.progressPct || 0,
         lessons: lessonsWithProgress,
-        quizzes: quizzes.map(q => {
+        quizzes: await Promise.all(quizzes.map(async (q) => {
           const rec = progress?.assessmentRecords?.find(ar => ar.quizId.toString() === q._id.toString());
+          const quizQuestions = await Question.find({ quiz: q._id }).select('-correctAnswer').sort({ order: 1 });
           return {
             _id: q._id,
             title: q.title,
@@ -236,8 +237,9 @@ router.get('/courses/:courseId/learn', protect, async (req, res) => {
             bestScore: rec?.bestScore || 0,
             passed: rec?.passed || false,
             attemptsCount: rec?.attemptsCount || 0,
+            questions: quizQuestions,
           };
-        }),
+        })),
         assignments: assignments.map(a => {
           const sub = progress?.assignmentSubmissions?.find(as => as.assignmentId.toString() === a._id.toString());
           return {

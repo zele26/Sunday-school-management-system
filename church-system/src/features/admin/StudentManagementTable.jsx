@@ -59,81 +59,8 @@ export const formatStudentCount = (count) => {
   return `${num} ተማሪዎች`;
 };
 
-// Default high-fidelity mock data matching the Sunday School management system
-export const initialMockStudents = [
-  {
-    _id: 'std-001',
-    studentId: 'TKR-2019-0001',
-    firstName: 'ዘለቀ',
-    middleName: 'ፍስሃ',
-    lastName: 'ገ/ህይወት',
-    grade: 'Grade 10',
-    studentType: 'regular',
-    shift: 'weekend',
-    contactPhone: '+251 911 234 567',
-    email: 'zeleke.fisseha@example.com',
-    qrCode: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><rect x="10" y="10" width="30" height="30" fill="black"/><rect x="60" y="10" width="30" height="30" fill="black"/><rect x="10" y="60" width="30" height="30" fill="black"/><rect x="20" y="20" width="10" height="10" fill="white"/><rect x="70" y="20" width="10" height="10" fill="white"/><rect x="20" y="70" width="10" height="10" fill="white"/><rect x="50" y="50" width="20" height="20" fill="black"/></svg>',
-    teachers: [{ name: 'መምህር ዳዊት', course: 'ነገረ መለኮት' }],
-    emergencyFirstName: 'ፍስሃ',
-    emergencyLastName: 'ገ/ህይወት',
-    relationship: 'አባት',
-    emergencyPhone: '+251 912 345 678',
-  },
-  {
-    _id: 'std-002',
-    studentId: 'TKR-2019-0002',
-    firstName: 'ማርታ',
-    middleName: 'ተክሌ',
-    lastName: 'ወልደማርያም',
-    grade: 'Grade 8',
-    studentType: 'regular',
-    shift: 'night',
-    contactPhone: '+251 922 456 789',
-    email: 'marta.tekle@example.com',
-    qrCode: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><rect x="10" y="10" width="30" height="30" fill="black"/><rect x="60" y="10" width="30" height="30" fill="black"/><rect x="10" y="60" width="30" height="30" fill="black"/></svg>',
-    teachers: [{ name: 'መምህር ዮሐንስ', course: 'የቤተክርስቲያን ታሪክ' }],
-    emergencyFirstName: 'ተክሌ',
-    emergencyLastName: 'ወልደማርያም',
-    relationship: 'አባት',
-    emergencyPhone: '+251 922 111 222',
-  },
-  {
-    _id: 'std-003',
-    studentId: 'TKR-2020-0045',
-    firstName: 'አቤል',
-    middleName: 'ዮናስ',
-    lastName: 'ተስፋዬ',
-    grade: 'Grade 12',
-    studentType: 'distance',
-    shift: 'night',
-    contactPhone: '+251 933 567 890',
-    email: 'abel.yonas@example.com',
-    qrCode: null,
-    teachers: [],
-    emergencyFirstName: 'ዮናስ',
-    emergencyLastName: 'ተስፋዬ',
-    relationship: 'አባት',
-    emergencyPhone: '+251 933 999 888',
-  },
-  {
-    _id: 'std-004',
-    studentId: 'TKR-2021-0089',
-    firstName: 'ሰላማዊት',
-    middleName: 'ግርማ',
-    lastName: 'አሰፋ',
-    grade: 'Grade 9',
-    studentType: 'regular',
-    shift: 'weekend',
-    contactPhone: '+251 944 678 901',
-    email: 'selamawit.g@example.com',
-    qrCode: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><rect x="10" y="10" width="30" height="30" fill="black"/><rect x="60" y="10" width="30" height="30" fill="black"/><rect x="10" y="60" width="30" height="30" fill="black"/></svg>',
-    teachers: [{ name: 'መምህር ሳሙኤል', course: 'ግእዝ ቋንቋ' }],
-    emergencyFirstName: 'ግርማ',
-    emergencyLastName: 'አሰፋ',
-    relationship: 'አባት',
-    emergencyPhone: '+251 944 333 444',
-  },
-];
+// Default empty student list for production
+export const initialMockStudents = [];
 
 /**
  * Accessible Lightweight Tooltip Component
@@ -161,7 +88,7 @@ const SimpleTooltip = ({ content, children }) => {
 };
 
 export default function StudentManagementTable({
-  initialStudents = initialMockStudents,
+  initialStudents = [],
   onAddNewStudent,
   onExportCsv,
   onGenerateBatchQr,
