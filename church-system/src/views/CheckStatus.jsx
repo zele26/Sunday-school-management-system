@@ -58,11 +58,11 @@ const getStatusMessage = (status, studentType, isAmharic) => {
           : 'Pending payment deposit slip. Please complete your bank deposit and upload your receipt.';
       case 'Pending Verification':
         return isAmharic
-          ? 'የክፍያ ደረሰኝዎ ደርሶናል፤ በሂሳብ ክፍል በመረጋገጥ ላይ ነው። እንደተረጋገጠ የተማሪ መለያዎ ዝግጁ ይሆናል።'
+          ? 'የክፍያ ደረሰኝዎ ደርሶናል፤ በሂሳብ ክፍል በመረጋገጥ ላይ ነው።'
           : 'Your payment slip has been received and is being verified by the finance department.';
       case 'Approved':
         return isAmharic
-          ? 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። የተማሪ መለያ ቁጥርዎን እና የይለፍ ቃልዎን ተጠቅመው ወደ ኦንላይን መማሪያ ፖርታል መግባት ይችላሉ።'
+          ? 'እንኳን ደስ አዎት! ምዝገባዎ ጸድቋል። ስልክ ቁጥርዎን እና የይለፍ ቃልዎን ተጠቅመው ወደ ኦንላይን መማሪያ ፖርታል መግባት ይችላሉ።'
           : 'Congratulations! Your distance registration is approved. You may now sign in to your online LMS portal.';
       case 'Rejected':
         return isAmharic
@@ -159,13 +159,12 @@ const CheckStatusContent = () => {
           >
             {/* Status Icon */}
             <div
-              className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center shadow-sm border ${
-                result.status === 'Approved'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                  : result.status === 'Rejected'
+              className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center shadow-sm border ${result.status === 'Approved'
+                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                : result.status === 'Rejected'
                   ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
                   : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-              }`}
+                }`}
             >
               {result.status === 'Approved' ? (
                 <CheckCircle2 className="w-8 h-8" />
@@ -179,19 +178,18 @@ const CheckStatusContent = () => {
             {/* Status Title & Badge */}
             <div className="space-y-1.5">
               <span
-                className={`inline-block px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                  result.status === 'Approved'
-                    ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300'
-                    : result.status === 'Rejected'
+                className={`inline-block px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${result.status === 'Approved'
+                  ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300'
+                  : result.status === 'Rejected'
                     ? 'bg-rose-100 text-rose-900 border-rose-200 dark:bg-rose-950/70 dark:text-rose-300'
                     : 'bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-950/70 dark:text-amber-300'
-                }`}
+                  }`}
               >
                 {result.status === 'Approved'
                   ? t('statusApprovedBadge', '✓ ምዝገባዎ ጸድቋል')
                   : result.status === 'Rejected'
-                  ? t('statusRejectedBadge', '✕ ምዝገባው ውድቅ ሆኗል')
-                  : t('statusPendingBadge', '⏳ በክለሳ ላይ ይገኛል')}
+                    ? t('statusRejectedBadge', '✕ ምዝገባው ውድቅ ሆኗል')
+                    : t('statusPendingBadge', '⏳ በክለሳ ላይ ይገኛል')}
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 {result.fullName || t('studentInfo', 'የተማሪ መረጃ')}

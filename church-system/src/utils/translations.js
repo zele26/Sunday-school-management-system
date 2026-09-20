@@ -3254,16 +3254,16 @@ export const translations = {
     am: 'የአስተዳደር ማረጋገጫ',
   },
   roadmapStep2Desc: {
-    en: 'Upon review and approval, your official Student ID will be generated.',
-    am: 'መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።',
+    en: 'Upon review and approval, you can officially sign in using your registered phone number and password.',
+    am: 'መረጃዎ ሲጸድቅ በይፋ በስልክ ቁጥርዎ እና የይለፍ ቃል ተጠቅመው የተማሪነት በየነመረብ አገልግሎቱን ማግኘት ይችላሉ።',
   },
   roadmapStep3Title: {
     en: 'Classroom Access',
     am: 'ወደ ትምህርት መግባት',
   },
   roadmapStep3Desc: {
-    en: 'Access your dashboard to view course materials, attendance, and grades.',
-    am: 'በተማሪ መለያ ቁጥርዎ ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።',
+    en: 'Sign in to the student portal with your phone number and password to access courses and grades.',
+    am: 'በስልክ ቁጥርዎ እና የይለፍ ቃል ተጠቅመው ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።',
   },
   checkStatusBtnText: {
     en: 'Check Application Status',
