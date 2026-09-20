@@ -22,15 +22,15 @@ const getTranslations = (isAmharic, firstName) => ({
   howToLink: isAmharic ? 'እንዴት ማገናኘት ይቻላል?' : 'How to Link:',
   steps: isAmharic
     ? [
-        'ወደ ቴሌግራም ቦቱ ውይይት (Chat) ይመለሱ።',
-        '"📱 ስልክ ቁጥር ያገናኙ (Link Phone)" የሚለውን አዝራር ይጫኑ።',
-        'ከዚያ ይህን ፖርታል በድጋሚ ይክፈቱ።',
-      ]
+      'ወደ ቴሌግራም ቦቱ ውይይት (Chat) ይመለሱ።',
+      '"📱 ስልክ ቁጥር ያገናኙ (Link Phone)" የሚለውን ይጫኑ።',
+      'ከዚያ ይህን ፖርታል በድጋሚ ይክፈቱ።',
+    ]
     : [
-        'Go back to the Telegram Bot chat.',
-        'Tap the "📱 Link Phone" button.',
-        'Then reopen this portal.',
-      ],
+      'Go back to the Telegram Bot chat.',
+      'Tap the "📱 Link Phone" button.',
+      'Then reopen this portal.',
+    ],
   loginBtn: isAmharic
     ? 'በስልክና በፓስዎርድ ይግቡ (Login with Password)'
     : 'Login with Password',
