@@ -320,11 +320,10 @@ const Login = () => {
                         'userIdentifierPlaceholder',
                         'ስልክ ቁጥር፣ ኢሜይል ወይም መለያ ቁጥር (TKD-...)'
                       )}
-                      className={`w-full pl-10 pr-4 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
-                        errors.credential
+                      className={`w-full pl-10 pr-4 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${errors.credential
                           ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                           : 'border-slate-200 dark:border-slate-700 focus:border-[#1657b8] focus:ring-[#1657b8]/20'
-                      }`}
+                        }`}
                     />
                   </div>
                   {errors.credential && (
@@ -355,11 +354,10 @@ const Login = () => {
                       type={showPassword ? 'text' : 'password'}
                       {...register('password')}
                       placeholder="••••••••"
-                      className={`w-full pl-10 pr-11 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${
-                        errors.password
+                      className={`w-full pl-10 pr-11 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-800/80 border rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:bg-white dark:focus:bg-slate-800 focus:ring-2 transition-all outline-none font-medium ${errors.password
                           ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
                           : 'border-slate-200 dark:border-slate-700 focus:border-[#1657b8] focus:ring-[#1657b8]/20'
-                      }`}
+                        }`}
                     />
                     <button
                       type="button"

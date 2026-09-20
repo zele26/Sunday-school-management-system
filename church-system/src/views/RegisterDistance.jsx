@@ -815,4 +815,4 @@ const RegisterDistanceContent = () => {
   );
 };
 
-export default RegisterDistanceContent;
+export default RegisterDistanceContent;
