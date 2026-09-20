@@ -27,6 +27,8 @@ import {
   Moon,
   Clock,
   UserX,
+  MoreHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
@@ -44,9 +46,15 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '../../components/ui';
 import {
   useStudents,
+  useDeleteStudent,
   useBulkDeleteStudents,
   useGenerateStudentQR,
   useGenerateAllQR,
@@ -142,6 +150,7 @@ const StudentsManagement = () => {
   const { data: courses = [] } = useCourses();
 
   // Mutations
+  const deleteStudentMutation = useDeleteStudent();
   const bulkDeleteMutation = useBulkDeleteStudents();
   const generateQRMutation = useGenerateStudentQR();
   const generateAllQRMutation = useGenerateAllQR();
@@ -220,7 +229,6 @@ const StudentsManagement = () => {
       onSuccess: () => setRowSelection({}),
     });
   };
-
 
   const [isExporting, setIsExporting] = useState(false);
 
@@ -411,18 +419,20 @@ const StudentsManagement = () => {
             s.fullName ||
             'ስም ያልተጠቀሰ';
           const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
+          const initial = s.firstName ? s.firstName.trim().charAt(0) : 'ተ';
+
           return (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs uppercase">
-                {s.firstName ? s.firstName.charAt(0) : 'ተ'}
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs flex items-center justify-center shrink-0 uppercase">
+                {initial}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                  <span className="font-semibold text-slate-900 dark:text-white text-sm block leading-tight truncate">
                     {fullName}
                   </span>
                   {isDeactivated && (
-                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
                       የታገደ
                     </span>
                   )}
@@ -441,14 +451,13 @@ const StudentsManagement = () => {
           );
         },
       },
-
       {
         accessorKey: 'studentId',
         header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ መለያ" />,
         cell: ({ getValue, row }) => {
           const val = getValue() || row.original.studentId || row.original._id?.slice(-8)?.toUpperCase() || '-';
           return (
-            <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded tracking-wider border border-slate-200/60 dark:border-slate-700/60 inline-block">
+            <span className="font-mono text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 px-2 py-0.5 rounded border border-slate-200/60 dark:border-slate-700/60 inline-block">
               {val}
             </span>
           );
@@ -456,11 +465,11 @@ const StudentsManagement = () => {
       },
       {
         accessorKey: 'grade',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="የትምህርት ደረጃ" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል" />,
         cell: ({ getValue }) => {
           const gradeValue = getValue();
           return (
-            <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-2 py-0.5 rounded text-xs inline-flex items-center">
+            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
               {formatGradeAmharic(gradeValue)}
             </span>
           );
@@ -471,319 +480,177 @@ const StudentsManagement = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="ዓይነት / ፈረቃ" />,
         cell: ({ row }) => {
           const s = row.original;
-          const type = s.studentType;
-          const shift = s.shift;
-
+          const isDistance = s.studentType === 'distance';
           return (
-            <div className="flex flex-col gap-1 items-start">
-              {type === 'distance' ? (
-                <span className="bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 text-[11px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1">
-                  <Globe className="w-3 h-3" />
-                  <span>የርቀት</span>
-                </span>
-              ) : (
-                <span className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 text-[11px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1">
-                  <GraduationCap className="w-3 h-3" />
-                  <span>መደበኛ</span>
+            <div className="flex flex-col gap-0.5">
+              <span className={`text-xs font-semibold ${isDistance ? 'text-purple-600 dark:text-purple-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                {isDistance ? 'የርቀት' : 'መደበኛ'}
+              </span>
+              {s.shift && (
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                  {s.shift === 'night' ? 'የማታ' : 'የሳምንት መጨረሻ'}
                 </span>
               )}
-
-              {/* Shift Tag: Weekend or Night */}
-              {shift === 'night' ? (
-                <span className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/60 text-[10px] px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1">
-                  <Moon className="w-2.5 h-2.5" />
-                  <span>የማታ (Night)</span>
-                </span>
-              ) : shift === 'weekend' ? (
-                <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 text-[10px] px-2 py-0.5 rounded-md font-medium inline-flex items-center gap-1">
-                  <Sun className="w-2.5 h-2.5" />
-                  <span>የሳምንት መጨረሻ</span>
-                </span>
-              ) : null}
             </div>
           );
         },
       },
-      {
-        id: 'teachers',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="የኮርስ መምህራን" />,
-        cell: ({ row }) => {
-          const student = row.original;
-          const courseTeacherItems = [];
-          if (Array.isArray(student.courses) && student.courses.length > 0) {
-            student.courses.forEach((c) => {
-              if (c.teacher?.fullName) {
-                courseTeacherItems.push({ courseName: c.name, teacherName: c.teacher.fullName });
-              }
-            });
-          }
 
-          if (courseTeacherItems.length > 0) {
-            return (
-              <div className="flex flex-col gap-1 max-w-[220px]">
-                {courseTeacherItems.slice(0, 2).map((item, idx) => (
-                  <div key={idx} className="text-xs leading-tight">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{item.teacherName}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1 truncate">
-                      ({item.courseName})
-                    </span>
-                  </div>
-                ))}
-                {courseTeacherItems.length > 2 && (
-                  <span className="text-[10px] text-slate-400">+{courseTeacherItems.length - 2} ተጨማሪ</span>
-                )}
-              </div>
-            );
-          }
-
-          if (Array.isArray(student.teachers) && student.teachers.length > 0) {
-            return (
-              <div className="flex flex-wrap gap-1">
-                {student.teachers.map((t, idx) => (
-                  <Badge key={idx} variant="neutral" size="sm">
-                    {t.fullName || t.name}
-                  </Badge>
-                ))}
-              </div>
-            );
-          }
-
-          if (student.teacher?.fullName) {
-            return (
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {student.teacher.fullName}
-              </span>
-            );
-          }
-
-          return <span className="text-xs text-slate-400 italic">ያልተመደበ</span>;
-        },
-      },
-      {
-        id: 'qrStatus',
-        header: 'የQR ኮድ ሁኔታ',
-        cell: ({ row }) => {
-          const s = row.original;
-          if (s.qrCode) {
-            return (
-              <button
-                type="button"
-                onClick={() => openQrModal(s)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 transition-colors cursor-pointer"
-                title="የQR ባጅ ይመልከቱ"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>✓ ተዘጋጅቷል</span>
-              </button>
-            );
-          }
-          return (
-            <button
-              type="button"
-              onClick={() => generateQRMutation.mutate(s._id)}
-              disabled={generateQRMutation.isPending}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer disabled:opacity-50"
-              title="አዲስ የQR ኮድ ያመንጩ"
-            >
-              <QrCode className="w-3.5 h-3.5 text-slate-500" />
-              <span>አልተዘጋጀም</span>
-            </button>
-          );
-        },
-      },
       {
         id: 'actions',
         header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const s = row.original;
           const fullName = s.fullName || [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || 'ተማሪ';
-          return (
-            <TooltipProvider delayDuration={150}>
-              <div className="flex items-center justify-end gap-1">
-                {/* View Profile */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => openProfileModal(s)}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
-                      aria-label="የተማሪ መረጃ"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>የተማሪ መረጃ (View Profile)</p>
-                  </TooltipContent>
-                </Tooltip>
+          const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
 
-                {/* Assign Teacher */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => openTeacherModal(s)}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
-                      aria-label="መምህር መድብ"
+          return (
+            <div className="flex items-center justify-end gap-1">
+              {/* Quick View Profile Button */}
+              <button
+                type="button"
+                onClick={() => openProfileModal(s)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                title="ሙሉ መረጃ ይመልከቱ"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+
+              {/* Action Dropdown Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="ተጨማሪ ተግባራት"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-2xl p-1.5">
+                  <DropdownMenuItem onClick={() => openProfileModal(s)} className="gap-2 text-xs cursor-pointer">
+                    <Eye className="w-4 h-4 text-slate-500" />
+                    <span>ሙሉ መረጃ (View)</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild className="gap-2 text-xs cursor-pointer">
+                    <Link to={`/admin/edit-student/${s._id}`}>
+                      <Edit className="w-4 h-4 text-blue-500" />
+                      <span>መረጃ አርም (Edit)</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem onClick={() => openCourseModal(s)} className="gap-2 text-xs cursor-pointer">
+                    <BookOpen className="w-4 h-4 text-purple-500" />
+                    <span>ኮርሶችን መድብ (Courses)</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem onClick={() => openTeacherModal(s)} className="gap-2 text-xs cursor-pointer">
+                    <UserCheck className="w-4 h-4 text-emerald-500" />
+                    <span>መምህር መድብ (Teacher)</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem onClick={() => openQrModal(s)} className="gap-2 text-xs cursor-pointer">
+                    <QrCode className="w-4 h-4 text-amber-500" />
+                    <span>የQR ባጅ (QR Badge)</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
+
+                  {isDeactivated ? (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (confirm(`የ"${fullName}" አካውንት እንደገና እንዲነቃ (Activate) ይፈልጋሉ?`)) {
+                          toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'approved' });
+                        }
+                      }}
+                      className="gap-2 text-xs text-emerald-600 dark:text-emerald-400 cursor-pointer font-semibold"
                     >
                       <UserCheck className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>መምህር መድብ (Assign Teacher)</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Enrolled Courses */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => openCourseModal(s)}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40 transition-colors"
-                      aria-label="የተመዘገቡ ኮርሶች"
+                      <span>አካውንት አንቃ (Activate)</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (confirm(`የ"${fullName}" አካውንት ለጊዜው እንዲቦዝን/እንዲዘጋ (Deactivate) ይፈልጋሉ?`)) {
+                          toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'disabled' });
+                        }
+                      }}
+                      className="gap-2 text-xs text-amber-600 dark:text-amber-400 cursor-pointer font-semibold"
                     >
-                      <BookOpen className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>የተመዘገቡ ኮርሶች (Enrolled Courses)</p>
-                  </TooltipContent>
-                </Tooltip>
+                      <UserX className="w-4 h-4" />
+                      <span>አካውንት አቦዝን (Deactivate)</span>
+                    </DropdownMenuItem>
+                  )}
 
-                {/* View / Print QR Badge */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => openQrModal(s)}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
-                      aria-label="የQR ባጅ አሳይ / አትም"
-                    >
-                      <QrCode className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>የQR ባጅ አሳይ / አትም (View/Print QR Badge)</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Safe Disable / Enable Toggle Action */}
-                {s.userId?.status === 'disabled' || s.status === 'disabled' ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`የ"${fullName}" አካውንት እንደገና እንዲነቃ (Activate) ይፈልጋሉ?`)) {
-                            toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'approved' });
-                          }
-                        }}
-                        disabled={toggleStudentStatusMutation.isPending}
-                        className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
-                        aria-label="አካውንት አንቃ"
-                      >
-                        <UserCheck className="w-4 h-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>አካውንቱን አንቃ (Activate Account)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`የ"${fullName}" አካውንት ለጊዜው እንዲቦዝን/እንዲዘጋ (Deactivate) ይፈልጋሉ? መረጃዎቻቸው አይጠፉም።`)) {
-                            toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'disabled' });
-                          }
-                        }}
-                        disabled={toggleStudentStatusMutation.isPending}
-                        className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
-                        aria-label="አካውንት አቦዝን"
-                      >
-                        <UserX className="w-4 h-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>አካውንቱን አቦዝን (Deactivate Account)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-
-                {/* Edit Student */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      to={`/admin/edit-student/${s._id}`}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
-                      aria-label="አስተካክል"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>አስተካክል (Edit Student)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </TooltipProvider>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (confirm(`ተማሪ "${fullName}"ን በቋሚነት መሰረዝ ይፈልጋሉ?`)) {
+                        deleteStudentMutation.mutate(s._id);
+                      }
+                    }}
+                    className="gap-2 text-xs text-rose-600 dark:text-rose-400 cursor-pointer font-semibold"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>ተማሪውን ሰርዝ (Delete)</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           );
         },
       },
     ],
-    [generateQRMutation, toggleStudentStatusMutation]
+    [generateQRMutation, toggleStudentStatusMutation, deleteStudentMutation]
   );
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <PageHeader
         title="የተማሪዎች አስተዳደር"
         subtitle="ተማሪዎችን ያስተዳድሩ፤ መምህራንን እና ኮርሶችን ይመድቡ፤ የ QR ኮድ ያመንጩ"
         icon={Users}
         badge={
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
             {formatStudentCount(stats.total)}
           </span>
         }
         actions={
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Secondary Action 2: CSV Export */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* CSV Export */}
             <Button
               variant="outline"
               size="sm"
               onClick={handleDownload}
               disabled={isExporting}
-              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xs px-3.5 py-2 font-semibold gap-1.5"
+              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold gap-1.5"
             >
-              <Download className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${isExporting ? 'animate-bounce' : ''}`} />
+              <Download className={`w-3.5 h-3.5 text-slate-600 dark:text-slate-300 ${isExporting ? 'animate-bounce' : ''}`} />
               <span>{isExporting ? 'በማውረድ ላይ...' : 'መረጃ ላክ (CSV)'}</span>
             </Button>
 
-            {/* Secondary Action 1: Batch QR Generation */}
+            {/* Batch QR Generation */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => generateAllQRMutation.mutate()}
               disabled={generateAllQRMutation.isPending}
-              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xs px-3.5 py-2 font-semibold gap-1.5"
+              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold gap-1.5"
             >
-              <QrCode className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+              <QrCode className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
               <span>{generateAllQRMutation.isPending ? 'በማመንጨት ላይ...' : 'ሁሉንም QR አመንጭ'}</span>
             </Button>
 
-            {/* Primary Action: Add Student */}
+            {/* Add Student */}
             <Link to="/admin/add-student">
               <Button
                 variant="primary"
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-lg shadow-sm px-4 py-2 gap-1.5 border-transparent"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg px-3.5 py-1.5 text-xs gap-1.5 border-transparent"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="w-3.5 h-3.5" />
                 <span>+ አዲስ ተማሪ</span>
               </Button>
             </Link>
@@ -791,246 +658,268 @@ const StudentsManagement = () => {
         }
       />
 
-      {/* Metric KPI Cards (Visual Anchors) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Sleek Minimal KPI Bar with Interactive Filters */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Total Students */}
-        <Card
-          variant="default"
-          padding="none"
-          className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow"
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter('');
+            setQrFilter('');
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+            !typeFilter && !qrFilter
+              ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 shadow-2xs ring-1 ring-blue-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          }`}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                አጠቃላይ ተማሪዎች
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1.5 tracking-tight">
-                {stats.total}
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center shrink-0 shadow-xs">
-              <Users className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">ጠቅላላ ተማሪዎች</span>
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
-        </Card>
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            {stats.total}
+          </div>
+        </button>
 
         {/* Regular Students */}
-        <Card
-          variant="default"
-          padding="none"
-          className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow"
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter((prev) => (prev === 'regular' ? '' : 'regular'));
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+            typeFilter === 'regular'
+              ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 shadow-2xs ring-1 ring-emerald-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          }`}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                መደበኛ ተማሪዎች
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1.5 tracking-tight">
-                {stats.regular}
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-center shrink-0 shadow-xs">
-              <GraduationCap className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">መደበኛ ተማሪዎች</span>
+            <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-        </Card>
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            {stats.regular}
+          </div>
+        </button>
 
         {/* Distance Students */}
-        <Card
-          variant="default"
-          padding="none"
-          className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow"
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter((prev) => (prev === 'distance' ? '' : 'distance'));
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+            typeFilter === 'distance'
+              ? 'bg-purple-50/70 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 shadow-2xs ring-1 ring-purple-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          }`}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-                የርቀት ተማሪዎች
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 mt-1.5 tracking-tight">
-                {stats.distance}
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 flex items-center justify-center shrink-0 shadow-xs">
-              <Globe className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">የርቀት ተማሪዎች</span>
+            <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
-        </Card>
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            {stats.distance}
+          </div>
+        </button>
 
-        {/* QR Badge Students */}
-        <Card
-          variant="default"
-          padding="none"
-          className="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow"
+        {/* QR Ready Students */}
+        <button
+          type="button"
+          onClick={() => {
+            setQrFilter((prev) => (prev === 'with_qr' ? '' : 'with_qr'));
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+            qrFilter === 'with_qr'
+              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 shadow-2xs ring-1 ring-amber-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+          }`}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                QR ያላቸው ተማሪዎች
-              </p>
-              <p className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 mt-1.5 tracking-tight">
-                {stats.withQR}
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center shrink-0 shadow-xs">
-              <QrCode className="w-5 h-5" />
-            </div>
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">QR ያላቸው</span>
+            <QrCode className="w-4 h-4 text-amber-600 dark:text-amber-400" />
           </div>
-        </Card>
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
+            {stats.withQR}
+          </div>
+        </button>
       </div>
 
-      {/* Unified Search & Filter Bar (Including Weekend / Night Learning Type) */}
-      <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-        {/* Search Input */}
-        <div className="flex-1 min-w-[200px]">
-          <Input
-            icon={Search}
-            placeholder="በስም፣ በመለያ ወይም በስልክ ቁጥር ይፈልጉ..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-            }}
-          />
-        </div>
+      {/* Clean Unified Search & Filter Toolbar */}
+      <div className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+          {/* Search Input */}
+          <div className="flex-1 relative min-w-[200px]">
+            <Input
+              icon={Search}
+              placeholder="በስም፣ በመለያ ወይም በስልክ ቁጥር ይፈልጉ..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                title="ፍለጋ አጽዳ"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-        {/* Dropdown 1: Grade Filter (1ኛ - 12ኛ ክፍል) */}
-        <div className="w-full sm:w-auto min-w-[130px]">
-          <Select
-            value={gradeFilter}
-            onChange={(e) => {
-              setGradeFilter(e.target.value);
-              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-            }}
-          >
-            <option value="">ሁሉም ክፍሎች</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
-              <option key={g} value={`Grade ${g}`}>
-                {g}ኛ ክፍል
-              </option>
-            ))}
-          </Select>
-        </div>
+          {/* Grade Filter */}
+          <div className="w-full sm:w-auto sm:min-w-[120px]">
+            <Select
+              value={gradeFilter}
+              onChange={(e) => {
+                setGradeFilter(e.target.value);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            >
+              <option value="">ክፍል (ሁሉም)</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                <option key={g} value={`Grade ${g}`}>
+                  {g}ኛ ክፍል
+                </option>
+              ))}
+            </Select>
+          </div>
 
-        {/* Dropdown 2: Student Type Filter (መደበኛ / ርቀት) */}
-        <div className="w-full sm:w-auto min-w-[150px]">
-          <Select
-            value={typeFilter}
-            onChange={(e) => {
-              setTypeFilter(e.target.value);
-              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-            }}
-          >
-            <option value="">ሁሉም ዓይነቶች</option>
-            <option value="regular">መደበኛ</option>
-            <option value="distance">የርቀት</option>
-          </Select>
-        </div>
+          {/* Student Type Filter */}
+          <div className="w-full sm:w-auto sm:min-w-[120px]">
+            <Select
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            >
+              <option value="">ዓይነት (ሁሉም)</option>
+              <option value="regular">መደበኛ</option>
+              <option value="distance">የርቀት</option>
+            </Select>
+          </div>
 
-        {/* Dropdown 3: Learning Type / Shift Filter (Weekend vs Night) */}
-        <div className="w-full sm:w-auto min-w-[165px]">
-          <Select
-            value={shiftFilter}
-            onChange={(e) => {
-              setShiftFilter(e.target.value);
-              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-            }}
-          >
-            <option value="">የመማሪያ ፈረቃ (ሁሉም)</option>
-            <option value="weekend">የሳምንት መጨረሻ (Weekend)</option>
-            <option value="night">የማታ (Night)</option>
-          </Select>
-        </div>
+          {/* Shift Filter */}
+          <div className="w-full sm:w-auto sm:min-w-[130px]">
+            <Select
+              value={shiftFilter}
+              onChange={(e) => {
+                setShiftFilter(e.target.value);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            >
+              <option value="">ፈረቃ (ሁሉም)</option>
+              <option value="weekend">የሳምንት መጨረሻ</option>
+              <option value="night">የማታ (Night)</option>
+            </Select>
+          </div>
 
-        {/* Dropdown 4: QR Status Filter */}
-        <div className="w-full sm:w-auto min-w-[130px]">
-          <Select
-            value={qrFilter}
-            onChange={(e) => {
-              setQrFilter(e.target.value);
-              setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-            }}
-          >
-            <option value="">የQR ሁኔታ</option>
-            <option value="with_qr">የተዘጋጀለት</option>
-            <option value="without_qr">የሌለው</option>
-          </Select>
+          {/* Reset Filters */}
+          {(search || gradeFilter || typeFilter || shiftFilter || qrFilter) && (
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setSearch('');
+                setGradeFilter('');
+                setTypeFilter('');
+                setShiftFilter('');
+                setQrFilter('');
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+              className="gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 shrink-0"
+              title="ሁሉንም ማጣሪያዎች ዳግም ጀምር"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>ዳግም ጀምር</span>
+            </Button>
+          )}
         </div>
 
         {/* Batch Actions Button Bar */}
         {selectedStudentIds.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Bulk Assign Courses */}
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => {
-                setBulkSelectedCourseIds([]);
-                setBulkCourseMode('replace');
-                setBulkCourseSearch('');
-                setBulkCourseGradeFilter('');
-                setShowBulkCourseModal(true);
-              }}
-              className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 gap-1.5 shrink-0 font-bold"
-              title="ለተመረጡት ተማሪዎች ኮርሶችን በጅምላ መድብ"
-            >
-              <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>ኮርስ መድብ ({selectedStudentIds.length})</span>
-            </Button>
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+              <span>{selectedStudentIds.length} ተማሪዎች ተመርጠዋል</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setBulkSelectedCourseIds([]);
+                  setBulkCourseMode('replace');
+                  setBulkCourseSearch('');
+                  setBulkCourseGradeFilter('');
+                  setShowBulkCourseModal(true);
+                }}
+                className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 gap-1.5 font-semibold text-xs"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>ኮርስ መድብ</span>
+              </Button>
 
-            {/* Bulk Assign Teacher */}
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => {
-                setBulkSelectedTeacherId('');
-                setBulkTeacherMode('set');
-                setShowBulkTeacherModal(true);
-              }}
-              className="bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 gap-1.5 shrink-0 font-bold"
-              title="ለተመረጡት ተማሪዎች መምህር በጅምላ መድብ"
-            >
-              <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              <span>መምህር መድብ ({selectedStudentIds.length})</span>
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setBulkSelectedTeacherId('');
+                  setBulkTeacherMode('set');
+                  setShowBulkTeacherModal(true);
+                }}
+                className="bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 gap-1.5 font-semibold text-xs"
+              >
+                <GraduationCap className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span>መምህር መድብ</span>
+              </Button>
 
-            {/* Bulk Disable */}
-            <Button
-              variant="warning"
-              size="md"
-              onClick={handleBulkDisable}
-              disabled={bulkToggleStudentStatusMutation.isPending}
-              className="gap-1.5 shrink-0"
-              title="የተመረጡትን ተማሪዎች አካውንት ለጊዜው አቦዝን"
-            >
-              <UserX className="w-4 h-4" />
-              <span>{bulkToggleStudentStatusMutation.isPending ? 'በማቦዘን ላይ...' : `አቦዝን (${selectedStudentIds.length})`}</span>
-            </Button>
+              <Button
+                variant="warning"
+                size="sm"
+                onClick={handleBulkDisable}
+                disabled={bulkToggleStudentStatusMutation.isPending}
+                className="gap-1.5 font-semibold text-xs"
+              >
+                <UserX className="w-3.5 h-3.5" />
+                <span>አቦዝን</span>
+              </Button>
 
-            {/* Bulk Enable */}
-            <Button
-              variant="success"
-              size="md"
-              onClick={handleBulkEnable}
-              disabled={bulkToggleStudentStatusMutation.isPending}
-              className="gap-1.5 shrink-0"
-              title="የተመረጡትን ተማሪዎች አካውንት አንቃ"
-            >
-              <UserCheck className="w-4 h-4" />
-              <span>{bulkToggleStudentStatusMutation.isPending ? 'በማንቃት ላይ...' : `አንቃ (${selectedStudentIds.length})`}</span>
-            </Button>
+              <Button
+                variant="success"
+                size="sm"
+                onClick={handleBulkEnable}
+                disabled={bulkToggleStudentStatusMutation.isPending}
+                className="gap-1.5 font-semibold text-xs"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>አንቃ</span>
+              </Button>
 
-            {/* Bulk Delete */}
-            <Button
-              variant="danger"
-              size="md"
-              onClick={handleDeleteSelected}
-              disabled={bulkDeleteMutation.isPending}
-              className="gap-1.5 shrink-0"
-              title="የተመረጡትን ተማሪዎች በቋሚነት ሰርዝ"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>{bulkDeleteMutation.isPending ? 'በመሰረዝ ላይ...' : `ሰርዝ (${selectedStudentIds.length})`}</span>
-            </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDeleteSelected}
+                disabled={bulkDeleteMutation.isPending}
+                className="gap-1.5 font-semibold text-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>ሰርዝ</span>
+              </Button>
+            </div>
           </div>
         )}
       </div>
