@@ -14,6 +14,49 @@ const getStudentFullName = (s) => {
   return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim() || 'ተማሪ';
 };
 
+const formatGradeAmharic = (g) => {
+  if (!g) return '';
+  const num = g.match(/\d+/);
+  if (g.toLowerCase().includes('batch') || g.includes('ዙር')) return num ? `ዙር ${num[0]} (የርቀት)` : g;
+  if (num) return `${num[0]}ኛ ክፍል`;
+  return g;
+};
+
+const isStudentEligibleForCourse = (student, course) => {
+  if (!course) return { eligible: true };
+
+  const studentType = (student.studentType || 'regular').toString().trim().toLowerCase();
+  const courseStudentType = (course.studentType || 'regular').toString().trim().toLowerCase();
+  if (courseStudentType && studentType && courseStudentType !== studentType) {
+    return {
+      eligible: false,
+      reason: `⚠️ ይህ ተማሪ ለዚህ የትምህርት ዘርፍ አልተመደበም። የተማሪው ዘርፍ፦ ${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'} | የኮርሱ ዘርፍ፦ ${courseStudentType === 'distance' ? 'የርቀት' : 'መደበኛ'}`
+    };
+  }
+
+  if (course.grade) {
+    const studentGrade = (student.grade || student.batch || '').toString().trim().toLowerCase();
+    const courseGrade = course.grade.toString().trim().toLowerCase();
+
+    if (!studentGrade) return { eligible: true };
+
+    const norm = (str) => {
+      const m = str.match(/\d+/);
+      if (m) return (str.includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+      return str.replace(/\s+/g, '');
+    };
+
+    if (norm(studentGrade) !== norm(courseGrade)) {
+      return {
+        eligible: false,
+        reason: `⚠️ ይህ ተማሪ ለተመረጠው ኮርስ (${course.name}) አልተመደበም። የተማሪው ክፍል፦ ${formatGradeAmharic(student.grade || student.batch)} | የኮርሱ ክፍል፦ ${formatGradeAmharic(course.grade)}`
+      };
+    }
+  }
+
+  return { eligible: true };
+};
+
 // All routes require authentication
 router.use(protect);
 
@@ -118,6 +161,24 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
     if (courseId) {
       const course = await Course.findById(courseId).populate('teacher', 'fullName');
       if (course) {
+        // Validate if student is eligible for this course
+        const eligibility = isStudentEligibleForCourse(student, course);
+        if (!eligibility.eligible) {
+          return res.status(400).json({
+            success: false,
+            notAssigned: true,
+            message: eligibility.reason,
+            student: {
+              id: student._id,
+              name: getStudentFullName(student),
+              grade: student.grade || student.batch || '',
+              studentType: student.studentType || 'regular',
+              shift: student.shift || '',
+              studentId: student.studentId || '',
+            },
+          });
+        }
+
         courseName = course.name;
         if (course.teacher) {
           teacher = course.teacher._id;
@@ -264,6 +325,24 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
     if (courseId) {
       const course = await Course.findById(courseId).populate('teacher', 'fullName');
       if (course) {
+        // Validate if student is eligible for this course
+        const eligibility = isStudentEligibleForCourse(student, course);
+        if (!eligibility.eligible) {
+          return res.status(400).json({
+            success: false,
+            notAssigned: true,
+            message: eligibility.reason,
+            student: {
+              id: student._id,
+              name: getStudentFullName(student),
+              grade: student.grade || student.batch || '',
+              studentType: student.studentType || 'regular',
+              shift: student.shift || '',
+              studentId: student.studentId || '',
+            },
+          });
+        }
+
         courseName = course.name;
         if (course.teacher) {
           teacher = course.teacher._id;
