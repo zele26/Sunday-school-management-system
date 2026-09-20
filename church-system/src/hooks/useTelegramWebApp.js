@@ -177,11 +177,27 @@ export function useTelegramWebApp() {
     }
   }, []);
 
+  const setBackButton = useCallback((show, onClick) => {
+    try {
+      const backBtn = window.Telegram?.WebApp?.BackButton;
+      if (!backBtn) return;
+      backBtn.offClick?.();
+      if (show) {
+        backBtn.show();
+        if (typeof onClick === 'function') {
+          backBtn.onClick(onClick);
+        }
+      } else {
+        backBtn.hide();
+      }
+    } catch (e) {}
+  }, []);
+
   const retryAuth = useCallback(() => {
     const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
     if (tg) {
       authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
-    } else {
+    } else if (typeof window !== 'undefined') {
       window.location.reload();
     }
   }, [authenticateWithTelegram]);
@@ -193,6 +209,7 @@ export function useTelegramWebApp() {
     authError,
     themeParams,
     triggerHaptic,
+    setBackButton,
     closeTelegramApp,
     openTelegramLink,
     retryAuth,

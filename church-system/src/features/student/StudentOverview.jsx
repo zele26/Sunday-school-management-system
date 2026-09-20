@@ -210,16 +210,26 @@ const StudentOverview = () => {
               </div>
             </div>
 
-            {/* Quick Digital ID Button */}
-            <div className="shrink-0 w-full md:w-auto">
+            {/* Quick Digital ID and Telegram Bot Buttons */}
+            <div className="shrink-0 w-full md:w-auto flex flex-wrap items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowQrModal(true)}
-                className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-xs"
+                className="flex-1 md:flex-initial px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
-                <QrCode className="w-4 h-4 text-amber-300" />
-                <span>{isAmharic ? 'የተማሪ መታወቂያ (QR)' : 'Digital Student ID'}</span>
+                <QrCode className="w-4 h-4" />
+                <span>{isAmharic ? 'የተማሪ QR ባጅ' : 'Digital QR Pass'}</span>
               </button>
+
+              <a
+                href="https://t.me/TekleSawirosSundaySchoolBot"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 md:flex-initial px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 border border-white/20 text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 backdrop-blur-xs"
+              >
+                <span className="text-blue-300">✈️</span>
+                <span>{isAmharic ? 'የቴሌግራም ቦት' : 'Telegram Bot'}</span>
+              </a>
             </div>
           </div>
         </div>
