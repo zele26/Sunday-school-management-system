@@ -6,9 +6,30 @@ import useAuthStore from '../store/authStore';
 import { apiFetch } from '../api/apiClient';
 
 export function useTelegramWebApp() {
-  const [isTelegram, setIsTelegram] = useState(false);
-  const [telegramUser, setTelegramUser] = useState(null);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isTelegram, setIsTelegram] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(
+      window.Telegram?.WebApp?.initData ||
+      window.Telegram?.WebApp?.initDataUnsafe?.user ||
+      window.location.search.includes('tgWebApp=1') ||
+      window.location.hash.includes('tgWebAppData')
+    );
+  });
+  const [telegramUser, setTelegramUser] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+  });
+  const [isAuthenticating, setIsAuthenticating] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isTg = Boolean(
+      window.Telegram?.WebApp?.initData ||
+      window.Telegram?.WebApp?.initDataUnsafe?.user ||
+      window.location.search.includes('tgWebApp=1') ||
+      window.location.hash.includes('tgWebAppData')
+    );
+    const token = localStorage.getItem('token');
+    return isTg && !token;
+  });
   const [authError, setAuthError] = useState(null);
   const [themeParams, setThemeParams] = useState({});
 

@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import './globals.css';
 import AppInitializer from '../components/AppInitializer';
 import TelegramWebAppInitializer from '../components/TelegramWebAppInitializer';
@@ -40,20 +41,23 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         {/* Telegram Mini App WebApp SDK */}
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <script
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+        <Script
+          id="telegram-webapp-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                try {
-                  if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.ready();
-                    window.Telegram.WebApp.expand();
-                    if (window.Telegram.WebApp.setHeaderColor) window.Telegram.WebApp.setHeaderColor('#0f172a');
-                    if (window.Telegram.WebApp.setBackgroundColor) window.Telegram.WebApp.setBackgroundColor('#0f172a');
-                  }
-                } catch(e) {}
-              })();
+              try {
+                if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+                  window.Telegram.WebApp.ready();
+                  window.Telegram.WebApp.expand();
+                  if (window.Telegram.WebApp.setHeaderColor) window.Telegram.WebApp.setHeaderColor('#0f172a');
+                  if (window.Telegram.WebApp.setBackgroundColor) window.Telegram.WebApp.setBackgroundColor('#0f172a');
+                }
+              } catch(e) {}
             `,
           }}
         />

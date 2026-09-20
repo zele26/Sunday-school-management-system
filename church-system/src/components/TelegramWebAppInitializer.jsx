@@ -143,13 +143,13 @@ export default function TelegramWebAppInitializer({ children }) {
   const firstName = telegramUser?.first_name || '';
   const t = useMemo(() => getTranslations(isAmharic, firstName), [isAmharic, firstName]);
 
-  // State 1: Inside Telegram and authenticating
-  if (isTelegram && isAuthenticating && !isLoggedIn) {
+  // State 1: Inside Telegram, not logged in, currently authenticating
+  if (isTelegram && !isLoggedIn && isAuthenticating) {
     return <AuthenticatingView t={t} />;
   }
 
-  // State 2: Inside Telegram, not logged in (not linked, timeout, or auth error)
-  if (isTelegram && !isLoggedIn && authError) {
+  // State 2: Inside Telegram, not logged in (not linked or authentication not completed)
+  if (isTelegram && !isLoggedIn) {
     return <AccountNotLinkedView t={t} closeTelegramApp={closeTelegramApp} />;
   }
 

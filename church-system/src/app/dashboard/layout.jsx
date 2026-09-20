@@ -16,8 +16,17 @@ export default function DashboardRootLayout({ children }) {
   useEffect(() => {
     if (!hasHydrated) return;
 
+    const isTg = typeof window !== 'undefined' && (
+      Boolean(window.Telegram?.WebApp?.initData) ||
+      Boolean(window.Telegram?.WebApp?.initDataUnsafe?.user) ||
+      window.location.search.includes('tgWebApp=1') ||
+      window.location.hash.includes('tgWebAppData')
+    );
+
     if (!isLoggedIn || !user) {
-      router.replace('/login');
+      if (!isTg) {
+        router.replace('/login');
+      }
       return;
     }
 
