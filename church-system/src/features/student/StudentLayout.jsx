@@ -16,8 +16,10 @@ import {
   Printer,
   Download,
   ShieldCheck,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import useAuthStore from '../../store/authStore';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { ThemeToggle } from '../../components/ui/ThemeToggle';
@@ -26,6 +28,7 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { useTelegramWebApp } from '../../hooks/useTelegramWebApp';
 import { hasPermission, PERMISSIONS } from '../../utils/permissions';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
+import { toast } from '../../utils/toast';
 
 const StudentLayout = ({ children, onLogout }) => {
   const user = useAuthStore((state) => state.user);
@@ -38,6 +41,300 @@ const StudentLayout = ({ children, onLogout }) => {
   const canScanAttendance = hasPermission(user, PERMISSIONS.ATTENDANCE_SCAN);
 
   const [showQrModal, setShowQrModal] = useState(false);
+  const [isSavingBadge, setIsSavingBadge] = useState(false);
+
+  const handleLogoutClick = () => {
+    triggerHaptic('medium');
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('tg_manual_logout', 'true');
+    }
+    if (typeof onLogout === 'function') {
+      onLogout();
+    } else {
+      useAuthStore.getState().logout();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      } else {
+        navigate('/');
+      }
+    }
+  };
+
+  const getBadgeCanvas = () => {
+    const qrCanvas = document.getElementById('student-qr-canvas');
+    if (!qrCanvas) return null;
+
+    const width = 600;
+    const height = 860;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Draw Dark Card Background with gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#091024');
+    bgGrad.addColorStop(0.5, '#1e293b');
+    bgGrad.addColorStop(1, '#091024');
+
+    // Helper for rounded rectangle
+    const drawRoundRect = (x, y, w, h, r, fill, stroke, strokeColor, strokeWidth) => {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke && strokeColor) {
+        ctx.lineWidth = strokeWidth || 2;
+        ctx.strokeStyle = strokeColor;
+        ctx.stroke();
+      }
+    };
+
+    // Main Card Outer Body
+    drawRoundRect(0, 0, width, height, 32, bgGrad, true, '#f59e0b', 6);
+
+    // Inner subtle frame
+    drawRoundRect(14, 14, width - 28, height - 28, 22, null, true, 'rgba(245, 158, 11, 0.3)', 1.5);
+
+    // Header Pill Tag
+    drawRoundRect(140, 36, 320, 38, 19, 'rgba(245, 158, 11, 0.15)', true, 'rgba(245, 158, 11, 0.45)', 1.5);
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold 15px "Noto Sans Ethiopic", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🛡️ የተማሪ ይፋዊ ዲጂታል መታወቂያ', 300, 61);
+
+    // Church Header
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 23px "Noto Sans Ethiopic", sans-serif';
+    ctx.fillText('ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት', 300, 112);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('ST. TEKLE SAWIROS SUNDAY SCHOOL', 300, 134);
+
+    // Student Full Name
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px "Noto Sans Ethiopic", sans-serif';
+    ctx.fillText(studentName, 300, 186);
+
+    // Student ID Tag
+    const displayId = studentId || user?.phone || 'STU-ACTIVE';
+    drawRoundRect(170, 206, 260, 34, 12, '#020617', true, '#f59e0b', 1.5);
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText(displayId, 300, 229);
+
+    // Student Grade Label
+    const gradeLabel = user?.grade ? (formatGradeAmharic(user.grade) || user.grade) : '';
+    if (gradeLabel) {
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = 'bold 14px "Noto Sans Ethiopic", sans-serif';
+      ctx.fillText(gradeLabel, 300, 264);
+    }
+
+    // White Box for QR Code
+    const qrBoxY = gradeLabel ? 285 : 265;
+    drawRoundRect(150, qrBoxY, 300, 300, 24, '#ffffff', true, 'rgba(245, 158, 11, 0.6)', 4);
+
+    // Draw QR image
+    ctx.drawImage(qrCanvas, 165, qrBoxY + 15, 270, 270);
+
+    // Notice & Security Box
+    const noticeY = qrBoxY + 325;
+    drawRoundRect(40, noticeY, 520, 110, 18, 'rgba(30, 41, 59, 0.9)', true, 'rgba(148, 163, 184, 0.25)', 1.5);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold 14px "Noto Sans Ethiopic", sans-serif';
+    ctx.fillText('💡 ጠቃሚ ማሳሰቢያ / Usage Note:', 60, noticeY + 30);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px "Noto Sans Ethiopic", sans-serif';
+    ctx.fillText('• ይህን QR ኮድ በስልክዎ በማስቀመጥ ወይም በማተም ለሰንበት ት/ቤት መግቢያ ይጠቀሙ።', 60, noticeY + 60);
+    ctx.fillText('• Keep this digital ID badge on your phone for daily church gate attendance.', 60, noticeY + 86);
+
+    // Bottom Official Seal / Verification
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px monospace';
+    ctx.fillText('OFFICIAL DIGITAL ATTENDANCE PASS • VERIFIED STUDENT', 300, height - 32);
+
+    return canvas;
+  };
+
+  const handleDownloadBadge = async () => {
+    triggerHaptic('medium');
+    setIsSavingBadge(true);
+    try {
+      const canvas = getBadgeCanvas();
+      if (!canvas) {
+        toast.error(isAmharic ? 'የባጅ መረጃ ማግኘት አልተቻለም' : 'Could not generate badge canvas');
+        return;
+      }
+
+      const fileName = `TekleSawiros-Badge-${studentId || 'student'}.png`;
+
+      // Check if mobile device supports Web Share API with files
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          const dataUrl = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = dataUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          toast.success(isAmharic ? 'ባጁ ወደ ስልክዎ ተቀምጧል! 📥' : 'Badge image downloaded! 📥');
+          setIsSavingBadge(false);
+          return;
+        }
+
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: isAmharic ? 'የተማሪ ይፋዊ መታወቂያ' : 'Student Attendance ID Pass',
+              text: `${studentName} (${studentId || ''}) - ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት`,
+              files: [file],
+            });
+            toast.success(isAmharic ? 'ባጁ በተሳካ ሁኔታ ተጋርቷል/ተቀምጧል!' : 'Badge shared/saved successfully!');
+            setIsSavingBadge(false);
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === 'AbortError') {
+              setIsSavingBadge(false);
+              return;
+            }
+          }
+        }
+
+        // Standard link download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+        toast.success(isAmharic ? 'ባጁ ወደ ስልክዎ ተቀምጧል! 📥' : 'Badge image downloaded! 📥');
+        triggerHaptic('success');
+      }, 'image/png');
+    } catch (err) {
+      console.error('Error saving badge:', err);
+      toast.error(isAmharic ? 'ባጁን ማስቀመጥ አልተቻለም' : 'Failed to save badge image');
+    } finally {
+      setIsSavingBadge(false);
+    }
+  };
+
+  const handlePrintBadge = () => {
+    triggerHaptic('light');
+
+    // On Telegram Mini App or WebViews where printing is disabled, save directly as image
+    if (isTelegram) {
+      handleDownloadBadge();
+      toast.info(
+        isAmharic
+          ? 'በቴሌግራም ውስጥ ባጁ በምስል ተቀምጧል። ከስልክ ጋለሪዎ ማተም ይችላሉ።'
+          : 'Badge saved as image to your device for printing.'
+      );
+      return;
+    }
+
+    const qrEl = document.getElementById('student-qr-canvas');
+    const qrDataUrl = qrEl ? qrEl.toDataURL('image/png') : '';
+    const gradeLabel = user?.grade ? (formatGradeAmharic(user.grade) || user.grade) : '';
+    const displayId = studentId || user?.phone || 'STU-ACTIVE';
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      // If popup blocked or mobile, fallback to download
+      handleDownloadBadge();
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Student ID Badge - ${studentName}</title>
+          <style>
+            @page { size: auto; margin: 8mm; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+              background: #ffffff;
+              color: #0f172a;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              padding: 16px;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .badge-card {
+              width: 330px;
+              border: 2px solid #0f172a;
+              border-radius: 18px;
+              padding: 22px;
+              text-align: center;
+              box-sizing: border-box;
+            }
+            .church-name { font-size: 16px; font-weight: 900; margin-bottom: 2px; color: #1e3a8a; }
+            .church-sub { font-size: 11px; color: #64748b; font-weight: 600; margin-bottom: 12px; }
+            .tag { display: inline-block; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+            .name { font-size: 20px; font-weight: 900; margin-bottom: 4px; color: #0f172a; }
+            .id { font-family: monospace; font-size: 14px; font-weight: 800; color: #d97706; margin-bottom: 10px; }
+            .grade { font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 14px; }
+            .qr-wrap { background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; display: inline-block; margin-bottom: 14px; }
+            .qr-img { width: 210px; height: 210px; display: block; }
+            .footer { font-size: 10px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-weight: 600; }
+            @media print {
+              body { padding: 0; }
+              .badge-card { box-shadow: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="badge-card">
+            <div class="church-name">ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት</div>
+            <div class="church-sub">St. Tekle Sawiros Sunday School</div>
+            <div class="tag">🛡️ የተማሪ ይፋዊ መታወቂያ / Student ID</div>
+            <div class="name">${studentName}</div>
+            <div class="id">${displayId}</div>
+            ${gradeLabel ? '<div class="grade">' + gradeLabel + '</div>' : ''}
+            <div class="qr-wrap">
+              <img class="qr-img" src="${qrDataUrl}" alt="Student QR Code" />
+            </div>
+            <div class="footer">ይፋዊ የተማሪ መግቢያ ባጅ • OFFICIAL ATTENDANCE PASS</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 700);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   // Sync native Telegram BackButton with navigation
   useEffect(() => {
@@ -160,7 +457,7 @@ const StudentLayout = ({ children, onLogout }) => {
 
           {/* Logout Button */}
           <button
-            onClick={onLogout}
+            onClick={handleLogoutClick}
             className="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/30 hover:border-rose-500 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer min-h-[38px]"
             title={t('logout', 'ከሲስተሙ ውጣ')}
           >
@@ -278,7 +575,7 @@ const StudentLayout = ({ children, onLogout }) => {
 
       {/* Digital QR Attendance Pass Modal */}
       {showQrModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-white text-center relative shadow-2xl space-y-5">
             <button
               onClick={() => setShowQrModal(false)}
@@ -296,11 +593,17 @@ const StudentLayout = ({ children, onLogout }) => {
               <p className="text-xs text-amber-300/90 font-mono font-bold tracking-wide">
                 {studentId || user?.phone || 'STU-ACTIVE'}
               </p>
+              {user?.grade && (
+                <p className="text-[11px] text-blue-300 font-bold">
+                  {formatGradeAmharic(user.grade) || user.grade}
+                </p>
+              )}
             </div>
 
-            {/* High-Contrast QR Code */}
+            {/* High-Contrast QR Code View + Canvas */}
             <div className="p-4 bg-white rounded-2xl shadow-inner inline-block mx-auto border-2 border-amber-400/40">
-              <QRCodeSVG
+              <QRCodeCanvas
+                id="student-qr-canvas"
                 value={studentId || user?.phone || String(user?._id || 'SUNDAY-STUDENT')}
                 size={210}
                 level="H"
@@ -315,21 +618,30 @@ const StudentLayout = ({ children, onLogout }) => {
               </p>
               <p className="leading-relaxed text-[11px] text-slate-300">
                 {isAmharic
-                  ? 'ይህን QR ኮድ ስክሪንሽት በማድረግ ወይም በማተም ለሰንበት ት/ቤት መግቢያና ለዕለታዊ ክትትል መጠቀም ይችላሉ። ሁልጊዜ በሲስተሙ መግባት አይጠበቅብዎትም።'
-                  : 'You can screenshot or print this QR code for daily gate attendance. Logging into the system every time is not required.'}
+                  ? 'ይህን የQR ባጅ በስልክዎ በማስቀመጥ ወይም በማተም ለሰንበት ት/ቤት መግቢያና ለዕለታዊ ክትትል መጠቀም ይችላሉ።'
+                  : 'Save or print this QR pass for daily church gate attendance. Quick check-in without logging in each time.'}
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                triggerHaptic('light');
-                window.print();
-              }}
-              className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>{isAmharic ? 'ባጁን አትም / Print Badge' : 'Print Badge'}</span>
-            </button>
+            {/* Action Buttons: 1. Save Image (PNG) 2. Print */}
+            <div className="space-y-2 pt-1">
+              <button
+                onClick={handleDownloadBadge}
+                disabled={isSavingBadge}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSavingBadge ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <span>{isAmharic ? '💾 ምስሉን አስቀምጥ (Save Badge)' : '💾 Save Badge Image (PNG)'}</span>
+              </button>
+
+              <button
+                onClick={handlePrintBadge}
+                className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>{isAmharic ? '🖨️ ባጁን አትም (Print Badge)' : '🖨️ Print Badge'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

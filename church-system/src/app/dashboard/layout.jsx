@@ -59,14 +59,10 @@ export default function DashboardRootLayout({ children }) {
       sessionStorage.setItem('tg_manual_logout', 'true');
     }
     logout();
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.close) {
-      try {
-        window.Telegram.WebApp.close();
-      } catch (e) {
-        router.replace('/login');
-      }
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
     } else {
-      router.replace('/login');
+      router.replace('/');
     }
   };
 

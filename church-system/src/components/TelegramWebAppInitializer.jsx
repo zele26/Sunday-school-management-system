@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Send, Sparkles, Phone, ShieldCheck, ArrowRight } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../hooks/useLanguage';
@@ -145,23 +146,38 @@ const AccountNotLinkedView = ({ t, closeTelegramApp }) => (
 
 // --- Main Telegram WebApp Initializer ---
 export default function TelegramWebAppInitializer({ children }) {
-  const { isTelegram, telegramUser, isAuthenticating, authError, closeTelegramApp } = useTelegramWebApp();
+  const pathname = usePathname();
+  const { isTelegram, telegramUser, isAuthenticating, closeTelegramApp } = useTelegramWebApp();
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const { isAmharic } = useLanguage();
 
   const firstName = telegramUser?.first_name || '';
   const t = useMemo(() => getTranslations(isAmharic, firstName), [isAmharic, firstName]);
 
-  // State 1: Inside Telegram, not logged in, currently authenticating
-  if (isTelegram && !isLoggedIn && isAuthenticating) {
+  const isPublicRoute =
+    !pathname ||
+    pathname === '/' ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/about' ||
+    pathname === '/schedule' ||
+    pathname === '/announcements' ||
+    pathname === '/contact' ||
+    pathname === '/forgot-password';
+
+  const isManuallyLoggedOut =
+    typeof window !== 'undefined' && sessionStorage.getItem('tg_manual_logout') === 'true';
+
+  // State 1: Inside Telegram, not logged in, currently authenticating on protected/root route
+  if (isTelegram && !isLoggedIn && isAuthenticating && !isManuallyLoggedOut && !isPublicRoute) {
     return <AuthenticatingView t={t} />;
   }
 
-  // State 2: Inside Telegram, not logged in (not linked or authentication not completed)
-  if (isTelegram && !isLoggedIn) {
+  // State 2: Inside Telegram, not logged in, trying to access protected portal without account link
+  if (isTelegram && !isLoggedIn && !isPublicRoute && !isManuallyLoggedOut) {
     return <AccountNotLinkedView t={t} closeTelegramApp={closeTelegramApp} />;
   }
 
-  // State 3: Normal pass-through render
+  // State 3: Public route, normal logged-in portal, or explicit guest browse
   return <>{children}</>;
 }
