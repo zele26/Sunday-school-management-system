@@ -7,16 +7,22 @@ import VerifiableCertificate from '../../components/VerifiableCertificate';
 import { Card } from '../../components/ui';
 
 const DirectCertificateView = () => {
-  const { certNumber } = useParams();
+  const params = useParams();
+  const certNumber = params?.certificateNumber || params?.certNumber || params?.id || '';
   const [cert, setCert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchCert = async () => {
+      if (!certNumber) {
+        setLoading(false);
+        setError('የምስክር ወረቀት መለያ አልተገለጸም');
+        return;
+      }
       setLoading(true);
       try {
-        const res = await apiFetch(`/api/education/distance/public/certificate/${certNumber || 'TKD-CERT-2017-B1-0001'}`);
+        const res = await apiFetch(`/api/education/distance/public/certificate/${certNumber.trim().toUpperCase()}`);
         const data = await res.json();
         if (res.ok && data.certificate) {
           setCert(data.certificate);

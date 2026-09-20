@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 const completedCourseSubSchema = new mongoose.Schema({
   courseName: { type: String, trim: true },
   code: { type: String, trim: true },
-  mark: { type: Number, min: 0, max: 100 },
-  grade: { type: String, trim: true },
+  mark: { type: Number, min: 0, max: 100, default: 0 },
+  grade: { type: String, trim: true, default: 'A' },
 }, { _id: false });
 
 // Sub-schema for Authorized Signatories
@@ -18,8 +18,6 @@ const signatorySubSchema = new mongoose.Schema({
 const certificateSchema = new mongoose.Schema({
   certificateNumber: { 
     type: String, 
-    unique: true, 
-    required: true, 
     trim: true,
     index: true 
   },
@@ -33,6 +31,12 @@ const certificateSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
+  studentType: {
+    type: String,
+    enum: ['regular', 'distance'],
+    default: 'regular',
+    trim: true,
+  },
   studentName: { type: String, required: true, trim: true },
   studentNameAmharic: { type: String, trim: true },
   studentNumber: { type: String, required: true, trim: true },
@@ -40,16 +44,16 @@ const certificateSchema = new mongoose.Schema({
   // Academic Program Details
   program: { 
     type: String, 
-    default: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን የርቀት ነገረ መለኮትና የመጽሐፍ ቅዱስ ጥናት መርሃ ግብር',
+    default: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን የሰንበት ትምህርት ቤት መደበኛና የርቀት ሥርዓተ ትምህርት መርሃ ግብር',
     trim: true,
   },
   programEnglish: {
     type: String,
-    default: 'Ethiopian Orthodox Tewahedo Church Distance Theological & Biblical Studies Program',
+    default: 'Ethiopian Orthodox Tewahedo Church Sunday School Curriculum Program',
     trim: true,
   },
-  batch: { type: String, required: true, trim: true },
-  academicYear: { type: String, required: true, trim: true },
+  batch: { type: String, default: 'መደበኛ (Regular)', trim: true },
+  academicYear: { type: String, default: '2017 ዓ.ም', trim: true },
   
   // Academic Record Summary
   completedCourses: [completedCourseSubSchema],
@@ -57,17 +61,22 @@ const certificateSchema = new mongoose.Schema({
   honors: { type: String, default: 'በማዕረግ ተመርቋል (With Distinction)', trim: true },
   
   // Dates & Issuance
-  issueDateEthiopian: { type: String, required: true, trim: true },
+  issueDateEthiopian: { type: String, trim: true },
   issueDateGregorian: { type: Date, default: Date.now },
   
-  // Verification Security
-  verificationHash: { type: String, required: true, trim: true },
+  // Verification Security & Workflow Status
+  verificationHash: { type: String, trim: true },
   qrCodeUrl: { type: String, trim: true },
   status: { 
     type: String, 
     enum: ['Valid', 'Revoked', 'Pending'], 
-    default: 'Valid' 
+    default: 'Pending' 
   },
+  
+  // Administrative Review Workflow
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  reviewedAt: { type: Date, default: null },
+  rejectionReason: { type: String, trim: true, default: '' },
   
   // Authorized Signatories
   signatories: [signatorySubSchema],
@@ -85,9 +94,11 @@ const certificateSchema = new mongoose.Schema({
 });
 
 // Security and Verification Indexes
-certificateSchema.index({ verificationHash: 1 }, { unique: true });
-certificateSchema.index({ studentId: 1, batch: 1 });
+certificateSchema.index({ certificateNumber: 1 });
+certificateSchema.index({ verificationHash: 1 });
+certificateSchema.index({ studentId: 1, status: 1 });
 certificateSchema.index({ userId: 1 });
 certificateSchema.index({ status: 1 });
+certificateSchema.index({ studentType: 1, status: 1 });
 
 module.exports = mongoose.models.Certificate || mongoose.model('Certificate', certificateSchema);

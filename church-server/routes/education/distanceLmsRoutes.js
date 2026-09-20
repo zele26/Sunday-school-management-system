@@ -1178,8 +1178,8 @@ router.get('/certificates/my-certificates', protect, async (req, res) => {
 // 5. PUBLIC CERTIFICATE VERIFICATION (NO AUTH REQUIRED)
 // ============================================================================
 
-// GET /api/education/distance/public/verify/:certNumber – Public Certificate Verification
-router.get('/public/verify/:certNumber', async (req, res) => {
+// GET /api/education/distance/public/verify/:certNumber and /api/public/certificates/verify/:certNumber
+router.get(['/public/verify/:certNumber', '/verify/:certNumber'], async (req, res) => {
   try {
     const { certNumber } = req.params;
     const cert = await Certificate.findOne({
@@ -1217,8 +1217,8 @@ router.get('/public/verify/:certNumber', async (req, res) => {
   }
 });
 
-// GET /api/education/distance/public/certificate/:certNumber – Full Certificate View
-router.get('/public/certificate/:certNumber', async (req, res) => {
+// GET /api/education/distance/public/certificate/:certNumber and /api/public/certificates/certificate/:certNumber
+router.get(['/public/certificate/:certNumber', '/certificate/:certNumber'], async (req, res) => {
   try {
     const { certNumber } = req.params;
     const cert = await Certificate.findOne({

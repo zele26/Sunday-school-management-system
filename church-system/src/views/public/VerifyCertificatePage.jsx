@@ -13,7 +13,8 @@ import { useLanguage } from '../../hooks/useLanguage';
 
 const VerifyCertificatePage = () => {
   const { t, isAmharic } = useLanguage();
-  const { certNumber } = useParams();
+  const params = useParams();
+  const certNumber = params?.certificateNumber || params?.certNumber || params?.id || '';
   const [inputNumber, setInputNumber] = useState(certNumber || '');
   const [loading, setLoading] = useState(false);
   const [certData, setCertData] = useState(null);
@@ -21,6 +22,7 @@ const VerifyCertificatePage = () => {
 
   useEffect(() => {
     if (certNumber) {
+      setInputNumber(certNumber);
       verifyCert(certNumber);
     }
   }, [certNumber]);
