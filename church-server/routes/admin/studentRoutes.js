@@ -18,9 +18,11 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
     const {
       studentId, batch, registrationNumber, studentType,
-      firstName, middleName, lastName, dob, grade, address, contactPhone,
+      firstName, middleName, lastName, christianName, dob, grade, address, contactPhone,
       email, password,
       age, subcity, woreda, kebele, shift,
+      hasConfessionFather, confessionFatherName, confessionFatherPhone,
+      photoUrl, emergencyContactPhoto,
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
     } = req.body;
@@ -51,7 +53,15 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       password: hashedPassword,
       role: 'student',
       status: 'approved',
+      christianName: (christianName || '').toString().trim(),
+      profilePicture: (photoUrl || '').toString().trim(),
     });
+
+    const isHasFather = Boolean(
+      hasConfessionFather === true ||
+      hasConfessionFather === 'true' ||
+      hasConfessionFather === 'yes'
+    );
 
     const studentData = {
       userId: newUser._id,
@@ -62,6 +72,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       firstName,
       middleName: middleName || '',
       lastName,
+      christianName: (christianName || '').toString().trim(),
       dob: dob || '',
       age: age ? Number(age) : undefined,
       subcity: subcity || '',
@@ -71,6 +82,11 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       grade: grade || '',
       address: address || '',
       regYear: new Date().getFullYear().toString(),
+      hasConfessionFather: isHasFather,
+      confessionFatherName: isHasFather ? (confessionFatherName || '').toString().trim() : '',
+      confessionFatherPhone: isHasFather ? (confessionFatherPhone || '').toString().trim() : '',
+      photoUrl: (photoUrl || '').toString().trim(),
+      emergencyContactPhoto: (emergencyContactPhoto || '').toString().trim(),
       emergencyFirstName: emergencyFirstName || '',
       emergencyMiddleName: emergencyMiddleName || '',
       emergencyLastName: emergencyLastName || '',
@@ -243,7 +259,11 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       'ስም',
       'የአባት ስም',
       'የአያት ስም',
+      'የክርስትና ስም',
       'ሙሉ ስም',
+      'የንስሐ አባት',
+      'የንስሐ አባት ስም',
+      'የንስሐ አባት ስልክ',
       'ዕድሜ',
       'ጾታ',
       'ክፍለ ከተማ',
@@ -342,7 +362,11 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       'ስም': s.firstName || '',
       'የአባት ስም': s.middleName || '',
       'የአያት ስም': s.lastName || '',
+      'የክርስትና ስም': s.christianName || '',
       'ሙሉ ስም': [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || s.fullName || '',
+      'የንስሐ አባት': s.hasConfessionFather ? 'አላቸው' : 'የላቸውም',
+      'የንስሐ አባት ስም': s.confessionFatherName || '',
+      'የንስሐ አባት ስልክ': s.confessionFatherPhone || '',
       'ዕድሜ': s.age || '',
       'ጾታ': s.gender === 'Female' ? 'ሴት' : (s.gender === 'Male' ? 'ወንድ' : (s.gender || '')),
       'ክፍለ ከተማ': s.subcity || '',
@@ -721,9 +745,11 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const {
       studentId, batch, registrationNumber,
-      firstName, middleName, lastName, dob, grade, address, studentPhone, contactPhone,
+      firstName, middleName, lastName, christianName, dob, grade, address, studentPhone, contactPhone,
       educationLevel, profession, gender, studentType,
       age, subcity, woreda, kebele, shift,
+      hasConfessionFather, confessionFatherName, confessionFatherPhone,
+      photoUrl, emergencyContactPhoto,
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
       contactEmail, contactAddress
@@ -748,6 +774,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (firstName !== undefined) student.firstName = firstName.trim();
     if (middleName !== undefined) student.middleName = middleName.trim();
     if (lastName !== undefined) student.lastName = lastName.trim();
+    if (christianName !== undefined) student.christianName = christianName.trim();
     if (dob !== undefined) student.dob = dob;
     if (age !== undefined) student.age = age ? Number(age) : undefined;
     if (subcity !== undefined) student.subcity = subcity;
@@ -760,6 +787,18 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (profession !== undefined) student.profession = profession;
     if (gender !== undefined) student.gender = gender;
     if (studentType !== undefined) student.studentType = studentType;
+
+    if (hasConfessionFather !== undefined) {
+      student.hasConfessionFather = Boolean(
+        hasConfessionFather === true ||
+        hasConfessionFather === 'true' ||
+        hasConfessionFather === 'yes'
+      );
+    }
+    if (confessionFatherName !== undefined) student.confessionFatherName = confessionFatherName.trim();
+    if (confessionFatherPhone !== undefined) student.confessionFatherPhone = confessionFatherPhone.trim();
+    if (photoUrl !== undefined) student.photoUrl = photoUrl.trim();
+    if (emergencyContactPhoto !== undefined) student.emergencyContactPhoto = emergencyContactPhoto.trim();
 
     const phoneValue = studentPhone || contactPhone;
     if (phoneValue !== undefined) student.studentPhone = phoneValue;

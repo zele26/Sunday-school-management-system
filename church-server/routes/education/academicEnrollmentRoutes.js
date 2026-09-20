@@ -9,7 +9,7 @@ router.get('/', protect, async (req, res) => {
     const enrollments = await AcademicEnrollment.find()
       .populate({
         path: 'studentProfileId',
-        populate: { path: 'personId', select: 'firstName lastName' }
+        populate: { path: 'personId', select: 'firstName middleName lastName christianName photoUrl' }
       })
       .populate('academicYearId', 'name')
       .populate('programId', 'name code')
@@ -28,7 +28,10 @@ router.get('/:enrollmentId', protect, async (req, res) => {
   try {
     const { enrollmentId } = req.params;
     const enrollment = await AcademicEnrollment.findById(enrollmentId)
-      .populate('studentProfileId', 'studentNumber')
+      .populate({
+        path: 'studentProfileId',
+        populate: { path: 'personId', select: 'firstName middleName lastName christianName photoUrl' }
+      })
       .populate('academicYearId', 'name')
       .populate('programId', 'name code type')
       .populate('gradeId', 'name level')

@@ -797,11 +797,19 @@ const initTelegramBot = async () => {
         msg += `   🎓 *የተማሪ ይፋዊ ዲጂታል ማህደር* 🎓\n`;
         msg += `╰──────────────────────────────╯\n\n`;
         msg += `👤 *ሙሉ ስም፦* ${fullName}\n`;
+        if (student.christianName) {
+          msg += `✝️ *የክርስትና ስም፦* ${student.christianName}\n`;
+        }
         msg += `🏷️ *መለያ ቁጥር፦* \`${student.studentId || '-'}\`\n`;
         msg += `📝 *የማመልከቻ ቁጥር፦* \`${student.registrationNumber || '-'}\`\n`;
         msg += `📚 *ክፍል / ደረጃ፦* ${student.grade || student.batch || '-'}\n`;
         msg += `🏛️ *የትምህርት ዓይነት፦* ${track}\n`;
         msg += `⏰ *ፈረቃ፦* ${shift}\n`;
+        if (student.hasConfessionFather) {
+          msg += `✝️ *የንስሐ አባት፦* ${student.confessionFatherName || '-'}`;
+          if (student.confessionFatherPhone) msg += ` (${student.confessionFatherPhone})`;
+          msg += `\n`;
+        }
         msg += `📞 *ስልክ ቁጥር፦* ${student.studentPhone || student.contactPhone || '-'}\n`;
         msg += `📍 *አድራሻ፦* ${student.address || student.subcity || '-'}\n`;
         if (student.teacher) {

@@ -169,7 +169,29 @@ const RegistrationsManagement = () => {
       {
         accessorKey: 'fullName',
         header: ({ column }) => <DataTableColumnHeader column={column} title="ሙሉ ስም" />,
-        cell: ({ getValue }) => <span className="font-semibold text-slate-900 dark:text-white">{getValue()}</span>,
+        cell: ({ row, getValue }) => (
+          <div className="flex items-center gap-2.5">
+            {row.original.photoUrl ? (
+              <img
+                src={row.original.photoUrl}
+                alt={getValue()}
+                className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-[#1657b8] dark:text-blue-300 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-xs font-bold shrink-0">
+                {(getValue() || 'U').charAt(0)}
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-900 dark:text-white leading-tight">{getValue()}</span>
+              {row.original.christianName && (
+                <span className="text-[11px] text-[var(--brand-primary)] dark:text-blue-400 font-medium">
+                  ✝️ {row.original.christianName}
+                </span>
+              )}
+            </div>
+          </div>
+        ),
       },
       {
         accessorKey: 'grade',
@@ -419,25 +441,51 @@ const RegistrationsManagement = () => {
                 </div>
 
                 <div className="p-6 space-y-6 overflow-y-auto flex-1 bg-white dark:bg-slate-900">
-                  {/* Top info */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ሙሉ ስም</span>
-                      <span className="text-slate-900 dark:text-white font-bold text-base">{selectedRegistration.fullName}</span>
+                  {/* Top info with Photo */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <div className="shrink-0">
+                      {selectedRegistration.photoUrl ? (
+                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-[var(--brand-primary)] shadow-md">
+                          <Image
+                            src={selectedRegistration.photoUrl}
+                            alt={selectedRegistration.fullName || 'Student'}
+                            width={80}
+                            height={80}
+                            unoptimized
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-950 dark:to-slate-800 border-2 border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400">
+                          <UserCheck className="w-8 h-8 text-[var(--brand-primary)] opacity-70" />
+                          <span className="text-[10px] font-bold mt-1 text-slate-500">ፎቶ የለም</span>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተማሪ ዓይነት</span>
-                      <Badge variant={selectedRegistration.studentType === 'distance' ? 'gold' : 'approved'} size="sm">
-                        {selectedRegistration.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}
-                      </Badge>
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የምዝገባ ቁጥር</span>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedRegistration.registrationNumber}</span>
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የክፍል ደረጃ / ምድብ</span>
-                      <span className="text-slate-900 dark:text-white font-medium">{formatGradeAmharic(selectedRegistration.grade)}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 text-sm">
+                      <div>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ሙሉ ስም</span>
+                        <span className="text-slate-900 dark:text-white font-black text-base block">{selectedRegistration.fullName}</span>
+                        {selectedRegistration.christianName && (
+                          <span className="text-xs text-[var(--brand-primary)] dark:text-blue-400 font-bold block mt-0.5">
+                            ✝️ የክርስትና ስም፦ {selectedRegistration.christianName}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተማሪ ዓይነት</span>
+                        <Badge variant={selectedRegistration.studentType === 'distance' ? 'gold' : 'approved'} size="sm">
+                          {selectedRegistration.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}
+                        </Badge>
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የምዝገባ ቁጥር</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedRegistration.registrationNumber}</span>
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የክፍል ደረጃ / ምድብ</span>
+                        <span className="text-slate-900 dark:text-white font-medium">{formatGradeAmharic(selectedRegistration.grade)}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -454,6 +502,10 @@ const RegistrationsManagement = () => {
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የአያት ስም</span>
                       <span className="text-slate-900 dark:text-white">{selectedRegistration.lastName || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የክርስትና ስም (Baptismal Name)</span>
+                      <span className="text-slate-900 dark:text-white font-semibold">{selectedRegistration.christianName || '—'}</span>
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዕድሜ</span>
@@ -513,35 +565,78 @@ const RegistrationsManagement = () => {
                     </div>
                   </div>
 
+                  {/* ✝️ Spiritual / Confession Father Section */}
+                  <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-wider flex items-center gap-1.5">
+                        <span>✝️ የንስሐ አባት መረጃ</span>
+                      </h4>
+                      <Badge variant={selectedRegistration.hasConfessionFather ? 'approved' : 'rejected'} size="sm">
+                        {selectedRegistration.hasConfessionFather ? '✅ አላቸው' : '❌ የላቸውም'}
+                      </Badge>
+                    </div>
+                    {selectedRegistration.hasConfessionFather ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-blue-50/60 dark:bg-blue-950/20 p-4 rounded-xl border border-blue-200/60 dark:border-blue-800/40">
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የንስሐ አባት ስም</span>
+                          <span className="text-slate-900 dark:text-white font-bold">{selectedRegistration.confessionFatherName || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የንስሐ አባት ስልክ</span>
+                          <span className="text-slate-900 dark:text-white font-mono font-bold">{selectedRegistration.confessionFatherPhone || '—'}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-xs text-amber-800 dark:text-amber-300">
+                        ℹ️ ተማሪው የንስሐ አባት እንደሌላቸው አመልክተዋል። ከጸደቁ በኋላ የንስሐ አባት እንዲይዙ መንፈሳዊ ድጋፍ ይደረግላቸዋል።
+                      </div>
+                    )}
+                  </div>
+
                   {/* Emergency Contact */}
                   <div className="border-t border-slate-200 dark:border-slate-800 pt-4">
                     <h4 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-wider mb-3">
                       የአደጋ ጊዜ ተጠሪ
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                      <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተጠሪ ስም</span>
-                        <span className="text-slate-900 dark:text-white font-medium">
-                          {selectedRegistration.emergencyFirstName || selectedRegistration.parentName || '—'}{' '}
-                          {selectedRegistration.emergencyMiddleName || ''}{' '}
-                          {selectedRegistration.emergencyLastName || ''}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዝምድና</span>
-                        <span className="text-slate-900 dark:text-white">{getRelationshipLabel(selectedRegistration.relationship, isAmharic) || selectedRegistration.relationship || 'ወላጅ/አሳዳጊ'}</span>
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስልክ ቁጥር</span>
-                        <span className="text-slate-900 dark:text-white font-mono">
-                          {selectedRegistration.emergencyPhone || selectedRegistration.parentPhone || '—'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ኢሜይል</span>
-                        <span className="text-slate-900 dark:text-white">
-                          {selectedRegistration.emergencyEmail || selectedRegistration.parentEmail || '—'}
-                        </span>
+                    <div className="flex flex-col sm:flex-row gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {selectedRegistration.emergencyContactPhoto && (
+                        <div className="shrink-0 flex flex-col items-center">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase mb-1">የተጠሪ ፎቶ</span>
+                          <Image
+                            src={selectedRegistration.emergencyContactPhoto}
+                            alt="የተጠሪ ፎቶ"
+                            width={80}
+                            height={80}
+                            unoptimized
+                            className="w-20 h-20 rounded-xl object-cover border border-slate-300 dark:border-slate-700 shadow-xs"
+                          />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm flex-1">
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የተጠሪ ስም</span>
+                          <span className="text-slate-900 dark:text-white font-medium">
+                            {selectedRegistration.emergencyFirstName || selectedRegistration.parentName || '—'}{' '}
+                            {selectedRegistration.emergencyMiddleName || ''}{' '}
+                            {selectedRegistration.emergencyLastName || ''}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዝምድና</span>
+                          <span className="text-slate-900 dark:text-white">{getRelationshipLabel(selectedRegistration.relationship, isAmharic) || selectedRegistration.relationship || 'ወላጅ/አሳዳጊ'}</span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስልክ ቁጥር</span>
+                          <span className="text-slate-900 dark:text-white font-mono">
+                            {selectedRegistration.emergencyPhone || selectedRegistration.parentPhone || '—'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ኢሜይል</span>
+                          <span className="text-slate-900 dark:text-white">
+                            {selectedRegistration.emergencyEmail || selectedRegistration.parentEmail || '—'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

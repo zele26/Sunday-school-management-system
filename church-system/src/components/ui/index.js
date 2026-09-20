@@ -21,3 +21,4 @@ export * from './tooltip';
 export * from './sonner';
 export * from './BackButton';
 export * from './AppImage';
+export * from './PhotoUploadField';

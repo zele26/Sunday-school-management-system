@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { studentSelfRegisterSchema } from '../schemas';
 import EthiopianDatePicker from '../components/ui/EthiopianDatePicker';
+import PhotoUploadField from '../components/ui/PhotoUploadField';
 import { BackButton } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 
@@ -39,7 +40,12 @@ const StudentRegister = () => {
   } = useForm({
     resolver: zodResolver(studentSelfRegisterSchema),
     defaultValues: {
+      photoUrl: '',
       fullName: '',
+      christianName: '',
+      hasConfessionFather: false,
+      confessionFatherName: '',
+      confessionFatherPhone: '',
       gender: 'Male',
       age: '',
       dateOfBirth: '',
@@ -51,6 +57,7 @@ const StudentRegister = () => {
       grade: 'Grade 7',
       studentType: 'regular',
       address: '',
+      emergencyContactPhoto: '',
       parentName: '',
       parentPhone: '',
       parentEmail: '',
@@ -61,6 +68,7 @@ const StudentRegister = () => {
   });
 
   const studentType = watch('studentType');
+  const hasConfessionFather = watch('hasConfessionFather');
 
   const onSubmit = async (data) => {
     setServerError('');
@@ -133,11 +141,32 @@ const StudentRegister = () => {
       {serverError && <div className="mb-4 p-3 bg-rose-100 text-rose-700 rounded-xl text-sm font-medium">{serverError}</div>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
         <h2 className="font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">የግል መረጃ</h2>
+
+        {/* Student Photo */}
+        <div className="pb-2">
+          <Controller
+            name="photoUrl"
+            control={control}
+            render={({ field }) => (
+              <PhotoUploadField
+                label="የተማሪው ፎቶ"
+                hint="የተማሪውን የቁም ፎቶ ያስገቡ (አማራጭ)"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </div>
+
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ሙሉ ስም *</label>
             <input type="text" placeholder="ሙሉ ስም" {...register('fullName')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.fullName ? 'border-rose-400' : 'border-slate-200'}`} />
             {errors.fullName && <p className="text-xs text-rose-500 mt-1">{errors.fullName.message}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">✝️ የክርስትና ስም</label>
+            <input type="text" placeholder="የክርስትና ስም (ምሳሌ፡ ወልደ ሥላሴ)" {...register('christianName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ጾታ</label>
@@ -245,7 +274,77 @@ const StudentRegister = () => {
           </div>
         </div>
 
+        {/* ✝️ Spiritual Father Section */}
+        <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-slate-800 border border-blue-100 dark:border-slate-700 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <label className="block text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                የንስሐ አባት አለዎት?
+              </label>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                የንስሐ አባት ካለዎት መረጃቸውን ያስገቡ
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setValue('hasConfessionFather', true, { shouldValidate: true })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  hasConfessionFather
+                    ? 'bg-[var(--brand-primary)] text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                }`}
+              >
+                ✓ አዎ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('hasConfessionFather', false, { shouldValidate: true });
+                  setValue('confessionFatherName', '');
+                  setValue('confessionFatherPhone', '');
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  !hasConfessionFather
+                    ? 'bg-slate-700 text-white shadow-xs dark:bg-slate-600'
+                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                }`}
+              >
+                ✕ የለኝም
+              </button>
+            </div>
+          </div>
+
+          {hasConfessionFather && (
+            <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-blue-200/50 dark:border-slate-700">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የንስሐ አባት ስም</label>
+                <input type="text" placeholder="የንስሐ አባት ስም" {...register('confessionFatherName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የንስሐ አባት ስልክ</label>
+                <input type="tel" placeholder="0911234567" {...register('confessionFatherPhone')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm ${errors.confessionFatherPhone ? 'border-rose-400' : 'border-slate-200'}`} />
+                {errors.confessionFatherPhone && <p className="text-xs text-rose-500 mt-1">{errors.confessionFatherPhone.message}</p>}
+              </div>
+            </div>
+          )}
+        </div>
+
         <h2 className="font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">ወላጅ / አሳዳጊ መረጃ</h2>
+        <div className="pb-2">
+          <Controller
+            name="emergencyContactPhoto"
+            control={control}
+            render={({ field }) => (
+              <PhotoUploadField
+                label="የወላጅ / አሳዳጊ ፎቶ"
+                hint="የወላጅ ወይም አሳዳጊውን ፎቶ ያስገቡ (አማራጭ)"
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </div>
         <div className="grid md:grid-cols-3 gap-4">
           <input type="text" placeholder="የወላጅ ሙሉ ስም" {...register('parentName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
           <input type="tel" placeholder="የወላጅ ስልክ" {...register('parentPhone')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />

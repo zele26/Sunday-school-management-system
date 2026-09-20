@@ -61,6 +61,73 @@ router.delete('/cloudinary/:publicId', protect, async (req, res) => {
   }
 });
 
+// ---------- Photo / Avatar Upload (PUBLIC or authenticated) ----------
+router.post('/photo', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'ምንም ፎቶ አልተመረጠም (No photo uploaded)' });
+    }
+
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+    // Try Cloudinary upload if configured
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+      try {
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'student-photos',
+          resource_type: 'image',
+          transformation: [
+            { width: 800, height: 800, crop: 'limit', quality: 'auto:good' }
+          ]
+        });
+        return res.json({
+          success: true,
+          url: result.secure_url,
+          publicId: result.public_id,
+        });
+      } catch (cloudErr) {
+        console.warn('⚠️ Cloudinary upload warning, falling back to data URI:', cloudErr.message);
+      }
+    }
+
+    // Fallback: return dataURI directly if Cloudinary is not configured/fails
+    res.json({
+      success: true,
+      url: dataURI,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Alias for image upload
+router.post('/image', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    const b64 = Buffer.from(req.file.buffer).toString('base64');
+    const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+      try {
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'church-images',
+          resource_type: 'image',
+        });
+        return res.json({ success: true, url: result.secure_url });
+      } catch (cloudErr) {
+        console.warn('⚠️ Cloudinary fallback for image:', cloudErr.message);
+      }
+    }
+
+    res.json({ success: true, url: dataURI });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ---------- Receipt Upload (PUBLIC – no validation, just upload) ----------
 router.post('/receipt', upload.single('file'), async (req, res) => {
   try {
@@ -68,17 +135,22 @@ router.post('/receipt', upload.single('file'), async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // Upload file to Cloudinary – no registration lookup, no status change
     const b64 = Buffer.from(req.file.buffer).toString('base64');
     const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
-    const result = await cloudinary.uploader.upload(dataURI, {
-      folder: 'receipts',
-      resource_type: 'auto',
-    });
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+      try {
+        const result = await cloudinary.uploader.upload(dataURI, {
+          folder: 'receipts',
+          resource_type: 'auto',
+        });
+        return res.json({ url: result.secure_url });
+      } catch (cloudErr) {
+        console.warn('⚠️ Cloudinary receipt upload failed, returning data URI:', cloudErr.message);
+      }
+    }
 
-    // Return only the secure URL; finalize step will use it
-    res.json({ url: result.secure_url });
+    res.json({ url: dataURI });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

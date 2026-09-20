@@ -2,6 +2,15 @@ import { z } from 'zod';
 
 const phoneRegex = /^(?:\+251|0)?[79]\d{8}$|^\d{10}$/;
 
+const optionalPhoneValidator = z
+  .string()
+  .trim()
+  .optional()
+  .or(z.literal(''))
+  .refine((val) => !val || phoneRegex.test(val), {
+    message: 'ትክክለኛ 10 አሃዝ ስልክ ቁጥር ያስገቡ',
+  });
+
 export const regularRegistrationSchema = z.object({
   firstName: z
     .string()
@@ -15,6 +24,15 @@ export const regularRegistrationSchema = z.object({
     .string()
     .trim()
     .min(1, 'የአያት ስም ግዴታ ነው'),
+  christianName: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal('')),
+  photoUrl: z
+    .string()
+    .optional()
+    .or(z.literal('')),
   educationLevel: z
     .string()
     .trim()
@@ -49,6 +67,17 @@ export const regularRegistrationSchema = z.object({
   shift: z
     .string()
     .default('weekend'),
+  // Confession Father
+  hasConfessionFather: z
+    .union([z.boolean(), z.string()])
+    .default(false),
+  confessionFatherName: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal('')),
+  confessionFatherPhone: optionalPhoneValidator,
+  // Address
   subcity: z
     .string()
     .trim()
@@ -84,6 +113,10 @@ export const regularRegistrationSchema = z.object({
     .string()
     .default('regular'),
   // Emergency Contact
+  emergencyContactPhoto: z
+    .string()
+    .optional()
+    .or(z.literal('')),
   emergencyFirstName: z
     .string()
     .trim()
@@ -134,6 +167,15 @@ export const distanceRegistrationSchema = z.object({
     .string()
     .trim()
     .min(1, 'የአያት ስም ግዴታ ነው'),
+  christianName: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal('')),
+  photoUrl: z
+    .string()
+    .optional()
+    .or(z.literal('')),
   educationLevel: z
     .string()
     .trim()
@@ -162,6 +204,17 @@ export const distanceRegistrationSchema = z.object({
     .trim()
     .min(1, 'ስልክ ቁጥር ግዴታ ነው')
     .regex(phoneRegex, 'ትክክለኛ ስልክ ቁጥር ያስገቡ'),
+  // Confession Father
+  hasConfessionFather: z
+    .union([z.boolean(), z.string()])
+    .default(false),
+  confessionFatherName: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal('')),
+  confessionFatherPhone: optionalPhoneValidator,
+  // Address
   subcity: z
     .string()
     .trim()
@@ -197,6 +250,10 @@ export const distanceRegistrationSchema = z.object({
     .string()
     .default('distance'),
   // Emergency Contact
+  emergencyContactPhoto: z
+    .string()
+    .optional()
+    .or(z.literal('')),
   emergencyFirstName: z
     .string()
     .trim()
@@ -236,6 +293,8 @@ export const distanceRegistrationSchema = z.object({
 
 export const studentSelfRegisterSchema = z.object({
   fullName: z.string().trim().min(1, 'ሙሉ ስም ያስገቡ'),
+  christianName: z.string().trim().optional().or(z.literal('')),
+  photoUrl: z.string().optional().or(z.literal('')),
   gender: z.string().default('Male'),
   age: z
     .union([z.string(), z.number()])
@@ -247,6 +306,9 @@ export const studentSelfRegisterSchema = z.object({
     }),
   dateOfBirth: z.string().optional().or(z.literal('')),
   shift: z.string().optional().or(z.literal('')),
+  hasConfessionFather: z.union([z.boolean(), z.string()]).default(false),
+  confessionFatherName: z.string().trim().optional().or(z.literal('')),
+  confessionFatherPhone: optionalPhoneValidator,
   subcity: z.string().trim().optional().or(z.literal('')),
   woreda: z.string().trim().optional().or(z.literal('')),
   kebele: z.string().trim().optional().or(z.literal('')),
@@ -254,6 +316,7 @@ export const studentSelfRegisterSchema = z.object({
   grade: z.string().default('Grade 7'),
   studentType: z.string().default('regular'),
   address: z.string().optional().or(z.literal('')),
+  emergencyContactPhoto: z.string().optional().or(z.literal('')),
   parentName: z.string().optional().or(z.literal('')),
   parentPhone: z.string().optional().or(z.literal('')),
   parentEmail: z.string().optional().or(z.literal('')),

@@ -185,38 +185,60 @@ const StudentProfile = () => {
             <div className="absolute left-1/4 -bottom-10 w-44 h-44 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
-              <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{fullName}</h2>
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                      studentType === 'distance'
-                        ? 'bg-amber-400 text-slate-950'
-                        : 'bg-emerald-400 text-emerald-950'
-                    }`}
-                  >
-                    {studentType === 'distance'
-                      ? (isAmharic ? '🌐 የርቀት ተማሪ' : '🌐 Distance Track')
-                      : (isAmharic ? '🏛️ መደበኛ ተማሪ' : '🏛️ Regular Track')}
-                  </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {profile.photoUrl ? (
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-300 shadow-xl shrink-0">
+                    <img
+                      src={profile.photoUrl}
+                      alt={fullName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 border-2 border-white/20 backdrop-blur-xs flex items-center justify-center text-3xl font-black text-amber-300 shadow-xl shrink-0">
+                    {fullName.charAt(0)}
+                  </div>
+                )}
 
-                  {/* Grade Badge */}
-                  <span className="px-3 py-1 rounded-full bg-blue-500/40 border border-blue-400/40 text-xs font-bold text-white backdrop-blur-xs flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
-                    <span>{isAmharic ? `ክፍል፦ ${gradeDisplay}` : `Class: ${gradeDisplay}`}</span>
-                  </span>
-
-                  {/* Batch if Distance */}
-                  {studentType === 'distance' && batchDisplay !== '-' && (
-                    <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold text-white backdrop-blur-xs">
-                      {isAmharic ? `ዙር፦ ${batchDisplay}` : `Batch: ${batchDisplay}`}
-                    </span>
+                <div className="space-y-1.5">
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">{fullName}</h2>
+                  {profile.christianName && (
+                    <p className="text-sm font-semibold text-amber-300 flex items-center gap-1">
+                      <span>✝️ {isAmharic ? 'የክርስትና ስም፦' : 'Baptismal Name:'}</span>
+                      <span className="font-bold text-white">{profile.christianName}</span>
+                    </p>
                   )}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                        studentType === 'distance'
+                          ? 'bg-amber-400 text-slate-950'
+                          : 'bg-emerald-400 text-emerald-950'
+                      }`}
+                    >
+                      {studentType === 'distance'
+                        ? (isAmharic ? '🌐 የርቀት ተማሪ' : '🌐 Distance Track')
+                        : (isAmharic ? '🏛️ መደበኛ ተማሪ' : '🏛️ Regular Track')}
+                    </span>
+
+                    {/* Grade Badge */}
+                    <span className="px-3 py-1 rounded-full bg-blue-500/40 border border-blue-400/40 text-xs font-bold text-white backdrop-blur-xs flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{isAmharic ? `ክፍል፦ ${gradeDisplay}` : `Class: ${gradeDisplay}`}</span>
+                    </span>
+
+                    {/* Batch if Distance */}
+                    {studentType === 'distance' && batchDisplay !== '-' && (
+                      <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold text-white backdrop-blur-xs">
+                        {isAmharic ? `ዙር፦ ${batchDisplay}` : `Batch: ${batchDisplay}`}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Student ID Highlight Box */}
-              <div className="text-left sm:text-right bg-white/10 p-3.5 sm:p-4 rounded-2xl border border-white/20 backdrop-blur-xs shadow-inner shrink-0">
+              <div className="text-left sm:text-right bg-white/10 p-3.5 sm:p-4 rounded-2xl border border-white/20 backdrop-blur-xs shadow-inner shrink-0 self-stretch sm:self-auto">
                 <p className="text-[11px] text-blue-200 uppercase tracking-wider font-bold">
                   {isAmharic ? 'የተማሪ መለያ ቁጥር' : 'Student ID'}
                 </p>
@@ -328,6 +350,12 @@ const StudentProfile = () => {
             </div>
             <div>
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                {isAmharic ? 'የክርስትና ስም' : 'Baptismal Name'}
+              </span>
+              <span className="font-bold text-[var(--brand-primary)] dark:text-blue-400">{profile.christianName || '-'}</span>
+            </div>
+            <div>
+              <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
                 {isAmharic ? 'ዕድሜ' : 'Age'}
               </span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{profile.age || '-'}</span>
@@ -408,7 +436,56 @@ const StudentProfile = () => {
         </Card>
       </FadeIn>
 
-      {/* 📞 3. EMERGENCY CONTACT */}
+      {/* ✝️ 3. CONFESSION FATHER */}
+      <FadeIn delay={0.12}>
+        <Card variant="default" padding="lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 flex items-center justify-center font-bold">
+                ✝️
+              </span>
+              <span>{isAmharic ? 'የንስሐ አባት መረጃ' : 'Confession Father Information'}</span>
+            </h3>
+            <Badge variant={profile.hasConfessionFather ? 'approved' : 'rejected'} size="sm">
+              {profile.hasConfessionFather
+                ? (isAmharic ? '✅ አላቸው' : 'Has Father')
+                : (isAmharic ? '❌ የላቸውም' : 'None')}
+            </Badge>
+          </div>
+
+          {profile.hasConfessionFather ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-blue-50/50 dark:bg-slate-800/50 p-4 rounded-2xl border border-blue-100 dark:border-slate-800">
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'የንስሐ አባት ስም' : 'Father’s Name'}
+                </span>
+                <span className="font-bold text-slate-900 dark:text-white text-base">
+                  {profile.confessionFatherName || '-'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'የንስሐ አባት ስልክ' : 'Father’s Phone'}
+                </span>
+                <span className="font-bold font-mono text-slate-900 dark:text-white text-base">
+                  {profile.confessionFatherPhone || '-'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 rounded-2xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
+              <span className="text-base">ℹ️</span>
+              <p className="leading-relaxed">
+                {isAmharic
+                  ? 'የንስሐ አባት እስካሁን አልያዙም። የንስሐ አባት እንዲይዙ ሰንበት ትምህርት ቤቱ አስፈላጊውን መንፈሳዊ ድጋፍና መመሪያ ይሰጥዎታል።'
+                  : 'You have not registered a confession father yet. The Sunday school provides spiritual guidance to assist you.'}
+              </p>
+            </div>
+          )}
+        </Card>
+      </FadeIn>
+
+      {/* 📞 4. EMERGENCY CONTACT */}
       <FadeIn delay={0.15}>
         <Card variant="default" padding="lg">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -417,30 +494,44 @@ const StudentProfile = () => {
             </span>
             <span>{isAmharic ? 'የአስቸኳይ ጊዜ ተጠሪ መረጃ' : 'Emergency Contact'}</span>
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
-                {isAmharic ? 'ሙሉ ስም' : 'Full Name'}
-              </span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{emergencyName || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
-                {isAmharic ? 'ዝምድና' : 'Relationship'}
-              </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{getRelationshipLabel(profile.relationship, isAmharic) || profile.relationship || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
-                {isAmharic ? 'ስልክ ቁጥር' : 'Phone'}
-              </span>
-              <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{emergencyPhone || '-'}</span>
-            </div>
-            <div>
-              <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
-                {isAmharic ? 'ኢሜይል' : 'Email'}
-              </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyEmail || '-'}</span>
+          <div className="flex flex-col sm:flex-row gap-4">
+            {profile.emergencyContactPhoto && (
+              <div className="shrink-0 flex flex-col items-center">
+                <span className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+                  {isAmharic ? 'የተጠሪ ፎቶ' : 'Contact Photo'}
+                </span>
+                <img
+                  src={profile.emergencyContactPhoto}
+                  alt={emergencyName || 'Emergency Contact'}
+                  className="w-20 h-20 rounded-2xl object-cover border border-slate-300 dark:border-slate-700 shadow-sm"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm flex-1">
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'ሙሉ ስም' : 'Full Name'}
+                </span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{emergencyName || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'ዝምድና' : 'Relationship'}
+                </span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{getRelationshipLabel(profile.relationship, isAmharic) || profile.relationship || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'ስልክ ቁጥር' : 'Phone'}
+                </span>
+                <span className="font-bold font-mono text-slate-800 dark:text-slate-200">{emergencyPhone || '-'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
+                  {isAmharic ? 'ኢሜይል' : 'Email'}
+                </span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{emergencyEmail || '-'}</span>
+              </div>
             </div>
           </div>
         </Card>

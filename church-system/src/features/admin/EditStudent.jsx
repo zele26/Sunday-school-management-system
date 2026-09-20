@@ -23,6 +23,7 @@ import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { EthiopianDatePicker } from '../../components/ui/EthiopianDatePicker';
+import PhotoUploadField from '../../components/ui/PhotoUploadField';
 import { toast } from '../../utils/toast';
 import {
   EDUCATION_LEVEL_OPTIONS,
@@ -59,12 +60,17 @@ const EditStudent = () => {
   const [customGrade, setCustomGrade] = useState(false);
 
   const [form, setForm] = useState({
+    photoUrl: '',
     studentId: '',
     registrationNumber: '',
     batch: '',
     firstName: '',
     middleName: '',
     lastName: '',
+    christianName: '',
+    hasConfessionFather: false,
+    confessionFatherName: '',
+    confessionFatherPhone: '',
     phone: '',
     grade: 'Grade 7',
     age: '',
@@ -77,6 +83,7 @@ const EditStudent = () => {
     educationLevel: '',
     profession: '',
     gender: 'Male',
+    emergencyContactPhoto: '',
     emergencyFirstName: '',
     emergencyMiddleName: '',
     emergencyLastName: '',
@@ -100,12 +107,17 @@ const EditStudent = () => {
           }
 
           setForm({
+            photoUrl: s.photoUrl || '',
             studentId: s.studentId || '',
             registrationNumber: s.registrationNumber || '',
             batch: s.batch || '',
             firstName: s.firstName || '',
             middleName: s.middleName || '',
             lastName: s.lastName || '',
+            christianName: s.christianName || '',
+            hasConfessionFather: Boolean(s.hasConfessionFather),
+            confessionFatherName: s.confessionFatherName || '',
+            confessionFatherPhone: s.confessionFatherPhone || '',
             phone: s.studentPhone || s.contactPhone || '',
             grade: currentGrade,
             age: s.age || '',
@@ -118,6 +130,7 @@ const EditStudent = () => {
             educationLevel: s.educationLevel || '',
             profession: s.profession || '',
             gender: s.gender || 'Male',
+            emergencyContactPhoto: s.emergencyContactPhoto || '',
             emergencyFirstName: s.emergencyFirstName || s.parentName || '',
             emergencyMiddleName: s.emergencyMiddleName || '',
             emergencyLastName: s.emergencyLastName || '',
@@ -153,12 +166,17 @@ const EditStudent = () => {
     setSubmitting(true);
 
     const payload = {
+      photoUrl: form.photoUrl,
       studentId: form.studentId ? form.studentId.trim() : undefined,
       registrationNumber: form.registrationNumber ? form.registrationNumber.trim() : '',
       batch: form.batch ? form.batch.trim() : '',
       firstName: form.firstName.trim(),
       middleName: form.middleName.trim(),
       lastName: form.lastName.trim(),
+      christianName: form.christianName ? form.christianName.trim() : '',
+      hasConfessionFather: form.hasConfessionFather,
+      confessionFatherName: form.confessionFatherName ? form.confessionFatherName.trim() : '',
+      confessionFatherPhone: form.confessionFatherPhone ? form.confessionFatherPhone.trim() : '',
       grade: form.grade ? form.grade.trim() : 'Grade 7',
       age: form.age ? Number(form.age) : undefined,
       shift: form.shift,
@@ -172,6 +190,7 @@ const EditStudent = () => {
       educationLevel: form.educationLevel,
       profession: form.profession,
       gender: form.gender,
+      emergencyContactPhoto: form.emergencyContactPhoto,
       emergencyFirstName: form.emergencyFirstName.trim(),
       emergencyMiddleName: form.emergencyMiddleName.trim(),
       emergencyLastName: form.emergencyLastName.trim(),
@@ -315,10 +334,20 @@ const EditStudent = () => {
         </Card>
 
         {/* Section 2: Personal Information */}
-        <Card variant="default" padding="lg" className="space-y-4">
+        <Card variant="default" padding="lg" className="space-y-5">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <User className="w-5 h-5 text-[var(--brand-primary)]" />
             <h3 className="text-base font-bold text-slate-900 dark:text-white">የተማሪው የግል መረጃ (Personal Details)</h3>
+          </div>
+
+          {/* Student Photo */}
+          <div className="pb-2">
+            <PhotoUploadField
+              label="የተማሪው ፎቶ (የቁም ፎቶ)"
+              hint="የተማሪውን ግልጽ የቁም ፎቶ ያስገቡ (JPEG/PNG/WebP እስከ 5MB)"
+              value={form.photoUrl}
+              onChange={(url) => setForm((prev) => ({ ...prev, photoUrl: url }))}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -336,11 +365,105 @@ const EditStudent = () => {
             </div>
           </div>
 
+          {/* Christian / Baptismal Name */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <span>✝️ የክርስትና ስም (Baptismal Name)</span>
+              </label>
+              <Input
+                name="christianName"
+                placeholder="ምሳሌ፡ ወልደ ሥላሴ / ገብረ ማርያም"
+                value={form.christianName}
+                onChange={handleChange}
+              />
+            </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዕድሜ (Age &gt; 14)</label>
               <Input type="number" name="age" min="15" max="120" placeholder="ምሳሌ፡ 18" value={form.age} onChange={handleChange} />
             </div>
+          </div>
+
+          {/* ✝️ Spiritual Father Section */}
+          <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-slate-800/60 border border-blue-100 dark:border-slate-700 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <label className="block text-sm font-bold text-slate-900 dark:text-white">
+                  የንስሐ አባት አለዎት? (Do you have a confession father?)
+                </label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  የንስሐ አባት ካለዎት መረጃቸውን ያስገቡ፤ ከሌለዎትም በኋላ እንዲይዙ ይመቻቻል።
+                </p>
+              </div>
+
+              {/* Yes / No Pill Selector */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, hasConfessionFather: true }))}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    form.hasConfessionFather
+                      ? 'bg-[var(--brand-primary)] text-white shadow-md'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  ✓ አዎ / አለኝ
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      hasConfessionFather: false,
+                      confessionFatherName: '',
+                      confessionFatherPhone: '',
+                    }))
+                  }
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    !form.hasConfessionFather
+                      ? 'bg-slate-700 text-white shadow-md dark:bg-slate-600'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  ✕ የለኝም / አልያዝኩም
+                </button>
+              </div>
+            </div>
+
+            {form.hasConfessionFather ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-blue-200/50 dark:border-slate-700">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    የንስሐ አባት ስም
+                  </label>
+                  <Input
+                    name="confessionFatherName"
+                    placeholder="ምሳሌ፡ አባ ወልደ ገብርኤል"
+                    value={form.confessionFatherName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    የንስሐ አባት ስልክ
+                  </label>
+                  <Input
+                    icon={Phone}
+                    name="confessionFatherPhone"
+                    placeholder="0911234567"
+                    value={form.confessionFatherPhone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-800/40">
+                ℹ️ የንስሐ አባት ባይኖርዎትም መመዝገብ ይችላሉ፤ ሰንበት ትምህርት ቤቱ የንስሐ አባት እንዲይዙ አስፈላጊውን መንፈሳዊ ድጋፍ ይሰጥዎታል።
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ጾታ (Gender)</label>
               <Select name="gender" value={form.gender} onChange={handleChange}>
@@ -447,6 +570,16 @@ const EditStudent = () => {
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
             <Heart className="w-5 h-5 text-rose-500" />
             <h3 className="text-base font-bold text-slate-900 dark:text-white">የአደጋ ጊዜ ተጠሪ (Emergency Contact)</h3>
+          </div>
+
+          {/* Emergency Contact Photo */}
+          <div className="pb-2">
+            <PhotoUploadField
+              label="የአደጋ ጊዜ ተጠሪ ፎቶ (Emergency Contact Photo)"
+              hint="የአደጋ ጊዜ ተጠሪውን ፎቶ ያስገቡ (አማራጭ)"
+              value={form.emergencyContactPhoto}
+              onChange={(url) => setForm((prev) => ({ ...prev, emergencyContactPhoto: url }))}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

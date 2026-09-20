@@ -160,6 +160,8 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       password: reg.password,
       role: 'student',
       status: 'approved',
+      christianName: reg.christianName || '',
+      profilePicture: reg.photoUrl || '',
     });
 
     // Generate official student ID
@@ -181,6 +183,7 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       firstName: reg.firstName || reg.fullName,
       middleName: reg.middleName || '',
       lastName: reg.lastName || '',
+      christianName: reg.christianName || '',
       grade: reg.grade,
       batch: reg.batch || null,
       educationLevel: reg.educationLevel || '',
@@ -195,6 +198,13 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       address: reg.address || '',
       studentPhone: reg.phone,
       email: reg.email || '',
+      // Confession Father details
+      hasConfessionFather: Boolean(reg.hasConfessionFather),
+      confessionFatherName: reg.confessionFatherName || '',
+      confessionFatherPhone: reg.confessionFatherPhone || '',
+      // Photos
+      photoUrl: reg.photoUrl || '',
+      emergencyContactPhoto: reg.emergencyContactPhoto || '',
       emergencyFirstName,
       emergencyMiddleName,
       emergencyLastName,

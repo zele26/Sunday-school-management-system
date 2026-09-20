@@ -150,6 +150,38 @@ const AcademicEnrollmentDetails = () => {
         }
       />
 
+      {/* Student Profile Card */}
+      {enrollment?.studentProfileId?.personId && (
+        <Card variant="default" padding="md" className="flex items-center gap-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+          {enrollment.studentProfileId.personId.photoUrl ? (
+            <img
+              src={enrollment.studentProfileId.personId.photoUrl}
+              alt=""
+              className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-400 shadow-md shrink-0"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-xl flex items-center justify-center shadow-md shrink-0">
+              {enrollment.studentProfileId.personId.firstName ? enrollment.studentProfileId.personId.firstName.charAt(0) : 'ተ'}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+              {[enrollment.studentProfileId.personId.firstName, enrollment.studentProfileId.personId.middleName, enrollment.studentProfileId.personId.lastName].filter(Boolean).join(' ')}
+            </h3>
+            {enrollment.studentProfileId.personId.christianName && (
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-bold mt-0.5">
+                † የክርስትና ስም: {enrollment.studentProfileId.personId.christianName}
+              </p>
+            )}
+            {enrollment.studentProfileId.studentNumber && (
+              <span className="inline-block mt-1 font-mono text-[11px] bg-white dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                ID: {enrollment.studentProfileId.studentNumber}
+              </span>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* Summary Info */}
       {enrollment && (
         <Card variant="elevated" padding="md">

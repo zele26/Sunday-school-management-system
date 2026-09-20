@@ -49,6 +49,13 @@ const studentSchema = new mongoose.Schema({
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   teachers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EducationCourse' }],
+  // Orthodox / Spiritual & Photo fields
+  christianName: { type: String, default: '' },            // የክርስትና ስም
+  hasConfessionFather: { type: Boolean, default: false },   // የንስሐ አባት አለ / የለም
+  confessionFatherName: { type: String, default: '' },      // የንስሐ አባት ስም
+  confessionFatherPhone: { type: String, default: '' },     // የንስሐ አባት ስልክ
+  photoUrl: { type: String, default: '' },                  // የተማሪ ፎቶ
+  emergencyContactPhoto: { type: String, default: '' },     // የአደጋ ጊዜ ተጠሪ ፎቶ
   qrCode: { type: String, unique: true, sparse: true },
   studentType: { type: String, enum: ['regular', 'distance'], default: 'regular' },
   // Telegram Bot integration

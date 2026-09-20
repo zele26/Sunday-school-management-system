@@ -81,7 +81,7 @@ router.get('/attendance', async (req, res) => {
     }
 
     const attendances = await Attendance.find(query)
-      .populate('student', 'firstName lastName grade')
+      .populate('student', 'firstName middleName lastName christianName photoUrl grade')
       .populate('course', 'name')
       .sort({ date: -1 });
 

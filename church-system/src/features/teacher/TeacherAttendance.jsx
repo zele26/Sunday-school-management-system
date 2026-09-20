@@ -296,8 +296,30 @@ const TeacherAttendance = () => {
                         return (
                           <tr key={s._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                             <td className="p-3.5 text-center font-mono text-slate-400">{idx + 1}</td>
-                            <td className="p-3.5 font-bold text-slate-900 dark:text-white">
-                              {s.fullName}
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-2.5">
+                                {s.photoUrl ? (
+                                  <img
+                                    src={s.photoUrl}
+                                    alt=""
+                                    className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-xs shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {s.fullName ? s.fullName.charAt(0) : 'ተ'}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                                    {s.fullName}
+                                  </span>
+                                  {s.christianName && (
+                                    <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium block truncate">
+                                      † {s.christianName}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </td>
                             <td className="p-3.5 font-mono text-slate-500 font-bold">{s.studentId || '-'}</td>
                             <td className="p-3.5">

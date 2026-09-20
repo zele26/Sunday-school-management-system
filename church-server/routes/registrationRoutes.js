@@ -87,6 +87,10 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const {
       fullName, firstName, middleName, lastName, educationLevel, profession,
       gender, dateOfBirth, age, subcity, woreda, kebele, shift, phone, grade, address,
+      // Orthodox & Confession Father fields
+      christianName, hasConfessionFather, confessionFatherName, confessionFatherPhone,
+      // Photos
+      photoUrl, emergencyContactPhoto,
       // New emergency fields
       emergencyFirstName, emergencyMiddleName, emergencyLastName,
       relationship, emergencyPhone, emergencyEmail, emergencyAddress,
@@ -130,6 +134,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const normalizedFirstName = (firstName || fullName || '').toString().trim();
     const normalizedMiddleName = (middleName || '').toString().trim();
     const normalizedLastName = (lastName || '').toString().trim();
+    const normalizedChristianName = (christianName || '').toString().trim();
     const normalizedEducationLevel = (educationLevel || '').toString().trim();
     const normalizedProfession = (profession || '').toString().trim();
     const normalizedFullName = [normalizedFirstName, normalizedMiddleName, normalizedLastName].filter(Boolean).join(' ').trim();
@@ -138,6 +143,19 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const normalizedWoreda = (woreda || '').toString().trim();
     const normalizedKebele = (kebele || '').toString().trim();
     const normalizedShift = (shift || (studentType === 'regular' ? 'weekend' : '')).toString().trim();
+
+    const isHasConfessionFather = Boolean(
+      hasConfessionFather === true ||
+      hasConfessionFather === 'true' ||
+      hasConfessionFather === 'yes' ||
+      hasConfessionFather === '1'
+    );
+    const normalizedConfessionFatherName = isHasConfessionFather ? (confessionFatherName || '').toString().trim() : '';
+    const rawConfessionFatherPhone = isHasConfessionFather ? (confessionFatherPhone || '').toString().trim() : '';
+    const normalizedConfessionFatherPhone = rawConfessionFatherPhone ? normalizeEthiopianPhone(rawConfessionFatherPhone) : '';
+
+    const finalPhotoUrl = (photoUrl || '').toString().trim();
+    const finalEmergencyContactPhoto = (emergencyContactPhoto || '').toString().trim();
 
     // Determine batch and grade
     let finalGrade = grade;
@@ -181,6 +199,11 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       return res.status(400).json({ success: false, message: 'የአደጋ ጊዜ ተጠሪ ስልክ በትክክል 10 አሃዝ መሆን አለበት' });
     }
 
+    // Validate confession father phone if provided
+    if (normalizedConfessionFatherPhone && !isValidPhone(normalizedConfessionFatherPhone)) {
+      return res.status(400).json({ success: false, message: 'የንስሐ አባት ስልክ ቁጥር በትክክል 10 አሃዝ መሆን አለበት' });
+    }
+
     // Email optional but validated
     if (email && email.trim() !== '') {
       const emailRegex = /^\S+@\S+\.\S+$/;
@@ -208,12 +231,20 @@ router.post('/', upload.single('receipt'), async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    let receiptUrl = '';
+    let receiptUrl = req.body.receiptUrl || '';
     if (req.file) {
       const b64 = Buffer.from(req.file.buffer).toString('base64');
       const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-      const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
-      receiptUrl = result.secure_url;
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+        try {
+          const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
+          receiptUrl = result.secure_url;
+        } catch (cErr) {
+          receiptUrl = dataURI;
+        }
+      } else {
+        receiptUrl = dataURI;
+      }
     }
 
     const registrationNumber = await generateRegNumber();
@@ -224,6 +255,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       firstName: normalizedFirstName,
       middleName: normalizedMiddleName,
       lastName: normalizedLastName,
+      christianName: normalizedChristianName,
       educationLevel: normalizedEducationLevel,
       profession: normalizedProfession,
       gender: gender || 'Male',
@@ -237,6 +269,13 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       grade: finalGrade,
       batch,
       address: address || '',
+      // Confession Father
+      hasConfessionFather: isHasConfessionFather,
+      confessionFatherName: normalizedConfessionFatherName,
+      confessionFatherPhone: normalizedConfessionFatherPhone,
+      // Photos
+      photoUrl: finalPhotoUrl,
+      emergencyContactPhoto: finalEmergencyContactPhoto,
       // New emergency fields
       emergencyFirstName: finalEmergencyFirstName,
       emergencyMiddleName: finalEmergencyMiddleName,

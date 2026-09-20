@@ -39,9 +39,33 @@ const AcademicEnrollmentsManagement = () => {
         accessorKey: 'student',
         header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ ስም" />,
         cell: ({ row }) => {
-          const profile = row.original.studentProfileId?.personId;
-          const name = profile ? `${profile.firstName} ${profile.lastName}` : 'ያልታወቀ';
-          return <span className="font-bold text-slate-900 dark:text-white">{name}</span>;
+          const profile = row.original.studentProfileId?.personId || {};
+          const name = [profile.firstName, profile.middleName, profile.lastName].filter(Boolean).join(' ') || 'ያልታወቀ';
+          return (
+            <div className="flex items-center gap-2.5">
+              {profile.photoUrl ? (
+                <img
+                  src={profile.photoUrl}
+                  alt=""
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shadow-xs shrink-0"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-xs shrink-0">
+                  {profile.firstName ? profile.firstName.charAt(0) : 'ተ'}
+                </div>
+              )}
+              <div className="min-w-0">
+                <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                  {name}
+                </span>
+                {profile.christianName && (
+                  <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium block truncate">
+                    † {profile.christianName}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
         },
       },
       {

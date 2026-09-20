@@ -90,6 +90,7 @@ const userSchema = new mongoose.Schema(
       default: true,
     },
     profilePicture: { type: String, trim: true },
+    christianName: { type: String, trim: true, default: '' },
     gender: {
       type: String,
       enum: ['Male', 'Female', ''],

@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { regularRegistrationSchema } from '../schemas';
-import { EthiopianDatePicker, BackButton } from '../components/ui';
+import { EthiopianDatePicker, BackButton, PhotoUploadField } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
 import { useRegistrationStatus } from '../hooks/queries';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
@@ -37,6 +37,8 @@ const RegisterRegularContent = () => {
       firstName: '',
       middleName: '',
       lastName: '',
+      christianName: '',
+      photoUrl: '',
       educationLevel: '',
       profession: '',
       gender: 'Male',
@@ -45,6 +47,9 @@ const RegisterRegularContent = () => {
       phone: '',
       grade: 'Grade 7',
       shift: 'weekend',
+      hasConfessionFather: false,
+      confessionFatherName: '',
+      confessionFatherPhone: '',
       subcity: '',
       woreda: '',
       kebele: '',
@@ -53,6 +58,7 @@ const RegisterRegularContent = () => {
       password: '',
       confirmPassword: '',
       studentType: 'regular',
+      emergencyContactPhoto: '',
       emergencyFirstName: '',
       emergencyMiddleName: '',
       emergencyLastName: '',
@@ -436,14 +442,32 @@ const RegisterRegularContent = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md"
+            className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md space-y-6"
           >
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 flex items-center justify-center text-lg font-bold">👤</div>
               <h2 className="text-lg font-bold text-slate-800 dark:text-white">
                 {t('personalInfoSection', 'የግል መረጃ')}
               </h2>
             </div>
+
+            {/* Student Photo Upload */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+              <Controller
+                control={control}
+                name="photoUrl"
+                render={({ field }) => (
+                  <PhotoUploadField
+                    value={field.value}
+                    onChange={field.onChange}
+                    label={t('studentPhotoLabel', 'የተማሪው ፎቶ')}
+                    helperText={t('studentPhotoHelp', 'የቅርብ ጊዜ የተማሪውን ፎቶ ይጫኑ (ፓስፖርት ሳይዝ ይመረጣል)')}
+                    placeholderIcon="user"
+                  />
+                )}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
@@ -481,6 +505,20 @@ const RegisterRegularContent = () => {
                 />
                 {errors.lastName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.lastName.message}</p>}
               </div>
+
+              {/* Christian / Baptismal Name (የክርስትና ስም) */}
+              <div>
+                <label className={labelClass}>
+                  {t('christianNameLabel', 'የክርስትና ስም')} <span className="text-amber-600 dark:text-amber-400 text-xs font-normal">({t('emailOptional', 'አማራጭ')})</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder={t('christianNamePlaceholder', 'ምሳሌ፡ ወልደ ማርያም / ወለተ ጊዮርጊስ')}
+                  {...register('christianName')}
+                  className={inputClass}
+                />
+              </div>
+
               <div>
                 <label className={labelClass}>
                   {t('educationLevelLabel', 'ዓለማዊ የትምህርት ደረጃ')} <span className="text-rose-500">*</span>
@@ -637,6 +675,134 @@ const RegisterRegularContent = () => {
             </div>
           </motion.div>
 
+          {/* ⛪ Confession Father (የንስሐ አባት) Section */}
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md space-y-5">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-bold">⛪</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+                  {t('confessionFatherSection', 'የንስሐ አባት መረጃ')}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t('hasConfessionFatherQuestion', 'የንስሐ አባት አለዎት?')}
+                </p>
+              </div>
+            </div>
+
+            {/* Yes / No Toggle Selector Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setValue('hasConfessionFather', true, { shouldValidate: true })}
+                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${
+                  watch('hasConfessionFather') === true
+                    ? 'border-[#1657b8] bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div className="space-y-0.5">
+                  <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>✨</span>
+                    <span>{t('hasConfessionFatherYes', 'አዎ / አለኝ')}</span>
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    የንስሐ አባት ስም እና ስልክ ያስገቡ
+                  </p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  watch('hasConfessionFather') === true
+                    ? 'border-[#1657b8] bg-[#1657b8] text-white'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {watch('hasConfessionFather') === true && <span className="text-xs">✓</span>}
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('hasConfessionFather', false, { shouldValidate: true });
+                  setValue('confessionFatherName', '');
+                  setValue('confessionFatherPhone', '');
+                }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${
+                  watch('hasConfessionFather') === false
+                    ? 'border-amber-400 bg-amber-50/70 dark:bg-amber-950/40 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
+                }`}
+              >
+                <div className="space-y-0.5">
+                  <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>🕊️</span>
+                    <span>{t('hasConfessionFatherNo', 'የለኝም / አልያዝኩም')}</span>
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    ሰንበት ት/ቤቱ ድጋፍ ያደርግልዎታል
+                  </p>
+                </div>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  watch('hasConfessionFather') === false
+                    ? 'border-amber-500 bg-amber-500 text-white'
+                    : 'border-slate-300 dark:border-slate-600'
+                }`}>
+                  {watch('hasConfessionFather') === false && <span className="text-xs">✓</span>}
+                </div>
+              </button>
+            </div>
+
+            {/* Conditional Input Fields or Guidance Message */}
+            <AnimatePresence mode="wait">
+              {watch('hasConfessionFather') === true ? (
+                <motion.div
+                  key="confession-inputs"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2"
+                >
+                  <div>
+                    <label className={labelClass}>
+                      {t('confessionFatherNameLabel', 'የንስሐ አባት ስም')} <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={t('confessionFatherNamePlaceholder', 'የንስሐ አባት ስም (ምሳሌ፡ አባ... / መጋቢ...)')}
+                      {...register('confessionFatherName')}
+                      className={`${inputClass} ${errors.confessionFatherName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                    />
+                    {errors.confessionFatherName && (
+                      <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.confessionFatherName.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className={labelClass}>
+                      {t('confessionFatherPhoneLabel', 'የንስሐ አባት ስልክ ቁጥር')}
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder={t('confessionFatherPhonePlaceholder', '09XXXXXXXX / 07XXXXXXXX')}
+                      {...register('confessionFatherPhone')}
+                      className={`${inputClass} ${errors.confessionFatherPhone ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
+                    />
+                    {errors.confessionFatherPhone && (
+                      <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.confessionFatherPhone.message}</p>
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="confession-notice"
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-xs sm:text-sm text-amber-900 dark:text-amber-200 leading-relaxed flex items-start gap-2.5"
+                >
+                  <span className="text-base shrink-0">💡</span>
+                  <span>{t('noConfessionFatherGuidance', 'የንስሐ አባት ባይኖርዎትም መመዝገብ ይችላሉ፤ ሰንበት ትምህርት ቤቱ የንስሐ አባት እንዲይዙ አስፈላጊውን መንፈሳዊ ድጋፍና መመሪያ ይሰጥዎታል።')}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Residential Address Information */}
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md">
             <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -700,13 +866,31 @@ const RegisterRegularContent = () => {
           </div>
 
           {/* Emergency Info */}
-          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md">
-            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 transition-all hover:shadow-md space-y-5">
+            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg">👨‍👩‍👧</div>
               <h2 className="text-lg font-bold text-slate-800 dark:text-white">
                 {t('emergencyContactSection', 'የአደጋ ጊዜ ተጠሪ መረጃ')}
               </h2>
             </div>
+
+            {/* Emergency Contact Photo Upload (Optional) */}
+            <div className="bg-slate-50/70 dark:bg-slate-800/40 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
+              <Controller
+                control={control}
+                name="emergencyContactPhoto"
+                render={({ field }) => (
+                  <PhotoUploadField
+                    value={field.value}
+                    onChange={field.onChange}
+                    label={t('emergencyContactPhotoLabel', 'የአደጋ ጊዜ ተጠሪ ፎቶ')}
+                    helperText={t('emergencyContactPhotoHelp', 'የአደጋ ጊዜ ተጠሪውን ፎቶ ማያያዝ ይችላሉ (አማራጭ)')}
+                    placeholderIcon="contact"
+                  />
+                )}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>

@@ -9,6 +9,12 @@ const personSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   email: { type: String, lowercase: true, default: '' },
   address: { type: String, default: '' },
+  photoUrl: { type: String, default: '' },
+  christianName: { type: String, default: '' },
+  hasConfessionFather: { type: Boolean, default: null },
+  confessionFatherName: { type: String, default: '' },
+  confessionFatherPhone: { type: String, default: '' },
+  emergencyContactPhoto: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 }, { timestamps: true });

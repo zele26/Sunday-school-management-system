@@ -753,7 +753,7 @@ router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
     }
 
     const students = await Student.find(query)
-      .select('firstName middleName lastName studentId grade batch studentType shift phone qrCode photo')
+      .select('firstName middleName lastName christianName studentId grade batch studentType shift phone qrCode photo photoUrl')
       .sort({ firstName: 1, lastName: 1 });
 
     const attendanceDate = date ? new Date(date) : new Date();
@@ -780,6 +780,8 @@ router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
         fullName: `${s.firstName || ''} ${s.middleName || ''} ${s.lastName || ''}`.trim(),
         firstName: s.firstName,
         lastName: s.lastName,
+        christianName: s.christianName || '',
+        photoUrl: s.photoUrl || s.photo || '',
         grade: s.grade || s.batch || '',
         studentType: s.studentType || 'regular',
         shift: s.shift || '',

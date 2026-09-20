@@ -39,6 +39,12 @@ const registrationSchema = new mongoose.Schema({
   parentEmail: { type: String, default: '' },
 
   email: { type: String, lowercase: true, default: '' },   // optional
+  christianName: { type: String, default: '' },            // የክርስትና ስም
+  hasConfessionFather: { type: Boolean, default: false },   // የንስሐ አባት አለ / የለም
+  confessionFatherName: { type: String, default: '' },      // የንስሐ አባት ስም
+  confessionFatherPhone: { type: String, default: '' },     // የንስሐ አባት ስልክ
+  photoUrl: { type: String, default: '' },                  // የተማሪ ፎቶ
+  emergencyContactPhoto: { type: String, default: '' },     // የአደጋ ጊዜ ተጠሪ ፎቶ
   password: { type: String, required: true },
   studentType: { type: String, enum: ['regular', 'distance'], required: true },
   transactionRef: { type: String },
