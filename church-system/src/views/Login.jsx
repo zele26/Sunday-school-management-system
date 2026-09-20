@@ -69,6 +69,16 @@ const Login = () => {
   // Helper to determine destination path based on role and permissions
   const getDestinationPath = (userObj) => {
     const role = (typeof userObj === 'string' ? userObj : userObj?.role)?.toLowerCase() || '';
+
+    // Students always land on their personal student dashboard first
+    if (role === 'student') {
+      return '/dashboard';
+    }
+
+    if (role === 'teacher') {
+      return '/teacher';
+    }
+
     const hasAdminAccess =
       ['admin', 'superadmin', 'department_admin', 'staff'].includes(role) ||
       (Array.isArray(userObj?.roles) && userObj.roles.some((r) => ['admin', 'superadmin', 'department_admin', 'staff'].includes(r?.toLowerCase()))) ||
@@ -77,9 +87,7 @@ const Login = () => {
     if (hasAdminAccess) {
       return getFirstPermittedAdminRoute(userObj);
     }
-    if (role === 'teacher') {
-      return '/teacher';
-    }
+
     return '/dashboard';
   };
 
