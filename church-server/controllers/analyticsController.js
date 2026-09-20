@@ -15,30 +15,33 @@ const getStudentFullName = (s) => {
  */
 exports.getStudentAnalytics = async (req, res) => {
   try {
-    let student = await Student.findOne({ userId: req.user._id });
+    let student = await Student.findOne({ userId: req.user._id }).lean();
     if (!student && req.query.studentId && ['admin', 'superadmin', 'teacher'].includes(req.user.role)) {
-      student = await Student.findById(req.query.studentId);
+      student = await Student.findById(req.query.studentId).lean();
     }
     if (!student) {
       return res.status(404).json({ success: false, message: 'ተማሪው አልተገኘም' });
     }
 
-    // 1. Fetch all attendance records
-    const attendances = await Attendance.find({ student: student._id })
-      .populate('course', 'name code')
-      .sort({ date: -1 });
+    // Parallel fetch: attendance records & grade records (both lean)
+    const [attendances, gradeRecords] = await Promise.all([
+      Attendance.find({ student: student._id })
+        .populate('course', 'name code')
+        .sort({ date: -1 })
+        .lean(),
+      GradeRecord.find({ student: student._id })
+        .populate('course', 'name code')
+        .sort({ createdAt: -1 })
+        .lean()
+    ]);
 
     const totalAttendanceCount = attendances.length;
-    const presentCount = attendances.filter(a => a.status === 'Present').length;
-    const lateCount = attendances.filter(a => a.status === 'Late').length;
-    const absentCount = attendances.filter(a => a.status === 'Absent').length;
-    const excusedCount = attendances.filter(a => a.status === 'Excused').length;
+    let presentCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    let excusedCount = 0;
 
-    const overallAttendanceRate = totalAttendanceCount > 0
-      ? Number((((presentCount + lateCount) / totalAttendanceCount) * 100).toFixed(1))
-      : 100;
-
-    // 2. Course-wise attendance breakdown
+    // Course-wise attendance breakdown
     const courseMap = {};
     attendances.forEach(a => {
       const cId = a.course?._id?.toString() || 'other';
@@ -55,21 +58,29 @@ exports.getStudentAnalytics = async (req, res) => {
         };
       }
       courseMap[cId].total += 1;
-      if (a.status === 'Present') courseMap[cId].present += 1;
-      else if (a.status === 'Late') courseMap[cId].late += 1;
-      else if (a.status === 'Absent') courseMap[cId].absent += 1;
-      else if (a.status === 'Excused') courseMap[cId].excused += 1;
+      if (a.status === 'Present') {
+        presentCount += 1;
+        courseMap[cId].present += 1;
+      } else if (a.status === 'Late') {
+        lateCount += 1;
+        courseMap[cId].late += 1;
+      } else if (a.status === 'Absent') {
+        absentCount += 1;
+        courseMap[cId].absent += 1;
+      } else if (a.status === 'Excused') {
+        excusedCount += 1;
+        courseMap[cId].excused += 1;
+      }
     });
+
+    const overallAttendanceRate = totalAttendanceCount > 0
+      ? Number((((presentCount + lateCount) / totalAttendanceCount) * 100).toFixed(1))
+      : 100;
 
     const courseBreakdown = Object.values(courseMap).map(c => {
       const rate = c.total > 0 ? Number((((c.present + c.late) / c.total) * 100).toFixed(1)) : 100;
       return { ...c, rate, isAtRisk: rate < 75 };
     });
-
-    // 3. Fetch academic grades
-    const gradeRecords = await GradeRecord.find({ student: student._id })
-      .populate('course', 'name code')
-      .sort({ createdAt: -1 });
 
     const totalScoreSum = gradeRecords.reduce((acc, g) => acc + (g.totalScore || 0), 0);
     const averageScore = gradeRecords.length > 0 ? Number((totalScoreSum / gradeRecords.length).toFixed(1)) : 0;
@@ -135,18 +146,22 @@ exports.getTeacherAnalytics = async (req, res) => {
     const isTeacher = req.user.role === 'teacher';
     const courseQuery = isTeacher ? { teacher: req.user._id } : {};
 
-    const teacherCourses = await Course.find(courseQuery).select('_id name code grade shift');
+    const teacherCourses = await Course.find(courseQuery).select('_id name code grade shift').lean();
     const courseIds = teacherCourses.map(c => c._id);
 
     const attendanceQuery = isTeacher ? { course: { $in: courseIds } } : {};
-    const attendances = await Attendance.find(attendanceQuery)
-      .populate('student', 'firstName middleName lastName studentId grade shift studentPhone')
-      .populate('course', 'name grade shift');
-
     const gradeRecordQuery = isTeacher ? { course: { $in: courseIds } } : {};
-    const gradeRecords = await GradeRecord.find(gradeRecordQuery)
-      .populate('student', 'firstName middleName lastName studentId grade shift studentPhone')
-      .populate('course', 'name');
+
+    const [attendances, gradeRecords] = await Promise.all([
+      Attendance.find(attendanceQuery)
+        .populate('student', 'firstName middleName lastName studentId grade shift studentPhone')
+        .populate('course', 'name grade shift')
+        .lean(),
+      GradeRecord.find(gradeRecordQuery)
+        .populate('student', 'firstName middleName lastName studentId grade shift studentPhone')
+        .populate('course', 'name')
+        .lean()
+    ]);
 
     // Aggregate by student
     const studentStatsMap = {};
@@ -249,27 +264,61 @@ exports.getTeacherAnalytics = async (req, res) => {
  */
 exports.getAdminAnalytics = async (req, res) => {
   try {
-    const totalStudentsCount = await Student.countDocuments({});
-    const totalAttendancesCount = await Attendance.countDocuments({});
-
-    // 1. Shift Breakdown: Weekend vs Night
-    const shiftAggregation = await Attendance.aggregate([
-      {
-        $group: {
-          _id: { $toLower: { $ifNull: ['$shift', 'weekend'] } },
-          total: { $sum: 1 },
-          present: {
-            $sum: {
-              $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
-            }
-          },
-          absent: {
-            $sum: {
-              $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0]
+    // Parallel execute all analytics count and aggregation pipelines
+    const [totalStudentsCount, totalAttendancesCount, shiftAggregation, gradeAggregation, lowAttendanceAgg] = await Promise.all([
+      Student.countDocuments({}),
+      Attendance.countDocuments({}),
+      Attendance.aggregate([
+        {
+          $group: {
+            _id: { $toLower: { $ifNull: ['$shift', 'weekend'] } },
+            total: { $sum: 1 },
+            present: {
+              $sum: {
+                $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
+              }
+            },
+            absent: {
+              $sum: {
+                $cond: [{ $eq: ['$status', 'Absent'] }, 1, 0]
+              }
             }
           }
         }
-      }
+      ]),
+      Attendance.aggregate([
+        {
+          $group: {
+            _id: '$grade',
+            total: { $sum: 1 },
+            present: {
+              $sum: {
+                $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
+              }
+            }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]),
+      Attendance.aggregate([
+        {
+          $group: {
+            _id: '$student',
+            total: { $sum: 1 },
+            present: {
+              $sum: {
+                $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            rate: { $multiply: [{ $divide: ['$present', '$total'] }, 100] }
+          }
+        },
+        { $match: { rate: { $lt: 75 } } }
+      ])
     ]);
 
     const shiftBreakdown = {
@@ -291,22 +340,6 @@ exports.getAdminAnalytics = async (req, res) => {
       shiftBreakdown.night.rate = Number(((shiftBreakdown.night.present / shiftBreakdown.night.total) * 100).toFixed(1));
     }
 
-    // 2. Grade 7 to 12 Breakdown
-    const gradeAggregation = await Attendance.aggregate([
-      {
-        $group: {
-          _id: '$grade',
-          total: { $sum: 1 },
-          present: {
-            $sum: {
-              $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
-            }
-          }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
     const gradeBreakdown = gradeAggregation.map(g => ({
       grade: g._id || 'ያልተገለጸ',
       totalLogs: g.total,
@@ -314,32 +347,10 @@ exports.getAdminAnalytics = async (req, res) => {
       rate: g.total > 0 ? Number(((g.present / g.total) * 100).toFixed(1)) : 0,
     }));
 
-    // 3. Overall School Attendance Rate
     const totalPresentLogs = (shiftBreakdown.weekend.present + shiftBreakdown.night.present);
     const overallSchoolRate = totalAttendancesCount > 0
       ? Number(((totalPresentLogs / totalAttendancesCount) * 100).toFixed(1))
       : 100;
-
-    // 4. Low attendance students count (< 75% attendance)
-    const lowAttendanceAgg = await Attendance.aggregate([
-      {
-        $group: {
-          _id: '$student',
-          total: { $sum: 1 },
-          present: {
-            $sum: {
-              $cond: [{ $in: ['$status', ['Present', 'Late']] }, 1, 0]
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          rate: { $multiply: [{ $divide: ['$present', '$total'] }, 100] }
-        }
-      },
-      { $match: { rate: { $lt: 75 } } }
-    ]);
 
     const atRiskCount = lowAttendanceAgg.length;
 

@@ -1,39 +1,90 @@
 // routes/admin/reportRoutes.js
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Student = require('../../models/Student');
 const Course = require('../../models/Course');
 const Attendance = require('../../models/Attendance');
 const User = require('../../models/User');
 
+const toObjectId = (id) => {
+  try {
+    return mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null;
+  } catch {
+    return null;
+  }
+};
+
 // ---------- 1. By Student Report ----------
 router.get('/student/:studentId', async (req, res) => {
   try {
-    const student = await Student.findById(req.params.studentId)
-      .populate('userId', 'email phone fullName')
-      .populate({
-        path: 'courses',
-        select: 'name code teacher grade shift',
-        populate: { path: 'teacher', select: 'fullName email phone' },
-      })
-      .lean();
+    const studentObjId = toObjectId(req.params.studentId);
+    if (!studentObjId) {
+      return res.status(400).json({ success: false, message: 'Invalid Student ID format' });
+    }
+
+    // Parallel fetch: Student info & Attendance history (both with .lean())
+    const [student, history] = await Promise.all([
+      Student.findById(studentObjId)
+        .populate('userId', 'email phone fullName')
+        .populate({
+          path: 'courses',
+          select: 'name code teacher grade shift',
+          populate: { path: 'teacher', select: 'fullName email phone' },
+        })
+        .lean(),
+      Attendance.find({ student: studentObjId })
+        .populate('course', 'name code')
+        .populate('teacher', 'fullName')
+        .sort({ date: -1 })
+        .lean()
+    ]);
+
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
-    const history = await Attendance.find({ student: student._id })
-      .populate('course', 'name code')
-      .populate('teacher', 'fullName')
-      .sort({ date: -1 })
-      .lean();
+    const studentCourses = student.courses || [];
+    const courseIds = studentCourses.map((c) => toObjectId(c._id)).filter(Boolean);
+
+    // Single-pass aggregation for all courses assigned to this student
+    const courseStatsAggregation = courseIds.length > 0 ? await Attendance.aggregate([
+      { $match: { course: { $in: courseIds } } },
+      {
+        $group: {
+          _id: { course: '$course', date: '$date' },
+          hasStudent: {
+            $max: {
+              $cond: [
+                { $and: [{ $eq: ['$student', studentObjId] }, { $ne: ['$status', 'Absent'] }] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.course',
+          totalSessions: { $sum: 1 },
+          attended: { $sum: '$hasStudent' }
+        }
+      }
+    ]) : [];
+
+    const statsMap = {};
+    courseStatsAggregation.forEach((s) => {
+      statsMap[s._id.toString()] = s;
+    });
 
     const courseSummaries = [];
     let totalAttendedAll = 0;
     let totalSessionsAll = 0;
 
-    const studentCourses = student.courses || [];
     for (const course of studentCourses) {
-      const distinctSessions = await Attendance.distinct('date', { course: course._id });
-      const totalSessions = Math.max(distinctSessions.length, 0);
-      const attended = await Attendance.countDocuments({ student: student._id, course: course._id, status: { $ne: 'Absent' } });
+      const cIdStr = course._id.toString();
+      const stats = statsMap[cIdStr] || { totalSessions: 0, attended: 0 };
+      const totalSessions = stats.totalSessions || 0;
+      const attended = stats.attended || 0;
       const missed = Math.max(0, totalSessions - attended);
       const rate = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : (attended > 0 ? 100 : 0);
 
@@ -54,7 +105,6 @@ router.get('/student/:studentId', async (req, res) => {
     }
 
     const overallRate = totalSessionsAll > 0 ? Math.round((totalAttendedAll / totalSessionsAll) * 100) : (totalAttendedAll > 0 ? 100 : 0);
-
     const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.fullName || 'ስም ያልተጠቀሰ';
 
     res.json({
@@ -95,7 +145,7 @@ router.get('/student/:studentId', async (req, res) => {
   }
 });
 
-// ---------- 2. By Grade Report ----------
+// ---------- 2. By Grade Report (High-Performance Parallel Aggregations) ----------
 router.get('/grade/:grade', async (req, res) => {
   try {
     const grade = req.params.grade;
@@ -103,6 +153,51 @@ router.get('/grade/:grade', async (req, res) => {
       .populate('userId', 'email phone fullName')
       .populate('courses', 'name code')
       .lean();
+
+    if (!students || students.length === 0) {
+      return res.json({
+        success: true,
+        grade,
+        summary: { totalStudents: 0, totalSessions: 0, totalAttended: 0, averageRate: 0 },
+        students: [],
+      });
+    }
+
+    const studentIds = students.map((s) => s._id);
+    const allCourseIds = Array.from(new Set(
+      students.flatMap((s) => (s.courses || []).map((c) => toObjectId(c._id))).filter(Boolean)
+    ));
+
+    // Parallel Aggregation Pipeline: 
+    // 1. Total distinct sessions per course
+    // 2. Total attendances per student per course
+    const [courseSessionsAgg, studentAttendanceAgg] = await Promise.all([
+      allCourseIds.length > 0 ? Attendance.aggregate([
+        { $match: { course: { $in: allCourseIds } } },
+        { $group: { _id: { course: '$course', date: '$date' } } },
+        { $group: { _id: '$_id.course', totalSessions: { $sum: 1 } } }
+      ]) : [],
+      Attendance.aggregate([
+        { $match: { student: { $in: studentIds }, status: { $ne: 'Absent' } } },
+        {
+          $group: {
+            _id: { student: '$student', course: '$course' },
+            attended: { $sum: 1 }
+          }
+        }
+      ])
+    ]);
+
+    const courseSessionsMap = {};
+    courseSessionsAgg.forEach((c) => {
+      courseSessionsMap[c._id.toString()] = c.totalSessions;
+    });
+
+    const studentAttendanceMap = {};
+    studentAttendanceAgg.forEach((item) => {
+      const key = `${item._id.student?.toString()}_${item._id.course?.toString() || 'null'}`;
+      studentAttendanceMap[key] = item.attended;
+    });
 
     const result = [];
     let grandAttended = 0;
@@ -114,9 +209,11 @@ router.get('/grade/:grade', async (req, res) => {
       let totalSessions = 0;
 
       for (const course of (student.courses || [])) {
-        const sessions = (await Attendance.distinct('date', { course: course._id })).length;
-        const attended = await Attendance.countDocuments({ student: student._id, course: course._id, status: { $ne: 'Absent' } });
+        const cIdStr = course._id.toString();
+        const sessions = courseSessionsMap[cIdStr] || 0;
+        const attended = studentAttendanceMap[`${student._id.toString()}_${cIdStr}`] || 0;
         const rate = sessions > 0 ? Math.round((attended / sessions) * 100) : (attended > 0 ? 100 : 0);
+
         courseBreakdown.push({
           courseName: course.name,
           courseCode: course.code || '',
@@ -124,6 +221,7 @@ router.get('/grade/:grade', async (req, res) => {
           totalSessions: sessions,
           rate,
         });
+
         totalAttended += attended;
         totalSessions += sessions;
       }
@@ -169,24 +267,42 @@ router.get('/grade/:grade', async (req, res) => {
   }
 });
 
-// ---------- 3. By Course Report ----------
+// ---------- 3. By Course Report (Parallel Single-Pass Aggregation) ----------
 router.get('/course/:courseId', async (req, res) => {
   try {
-    const course = await Course.findById(req.params.courseId)
-      .populate('teacher', 'fullName email phone')
-      .lean();
+    const courseObjId = toObjectId(req.params.courseId);
+    if (!courseObjId) {
+      return res.status(400).json({ success: false, message: 'Invalid Course ID format' });
+    }
+
+    // Parallel fetch: Course info, Enrolled students, Total distinct dates, Student attendance counts
+    const [course, students, totalSessionsData, studentStatsAgg] = await Promise.all([
+      Course.findById(courseObjId).populate('teacher', 'fullName email phone').lean(),
+      Student.find({ courses: courseObjId }).populate('userId', 'email phone').lean(),
+      Attendance.aggregate([
+        { $match: { course: courseObjId } },
+        { $group: { _id: '$date' } },
+        { $count: 'total' }
+      ]),
+      Attendance.aggregate([
+        { $match: { course: courseObjId, status: { $ne: 'Absent' } } },
+        { $group: { _id: '$student', attended: { $sum: 1 } } }
+      ])
+    ]);
+
     if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
 
-    const students = await Student.find({ courses: course._id })
-      .populate('userId', 'email phone')
-      .lean();
-    const totalSessions = (await Attendance.distinct('date', { course: course._id })).length;
+    const totalSessions = totalSessionsData[0]?.total || 0;
+    const studentAttendanceMap = {};
+    studentStatsAgg.forEach((s) => {
+      studentAttendanceMap[s._id.toString()] = s.attended;
+    });
 
     const studentSummaries = [];
     let totalAttendedInCourse = 0;
 
     for (const student of students) {
-      const attended = await Attendance.countDocuments({ student: student._id, course: course._id, status: { $ne: 'Absent' } });
+      const attended = studentAttendanceMap[student._id.toString()] || 0;
       const missed = Math.max(0, totalSessions - attended);
       const rate = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : (attended > 0 ? 100 : 0);
       totalAttendedInCourse += attended;
@@ -236,26 +352,60 @@ router.get('/course/:courseId', async (req, res) => {
   }
 });
 
-// ---------- 4. By Teacher Report ----------
+// ---------- 4. By Teacher Report (Parallel Aggregation) ----------
 router.get('/teacher/:teacherId', async (req, res) => {
   try {
-    const teacher = await User.findById(req.params.teacherId).lean();
+    const teacherObjId = toObjectId(req.params.teacherId);
+    if (!teacherObjId) {
+      return res.status(400).json({ success: false, message: 'Invalid Teacher ID format' });
+    }
+
+    const [teacher, courses] = await Promise.all([
+      User.findById(teacherObjId).lean(),
+      Course.find({ teacher: teacherObjId }).lean()
+    ]);
+
     if (!teacher) return res.status(404).json({ success: false, message: 'Teacher not found' });
 
-    const courses = await Course.find({ teacher: teacher._id }).lean();
+    const courseIds = courses.map((c) => toObjectId(c._id)).filter(Boolean);
+
+    // Parallel fetch: Enrolled students, distinct session counts, student attendance per course
+    const [allStudents, courseSessionsAgg, studentAttendanceAgg] = await Promise.all([
+      courseIds.length > 0 ? Student.find({ courses: { $in: courseIds } }).populate('userId', 'email').lean() : [],
+      courseIds.length > 0 ? Attendance.aggregate([
+        { $match: { course: { $in: courseIds } } },
+        { $group: { _id: { course: '$course', date: '$date' } } },
+        { $group: { _id: '$_id.course', totalSessions: { $sum: 1 } } }
+      ]) : [],
+      courseIds.length > 0 ? Attendance.aggregate([
+        { $match: { course: { $in: courseIds }, status: { $ne: 'Absent' } } },
+        { $group: { _id: { course: '$course', student: '$student' }, attended: { $sum: 1 } } }
+      ]) : []
+    ]);
+
+    const courseSessionsMap = {};
+    courseSessionsAgg.forEach((c) => {
+      courseSessionsMap[c._id.toString()] = c.totalSessions;
+    });
+
+    const studentAttendanceMap = {};
+    studentAttendanceAgg.forEach((item) => {
+      const key = `${item._id.course?.toString()}_${item._id.student?.toString()}`;
+      studentAttendanceMap[key] = item.attended;
+    });
+
     const coursesData = [];
     let grandTotalStudents = 0;
 
     for (const course of courses) {
-      const students = await Student.find({ courses: course._id })
-        .populate('userId', 'email')
-        .lean();
-      const totalSessions = (await Attendance.distinct('date', { course: course._id })).length;
+      const cIdStr = course._id.toString();
+      const courseStudents = allStudents.filter((s) => (s.courses || []).some((c) => (c._id || c).toString() === cIdStr));
+      const totalSessions = courseSessionsMap[cIdStr] || 0;
       const studentSummaries = [];
-      grandTotalStudents += students.length;
+      grandTotalStudents += courseStudents.length;
 
-      for (const student of students) {
-        const attended = await Attendance.countDocuments({ student: student._id, course: course._id, status: { $ne: 'Absent' } });
+      for (const student of courseStudents) {
+        const attended = studentAttendanceMap[`${cIdStr}_${student._id.toString()}`] || 0;
         const missed = Math.max(0, totalSessions - attended);
         const rate = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : (attended > 0 ? 100 : 0);
         const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.fullName || 'ተማሪ';
@@ -271,13 +421,14 @@ router.get('/teacher/:teacherId', async (req, res) => {
           rate,
         });
       }
+
       coursesData.push({
         courseId: course._id,
         courseName: course.name,
         courseCode: course.code || '—',
         grade: course.grade || '—',
         totalSessions,
-        enrolledCount: students.length,
+        enrolledCount: courseStudents.length,
         students: studentSummaries,
       });
     }
@@ -302,7 +453,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
   }
 });
 
-// ---------- 5. By Date Report ----------
+// ---------- 5. By Date Report (Indexed Range with .lean()) ----------
 router.get('/date', async (req, res) => {
   try {
     const { date } = req.query;
@@ -314,6 +465,7 @@ router.get('/date', async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999);
 
     const records = await Attendance.find({ date: { $gte: startOfDay, $lte: endOfDay } })
+      .select('student course teacher date checkInTime status shift session studentName grade courseName teacherName')
       .populate('student', 'firstName middleName lastName studentId grade studentType shift')
       .populate('course', 'name code')
       .populate('teacher', 'fullName')
@@ -353,4 +505,4 @@ router.get('/date', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;

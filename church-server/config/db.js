@@ -18,12 +18,15 @@ const connectToDatabase = async () => {
     console.log(`📌 Target Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📌 Target Database:    ${targetDbName}`);
 
-    // Connection options for better reliability
+    // Connection options for high throughput, pooling & reliability
     const options = {
       dbName: targetDbName, // Explicitly enforce target database (overrides URI path)
-      serverSelectionTimeoutMS: 20000,
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
-      maxPoolSize: 10,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 50,         // Scale pool up to 50 concurrent connections
+      minPoolSize: 10,         // Keep 10 warm connections ready
+      maxIdleTimeMS: 30000,    // Close idle connections after 30s
     };
 
     await mongoose.connect(MONGO_URI, options);

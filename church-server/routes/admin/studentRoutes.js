@@ -136,33 +136,54 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     if (shift) query.shift = shift;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const total = await Student.countDocuments(query);
-    const students = await Student.find(query)
-      .populate('userId', 'email fullName status')
-      .populate('teacher', 'fullName email phone')
-      .populate('teachers', 'fullName email phone')
-      .populate({
-        path: 'courses',
-        select: 'name grade code teacher shift dayOfWeek startTime endTime',
-        populate: { path: 'teacher', select: 'fullName email phone' }
-      })
-      .sort({ registrationDate: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const limitNum = parseInt(limit);
 
-    const [totalCount, regularCount, distanceCount, qrCount] = await Promise.all([
-      Student.countDocuments(),
-      Student.countDocuments({ studentType: 'regular' }),
-      Student.countDocuments({ studentType: 'distance' }),
-      Student.countDocuments({ qrCode: { $exists: true, $ne: '' } }),
+    // Parallel fetch: Total count for filtered query, Paginated students with .lean(), and Global stats via single $facet
+    const [total, studentsRaw, statsAgg] = await Promise.all([
+      Student.countDocuments(query),
+      Student.find(query)
+        .populate('userId', 'email fullName status')
+        .populate('teacher', 'fullName email phone')
+        .populate('teachers', 'fullName email phone')
+        .populate({
+          path: 'courses',
+          select: 'name grade code teacher shift dayOfWeek startTime endTime',
+          populate: { path: 'teacher', select: 'fullName email phone' }
+        })
+        .sort({ registrationDate: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Student.aggregate([
+        {
+          $facet: {
+            total: [{ $count: 'count' }],
+            regular: [{ $match: { studentType: 'regular' } }, { $count: 'count' }],
+            distance: [{ $match: { studentType: 'distance' } }, { $count: 'count' }],
+            withQR: [{ $match: { qrCode: { $exists: true, $ne: '' } } }, { $count: 'count' }],
+          }
+        }
+      ])
     ]);
+
+    const statsResult = statsAgg[0] || {};
+    const totalCount = statsResult.total?.[0]?.count || 0;
+    const regularCount = statsResult.regular?.[0]?.count || 0;
+    const distanceCount = statsResult.distance?.[0]?.count || 0;
+    const qrCount = statsResult.withQR?.[0]?.count || 0;
+
+    // Attach virtual fullName if missing
+    const students = studentsRaw.map((s) => ({
+      ...s,
+      fullName: s.fullName || [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || 'ተማሪ',
+    }));
 
     res.json({
       success: true,
       students,
       total,
       page: parseInt(page),
-      totalPages: Math.ceil(total / parseInt(limit)),
+      totalPages: Math.ceil(total / limitNum) || 1,
       stats: {
         total: totalCount,
         regular: regularCount,

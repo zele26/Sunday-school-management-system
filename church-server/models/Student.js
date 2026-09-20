@@ -83,8 +83,10 @@ studentSchema.virtual('fullName').get(function () {
 });
 
 // Indexes for high-performance student lookups & filters
-studentSchema.index({ grade: 1, studentType: 1 });
+studentSchema.index({ grade: 1, studentType: 1, shift: 1 });
 studentSchema.index({ studentType: 1 });
+studentSchema.index({ courses: 1 }, { sparse: true });
+studentSchema.index({ registrationDate: -1 });
 studentSchema.index({ batch: 1 }, { sparse: true });
 studentSchema.index({ studentPhone: 1 }, { sparse: true });
 studentSchema.index({ teacher: 1 }, { sparse: true });

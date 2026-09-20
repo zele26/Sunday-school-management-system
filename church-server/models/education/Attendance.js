@@ -69,9 +69,13 @@ attendanceSchema.index(
   { unique: true, partialFilterExpression: { course: null } }
 );
 
-// Indexes for teacher roll call & attendance reports
+// High-speed compound indexes for roll calls, reports & analytics
+attendanceSchema.index({ student: 1, course: 1, status: 1 });
+attendanceSchema.index({ course: 1, status: 1, student: 1 });
+attendanceSchema.index({ student: 1, status: 1 });
 attendanceSchema.index({ course: 1, date: 1 }, { sparse: true });
-attendanceSchema.index({ grade: 1, date: 1 });
-attendanceSchema.index({ teacher: 1, date: 1 }, { sparse: true });
+attendanceSchema.index({ grade: 1, date: -1 });
+attendanceSchema.index({ teacher: 1, course: 1, date: -1 }, { sparse: true });
+attendanceSchema.index({ date: -1, status: 1 });
 
 module.exports = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);

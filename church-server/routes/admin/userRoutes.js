@@ -140,27 +140,43 @@ router.get('/users', async (req, res) => {
     const limitNum = parseInt(limit, 10) || 1000;
     const skip = (pageNum - 1) * limitNum;
 
-    const total = await User.countDocuments(query);
-    const users = await User.find(query)
-      .select('-password')
-      .populate('departmentId', 'name code')
-      .populate('assignedDepartments', 'name code')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum);
-
-    // Global Stats
-    const [totalCount, superadminCount, deptAdminCount, adminCount, teacherCount, studentCount, memberCount, pendingCount, approvedCount] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ role: 'superadmin' }),
-      User.countDocuments({ role: 'department_admin' }),
-      User.countDocuments({ role: 'admin' }),
-      User.countDocuments({ role: 'teacher' }),
-      User.countDocuments({ role: 'student' }),
-      User.countDocuments({ role: 'member' }),
-      User.countDocuments({ status: 'pending' }),
-      User.countDocuments({ status: { $in: ['approved', 'active'] } }),
+    const [total, users, statsAgg] = await Promise.all([
+      User.countDocuments(query),
+      User.find(query)
+        .select('-password')
+        .populate('departmentId', 'name code')
+        .populate('assignedDepartments', 'name code')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      User.aggregate([
+        {
+          $facet: {
+            total: [{ $count: 'count' }],
+            superadmin: [{ $match: { role: 'superadmin' } }, { $count: 'count' }],
+            department_admin: [{ $match: { role: 'department_admin' } }, { $count: 'count' }],
+            admin: [{ $match: { role: 'admin' } }, { $count: 'count' }],
+            teacher: [{ $match: { role: 'teacher' } }, { $count: 'count' }],
+            student: [{ $match: { role: 'student' } }, { $count: 'count' }],
+            member: [{ $match: { role: 'member' } }, { $count: 'count' }],
+            pending: [{ $match: { status: 'pending' } }, { $count: 'count' }],
+            approved: [{ $match: { status: { $in: ['approved', 'active'] } } }, { $count: 'count' }],
+          }
+        }
+      ])
     ]);
+
+    const sRes = statsAgg[0] || {};
+    const totalCount = sRes.total?.[0]?.count || 0;
+    const superadminCount = sRes.superadmin?.[0]?.count || 0;
+    const deptAdminCount = sRes.department_admin?.[0]?.count || 0;
+    const adminCount = sRes.admin?.[0]?.count || 0;
+    const teacherCount = sRes.teacher?.[0]?.count || 0;
+    const studentCount = sRes.student?.[0]?.count || 0;
+    const memberCount = sRes.member?.[0]?.count || 0;
+    const pendingCount = sRes.pending?.[0]?.count || 0;
+    const approvedCount = sRes.approved?.[0]?.count || 0;
 
     res.json({
       success: true,
