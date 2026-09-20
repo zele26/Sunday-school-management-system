@@ -334,22 +334,32 @@ exports.login = async (req, res) => {
     const isAdminBypass = user.email === 'admin@example.com';
 
     if (!isApproved && !isAdminBypass) {
+      if (user.status === 'disabled' || user.status === 'inactive' || user.status === 'suspended') {
+        return res.status(403).json({
+          success: false,
+          message: 'አካውንትዎ ለጊዜው ታግዷል/ተዘግቷል። እባክዎ የሰንበት ትምህርት ቤቱን አስተዳደር ያግኙ። (Your account has been deactivated. Please contact administration.)',
+          reason: 'disabled',
+        });
+      }
       if (user.status === 'pending') {
         return res.status(403).json({
           success: false,
-          message: 'Your account is pending admin approval.'
+          message: 'አካውንትዎ በአስተዳዳሪ ማረጋገጫ በመጠባበቅ ላይ ነው። (Your account is pending admin approval.)',
+          reason: 'pending',
         });
       }
       if (user.status === 'rejected') {
         return res.status(403).json({
           success: false,
-          message: 'Your account registration request was declined.'
+          message: 'የአካውንት ምዝገባ ጥያቄዎ ውድቅ ተደርጓል። (Your account registration request was declined.)',
+          reason: 'rejected',
         });
       }
       // Fallback for any other status
       return res.status(403).json({
         success: false,
-        message: 'Your account is pending admin approval.'
+        message: 'አካውንትዎ ለጊዜው አገልግሎት አይሰጥም፤ እባክዎ አስተዳዳሪውን ያግኙ። (Your account is inactive. Please contact administrator.)',
+        reason: 'inactive',
       });
     }
 

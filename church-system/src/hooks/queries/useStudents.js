@@ -30,7 +30,68 @@ export function useStudents(params = {}) {
 }
 
 /**
- * Delete a student
+ * Toggle student account status (e.g. 'disabled' or 'approved')
+ */
+export function useToggleStudentStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ studentId, status }) => {
+      const res = await apiFetch(`/api/admin/students/${studentId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'የተማሪውን አካውንት ሁኔታ መቀየር አልተቻለም');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'የተማሪው አካውንት ሁኔታ ተቀይሯል');
+      queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'የተማሪውን አካውንት ሁኔታ መቀየር አልተቻለም');
+    },
+  });
+}
+
+/**
+ * Bulk toggle student accounts status (safely disable/enable multiple students)
+ */
+export function useBulkToggleStudentsStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ studentIds, status }) => {
+      for (const id of studentIds) {
+        const res = await apiFetch(`/api/admin/students/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || `ስህተት በ ID ${id}`);
+        }
+      }
+      return { success: true, count: studentIds.length, status };
+    },
+    onSuccess: (_, vars) => {
+      const isDisable = vars.status === 'disabled';
+      toast.success(
+        isDisable
+          ? `${vars.studentIds.length} የተማሪ አካውንቶች ታግደዋል/ተዘግተዋል`
+          : `${vars.studentIds.length} የተማሪ አካውንቶች ነቅተዋል`
+      );
+      queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'የጅምላ ሁኔታ ቅያሬ አልተሳካም');
+    },
+  });
+}
+
+/**
+ * Delete a student (Hard delete fallback)
  */
 export function useDeleteStudent() {
   const queryClient = useQueryClient();
@@ -72,6 +133,7 @@ export function useBulkDeleteStudents() {
     },
   });
 }
+
 
 /**
  * Generate QR code for a single student

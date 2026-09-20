@@ -26,6 +26,7 @@ import {
   Sun,
   Moon,
   Clock,
+  UserX,
 } from 'lucide-react';
 import { API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
@@ -51,8 +52,11 @@ import {
   useGenerateAllQR,
   useAssignTeacher,
   useAssignCourses,
+  useToggleStudentStatus,
+  useBulkToggleStudentsStatus,
 } from '../../hooks/queries/useStudents';
 import { useTeachers } from '../../hooks/queries/useTeachers';
+
 import { useCourses } from '../../hooks/queries/useCourses';
 
 /**
@@ -131,6 +135,8 @@ const StudentsManagement = () => {
   const generateAllQRMutation = useGenerateAllQR();
   const assignTeacherMutation = useAssignTeacher();
   const assignCoursesMutation = useAssignCourses();
+  const toggleStudentStatusMutation = useToggleStudentStatus();
+  const bulkToggleStudentStatusMutation = useBulkToggleStudentsStatus();
 
   const rawStudents = data?.students || [];
   const totalPages = data?.totalPages || 1;
@@ -175,13 +181,32 @@ const StudentsManagement = () => {
     return Object.keys(rowSelection).filter((id) => rowSelection[id]);
   }, [rowSelection]);
 
+  const handleBulkDisable = () => {
+    if (selectedStudentIds.length === 0) return;
+    if (!confirm(`እርግጠኛ ነዎት ${selectedStudentIds.length} የተማሪ አካውንቶችን ለጊዜው ማቦዘን/ማገድ ይፈልጋሉ? የተማሪዎቹ ውጤትና መረጃ አይጠፋም።`)) return;
+    bulkToggleStudentStatusMutation.mutate(
+      { studentIds: selectedStudentIds, status: 'disabled' },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
+  const handleBulkEnable = () => {
+    if (selectedStudentIds.length === 0) return;
+    if (!confirm(`እርግጠኛ ነዎት ${selectedStudentIds.length} የተማሪ አካውንቶችን ማንቃት ይፈልጋሉ?`)) return;
+    bulkToggleStudentStatusMutation.mutate(
+      { studentIds: selectedStudentIds, status: 'approved' },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
   const handleDeleteSelected = () => {
     if (selectedStudentIds.length === 0) return;
-    if (!confirm(`እርግጠኛ ነዎት ${selectedStudentIds.length} ተማሪዎችን መሰረዝ ይፈልጋሉ?`)) return;
+    if (!confirm(`ማስጠንቀቂያ፡ ተማሪዎችን ሙሉ በሙሉ ከመሰረዝ ይልቅ "አቦዝን" ማድረግ ይመረጣል። ${selectedStudentIds.length} ተማሪዎችን በቋሚነት መሰረዝ ይፈልጋሉ?`)) return;
     bulkDeleteMutation.mutate(selectedStudentIds, {
       onSuccess: () => setRowSelection({}),
     });
   };
+
 
   const [isExporting, setIsExporting] = useState(false);
 
@@ -306,15 +331,23 @@ const StudentsManagement = () => {
             [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') ||
             s.fullName ||
             'ስም ያልተጠቀሰ';
+          const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
           return (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs uppercase">
                 {s.firstName ? s.firstName.charAt(0) : 'ተ'}
               </div>
               <div className="min-w-0">
-                <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
-                  {fullName}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                    {fullName}
+                  </span>
+                  {isDeactivated && (
+                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                      የታገደ
+                    </span>
+                  )}
+                </div>
                 {s.contactPhone ? (
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 block truncate font-mono">
                     {s.contactPhone}
@@ -329,6 +362,7 @@ const StudentsManagement = () => {
           );
         },
       },
+
       {
         accessorKey: 'studentId',
         header: ({ column }) => <DataTableColumnHeader column={column} title="የተማሪ መለያ" />,
@@ -554,6 +588,51 @@ const StudentsManagement = () => {
                   </TooltipContent>
                 </Tooltip>
 
+                {/* Safe Disable / Enable Toggle Action */}
+                {s.userId?.status === 'disabled' || s.status === 'disabled' ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`የ"${fullName}" አካውንት እንደገና እንዲነቃ (Activate) ይፈልጋሉ?`)) {
+                            toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'approved' });
+                          }
+                        }}
+                        disabled={toggleStudentStatusMutation.isPending}
+                        className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+                        aria-label="አካውንት አንቃ"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>አካውንቱን አንቃ (Activate Account)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`የ"${fullName}" አካውንት ለጊዜው እንዲቦዝን/እንዲዘጋ (Deactivate) ይፈልጋሉ? መረጃዎቻቸው አይጠፉም።`)) {
+                            toggleStudentStatusMutation.mutate({ studentId: s._id, status: 'disabled' });
+                          }
+                        }}
+                        disabled={toggleStudentStatusMutation.isPending}
+                        className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+                        aria-label="አካውንት አቦዝን"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>አካውንቱን አቦዝን (Deactivate Account)</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+
                 {/* Edit Student */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -575,8 +654,9 @@ const StudentsManagement = () => {
         },
       },
     ],
-    [generateQRMutation]
+    [generateQRMutation, toggleStudentStatusMutation]
   );
+
 
   return (
     <div className="space-y-6">
@@ -796,20 +876,46 @@ const StudentsManagement = () => {
           </Select>
         </div>
 
-        {/* Batch Delete Action Button */}
+        {/* Batch Actions Button Bar */}
         {selectedStudentIds.length > 0 && (
-          <Button
-            variant="danger"
-            size="md"
-            onClick={handleDeleteSelected}
-            disabled={bulkDeleteMutation.isPending}
-            className="gap-1.5 shrink-0"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>{bulkDeleteMutation.isPending ? 'በመሰረዝ ላይ...' : `ሰርዝ (${selectedStudentIds.length})`}</span>
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              variant="warning"
+              size="md"
+              onClick={handleBulkDisable}
+              disabled={bulkToggleStudentStatusMutation.isPending}
+              className="gap-1.5 shrink-0"
+              title="የተመረጡትን ተማሪዎች አካውንት ለጊዜው አቦዝን"
+            >
+              <UserX className="w-4 h-4" />
+              <span>{bulkToggleStudentStatusMutation.isPending ? 'በማቦዘን ላይ...' : `አቦዝን (${selectedStudentIds.length})`}</span>
+            </Button>
+            <Button
+              variant="success"
+              size="md"
+              onClick={handleBulkEnable}
+              disabled={bulkToggleStudentStatusMutation.isPending}
+              className="gap-1.5 shrink-0"
+              title="የተመረጡትን ተማሪዎች አካውንት አንቃ"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>{bulkToggleStudentStatusMutation.isPending ? 'በማንቃት ላይ...' : `አንቃ (${selectedStudentIds.length})`}</span>
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={handleDeleteSelected}
+              disabled={bulkDeleteMutation.isPending}
+              className="gap-1.5 shrink-0"
+              title="የተመረጡትን ተማሪዎች በቋሚነት ሰርዝ"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>{bulkDeleteMutation.isPending ? 'በመሰረዝ ላይ...' : `ሰርዝ (${selectedStudentIds.length})`}</span>
+            </Button>
+          </div>
         )}
       </div>
+
 
       {/* TanStack Data Table */}
       <DataTable

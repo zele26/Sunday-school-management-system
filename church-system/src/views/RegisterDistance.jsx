@@ -264,7 +264,7 @@ const RegisterDistanceContent = () => {
               </ul>
             </div>
           </div>
-          no
+
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}

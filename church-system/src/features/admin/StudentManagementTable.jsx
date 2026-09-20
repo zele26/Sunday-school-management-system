@@ -11,6 +11,7 @@ import {
   Edit,
   BookOpen,
   UserCheck,
+  UserX,
   GraduationCap,
   Globe,
   Eye,
@@ -26,6 +27,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+
 import { getRelationshipLabel } from '../../constants/registrationOptions';
 
 /**
@@ -173,6 +175,7 @@ export default function StudentManagementTable({
   onExportCsv,
   onGenerateBatchQr,
   onEditStudent,
+  onToggleStatus,
 }) {
   // State
   const [students, setStudents] = useState(initialStudents);
@@ -195,6 +198,50 @@ export default function StudentManagementTable({
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  const handleToggleStudentStatus = async (student) => {
+    const isCurrentlyDisabled = student.userId?.status === 'disabled' || student.status === 'disabled';
+    const nextStatus = isCurrentlyDisabled ? 'approved' : 'disabled';
+    const fullName = `${student.firstName} ${student.middleName || ''} ${student.lastName}`.trim();
+    const confirmMsg = isCurrentlyDisabled
+      ? `የ"${fullName}" አካውንት እንደገና እንዲነቃ (Activate) ይፈልጋሉ?`
+      : `የ"${fullName}" አካውንት ለጊዜው እንዲቦዝን/እንዲዘጋ (Deactivate) ይፈልጋሉ? መረጃዎቻቸው አይጠፉም።`;
+
+    if (!confirm(confirmMsg)) return;
+
+    if (onToggleStatus) {
+      onToggleStatus(student, nextStatus);
+      return;
+    }
+
+    try {
+      const { apiFetch } = await import('../../api/apiClient');
+      const res = await apiFetch(`/api/admin/students/${student._id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (res.ok) {
+        showToast(nextStatus === 'disabled' ? 'የተማሪው አካውንት ታግዷል/ተዘግቷል' : 'የተማሪው አካውንት ነቅቷል');
+        setStudents((prev) =>
+          prev.map((s) =>
+            s._id === student._id
+              ? {
+                  ...s,
+                  status: nextStatus,
+                  userId: s.userId ? { ...s.userId, status: nextStatus } : { status: nextStatus },
+                }
+              : s
+          )
+        );
+      } else {
+        showToast('የአካውንት ሁኔታ መቀየር አልተቻለም');
+      }
+    } catch {
+      showToast('የኔትወርክ ችግር አጋጥሟል');
+    }
+  };
+
 
   // KPI Metrics Calculation
   const stats = useMemo(() => {
@@ -659,9 +706,16 @@ export default function StudentManagementTable({
                             {s.firstName ? s.firstName.charAt(0) : 'ተ'}
                           </div>
                           <div className="min-w-0">
-                            <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
-                              {fullName}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-slate-900 dark:text-white block leading-tight truncate">
+                                {fullName}
+                              </span>
+                              {(s.userId?.status === 'disabled' || s.status === 'disabled') && (
+                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                  የታገደ
+                                </span>
+                              )}
+                            </div>
                             {s.contactPhone && (
                               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono block">
                                 {s.contactPhone}
@@ -670,6 +724,7 @@ export default function StudentManagementTable({
                           </div>
                         </div>
                       </td>
+
 
                       {/* Student ID (Monospace) */}
                       <td className="py-3 px-4">
@@ -807,7 +862,32 @@ export default function StudentManagementTable({
                             </button>
                           </SimpleTooltip>
 
-                          {/* 4. Edit Student */}
+                          {/* 4. Disable / Enable Account Toggle */}
+                          {s.userId?.status === 'disabled' || s.status === 'disabled' ? (
+                            <SimpleTooltip content="አካውንት አንቃ (Activate Account)">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStudentStatus(s)}
+                                className="p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
+                                aria-label="አካውንት አንቃ"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                              </button>
+                            </SimpleTooltip>
+                          ) : (
+                            <SimpleTooltip content="አካውንት አቦዝን (Deactivate Account)">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStudentStatus(s)}
+                                className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+                                aria-label="አካውንት አቦዝን"
+                              >
+                                <UserX className="w-4 h-4" />
+                              </button>
+                            </SimpleTooltip>
+                          )}
+
+                          {/* 5. Edit Student */}
                           <SimpleTooltip content="አስተካክል (Edit Student)">
                             <button
                               type="button"
@@ -822,6 +902,7 @@ export default function StudentManagementTable({
                             </button>
                           </SimpleTooltip>
                         </div>
+
                       </td>
                     </tr>
                   );

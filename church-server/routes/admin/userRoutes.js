@@ -633,6 +633,30 @@ router.get('/users/:id/journey', async (req, res) => {
   }
 });
 
+// ---------- Toggle User Status (Disable / Enable) ----------
+router.put('/users/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.status = status;
+    await user.save({ validateBeforeSave: false });
+
+    res.json({
+      success: true,
+      message: status === 'disabled' ? 'አካውንቱ ታግዷል/ተዘግቷል' : 'አካውንቱ ነቅቷል',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        status: user.status,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ---------- Delete User ----------
 router.delete('/users/:id', async (req, res) => {
   try {

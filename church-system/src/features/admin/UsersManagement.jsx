@@ -20,6 +20,10 @@ import {
   ShieldCheck,
   Key,
   Mail,
+  UserCheck,
+  UserX,
+  ShieldAlert,
+  Power,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,12 +49,15 @@ import {
   useBulkApproveUsers,
   useBulkRejectUsers,
   useBulkDeleteUsers,
+  useToggleUserStatus,
+  useBulkToggleUsersStatus,
 } from '../../hooks/queries/useUsers';
 import { useDepartments } from '../../hooks/queries/useDepartments';
 import { userEditModalSchema, userCreateModalSchema } from '../../schemas';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { PermissionSelector } from '../../components/admin/PermissionSelector';
 import { useLanguage } from '../../hooks/useLanguage';
+
 
 const UsersManagement = () => {
   const { t, isAmharic } = useLanguage();
@@ -225,6 +232,8 @@ const UsersManagement = () => {
   const bulkApproveMutation = useBulkApproveUsers();
   const bulkRejectMutation = useBulkRejectUsers();
   const bulkDeleteMutation = useBulkDeleteUsers();
+  const toggleUserStatusMutation = useToggleUserStatus();
+  const bulkToggleStatusMutation = useBulkToggleUsersStatus();
 
   const users = data?.users || data || [];
   const totalPages = data?.totalPages || 1;
@@ -243,6 +252,7 @@ const UsersManagement = () => {
       member: users.filter((u) => u.role === 'member').length,
       pending: users.filter((u) => u.status === 'pending').length,
       approved: users.filter((u) => u.status === 'approved' || u.status === 'active').length,
+      disabled: users.filter((u) => u.status === 'disabled' || u.status === 'inactive' || u.status === 'suspended').length,
     };
   }, [data, users, totalUsers]);
 
@@ -265,8 +275,24 @@ const UsersManagement = () => {
     });
   };
 
+  const handleBulkDisable = () => {
+    if (!confirm(isAmharic ? `${selectedUserIds.length} ተጠቃሚዎችን ማቦዘን/ማገድ ይፈልጋሉ? መረጃዎቻቸው ተጠብቀው ይቆያሉ።` : `Deactivate ${selectedUserIds.length} users? Their historical records will be preserved.`)) return;
+    bulkToggleStatusMutation.mutate(
+      { userIds: selectedUserIds, status: 'disabled' },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
+  const handleBulkEnable = () => {
+    if (!confirm(isAmharic ? `${selectedUserIds.length} ተጠቃሚዎችን ማንቃት ይፈልጋሉ?` : `Re-activate ${selectedUserIds.length} users?`)) return;
+    bulkToggleStatusMutation.mutate(
+      { userIds: selectedUserIds, status: 'approved' },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
   const handleBulkDelete = () => {
-    if (!confirm(isAmharic ? `${selectedUserIds.length} ተጠቃሚዎችን መሰረዝ ይፈልጋሉ?` : `Delete ${selectedUserIds.length} users?`)) return;
+    if (!confirm(isAmharic ? `ማስጠንቀቂያ፡ ${selectedUserIds.length} ተጠቃሚዎችን በቋሚነት መሰረዝ ይፈልጋሉ?` : `Warning: Permanently delete ${selectedUserIds.length} users?`)) return;
     bulkDeleteMutation.mutate(selectedUserIds, {
       onSuccess: () => setRowSelection({}),
     });
@@ -305,10 +331,35 @@ const UsersManagement = () => {
         return 'success';
       case 'pending':
         return 'warning';
+      case 'disabled':
+      case 'inactive':
+      case 'suspended':
+        return 'danger';
       case 'rejected':
         return 'danger';
       default:
         return 'neutral';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved':
+        return isAmharic ? 'የጸደቀ' : 'Approved';
+      case 'active':
+        return isAmharic ? 'ንቁ' : 'Active';
+      case 'pending':
+        return isAmharic ? 'በመጠባበቅ ላይ' : 'Pending';
+      case 'disabled':
+        return isAmharic ? 'የታገደ/የተዘጋ' : 'Disabled';
+      case 'inactive':
+        return isAmharic ? 'ቦዝኗል' : 'Inactive';
+      case 'suspended':
+        return isAmharic ? 'የታገደ' : 'Suspended';
+      case 'rejected':
+        return isAmharic ? 'ውድቅ የተደረገ' : 'Rejected';
+      default:
+        return status || '—';
     }
   };
 
@@ -405,7 +456,7 @@ const UsersManagement = () => {
       {
         accessorKey: 'status',
         header: ({ column }) => <DataTableColumnHeader column={column} title={isAmharic ? 'ሁኔታ' : 'Status'} />,
-        cell: ({ getValue }) => <Badge variant={getStatusVariant(getValue())} size="sm">{getValue()}</Badge>,
+        cell: ({ getValue }) => <Badge variant={getStatusVariant(getValue())} size="sm">{getStatusLabel(getValue())}</Badge>,
       },
       {
         accessorKey: 'contact',
@@ -422,6 +473,9 @@ const UsersManagement = () => {
         header: () => <div className="text-right">{isAmharic ? 'ተግባራት' : 'Actions'}</div>,
         cell: ({ row }) => {
           const u = row.original;
+          const isDeactivated = u.status === 'disabled' || u.status === 'inactive' || u.status === 'suspended';
+          const isApproved = u.status === 'approved' || u.status === 'active';
+
           return (
             <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
               <Button
@@ -433,6 +487,7 @@ const UsersManagement = () => {
                 <History className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'የአባል ጉዞ' : 'Journey'}
               </Button>
 
+              {/* Pending Approvals */}
               {u.status === 'pending' && (
                 <>
                   <Button
@@ -457,6 +512,40 @@ const UsersManagement = () => {
                   </Button>
                 </>
               )}
+
+              {/* Safe Disable / Enable Toggle Action */}
+              {isDeactivated && (
+                <Button
+                  size="xs"
+                  variant="success"
+                  onClick={() => {
+                    if (confirm(isAmharic ? `የ"${u.fullName}" አካውንት እንደገና እንዲነቃ (Activate) ይፈልጋሉ?` : `Re-activate account for "${u.fullName}"?`)) {
+                      toggleUserStatusMutation.mutate({ userId: u._id, status: 'approved' });
+                    }
+                  }}
+                  disabled={toggleUserStatusMutation.isPending}
+                  title={isAmharic ? 'አካውንቱን አንቃ (Activate Account)' : 'Activate Account'}
+                >
+                  <UserCheck className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'አንቃ' : 'Activate'}
+                </Button>
+              )}
+
+              {isApproved && (
+                <Button
+                  size="xs"
+                  variant="warning"
+                  onClick={() => {
+                    if (confirm(isAmharic ? `የ"${u.fullName}" አካውንት ለጊዜው እንዲቦዝን/እንዲዘጋ (Deactivate) ይፈልጋሉ? መረጃዎቻቸው አይጠፉም።` : `Deactivate account for "${u.fullName}"? Historical records will be preserved.`)) {
+                      toggleUserStatusMutation.mutate({ userId: u._id, status: 'disabled' });
+                    }
+                  }}
+                  disabled={toggleUserStatusMutation.isPending}
+                  title={isAmharic ? 'አካውንቱን አቦዝን (Deactivate Account)' : 'Deactivate Account'}
+                >
+                  <UserX className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'አቦዝን' : 'Disable'}
+                </Button>
+              )}
+
               <Button size="xs" variant="secondary" onClick={() => openEditModal(u)}>
                 <Edit className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'አርም' : 'Edit'}
               </Button>
@@ -464,9 +553,10 @@ const UsersManagement = () => {
                 size="xs"
                 variant="outline"
                 onClick={() => {
-                  if (confirm(isAmharic ? 'ይህን ተጠቃሚ መሰረዝ ይፈልጋሉ?' : 'Delete this user?')) deleteUserMutation.mutate(u._id);
+                  if (confirm(isAmharic ? 'ማስጠንቀቂያ፡ ተጠቃሚውን ሙሉ በሙሉ ከመሰረዝ ይልቅ "አቦዝን" (Disable) ማድረግ ይመረጣል። በእርግጥ በቋሚነት መሰረዝ ይፈልጋሉ?' : 'Warning: Deactivating (Disable) is recommended over deletion. Are you sure you want to permanently delete?')) deleteUserMutation.mutate(u._id);
                 }}
                 disabled={deleteUserMutation.isPending}
+                title={isAmharic ? 'በቋሚነት ሰርዝ' : 'Permanently Delete'}
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-500" />
               </Button>
@@ -475,8 +565,9 @@ const UsersManagement = () => {
         },
       },
     ],
-    [approveUserMutation, rejectUserMutation, deleteUserMutation, isAmharic]
+    [approveUserMutation, rejectUserMutation, deleteUserMutation, toggleUserStatusMutation, isAmharic]
   );
+
 
   return (
     <div className="space-y-6">
@@ -605,6 +696,7 @@ const UsersManagement = () => {
               <option value="">{isAmharic ? 'ሁሉም ሁኔታዎች' : 'All Statuses'}</option>
               <option value="approved">{isAmharic ? 'የጸደቀ' : 'Approved'}</option>
               <option value="active">{isAmharic ? 'ንቁ' : 'Active'}</option>
+              <option value="disabled">{isAmharic ? 'የታገደ/የተዘጋ' : 'Disabled'}</option>
               <option value="pending">{isAmharic ? 'በመጠባበቅ ላይ' : 'Pending'}</option>
               <option value="rejected">{isAmharic ? 'ውድቅ የተደረገ' : 'Rejected'}</option>
             </Select>
@@ -614,13 +706,19 @@ const UsersManagement = () => {
 
       {/* Bulk Actions Banner */}
       {selectedUserIds.length > 0 && (
-        <div className="p-3 bg-[#1657b8]/10 border border-[#1657b8]/30 rounded-2xl flex items-center justify-between animate-in fade-in">
+        <div className="p-3 bg-[#1657b8]/10 border border-[#1657b8]/30 rounded-2xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in">
           <span className="text-xs font-bold text-[#1657b8] dark:text-blue-300">
             {selectedUserIds.length} {isAmharic ? 'ተጠቃሚዎች ተመርጠዋል' : 'users selected'}
           </span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="xs" variant="success" onClick={handleBulkApprove}>
               <Check className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ አጽድቅ' : 'Bulk Approve'}
+            </Button>
+            <Button size="xs" variant="warning" onClick={handleBulkDisable} title={isAmharic ? 'የተመረጡትን አካውንቶች ለጊዜው አቦዝን' : 'Deactivate selected accounts safely'}>
+              <UserX className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ አቦዝን' : 'Bulk Disable'}
+            </Button>
+            <Button size="xs" variant="success" onClick={handleBulkEnable} title={isAmharic ? 'የተመረጡትን አካውንቶች አንቃ' : 'Re-activate selected accounts'}>
+              <UserCheck className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ አንቃ' : 'Bulk Enable'}
             </Button>
             <Button size="xs" variant="danger" onClick={handleBulkReject}>
               <X className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ ውድቅ አድርግ' : 'Bulk Reject'}
@@ -631,6 +729,7 @@ const UsersManagement = () => {
           </div>
         </div>
       )}
+
 
       {/* TanStack Data Table */}
       <DataTable
@@ -880,10 +979,12 @@ const UsersManagement = () => {
                     </label>
                     <Select {...editRegister('status')}>
                       <option value="approved">{isAmharic ? 'የጸደቀ' : 'Approved'}</option>
+                      <option value="active">{isAmharic ? 'ንቁ' : 'Active'}</option>
+                      <option value="disabled">{isAmharic ? 'የታገደ/የተዘጋ (Disabled)' : 'Disabled / Inactive'}</option>
                       <option value="pending">{isAmharic ? 'በመጠባበቅ ላይ' : 'Pending'}</option>
                       <option value="rejected">{isAmharic ? 'ውድቅ የተደረገ' : 'Rejected'}</option>
-                      <option value="active">{isAmharic ? 'ንቁ' : 'Active'}</option>
                     </Select>
+
                   </div>
                 </div>
 

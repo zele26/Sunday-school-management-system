@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema(
     }],
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'created', 'active'],
+      enum: ['pending', 'approved', 'rejected', 'created', 'active', 'disabled', 'inactive', 'suspended'],
       default: 'pending',
     },
     mustChangePassword: {

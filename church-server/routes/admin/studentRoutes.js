@@ -138,7 +138,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const total = await Student.countDocuments(query);
     const students = await Student.find(query)
-      .populate('userId', 'email fullName')
+      .populate('userId', 'email fullName status')
       .populate('teacher', 'fullName email phone')
       .populate('teachers', 'fullName email phone')
       .populate({
@@ -639,6 +639,34 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     });
   } catch (err) {
     console.error('Update student error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Toggle Student Account Status (Disable / Enable) ----------
+router.put('/:id/status', protect, authorize('admin'), async (req, res) => {
+  try {
+    const { status } = req.body; // 'disabled' or 'approved'/'active'
+    const student = await Student.findById(req.params.id);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    if (student.userId) {
+      const user = await User.findById(student.userId);
+      if (user) {
+        user.status = status === 'disabled' ? 'disabled' : 'approved';
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: status === 'disabled' ? 'የተማሪው አካውንት ታግዷል/ተዘግቷል (Student account deactivated)' : 'የተማሪው አካውንት ነቅቷል (Student account activated)',
+      status: status === 'disabled' ? 'disabled' : 'approved',
+    });
+  } catch (err) {
+    console.error('Toggle student status error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });

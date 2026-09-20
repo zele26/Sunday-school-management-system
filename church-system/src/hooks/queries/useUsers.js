@@ -212,6 +212,67 @@ export function useBulkRejectUsers() {
 }
 
 /**
+ * Toggle single user status (e.g. 'disabled' or 'approved')
+ */
+export function useToggleUserStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, status }) => {
+      const res = await apiFetch(`/api/admin/users/${userId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'የሁኔታ ቅያሬ አልተሳካም');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'የተጠቃሚው ሁኔታ ተቀይሯል');
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'የሁኔታ ቅያሬ አልተሳካም');
+    },
+  });
+}
+
+/**
+ * Bulk toggle user status (e.g. disable multiple users safely)
+ */
+export function useBulkToggleUsersStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userIds, status }) => {
+      for (const id of userIds) {
+        const res = await apiFetch(`/api/admin/users/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || `ስህተት በ ID ${id}`);
+        }
+      }
+      return { success: true, count: userIds.length, status };
+    },
+    onSuccess: (_, vars) => {
+      const isDisable = vars.status === 'disabled';
+      toast.success(
+        isDisable
+          ? `${vars.userIds.length} ተጠቃሚዎች ታግደዋል/ተዘግተዋል`
+          : `${vars.userIds.length} ተጠቃሚዎች ነቅተዋል`
+      );
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'የጅምላ ሁኔታ ቅያሬ አልተሳካም');
+    },
+  });
+}
+
+/**
  * Bulk delete users
  */
 export function useBulkDeleteUsers() {
@@ -235,3 +296,5 @@ export function useBulkDeleteUsers() {
     },
   });
 }
+
+
