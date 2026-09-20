@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   ExternalLink,
   MessageSquare,
+  KeyRound,
 } from 'lucide-react';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
@@ -727,6 +728,34 @@ const StudentProfile = () => {
                 </div>
               </div>
             )}
+          </div>
+        </Card>
+      </FadeIn>
+
+      {/* 🔐 7. ACCOUNT SECURITY */}
+      <FadeIn delay={0.35}>
+        <Card variant="default" padding="lg" className="border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/60 dark:border-amber-800/40">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {isAmharic ? 'የመለያ ደህንነትና የይለፍ ቃል' : 'Account Security & Password'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isAmharic ? 'የመግቢያ የይለፍ ቃልዎን በማንኛውም ጊዜ ማደስና መቀየር ይችላሉ' : 'You can update and change your login password at any time'}
+                </p>
+              </div>
+            </div>
+            <a
+              href="/change-password"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-amber-400 dark:hover:bg-amber-300 text-white dark:text-slate-950 font-bold text-xs transition-all shadow-xs"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>{isAmharic ? 'የይለፍ ቃል ቀይር (Change Password)' : 'Change Password'}</span>
+            </a>
           </div>
         </Card>
       </FadeIn>

@@ -826,4 +826,38 @@ router.put('/password-resets/:id/reject', async (req, res) => {
   }
 });
 
+// Direct Admin Reset User Password
+router.post('/users/:id/reset-password', async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const tempPassword = req.body.password && req.body.password.trim().length >= 6
+      ? req.body.password.trim()
+      : `Pass${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const salt = await bcrypt.genSalt(10);
+    targetUser.password = await bcrypt.hash(tempPassword, salt);
+    targetUser.mustChangePassword = req.body.mustChangePassword !== false;
+    await targetUser.save({ validateBeforeSave: false });
+
+    res.json({
+      success: true,
+      message: `የተጠቃሚው ፓስዎርድ በተሳካ ሁኔታ ተቀይሯል! አዲሱ ፓስዎርድ፡ ${tempPassword}`,
+      tempPassword,
+      user: {
+        id: targetUser._id,
+        fullName: targetUser.fullName,
+        email: targetUser.email,
+        phone: targetUser.phone,
+        role: targetUser.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

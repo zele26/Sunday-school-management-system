@@ -333,6 +333,14 @@ const AdminLayout = ({ children, onLogout }) => {
 
             <LanguageToggle />
             <ThemeToggle />
+            <a
+              href="/change-password"
+              className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-xs"
+              title={isAmharic ? 'የይለፍ ቃል ቀይር (Change Password)' : 'Change Password'}
+            >
+              <KeyRound className="w-4 h-4 text-amber-500" />
+              <span className="hidden lg:inline">{isAmharic ? 'የይለፍ ቃል' : 'Password'}</span>
+            </a>
             <button
               type="button"
               onClick={handleLogout}

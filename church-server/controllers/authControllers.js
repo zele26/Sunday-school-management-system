@@ -448,18 +448,93 @@ exports.forgotPassword = async (req, res) => {
     if (!input) {
       return res.status(400).json({
         success: false,
-        message: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ መለያ ያስገቡ።',
+        message: 'እባክዎ ኢሜይል፣ ስልክ ቁጥር ወይም የተማሪ/መምህር መለያ ያስገቡ።',
       });
     }
 
-    let user;
+    let user = null;
+    const escapedInput = input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // 1. If email format
     if (input.includes('@')) {
       user = await User.findOne({ email: input.toLowerCase() });
-    } else if (input.toUpperCase().startsWith('STU-')) {
-      const student = await Student.findOne({ studentId: input });
-      if (student) user = await User.findById(student.userId);
+      if (!user) {
+        const student = await Student.findOne({ email: input.toLowerCase() });
+        if (student && student.userId) user = await User.findById(student.userId);
+      }
+      if (!user) {
+        try {
+          const Teacher = require('../models/Teacher');
+          const teacher = await Teacher.findOne({ email: input.toLowerCase() });
+          if (teacher && teacher.userId) user = await User.findById(teacher.userId);
+        } catch (e) {}
+      }
     } else {
-      user = await User.findOne({ phone: input });
+      // 2. Check Student ID / Registration Number (TKR-..., TKD-..., STU-..., REG-...)
+      const studentById = await Student.findOne({
+        $or: [
+          { studentId: new RegExp('^' + escapedInput + '$', 'i') },
+          { registrationNumber: new RegExp('^' + escapedInput + '$', 'i') },
+        ],
+      });
+      if (studentById && studentById.userId) {
+        user = await User.findById(studentById.userId);
+      }
+
+      // 3. Check Teacher ID (TCH-...)
+      if (!user) {
+        try {
+          const Teacher = require('../models/Teacher');
+          const teacherById = await Teacher.findOne({
+            teacherId: new RegExp('^' + escapedInput + '$', 'i'),
+          });
+          if (teacherById && teacherById.userId) {
+            user = await User.findById(teacherById.userId);
+          }
+        } catch (e) {}
+      }
+
+      // 4. Check Phone number (flexible digits matching)
+      if (!user) {
+        const cleanDigits = input.replace(/\D/g, '').slice(-9);
+        const phoneConds = [{ phone: input }];
+        if (cleanDigits && cleanDigits.length >= 8) {
+          phoneConds.push({ phone: new RegExp(cleanDigits + '$') });
+        }
+        user = await User.findOne({ $or: phoneConds });
+
+        // If not found in User, search Student & Teacher by phone
+        if (!user && cleanDigits && cleanDigits.length >= 8) {
+          const studentByPhone = await Student.findOne({
+            $or: [
+              { studentPhone: input },
+              { contactPhone: input },
+              { studentPhone: new RegExp(cleanDigits + '$') },
+              { contactPhone: new RegExp(cleanDigits + '$') },
+            ],
+          });
+          if (studentByPhone && studentByPhone.userId) {
+            user = await User.findById(studentByPhone.userId);
+          }
+
+          if (!user) {
+            try {
+              const Teacher = require('../models/Teacher');
+              const teacherByPhone = await Teacher.findOne({
+                $or: [{ phone: input }, { phone: new RegExp(cleanDigits + '$') }],
+              });
+              if (teacherByPhone && teacherByPhone.userId) {
+                user = await User.findById(teacherByPhone.userId);
+              }
+            } catch (e) {}
+          }
+        }
+      }
+
+      // 5. User exact name fallback
+      if (!user) {
+        user = await User.findOne({ fullName: new RegExp('^' + escapedInput + '$', 'i') });
+      }
     }
 
     if (user) {
@@ -470,10 +545,14 @@ exports.forgotPassword = async (req, res) => {
           fullName: user.fullName,
           email: user.email || '',
           phone: user.phone || '',
-          role: user.role,
+          role: user.role || 'student',
           identifier: input,
           status: 'pending',
         });
+      } else {
+        pendingReq.identifier = input;
+        pendingReq.updatedAt = new Date();
+        await pendingReq.save();
       }
     }
 

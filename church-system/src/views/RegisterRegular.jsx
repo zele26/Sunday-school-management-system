@@ -241,11 +241,10 @@ const RegisterRegularContent = () => {
               </h2>
               <ul className="list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1">
                 <li>{t('regBenefit1', 'ምዝገባዎን በቀጥታ በሲስተሙ ያከናውናሉ')}</li>
-                <li>{t('regBenefit2', 'የሰንበት ትምህርት ቤቱን መለያ ቁጥር ያገኛሉ')}</li>
                 <li>{t('regBenefit3', 'የግል መረጃዎን ያስተዳድራሉ')}</li>
                 <li>{t('regBenefit4', 'ስለሚወስዷቸው ትምህርቶች መረጃ ያገኛሉ')}</li>
                 <li>{t('regBenefit5', 'ፈተናና የቤት ሥራ በሲስተሙ ይወስዳሉ')}</li>
-                <li>{t('regBenefit6', 'የመገኘት ሁኔታዎን ይከታተላሉ')}</li>
+                <li>{t('regBenefit6', 'የመገኘት(Attendance) ሁኔታዎን ይከታተላሉ')}</li>
                 <li>{t('regBenefit7', 'የክፍል ውጤትዎን ይከታተላሉ')}</li>
                 <li>{t('regBenefit8', 'የትምህርት ውጤት መግለጫ ይወስዳሉ')}</li>
                 <li>{t('regBenefit9', 'የትምህርት ቁሳቁሶችን (መጻሕፍት፣ መንፈሳዊ ትምህርቶችና ዜናዎች) ያገኛሉ')}</li>
@@ -301,7 +300,7 @@ const RegisterRegularContent = () => {
               {t('registrationSuccessfulTitle', 'ምዝገባዎ በተሳካ ሁኔታ ተጠናቋል!')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
-              {t('regularSuccessDesc', 'ማመልከቻዎ በስኬት ደርሷል፤ በአስተዳዳሪው እየተገመገመ ይገኛል። ሲረጋገጥ የመለያ ቁጥርዎ ይዘጋጃል።')}
+              {t('regularSuccessDesc', 'ማመልከቻዎ በስኬት ደርሷል፤ በአስተዳዳሪው እየተገመገመ ይገኛል። ምዝገባዎ ሲጸድቅ ሲመዘገቡ ባስገቡት ስልክ ቁጥር እና የይለፍ ቃል ተጠቅመው ሲስተሙን መጠቀም ይችላሉ።')}
             </p>
           </div>
 
@@ -350,7 +349,7 @@ const RegisterRegularContent = () => {
                   {t('roadmapStep2Title', 'የአስተዳደር ማረጋገጫ')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t('roadmapStep2Desc', 'መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።')}
+                  {t('roadmapStep2Desc', 'መረጃዎ ሲጸድቅ በይፋ በስልክ ቁጥርዎ እና የይለፍ ቃል ተጠቅመው የተማሪነት በየነመረብ አገልግሎቱን ማግኘት ይችላሉ።')}
                 </p>
               </div>
             </div>
@@ -364,7 +363,7 @@ const RegisterRegularContent = () => {
                   {t('roadmapStep3Title', 'ወደ ትምህርት መግባት')}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {t('roadmapStep3Desc', 'በተማሪ መለያ ቁጥርዎ ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።')}
+                  {t('roadmapStep3Desc', 'በስልክ ቁጥርዎ እና የይለፍ ቃል ተጠቅመው ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።')}
                 </p>
               </div>
             </div>
@@ -694,11 +693,10 @@ const RegisterRegularContent = () => {
               <button
                 type="button"
                 onClick={() => setValue('hasConfessionFather', true, { shouldValidate: true })}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${
-                  watch('hasConfessionFather') === true
-                    ? 'border-[#1657b8] bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
-                }`}
+                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${watch('hasConfessionFather') === true
+                  ? 'border-[#1657b8] bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
+                  }`}
               >
                 <div className="space-y-0.5">
                   <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -709,11 +707,10 @@ const RegisterRegularContent = () => {
                     የንስሐ አባት ስም እና ስልክ ያስገቡ
                   </p>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  watch('hasConfessionFather') === true
-                    ? 'border-[#1657b8] bg-[#1657b8] text-white'
-                    : 'border-slate-300 dark:border-slate-600'
-                }`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${watch('hasConfessionFather') === true
+                  ? 'border-[#1657b8] bg-[#1657b8] text-white'
+                  : 'border-slate-300 dark:border-slate-600'
+                  }`}>
                   {watch('hasConfessionFather') === true && <span className="text-xs">✓</span>}
                 </div>
               </button>
@@ -725,11 +722,10 @@ const RegisterRegularContent = () => {
                   setValue('confessionFatherName', '');
                   setValue('confessionFatherPhone', '');
                 }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${
-                  watch('hasConfessionFather') === false
-                    ? 'border-amber-400 bg-amber-50/70 dark:bg-amber-950/40 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
-                }`}
+                className={`p-4 rounded-2xl border-2 text-left transition-all cursor-pointer flex items-center justify-between ${watch('hasConfessionFather') === false
+                  ? 'border-amber-400 bg-amber-50/70 dark:bg-amber-950/40 shadow-sm'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30'
+                  }`}
               >
                 <div className="space-y-0.5">
                   <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
@@ -740,11 +736,10 @@ const RegisterRegularContent = () => {
                     ሰንበት ት/ቤቱ ድጋፍ ያደርግልዎታል
                   </p>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  watch('hasConfessionFather') === false
-                    ? 'border-amber-500 bg-amber-500 text-white'
-                    : 'border-slate-300 dark:border-slate-600'
-                }`}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${watch('hasConfessionFather') === false
+                  ? 'border-amber-500 bg-amber-500 text-white'
+                  : 'border-slate-300 dark:border-slate-600'
+                  }`}>
                   {watch('hasConfessionFather') === false && <span className="text-xs">✓</span>}
                 </div>
               </button>
@@ -1038,4 +1033,4 @@ const RegisterRegularContent = () => {
   );
 };
 
-export default RegisterRegularContent;
+export default RegisterRegularContent;
