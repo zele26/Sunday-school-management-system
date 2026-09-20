@@ -71,7 +71,14 @@ const app = express();
 // --- GZIP COMPRESSION MIDDLEWARE ---
 try {
   const compression = require('compression');
-  app.use(compression());
+  app.use(compression({
+    level: 6,
+    threshold: 1024,
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) return false;
+      return compression.filter(req, res);
+    },
+  }));
 } catch (e) {
   // compression optional fallback
 }

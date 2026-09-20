@@ -17,12 +17,29 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@tanstack/react-query',
       'react-router-dom',
       'qrcode.react',
       'xlsx',
       'zustand',
       'html5-qrcode',
+      'canvas-confetti',
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|jpg|png|webp|avif|woff2|woff|ico)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
   async rewrites() {
     const defaultUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://church-api-3l2c.onrender.com';
