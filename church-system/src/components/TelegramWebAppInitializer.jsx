@@ -148,8 +148,8 @@ export default function TelegramWebAppInitializer({ children }) {
     return <AuthenticatingView t={t} />;
   }
 
-  // State 2: Inside Telegram, not logged in, account not linked
-  if (isTelegram && !isLoggedIn && authError === 'not_linked') {
+  // State 2: Inside Telegram, not logged in (not linked, timeout, or auth error)
+  if (isTelegram && !isLoggedIn && authError) {
     return <AccountNotLinkedView t={t} closeTelegramApp={closeTelegramApp} />;
   }
 

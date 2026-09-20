@@ -15,47 +15,12 @@ export function useTelegramWebApp() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const login = useAuthStore((state) => state.login);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const tg = window.Telegram?.WebApp;
-    if (!tg) return;
-
-    const hasInitData = Boolean(tg.initData && tg.initData.length > 0);
-    const hasTgUser = Boolean(tg.initDataUnsafe?.user);
-
-    if (hasInitData || hasTgUser) {
-      setIsTelegram(true);
-      setTelegramUser(tg.initDataUnsafe?.user || null);
-      setThemeParams(tg.themeParams || {});
-
-      // Optimize Telegram Mini App Environment
-      try {
-        tg.ready();
-        tg.expand();
-        tg.enableClosingConfirmation?.();
-
-        // Sync header and background styling to midnight navy
-        if (tg.setHeaderColor) {
-          tg.setHeaderColor('#0f172a');
-        }
-        if (tg.setBackgroundColor) {
-          tg.setBackgroundColor('#0f172a');
-        }
-      } catch (e) {
-        console.warn('Telegram WebApp expansion warning:', e);
-      }
-
-      // Auto-authenticate via Telegram initData if not currently logged in
-      if (!isLoggedIn && (hasInitData || hasTgUser)) {
-        authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
-      }
-    }
-  }, [isLoggedIn]);
-
-  const authenticateWithTelegram = async (initData, userObj) => {
+  const authenticateWithTelegram = useCallback(async (initData, userObj) => {
     setIsAuthenticating(true);
     setAuthError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
       const payload = {
@@ -66,13 +31,14 @@ export function useTelegramWebApp() {
       const res = await apiFetch('/api/telegram/auth', {
         method: 'POST',
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success && data.accessToken && data.user) {
         login(data.accessToken, data.user);
-        // Trigger celebratory haptic feedback on successful auto-login
         try {
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
         } catch (e) {}
@@ -80,16 +46,85 @@ export function useTelegramWebApp() {
         if (data.isLinked === false) {
           setAuthError('not_linked');
         } else {
-          setAuthError(data.message || 'Authentication failed');
+          setAuthError(data.message || 'not_linked');
         }
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.warn('Telegram auto-login error:', err);
-      setAuthError(err.message || 'Connection error');
+      if (err.name === 'AbortError') {
+        setAuthError('Connection timed out. Please try again or log in with your phone.');
+      } else {
+        setAuthError(err.message || 'Connection error');
+      }
     } finally {
       setIsAuthenticating(false);
     }
-  };
+  }, [login]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let checkInterval = null;
+    let attempts = 0;
+
+    const initTelegram = () => {
+      const tg = window.Telegram?.WebApp;
+      const isTgQuery = window.location.search.includes('tgWebApp=1') || window.location.hash.includes('tgWebAppData');
+
+      if (!tg && !isTgQuery) return false;
+
+      if (tg) {
+        try {
+          tg.ready();
+          tg.expand();
+          tg.enableClosingConfirmation?.();
+
+          if (tg.setHeaderColor) tg.setHeaderColor('#0f172a');
+          if (tg.setBackgroundColor) tg.setBackgroundColor('#0f172a');
+        } catch (e) {
+          console.warn('Telegram WebApp setup notice:', e);
+        }
+
+        const hasInitData = Boolean(tg.initData && tg.initData.length > 0);
+        const hasTgUser = Boolean(tg.initDataUnsafe?.user);
+
+        setIsTelegram(true);
+        if (hasTgUser) {
+          setTelegramUser(tg.initDataUnsafe.user);
+        }
+        if (tg.themeParams) {
+          setThemeParams(tg.themeParams);
+        }
+
+        // Auto-authenticate if not logged in
+        if (!isLoggedIn && (hasInitData || hasTgUser)) {
+          authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
+        }
+
+        return true;
+      }
+
+      if (isTgQuery) {
+        setIsTelegram(true);
+      }
+
+      return false;
+    };
+
+    if (!initTelegram()) {
+      checkInterval = setInterval(() => {
+        attempts++;
+        if (initTelegram() || attempts > 40) {
+          clearInterval(checkInterval);
+        }
+      }, 50);
+    }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
+  }, [isLoggedIn, authenticateWithTelegram]);
 
   const triggerHaptic = useCallback((type = 'medium') => {
     try {
@@ -121,6 +156,15 @@ export function useTelegramWebApp() {
     }
   }, []);
 
+  const retryAuth = useCallback(() => {
+    const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
+    if (tg) {
+      authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
+    } else {
+      window.location.reload();
+    }
+  }, [authenticateWithTelegram]);
+
   return {
     isTelegram,
     telegramUser,
@@ -130,6 +174,7 @@ export function useTelegramWebApp() {
     triggerHaptic,
     closeTelegramApp,
     openTelegramLink,
+    retryAuth,
     webApp: typeof window !== 'undefined' ? window.Telegram?.WebApp : null,
   };
 }

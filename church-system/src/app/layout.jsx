@@ -40,7 +40,23 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         {/* Telegram Mini App WebApp SDK */}
-        <script src="https://telegram.org/js/telegram-web-app.js" async></script>
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                    if (window.Telegram.WebApp.setHeaderColor) window.Telegram.WebApp.setHeaderColor('#0f172a');
+                    if (window.Telegram.WebApp.setBackgroundColor) window.Telegram.WebApp.setBackgroundColor('#0f172a');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)] antialiased font-sans selection:bg-[var(--brand-gold)] selection:text-slate-950">
         <QueryProvider>
