@@ -230,24 +230,17 @@ const StudentProfile = () => {
           <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-slate-900">
             {/* QR Code Identification */}
             <div className="flex flex-col items-center justify-center bg-blue-50/60 dark:bg-slate-800/50 rounded-2xl p-5 border border-blue-100 dark:border-slate-800">
-              {profile.qrCode ? (
-                <>
-                  <div className="bg-white p-3 rounded-2xl shadow-md border border-blue-100 dark:border-slate-700">
-                    <QRCodeSVG value={profile.qrCode} size={150} level="M" />
-                  </div>
-                  <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-3 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <span>{isAmharic ? 'የተረጋገጠ ዲጂታል QR ባጅ' : 'Verified Digital QR Badge'}</span>
-                  </p>
-                </>
-              ) : (
-                <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-center text-amber-800 dark:text-amber-300 text-xs">
-                  <p className="font-bold">{isAmharic ? 'QR ኮድ አልተዘጋጀም' : 'QR code not generated'}</p>
-                  <p className="text-[11px] mt-1 text-slate-500 dark:text-slate-400">
-                    {isAmharic ? 'እባክዎ ለአስተዳዳሪው ያሳውቁ' : 'Please contact school administrator'}
-                  </p>
-                </div>
-              )}
+              <div className="bg-white p-3 rounded-2xl shadow-md border border-blue-100 dark:border-slate-700">
+                <QRCodeSVG
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify-certificate?id=${encodeURIComponent(profile.studentId || profile.registrationNumber || profile._id || 'STUDENT')}`}
+                  size={150}
+                  level="M"
+                />
+              </div>
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-3 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <span>{isAmharic ? 'የተረጋገጠ ዲጂታል QR ባጅ' : 'Verified Digital QR Badge'}</span>
+              </p>
             </div>
 
             {/* Quick Details Table */}

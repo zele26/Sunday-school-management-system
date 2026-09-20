@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { apiFetch } from '../../api/apiClient';
 import ChurchLogo from '../../assets/ChurchLogo.png';
 import { Award, Search, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
@@ -14,7 +14,15 @@ import { useLanguage } from '../../hooks/useLanguage';
 const VerifyCertificatePage = () => {
   const { t, isAmharic } = useLanguage();
   const params = useParams();
-  const certNumber = params?.certificateNumber || params?.certNumber || params?.id || '';
+  const searchParams = useSearchParams();
+
+  const queryId = searchParams?.get('id') ||
+    searchParams?.get('studentId') ||
+    searchParams?.get('certNumber') ||
+    searchParams?.get('certificateNumber') ||
+    '';
+
+  const certNumber = params?.certificateNumber || params?.certNumber || params?.id || queryId || '';
   const [inputNumber, setInputNumber] = useState(certNumber || '');
   const [loading, setLoading] = useState(false);
   const [certData, setCertData] = useState(null);
@@ -34,12 +42,13 @@ const VerifyCertificatePage = () => {
     setCertData(null);
 
     try {
-      const res = await apiFetch(`/api/public/certificates/verify/${num.trim().toUpperCase()}`);
+      const cleanNum = encodeURIComponent(num.trim().toUpperCase());
+      const res = await apiFetch(`/api/public/certificates/verify/${cleanNum}`);
       const data = await res.json();
       if (res.ok && data.isValid) {
         setCertData(data.certificate);
       } else {
-        setError(data.message || t('certNotFound', 'ይህ የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም'));
+        setError(data.message || t('certNotFound', 'ይህ የምስክር ወረቀት ወይም የተማሪ መለያ በስርዓቱ ውስጥ አልተገኘም'));
       }
     } catch (err) {
       setError(t('serverErrorUnavailable', 'የማረጋገጫ አገልግሎት አሁን አልተሳካም። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።'));

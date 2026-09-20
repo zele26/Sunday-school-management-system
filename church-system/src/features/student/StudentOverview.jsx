@@ -537,7 +537,7 @@ const StudentOverview = () => {
             {/* QR Code Frame */}
             <div className="bg-white p-4 rounded-2xl shadow-inner border-2 border-dashed border-amber-300 dark:border-amber-500/40 inline-block mx-auto">
               <QRCodeSVG
-                value={profile?.qrCode || studentId || authUser?.id || authUser?._id || 'STUDENT'}
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/verify-certificate?id=${encodeURIComponent(studentId || profile?.studentId || profile?.registrationNumber || profile?._id || authUser?.id || 'STUDENT')}`}
                 size={180}
                 level="H"
                 includeMargin={true}

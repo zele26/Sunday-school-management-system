@@ -24,23 +24,78 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
 
     const trimmedQr = qrCode.trim();
     let searchId = trimmedQr;
+
+    // 1. Try parsing JSON if encoded
     try {
       const parsed = JSON.parse(trimmedQr);
       if (parsed.studentId) searchId = parsed.studentId;
       else if (parsed.qrCode) searchId = parsed.qrCode;
       else if (parsed.id) searchId = parsed.id;
+      else if (parsed.certificateNumber) searchId = parsed.certificateNumber;
     } catch (e) {
-      // not JSON, use raw trimmed string
+      // not JSON
+    }
+
+    // 2. Try parsing URL if encoded as a full URL (from Web or Telegram QR badge)
+    if (trimmedQr.includes('http://') || trimmedQr.includes('https://') || trimmedQr.includes('verify') || trimmedQr.includes('certificates')) {
+      try {
+        const urlStr = trimmedQr.startsWith('http') ? trimmedQr : `http://localhost/${trimmedQr.replace(/^\/+/, '')}`;
+        const urlObj = new URL(urlStr);
+        const queryId = urlObj.searchParams.get('id') ||
+          urlObj.searchParams.get('studentId') ||
+          urlObj.searchParams.get('certificateNumber') ||
+          urlObj.searchParams.get('certNumber');
+
+        if (queryId) {
+          searchId = queryId.trim();
+        } else {
+          const pathParts = urlObj.pathname.split('/').filter(Boolean);
+          if (pathParts.length > 0) {
+            searchId = pathParts[pathParts.length - 1].trim();
+          }
+        }
+      } catch (urlErr) {
+        const paramMatch = trimmedQr.match(/[?&](?:id|studentId|certificateNumber|certNumber)=([^&]+)/i);
+        if (paramMatch) {
+          searchId = decodeURIComponent(paramMatch[1]).trim();
+        }
+      }
     }
 
     const mongoose = require('mongoose');
+    const Certificate = require('../../models/education/Certificate');
+
+    // 3. If a certificate number is scanned, check if it maps to a student
+    let certStudentId = null;
+    try {
+      const matchedCert = await Certificate.findOne({
+        $or: [
+          { certificateNumber: searchId.toUpperCase() },
+          { certificateNumber: searchId },
+          { certNumber: searchId.toUpperCase() },
+          { certNumber: searchId },
+        ]
+      }).select('studentId');
+      if (matchedCert && matchedCert.studentId) {
+        certStudentId = matchedCert.studentId;
+      }
+    } catch (certErr) {}
+
     const queryConditions = [
       { qrCode: trimmedQr },
+      { qrCode: searchId },
       { studentId: searchId },
+      { studentId: searchId.toUpperCase() },
       { studentId: trimmedQr },
+      { studentId: trimmedQr.toUpperCase() },
       { registrationNumber: searchId },
+      { registrationNumber: searchId.toUpperCase() },
       { registrationNumber: trimmedQr },
     ];
+
+    if (certStudentId) {
+      queryConditions.push({ _id: certStudentId });
+    }
 
     if (mongoose.Types.ObjectId.isValid(searchId)) {
       queryConditions.push({ _id: searchId });
@@ -51,7 +106,7 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
 
     const student = await Student.findOne({ $or: queryConditions });
     if (!student) {
-      return res.status(404).json({ success: false, message: 'የተማሪው የQR መለያ አልተገኘም። እባክዎ እንደገና ይሞክሩ።' });
+      return res.status(404).json({ success: false, message: `የተማሪው የQR መለያ (${searchId}) አልተገኘም። እባክዎ እንደገና ይሞክሩ።` });
     }
 
     let courseName = '';

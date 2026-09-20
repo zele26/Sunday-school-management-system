@@ -1182,35 +1182,121 @@ router.get('/certificates/my-certificates', protect, async (req, res) => {
 router.get(['/public/verify/:certNumber', '/verify/:certNumber'], async (req, res) => {
   try {
     const { certNumber } = req.params;
-    const cert = await Certificate.findOne({
-      certificateNumber: certNumber.trim().toUpperCase(),
+    const trimmedInput = certNumber ? certNumber.trim() : '';
+
+    if (!trimmedInput) {
+      return res.status(400).json({ success: false, isValid: false, message: 'Verification identifier is required' });
+    }
+
+    // 1. Try finding Certificate by certificateNumber or certNumber
+    let cert = await Certificate.findOne({
+      $or: [
+        { certificateNumber: trimmedInput.toUpperCase() },
+        { certificateNumber: trimmedInput },
+        { certNumber: trimmedInput.toUpperCase() },
+        { certNumber: trimmedInput },
+      ],
       status: 'Valid'
     });
 
-    if (!cert) {
-      return res.status(404).json({
-        success: false,
-        isValid: false,
-        message: 'ይህ የምስክር ወረቀት በስርዓቱ ውስጥ አልተገኘም ወይም ውድቅ ተደርጓል (Certificate not found or revoked)',
+    if (cert) {
+      return res.json({
+        success: true,
+        isValid: true,
+        type: 'certificate',
+        certificate: {
+          certificateNumber: cert.certificateNumber,
+          studentName: cert.studentName,
+          studentNameAmharic: cert.studentNameAmharic,
+          studentNumber: cert.studentNumber,
+          program: cert.program || 'የሰንበት ትምህርት ቤት ሥርዓተ ትምህርት (Sunday School Curriculum)',
+          batch: cert.batch,
+          academicYear: cert.academicYear,
+          issueDateEthiopian: cert.issueDateEthiopian,
+          honors: cert.honors,
+          averageScore: cert.averageScore,
+          completedCourses: cert.completedCourses,
+          status: cert.status,
+          institution: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት (Teklesawiros Sunday School)',
+        },
       });
     }
 
-    res.json({
-      success: true,
-      isValid: true,
-      certificate: {
-        certificateNumber: cert.certificateNumber,
-        studentName: cert.studentName,
-        studentNameAmharic: cert.studentNameAmharic,
-        studentNumber: cert.studentNumber,
-        program: cert.program,
-        batch: cert.batch,
-        academicYear: cert.academicYear,
-        issueDateEthiopian: cert.issueDateEthiopian,
-        honors: cert.honors,
-        status: cert.status,
-        institution: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት (Teklesawiros Sunday School)',
-      },
+    // 2. Try finding Student by studentId, qrCode, registrationNumber, or _id
+    const mongoose = require('mongoose');
+    const Student = require('../../models/Student');
+
+    const studentConditions = [
+      { studentId: trimmedInput },
+      { studentId: trimmedInput.toUpperCase() },
+      { qrCode: trimmedInput },
+      { registrationNumber: trimmedInput },
+      { registrationNumber: trimmedInput.toUpperCase() },
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(trimmedInput)) {
+      studentConditions.push({ _id: trimmedInput });
+    }
+
+    const student = await Student.findOne({ $or: studentConditions }).populate('userId', 'fullName email phone');
+
+    if (student) {
+      // Check if student has an issued certificate
+      const studentCert = await Certificate.findOne({
+        studentId: student._id,
+        status: 'Valid',
+      }).sort({ createdAt: -1 });
+
+      const studentFullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.userId?.fullName || 'ተማሪ';
+
+      if (studentCert) {
+        return res.json({
+          success: true,
+          isValid: true,
+          type: 'certificate',
+          certificate: {
+            certificateNumber: studentCert.certificateNumber,
+            studentName: studentCert.studentName || studentFullName,
+            studentNameAmharic: studentCert.studentNameAmharic || studentFullName,
+            studentNumber: studentCert.studentNumber || student.studentId,
+            program: studentCert.program || (student.studentType === 'distance' ? 'የርቀት ትምህርት' : 'መደበኛ ትምህርት'),
+            batch: studentCert.batch || student.batch,
+            academicYear: studentCert.academicYear,
+            issueDateEthiopian: studentCert.issueDateEthiopian,
+            honors: studentCert.honors,
+            averageScore: studentCert.averageScore,
+            completedCourses: studentCert.completedCourses,
+            status: studentCert.status,
+            institution: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት (Teklesawiros Sunday School)',
+          },
+        });
+      }
+
+      // Return verified Student ID verification
+      return res.json({
+        success: true,
+        isValid: true,
+        type: 'student_id',
+        certificate: {
+          certificateNumber: student.studentId || 'TK-STU',
+          studentName: studentFullName,
+          studentNameAmharic: studentFullName,
+          studentNumber: student.studentId || student.registrationNumber || '-',
+          program: student.studentType === 'distance' ? 'የርቀት ትምህርት (Distance Track)' : 'መደበኛ ትምህርት (Regular Track)',
+          batch: student.batch || student.grade || 'መደበኛ',
+          academicYear: '፳፻፲፯ ዓ.ም',
+          issueDateEthiopian: 'በንቃት በመከታተል ላይ (Active Enrolled Student)',
+          honors: 'የተረጋገጠ የተማሪ ዲጂታል መታወቂያ (Verified Student ID)',
+          status: 'Valid',
+          institution: 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት (Teklesawiros Sunday School)',
+        },
+      });
+    }
+
+    return res.status(404).json({
+      success: false,
+      isValid: false,
+      message: 'ይህ የምስክር ወረቀት ወይም የተማሪ መለያ በስርዓቱ ውስጥ አልተገኘም (Certificate or Student ID not found in system)',
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
