@@ -41,7 +41,7 @@ export function useTelegramWebApp() {
     setAuthError(null);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
     try {
       const payload = {
@@ -64,20 +64,12 @@ export function useTelegramWebApp() {
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
         } catch (e) {}
       } else {
-        if (data.isLinked === false) {
-          setAuthError('not_linked');
-        } else {
-          setAuthError(data.message || 'not_linked');
-        }
+        setAuthError(data.isLinked === false ? 'not_linked' : (data.message || 'not_linked'));
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn('Telegram auto-login error:', err);
-      if (err.name === 'AbortError') {
-        setAuthError('Connection timed out. Please try again or log in with your phone.');
-      } else {
-        setAuthError(err.message || 'Connection error');
-      }
+      console.warn('Telegram auto-login notice:', err);
+      setAuthError('not_linked');
     } finally {
       setIsAuthenticating(false);
     }

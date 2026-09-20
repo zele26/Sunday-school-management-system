@@ -47,25 +47,34 @@ const AuthenticatingView = ({ t }) => (
 
     <section className="relative z-10 flex flex-col items-center text-center space-y-4 max-w-sm">
       {/* Dynamic Telegram Flying Paper Plane */}
-      <div className="relative w-22 h-22 flex items-center justify-center">
+      <div className="relative w-20 h-20 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full border border-blue-500/30" aria-hidden="true" />
         <div
           className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-400 border-r-blue-400/50 animate-spin"
           role="status"
           aria-label="Authenticating"
         />
-        <div className="w-16 h-16 rounded-full bg-blue-500/15 border border-blue-400/30 flex items-center justify-center shadow-[0_0_25px_rgba(59,130,246,0.25)]">
-          <Send className="w-7 h-7 text-blue-400 transform -rotate-12 translate-x-0.5 animate-pulse" aria-hidden="true" />
+        <div className="w-14 h-14 rounded-full bg-blue-500/15 border border-blue-400/30 flex items-center justify-center shadow-[0_0_25px_rgba(59,130,246,0.25)]">
+          <Send className="w-6 h-6 text-blue-400 transform -rotate-12 translate-x-0.5 animate-pulse" aria-hidden="true" />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+        <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">
           {t.authTitle}
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
+        <p className="text-slate-400 text-xs leading-relaxed">
           {t.authDesc}
         </p>
+      </div>
+
+      <div className="pt-2">
+        <a
+          href="/login"
+          className="text-[11px] text-blue-400/80 hover:text-blue-300 underline transition-colors"
+        >
+          {t.loginBtn}
+        </a>
       </div>
     </section>
   </main>
