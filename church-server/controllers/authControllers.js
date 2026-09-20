@@ -531,34 +531,52 @@ exports.forgotPassword = async (req, res) => {
         }
       }
 
-      // 5. User exact name fallback
-      if (!user) {
-        user = await User.findOne({ fullName: new RegExp('^' + escapedInput + '$', 'i') });
-      }
+    // 🔍 Check Registration records if still not linked
+    if (!user && cleanDigits && cleanDigits.length >= 8) {
+      try {
+        const Registration = require('../models/education/Registration');
+        const reg = await Registration.findOne({
+          $or: [
+            { phone: input },
+            { phone: new RegExp(cleanDigits + '$') },
+            { parentPhone: input },
+            { parentPhone: new RegExp(cleanDigits + '$') },
+          ],
+        });
+        if (reg && reg.userId) {
+          user = await User.findById(reg.userId);
+        }
+      } catch (e) {}
     }
 
-    if (user) {
-      const pendingReq = await PasswordResetRequest.findOne({ user: user._id, status: 'pending' });
-      if (!pendingReq) {
-        await PasswordResetRequest.create({
-          user: user._id,
-          fullName: user.fullName,
-          email: user.email || '',
-          phone: user.phone || '',
-          role: user.role || 'student',
-          identifier: input,
-          status: 'pending',
-        });
-      } else {
-        pendingReq.identifier = input;
-        pendingReq.updatedAt = new Date();
-        await pendingReq.save();
-      }
+    // 🛑 If no account or phone number is found in the system, inform the user immediately
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'በዚህ ስልክ ቁጥር ወይም መለያ የተመዘገበ አካውንት አልተገኘም። እባክዎ ያስገቡትን ስልክ ቁጥር ያረጋግጡ ወይም በአዲስ ይመዝገቡ።',
+      });
+    }
+
+    const pendingReq = await PasswordResetRequest.findOne({ user: user._id, status: 'pending' });
+    if (!pendingReq) {
+      await PasswordResetRequest.create({
+        user: user._id,
+        fullName: user.fullName,
+        email: user.email || '',
+        phone: user.phone || input,
+        role: user.role || 'student',
+        identifier: input,
+        status: 'pending',
+      });
+    } else {
+      pendingReq.identifier = input;
+      pendingReq.updatedAt = new Date();
+      await pendingReq.save();
     }
 
     res.status(200).json({
       success: true,
-      message: 'ለአስተዳዳሪው የፓስዎርድ ቅያሬ ጥያቄ ተልኳል! አስተዳዳሪው መረጃዎን አረጋግጦ ሲያጸድቀው በጊዜያዊ ፓስዎርድ መግባት ይችላሉ።',
+      message: `ለአካውንት (${user.fullName || user.phone}) የይለፍ ቃል ቅያሬ ጥያቄ ለአስተዳዳሪው በተሳካ ሁኔታ ተልኳል! አስተዳዳሪው ሲያጸድቀው በጊዜያዊ የይለፍ ቃል መግባት ይችላሉ።`,
     });
   } catch (error) {
     console.error('Forgot Password Error:', error);

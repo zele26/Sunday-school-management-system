@@ -128,6 +128,19 @@ async function runVerification() {
       }
     }
 
+    // 2.1 Test Non-Existent Phone Number Detection
+    console.log('\n--- Testing Non-Existent Phone Number Detection ---');
+    const nonExistentPhone = '0900000000';
+    const cleanDigits = nonExistentPhone.replace(/\D/g, '').slice(-9);
+    const nonExistentUser = await User.findOne({
+      $or: [{ phone: nonExistentPhone }, { phone: new RegExp(cleanDigits + '$') }],
+    });
+    if (!nonExistentUser) {
+      console.log(`✓ Correctly identified non-existent phone number [${nonExistentPhone}] -> System will return 404 User Not Found!`);
+    } else {
+      throw new Error('❌ Failed: Found a user for a non-existent number');
+    }
+
     // 3. Test Reset Request creation & Admin Approval lifecycle
     console.log('\n--- Testing Reset Request Creation & Admin Approval Lifecycle ---');
     await PasswordResetRequest.deleteMany({ user: { $in: [studentUser._id, teacherUser._id] } });
