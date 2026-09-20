@@ -12,6 +12,7 @@ import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { EthiopianDatePicker } from '../../components/ui/EthiopianDatePicker';
 import { toast } from '../../utils/toast';
+import { RELATIONSHIP_OPTIONS } from '../../constants/registrationOptions';
 
 const AddStudent = () => {
   const navigate = useNavigate();
@@ -239,10 +240,11 @@ const AddStudent = () => {
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ዝምድና</label>
               <Select name="relationship" value={formData.relationship} onChange={handleChange}>
-                <option value="Father">አባት</option>
-                <option value="Mother">እናት</option>
-                <option value="Guardian">አሳዳጊ</option>
-                <option value="Other">ሌላ</option>
+                {RELATIONSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm} ({opt.labelEn})
+                  </option>
+                ))}
               </Select>
             </div>
             <div>

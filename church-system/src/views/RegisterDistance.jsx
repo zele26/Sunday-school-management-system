@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
@@ -11,6 +11,7 @@ import { useRegistrationStatus } from '../hooks/queries';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useLanguage } from '../hooks/useLanguage';
+import { EDUCATION_LEVEL_OPTIONS, PROFESSION_OPTIONS, RELATIONSHIP_OPTIONS } from '../constants/registrationOptions';
 
 const RegisterDistanceContent = () => {
   const [step, setStep] = useState('info'); // 'info', 'form', 'success'
@@ -96,11 +97,11 @@ const RegisterDistanceContent = () => {
         }
         setStep('success');
       } else {
-        setServerError(resData.message || (isAmharic ? 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ' : 'Registration failed. Please check your input.'));
+        setServerError(resData.message || t('regFailedCheckInfo', 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ'));
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setServerError(isAmharic ? 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ' : 'Network error occurred. Please try again.');
+      setServerError(t('networkErrorRetry', 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ'));
     }
   };
 
@@ -113,7 +114,7 @@ const RegisterDistanceContent = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center p-4 font-sans">
         <div className="w-10 h-10 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3" />
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 animate-pulse">
-          {isAmharic ? 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...' : 'Checking registration status...'}
+          {t('checkingRegistrationStatus', 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...')}
         </p>
       </div>
     );
@@ -229,10 +230,10 @@ const RegisterDistanceContent = () => {
               </h2>
               <ul className="list-disc list-inside text-sm text-slate-700 dark:text-slate-300 space-y-1">
                 <li>{t('regularHowTo1', 'ከታች ያለውን ቅጽ ይሙሉ።')}</li>
-                <li>{isAmharic ? 'ዕድሜ እና የመኖሪያ አድራሻ (ክፍለ ከተማ፣ ወረዳ፣ ቀበሌ) ያስገቡ።' : 'Provide your age and residential address details.'}</li>
+                <li>{t('distanceHowTo2', 'ዕድሜ እና የመኖሪያ አድራሻ (ክፍለ ከተማ፣ ወረዳ፣ ቀበሌ) ያስገቡ።')}</li>
                 <li>{t('regularHowTo3', 'የ10 አሃዝ ስልክ ቁጥር እና የይለፍ ቃል ያስገቡ።')}</li>
                 <li>{t('regularHowTo4', 'የአደጋ ጊዜ ተጠሪ ስልክ ቁጥርም ግዴታ ነው።')}</li>
-                <li>{isAmharic ? 'ከተመዘገቡ በኋላ የክፍያ መመሪያ ይመጣል።' : 'Upon form submission, payment instructions will be displayed.'}</li>
+                <li>{t('distanceHowTo5', 'ከተመዘገቡ በኋላ የክፍያ መመሪያ ይመጣል።')}</li>
               </ul>
             </div>
 
@@ -241,7 +242,7 @@ const RegisterDistanceContent = () => {
                 <span className="text-xl">💳</span> {t('paymentInstructionTitle', 'የክፍያ መረጃ')}
               </h2>
               <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                {isAmharic ? 'ለርቀት ተማሪዎች የክፍያ መጠን እና የትምህርት ቁሳቁስ ክፍያ አለ። ክፍያውን ከፈጸሙ በኋላ ደረሰኝ በመላክ ምዝገባዎን ያጠናቅቃሉ። ትክክለኛው መጠን በቀጣዩ ገጽ ይታያል።' : 'Distance education requires a one-time registration and course material fee. Once payment is made, attach your slip to activate your portal.'}
+                {t('paymentInstructionDesc', 'ለርቀት ተማሪዎች የክፍያ መጠን እና የትምህርት ቁሳቁስ ክፍያ አለ። ክፍያውን ከፈጸሙ በኋላ ደረሰኝ በመላክ ምዝገባዎን ያጠናቅቃሉ። ትክክለኛው መጠን በቀጣዩ ገጽ ይታያል።')}
               </p>
             </div>
 
@@ -349,7 +350,7 @@ const RegisterDistanceContent = () => {
             )}
             <div className="space-y-1.5">
               <p className="leading-relaxed">
-                {paymentInfo?.instructions || (isAmharic ? 'ክፍያውን በባንክ ወይም በሞባይል ባንኪንግ ከፈጸሙ በኋላ የደረሰኝ ፎቶ በማያያዝ ምዝገባዎን ያጠናቅቁ።' : 'After completing payment via bank or Telebirr, upload your receipt slip to finish registration.')}
+                {paymentInfo?.instructions || t('distanceRegistrationInstructions', 'ክፍያውን በባንክ ወይም በሞባይል ባንኪንግ ከፈጸሙ በኋላ የደረሰኝ ፎቶ በማያያዝ ምዝገባዎን ያጠናቅቁ።')}
               </p>
             </div>
           </div>
@@ -398,7 +399,7 @@ const RegisterDistanceContent = () => {
             {t('distanceStudentRegistration', 'የርቀት ተማሪ ምዝገባ')}
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            {isAmharic ? 'በርቀት ለሚማሩ ተማሪዎች የመመዝገቢያ ቅጽ' : 'Online Application Form for Distance Learning Students'}
+            {t('distanceStudentRegistrationSubtitle', 'በርቀት ለሚማሩ ተማሪዎች የመመዝገቢያ ቅጽ')}
           </p>
         </div>
 
@@ -427,7 +428,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የመጀመሪያ ስም' : 'First Name'}
+                  placeholder={t('firstNamePlaceholder', 'የመጀመሪያ ስም')}
                   {...register('firstName')}
                   className={`${inputClass} ${errors.firstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -439,7 +440,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአባት ስም' : "Father's Name"}
+                  placeholder={t('middleNamePlaceholder', 'የአባት ስም')}
                   {...register('middleName')}
                   className={`${inputClass} ${errors.middleName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -451,7 +452,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአያት ስም' : "Grandfather's Name"}
+                  placeholder={t('lastNamePlaceholder', 'የአያት ስም')}
                   {...register('lastName')}
                   className={`${inputClass} ${errors.lastName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -466,28 +467,29 @@ const RegisterDistanceContent = () => {
                   className={`${inputClass} ${errors.educationLevel ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 >
                   <option value="">{t('selectEducationLevel', '-- የትምህርት ደረጃ ይምረጡ --')}</option>
-                  <option value="Grade 7">{isAmharic ? '7ኛ ክፍል' : 'Grade 7'}</option>
-                  <option value="Grade 8">{isAmharic ? '8ኛ ክፍል' : 'Grade 8'}</option>
-                  <option value="Grade 9">{isAmharic ? '9ኛ ክፍል' : 'Grade 9'}</option>
-                  <option value="Grade 10">{isAmharic ? '10ኛ ክፍል' : 'Grade 10'}</option>
-                  <option value="Grade 11">{isAmharic ? '11ኛ ክፍል' : 'Grade 11'}</option>
-                  <option value="Grade 12">{isAmharic ? '12ኛ ክፍል' : 'Grade 12'}</option>
-                  <option value="Diploma">{isAmharic ? 'ዲፕሎማ' : 'Diploma'}</option>
-                  <option value="Degree">{isAmharic ? 'ዲግሪ' : 'Bachelor Degree'}</option>
-                  <option value="Masters">{isAmharic ? 'ማስተርስ' : "Master's Degree"}</option>
+                  {EDUCATION_LEVEL_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
                 </select>
                 {errors.educationLevel && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.educationLevel.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('professionLabel', 'ሙያ')} <span className="text-rose-500">*</span>
+                  {t('professionLabel', 'የሥራ ዘርፍ / ሙያ')} <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder={isAmharic ? 'ሙያ' : 'Profession / Field'}
+                <select
                   {...register('profession')}
                   className={`${inputClass} ${errors.profession ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
-                />
+                >
+                  <option value="">{t('selectProfession', '-- የሥራ ዘርፍ / ሙያ ይምረጡ --')}</option>
+                  {PROFESSION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
+                </select>
                 {errors.profession && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.profession.message}</p>}
               </div>
               <div>
@@ -528,17 +530,17 @@ const RegisterDistanceContent = () => {
               <div>
                 <div className="flex items-center justify-between mb-1.5 ml-1">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {t('ageLabel', 'ዕድሜ')} <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">({isAmharic ? 'ከ 14 ዓመት በላይ' : 'Age 14+'})</span>
+                    {t('ageLabel', 'ዕድሜ')} <span className="text-rose-500">*</span> <span className="text-xs font-normal text-slate-500">({t('minAgeRequirement', 'ከ 14 ዓመት በላይ')})</span>
                   </label>
                   {watch('age') && watch('dateOfBirth') && (
                     <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in">
-                      {isAmharic ? `በቀኑ የተሰላ፡ ${watch('age')} ዓመት` : `Calculated: ${watch('age')} yrs`}
+                      {t('ageCalculatedFromDOB', 'በቀኑ የተሰላ፡')} {watch('age')} {t('yearsOldUnit', 'ዓመት')}
                     </span>
                   )}
                 </div>
                 <input
                   type="number"
-                  placeholder={isAmharic ? 'ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)' : 'e.g. 18 (Auto-calculated from DOB)'}
+                  placeholder={t('agePlaceholder', 'ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)')}
                   min="15"
                   max="120"
                   {...register('age')}
@@ -553,7 +555,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="tel"
-                  placeholder="09XXXXXXXX / 07XXXXXXXX"
+                  placeholder={t('phonePlaceholder', '09XXXXXXXX / 07XXXXXXXX')}
                   {...register('phone')}
                   className={`${inputClass} ${errors.phone ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -561,7 +563,7 @@ const RegisterDistanceContent = () => {
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('emailLabel', 'ኢሜይል')} <span className="text-slate-400">({isAmharic ? 'አማራጭ' : 'Optional'})</span>
+                  {t('emailLabel', 'ኢሜይል')} <span className="text-slate-400">({t('optional', 'አማራጭ')})</span>
                 </label>
                 <input
                   type="email"
@@ -573,16 +575,16 @@ const RegisterDistanceContent = () => {
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>
-                  {isAmharic ? 'የትምህርት ዙር' : 'Curriculum Batch'}
+                  {t('curriculumBatchLabel', 'የትምህርት ዙር')}
                 </label>
                 <input
                   type="text"
-                  value={isAmharic ? 'ዙር 1 (Batch 1)' : 'Batch 1 (Foundations)'}
+                  value={t('batch1Foundations', 'ዙር 1 (Batch 1)')}
                   disabled
                   className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-sm cursor-not-allowed"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  {isAmharic ? 'አዲስ ተማሪ ከ ዙር 1 ይጀምራል' : 'New distance students begin from Batch 1'}
+                  {t('newStudentBatchNotice', 'አዲስ ተማሪ ከ ዙር 1 ይጀምራል')}
                 </p>
               </div>
             </div>
@@ -594,10 +596,10 @@ const RegisterDistanceContent = () => {
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-bold">📍</div>
               <div>
                 <h2 className="text-lg font-bold text-slate-800 dark:text-white">
-                  {isAmharic ? 'የመኖሪያ አድራሻ መረጃ' : 'Residential Address Information'}
+                  {t('residentialAddressSection', 'የመኖሪያ አድራሻ መረጃ')}
                 </h2>
                 <p className="text-xs text-slate-400">
-                  {isAmharic ? 'ክፍለ ከተማ፣ ወረዳ እና ቀበሌ' : 'Subcity, Woreda and House Number'}
+                  {t('residentialAddressSubtitle', 'ክፍለ ከተማ፣ ወረዳ እና ቀበሌ')}
                 </p>
               </div>
             </div>
@@ -605,26 +607,26 @@ const RegisterDistanceContent = () => {
               <div>
                 <label className={labelClass}>{t('subcityLabel', 'ክፍለ ከተማ')}</label>
                 <select {...register('subcity')} className={inputClass}>
-                  <option value="">{isAmharic ? 'ክፍለ ከተማ ይምረጡ' : '-- Select Sub-city --'}</option>
-                  <option value="Bole">{isAmharic ? 'ቦሌ' : 'Bole'}</option>
-                  <option value="Arada">{isAmharic ? 'አራዳ' : 'Arada'}</option>
-                  <option value="Kirkos">{isAmharic ? 'ቂርቆስ' : 'Kirkos'}</option>
-                  <option value="Lideta">{isAmharic ? 'ልደታ' : 'Lideta'}</option>
-                  <option value="Yeka">{isAmharic ? 'የካ' : 'Yeka'}</option>
-                  <option value="Kolfe Keranio">{isAmharic ? 'ኮልፌ ቀራኒዮ' : 'Kolfe Keranio'}</option>
-                  <option value="Akaki Kality">{isAmharic ? 'አቃቂ ቃሊቲ' : 'Akaki Kality'}</option>
-                  <option value="Nifas Silk Lafto">{isAmharic ? 'ንፋስ ስልክ ላፍቶ' : 'Nifas Silk Lafto'}</option>
-                  <option value="Gullele">{isAmharic ? 'ጉለሌ' : 'Gullele'}</option>
-                  <option value="Addis Ketema">{isAmharic ? 'አዲስ ከተማ' : 'Addis Ketema'}</option>
-                  <option value="Lemi Kura">{isAmharic ? 'ለሚ ኩራ' : 'Lemi Kura'}</option>
-                  <option value="Outside Addis Ababa">{isAmharic ? 'ከአዲስ አበባ ውጪ' : 'Outside Addis Ababa'}</option>
+                  <option value="">{t('selectSubcity', 'ክፍለ ከተማ ይምረጡ')}</option>
+                  <option value="Bole">{t('subcityBole', 'ቦሌ')}</option>
+                  <option value="Arada">{t('subcityArada', 'አራዳ')}</option>
+                  <option value="Kirkos">{t('subcityKirkos', 'ቂርቆስ')}</option>
+                  <option value="Lideta">{t('subcityLideta', 'ልደታ')}</option>
+                  <option value="Yeka">{t('subcityYeka', 'የካ')}</option>
+                  <option value="Kolfe Keranio">{t('subcityKolfeKeranio', 'ኮልፌ ቀራኒዮ')}</option>
+                  <option value="Akaki Kality">{t('subcityAkakiKality', 'አቃቂ ቃሊቲ')}</option>
+                  <option value="Nifas Silk Lafto">{t('subcityNifasSilkLafto', 'ንፋስ ስልክ ላፍቶ')}</option>
+                  <option value="Gullele">{t('subcityGullele', 'ጉለሌ')}</option>
+                  <option value="Addis Ketema">{t('subcityAddisKetema', 'አዲስ ከተማ')}</option>
+                  <option value="Lemi Kura">{t('subcityLemiKura', 'ለሚ ኩራ')}</option>
+                  <option value="Outside Addis Ababa">{t('subcityOutsideAA', 'ከአዲስ አበባ ውጪ')}</option>
                 </select>
               </div>
               <div>
                 <label className={labelClass}>{t('woredaLabel', 'ወረዳ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ወረዳ (ምሳሌ፡ 03)' : 'Woreda (e.g. 03)'}
+                  placeholder={t('woredaPlaceholder', 'ወረዳ (ምሳሌ፡ 03)')}
                   {...register('woreda')}
                   className={inputClass}
                 />
@@ -633,7 +635,7 @@ const RegisterDistanceContent = () => {
                 <label className={labelClass}>{t('kebeleLabel', 'ቀበሌ / የቤት ቁጥር')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ቀበሌ / የቤት ቁጥር' : 'Kebele / House No.'}
+                  placeholder={t('kebelePlaceholder', 'ቀበሌ / የቤት ቁጥር')}
                   {...register('kebele')}
                   className={inputClass}
                 />
@@ -642,7 +644,7 @@ const RegisterDistanceContent = () => {
                 <label className={labelClass}>{t('residentialAddressLabel', 'ተጨማሪ አድራሻ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት' : 'City, Neighborhood or Landmark'}
+                  placeholder={t('residentialAddressPlaceholder', 'ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት')}
                   {...register('address')}
                   className={inputClass}
                 />
@@ -665,7 +667,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'ስም' : 'First Name'}
+                  placeholder={t('firstNamePlaceholder', 'የመጀመሪያ ስም')}
                   {...register('emergencyFirstName')}
                   className={`${inputClass} ${errors.emergencyFirstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -675,7 +677,7 @@ const RegisterDistanceContent = () => {
                 <label className={labelClass}>{t('emergencyMiddleNameLabel', 'የአባት ስም')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአባት ስም' : "Father's Name"}
+                  placeholder={t('middleNamePlaceholder', 'የአባት ስም')}
                   {...register('emergencyMiddleName')}
                   className={inputClass}
                 />
@@ -684,7 +686,7 @@ const RegisterDistanceContent = () => {
                 <label className={labelClass}>{t('emergencyLastNameLabel', 'የአያት ስም')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'የአያት ስም' : "Grandfather's Name"}
+                  placeholder={t('lastNamePlaceholder', 'የአያት ስም')}
                   {...register('emergencyLastName')}
                   className={inputClass}
                 />
@@ -694,13 +696,11 @@ const RegisterDistanceContent = () => {
                   {t('relationshipLabel', 'ዝምድና')} <span className="text-rose-500">*</span>
                 </label>
                 <select {...register('relationship')} className={inputClass}>
-                  <option value="Father">{t('relFather', 'አባት')}</option>
-                  <option value="Mother">{t('relMother', 'እናት')}</option>
-                  <option value="Brother">{isAmharic ? 'ወንድም' : 'Brother'}</option>
-                  <option value="Sister">{isAmharic ? 'እህት' : 'Sister'}</option>
-                  <option value="Guardian">{t('relGuardian', 'ሞግዚት / አሳዳጊ')}</option>
-                  <option value="Spouse">{t('relSpouse', 'የትዳር አጋር')}</option>
-                  <option value="Relative">{t('relOther', 'ሌላ ዘመድ')}</option>
+                  {RELATIONSHIP_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {isAmharic ? opt.labelAm : opt.labelEn}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -709,7 +709,7 @@ const RegisterDistanceContent = () => {
                 </label>
                 <input
                   type="tel"
-                  placeholder="09XXXXXXXX / 07XXXXXXXX"
+                  placeholder={t('phonePlaceholder', '09XXXXXXXX / 07XXXXXXXX')}
                   {...register('emergencyPhone')}
                   className={`${inputClass} ${errors.emergencyPhone ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -729,7 +729,7 @@ const RegisterDistanceContent = () => {
                 <label className={labelClass}>{t('emergencyAddressLabel', 'አድራሻ')}</label>
                 <input
                   type="text"
-                  placeholder={isAmharic ? 'አድራሻ' : 'Address'}
+                  placeholder={t('addressPlaceholder', 'አድራሻ')}
                   {...register('emergencyAddress')}
                   className={inputClass}
                 />
@@ -753,7 +753,7 @@ const RegisterDistanceContent = () => {
                   </label>
                   <input
                     type="password"
-                    placeholder={isAmharic ? 'ቢያንስ 6 ፊደላት/ቁጥሮች' : 'At least 6 characters'}
+                    placeholder={t('passwordPlaceholder', 'ቢያንስ 6 ፊደላት/ቁጥሮች')}
                     {...register('password')}
                     className={`${inputClass} ${errors.password ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                   />
@@ -765,7 +765,7 @@ const RegisterDistanceContent = () => {
                   </label>
                   <input
                     type="password"
-                    placeholder={isAmharic ? 'የይለፍ ቃሉን በድጋሚ ያስገቡ' : 'Re-enter your password'}
+                    placeholder={t('confirmPasswordPlaceholder', 'የይለፍ ቃሉን በድጋሚ ያስገቡ')}
                     {...register('confirmPassword')}
                     className={`${inputClass} ${errors.confirmPassword ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                   />
@@ -775,15 +775,7 @@ const RegisterDistanceContent = () => {
               <div className="bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-xl border border-blue-100/60 dark:border-blue-900/40 flex items-start gap-3">
                 <span className="text-xl">📌</span>
                 <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-0.5">
-                  {isAmharic ? (
-                    <>
-                      በርቀት ትምህርት ሲስተም ውስጥ ለመግባት፣ ከላይ የሰጡትን <span className="text-blue-700 dark:text-blue-300 font-bold">ስልክ ቁጥር</span> እና <span className="text-blue-700 dark:text-blue-300 font-bold">የይለፍ ቃል</span> ይጠቀማሉ።
-                    </>
-                  ) : (
-                    <>
-                      To log in to the distance education portal, use your submitted <span className="text-blue-700 dark:text-blue-300 font-bold">Phone Number</span> and this <span className="text-blue-700 dark:text-blue-300 font-bold">Password</span>.
-                    </>
-                  )}
+                  {t('distanceLoginNotice', 'በርቀት ትምህርት ሲስተም ውስጥ ለመግባት፣ ከላይ የሰጡትን ስልክ ቁጥር እና የይለፍ ቃል ይጠቀማሉ።')}
                 </p>
               </div>
             </div>

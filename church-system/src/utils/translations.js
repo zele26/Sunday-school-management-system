@@ -2800,6 +2800,734 @@ export const translations = {
     en: 'No recent activity yet.',
     am: 'ምንም የቅርብ ጊዜ እንቅስቃሴ የለም።',
   },
+
+  // ==========================================
+  // 📝 Student & Teacher Registration
+  // ==========================================
+  registrationClosedBadge: {
+    en: 'Registration Currently Closed',
+    am: 'ምዝገባ ለጊዜው ተዘግቷል',
+  },
+  regularRegistrationTitle: {
+    en: 'Regular Student Admissions',
+    am: 'የመደበኛ ተማሪዎች ምዝገባ',
+  },
+  regularRegInfoTitle: {
+    en: 'Regular Student Registration Guide',
+    am: 'የመደበኛ ተማሪ ምዝገባ መረጃ',
+  },
+  distanceInfoTitle: {
+    en: 'Distance Learning Registration Guide',
+    am: 'የርቀት ተማሪ ምዝገባ መረጃ',
+  },
+  readBeforeRegistering: {
+    en: 'Please read this guidance carefully before registering',
+    am: 'እባክዎ ከመመዝገብዎ በፊት ይህንን መረጃ ያንብቡ',
+  },
+  regularClosedNotice: {
+    en: 'Regular student registration is currently closed. Next enrollment period will be announced soon.',
+    am: 'የመደበኛ ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።',
+  },
+  distanceClosedNotice: {
+    en: 'Distance learning registration is currently closed. Next intake will be announced soon.',
+    am: 'የርቀት ተማሪዎች ምዝገባ ለጊዜው ተዘግቷል። ቀጣይ የምዝገባ ጊዜ በቅርቡ ይገለጻል።',
+  },
+  regularRegistrationBtn: {
+    en: 'Apply for Regular Classes',
+    am: 'የመደበኛ ትምህርት ይመዝገቡ',
+  },
+  distanceRegistrationBtn: {
+    en: 'Apply for Distance LMS',
+    am: 'የርቀት ትምህርት ይመዝገቡ',
+  },
+  backToHomeLink: {
+    en: '← Back to Home Page',
+    am: '← ወደ ዋናው ገጽ ይመለሱ',
+  },
+  whyRegisterTitle: {
+    en: 'Why Register?',
+    am: 'ለምን ይመዘገባሉ?',
+  },
+  whyRegisterDesc: {
+    en: 'Regular education is provided in progressive grade levels. Students attend classes in-person on weekends (daytime) or weekdays (evenings). Registration is mandatory for admission.',
+    am: 'የመደበኛ ትምህርት በክፍል ደረጃ የሚሰጥ ሲሆን ተማሪዎች በሳምንቱ መጨረሻ (የቀን) ወይም በሳምንት ቀናት (የማታ) በአካል ተገኝተው ይማራሉ። ለመግባት መመዝገብ ግዴታ ነው።',
+  },
+  distanceInfoDesc: {
+    en: 'Distance education is offered sequentially in batches starting from Batch 1. Completing a batch advances you to the next level. Registration is required to access the LMS.',
+    am: 'የርቀት ትምህርት በዙር የሚሰጥ ሲሆን አዲስ ተማሪ ከመጀመሪያው ዙር (ዙር 1) ይጀምራል። አንድ ዙር ሲያጠናቅቁ ወደ ቀጣዩ ዙር ያድጋሉ። በስርዓቱ ለመግባት መመዝገብ ግዴታ ነው።',
+  },
+  howToRegisterTitle: {
+    en: 'How to Register?',
+    am: 'እንዴት ይመዘገባሉ?',
+  },
+  regularHowTo1: {
+    en: 'Fill out the registration form below.',
+    am: 'ከታች ያለውን ቅጽ ይሙሉ።',
+  },
+  regularHowTo2: {
+    en: 'Select your age, study shift (Weekend or Evening), and residential address.',
+    am: 'ዕድሜ፣ የመማሪያ ፈረቃ (የቀን ወይም የማታ) እና የመኖሪያ አድራሻ ይምረጡ።',
+  },
+  regularHowTo3: {
+    en: 'Provide a valid 10-digit phone number and password for your account.',
+    am: 'የ10 አሃዝ ስልክ ቁጥር እና የይለፍ ቃል ያስገቡ።',
+  },
+  regularHowTo4: {
+    en: 'Emergency contact details are also required.',
+    am: 'የአደጋ ጊዜ ተጠሪ ስልክ ቁጥርም ግዴታ ነው።',
+  },
+  regularHowTo5: {
+    en: 'After submission, await administrative verification.',
+    am: 'ከተመዘገቡ በኋላ የአስተዳደር ማረጋገጫ ይጠብቁ።',
+  },
+  distanceHowTo2: {
+    en: 'Provide your age and residential address details (Sub-city, Woreda, Kebele).',
+    am: 'ዕድሜ እና የመኖሪያ አድራሻ (ክፍለ ከተማ፣ ወረዳ፣ ቀበሌ) ያስገቡ።',
+  },
+  distanceHowTo5: {
+    en: 'Upon submitting the form, payment and receipt upload instructions will appear.',
+    am: 'ከተመዘገቡ በኋላ የክፍያ መመሪያ ይመጣል።',
+  },
+  paymentInstructionTitle: {
+    en: 'Payment Information',
+    am: 'የክፍያ መረጃ',
+  },
+  paymentInstructionDesc: {
+    en: 'Distance education includes a registration and course materials contribution fee. Upload your deposit receipt slip after paying to complete enrollment.',
+    am: 'ለርቀት ተማሪዎች የክፍያ መጠን እና የትምህርት ቁሳቁስ ክፍያ አለ። ክፍያውን ከፈጸሙ በኋላ ደረሰኝ በመላክ ምዝገባዎን ያጠናቅቃሉ። ትክክለኛው መጠን በቀጣዩ ገጽ ይታያል።',
+  },
+  whatYouGetTitle: {
+    en: 'What You Will Receive',
+    am: 'ምን ያገኛሉ?',
+  },
+  regBenefit1: {
+    en: 'Direct digital registration and profile management',
+    am: 'ምዝገባዎን በቀጥታ በሲስተሙ ያከናውናሉ',
+  },
+  regBenefit2: {
+    en: 'Official Sunday School Student ID number',
+    am: 'የሰንበት ትምህርት ቤቱን መለያ ቁጥር ያገኛሉ',
+  },
+  regBenefit3: {
+    en: 'Manage your student profile and contact details',
+    am: 'የግል መረጃዎን ያስተዳድራሉ',
+  },
+  regBenefit4: {
+    en: 'Access your enrolled courses and class schedules',
+    am: 'ስለሚወስዷቸው ትምህርቶች መረጃ ያገኛሉ',
+  },
+  regBenefit5: {
+    en: 'Complete online quizzes, assignments, and exams',
+    am: 'ፈተናና የቤት ሥራ በሲስተሙ ይወስዳሉ',
+  },
+  regBenefit6: {
+    en: 'Track your attendance records and statistics',
+    am: 'የመገኘት ሁኔታዎን ይከታተላሉ',
+  },
+  regBenefit7: {
+    en: 'View real-time grades and teacher feedback',
+    am: 'የክፍል ውጤትዎን ይከታተላሉ',
+  },
+  regBenefit8: {
+    en: 'Download official academic transcripts and scorecards',
+    am: 'የትምህርት ውጤት መግለጫ ይወስዳሉ',
+  },
+  regBenefit9: {
+    en: 'Access spiritual study books, theological resources, and church updates',
+    am: 'የትምህርት ቁሳቁሶችን (መጻሕፍት፣ መንፈሳዊ ትምህርቶችና ዜናዎች) ያገኛሉ',
+  },
+  regBenefit10: {
+    en: 'Receive QR-verifiable graduation certificates upon grade advancement',
+    am: 'ከክፍል ወደ ክፍል ሲሸጋገሩ ይፋዊ የምስክር ወረቀት ያገኛሉ',
+  },
+  continueToFormBtn: {
+    en: 'Continue to Registration Form',
+    am: 'ወደ ምዝገባ ቅጽ ይቀጥሉ',
+  },
+  fillFormCarefully: {
+    en: 'Please fill out the application form carefully',
+    am: 'እባክዎ ከታች ያለውን ቅጽ በትክክል ይሙሉ',
+  },
+  distanceFormSubtitle: {
+    en: 'Online application form for distance learning students',
+    am: 'በርቀት ለሚማሩ ተማሪዎች የመመዝገቢያ ቅጽ',
+  },
+  personalInfoSection: {
+    en: 'Personal Information',
+    am: 'የግል መረጃ',
+  },
+  firstNameLabel: {
+    en: 'First Name',
+    am: 'ስም',
+  },
+  firstNamePlaceholder: {
+    en: 'First Name',
+    am: 'የመጀመሪያ ስም',
+  },
+  middleNameLabel: {
+    en: "Father's Name",
+    am: 'የአባት ስም',
+  },
+  middleNamePlaceholder: {
+    en: "Father's Name",
+    am: 'የአባት ስም',
+  },
+  lastNameLabel: {
+    en: "Grandfather's Name",
+    am: 'የአያት ስም',
+  },
+  lastNamePlaceholder: {
+    en: "Grandfather's Name",
+    am: 'የአያት ስም',
+  },
+  educationLevelLabel: {
+    en: 'Academic Education Level',
+    am: 'ዓለማዊ የትምህርት ደረጃ',
+  },
+  selectEducationLevel: {
+    en: '-- Select Education Level --',
+    am: '-- የትምህርት ደረጃ ይምረጡ --',
+  },
+  professionLabel: {
+    en: 'Profession / Field of Work',
+    am: 'የሥራ ዘርፍ / ሙያ',
+  },
+  selectProfession: {
+    en: '-- Select Profession / Field of Work --',
+    am: '-- የሥራ ዘርፍ / ሙያ ይምረጡ --',
+  },
+  professionPlaceholder: {
+    en: 'Select Profession or Field of Work',
+    am: 'የሥራ ዘርፍ ወይም ሙያ ይምረጡ',
+  },
+  genderLabel: {
+    en: 'Gender',
+    am: 'ጾታ',
+  },
+  male: {
+    en: 'Male',
+    am: 'ወንድ',
+  },
+  female: {
+    en: 'Female',
+    am: 'ሴት',
+  },
+  dateOfBirthLabel: {
+    en: 'Date of Birth (Ethiopian Calendar)',
+    am: 'የትውልድ ቀን በኢትዮጵያ የቀን አቆጣጠር',
+  },
+  ageLabel: {
+    en: 'Age',
+    am: 'ዕድሜ',
+  },
+  ageMinNote: {
+    en: 'Age 14+',
+    am: 'ከ 14 ዓመት በላይ',
+  },
+  ageCalculatedNote: {
+    en: 'Calculated from DOB',
+    am: 'በቀኑ የተሰላ',
+  },
+  agePlaceholder: {
+    en: 'e.g. 18 (Auto-calculated from DOB)',
+    am: 'ምሳሌ፡ 18 (የትውልድ ቀን ሲመርጡ በራሱ ይሰላል)',
+  },
+  phoneNumberLabel: {
+    en: 'Phone Number (10 Digits)',
+    am: 'ስልክ ቁጥር (10 አሃዝ)',
+  },
+  emailLabel: {
+    en: 'Email Address',
+    am: 'ኢሜይል',
+  },
+  emailOptional: {
+    en: 'Optional',
+    am: 'አማራጭ',
+  },
+  gradeLevelLabel: {
+    en: 'Grade Level',
+    am: 'የሚገቡበት ክፍል',
+  },
+  studyShiftLabel: {
+    en: 'Study Shift',
+    am: 'የመማሪያ ፈረቃ',
+  },
+  weekendDayShift: {
+    en: 'Day / Weekend (Sat & Sun)',
+    am: 'የቀን (ቅዳሜና እሑድ)',
+  },
+  weekdayNightShift: {
+    en: 'Night / Weekday Evenings',
+    am: 'የማታ (የሳምንቱ ቀናት)',
+  },
+  curriculumBatchLabel: {
+    en: 'Curriculum Batch',
+    am: 'የትምህርት ዙር',
+  },
+  curriculumBatchValue: {
+    en: 'Batch 1 (Foundations)',
+    am: 'ዙር 1 (መሠረታዊ)',
+  },
+  batchStartNotice: {
+    en: 'New distance students begin at Batch 1',
+    am: 'አዲስ ተማሪ ከ ዙር 1 ይጀምራል',
+  },
+  residentialAddressSection: {
+    en: 'Residential Address',
+    am: 'የመኖሪያ አድራሻ መረጃ',
+  },
+  residentialAddressSubtitle: {
+    en: 'Sub-city, Woreda and Kebele details',
+    am: 'ክፍለ ከተማ፣ ወረዳ እና ቀበሌ',
+  },
+  subcityLabel: {
+    en: 'Sub-City',
+    am: 'ክፍለ ከተማ',
+  },
+  selectSubcity: {
+    en: '-- Select Sub-City --',
+    am: '-- ክፍለ ከተማ ይምረጡ --',
+  },
+  woredaLabel: {
+    en: 'Woreda',
+    am: 'ወረዳ',
+  },
+  woredaPlaceholder: {
+    en: 'Woreda (e.g. 03)',
+    am: 'ወረዳ (ምሳሌ፡ 03)',
+  },
+  kebeleLabel: {
+    en: 'Kebele / House Number',
+    am: 'ቀበሌ / የቤት ቁጥር',
+  },
+  kebelePlaceholder: {
+    en: 'Kebele / House No.',
+    am: 'ቀበሌ / የቤት ቁጥር',
+  },
+  residentialAddressLabel: {
+    en: 'Additional Address / Landmark',
+    am: 'ተጨማሪ አድራሻ',
+  },
+  residentialAddressPlaceholder: {
+    en: 'Neighborhood or Landmark',
+    am: 'ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት',
+  },
+  emergencyContactSection: {
+    en: 'Emergency Contact Information',
+    am: 'የአደጋ ጊዜ ተጠሪ መረጃ',
+  },
+  emergencyFirstNameLabel: {
+    en: 'Emergency Contact First Name',
+    am: 'የተጠሪ ስም',
+  },
+  emergencyFirstNamePlaceholder: {
+    en: 'First Name',
+    am: 'የተጠሪ ስም',
+  },
+  emergencyMiddleNameLabel: {
+    en: "Emergency Contact Father's Name",
+    am: 'የተጠሪ የአባት ስም',
+  },
+  emergencyMiddleNamePlaceholder: {
+    en: "Father's Name",
+    am: 'የተጠሪ የአባት ስም',
+  },
+  emergencyLastNameLabel: {
+    en: "Emergency Contact Grandfather's Name",
+    am: 'የተጠሪ የአያት ስም',
+  },
+  emergencyLastNamePlaceholder: {
+    en: "Grandfather's Name",
+    am: 'የተጠሪ የአያት ስም',
+  },
+  relationshipLabel: {
+    en: 'Relationship',
+    am: 'ዝምድና',
+  },
+  emergencyPhoneLabel: {
+    en: 'Emergency Contact Phone',
+    am: 'የተጠሪ ስልክ ቁጥር',
+  },
+  emergencyEmailLabel: {
+    en: 'Emergency Contact Email',
+    am: 'የተጠሪ ኢሜይል',
+  },
+  emergencyAddressLabel: {
+    en: 'Emergency Contact Address',
+    am: 'የተጠሪ አድራሻ',
+  },
+  relFather: {
+    en: 'Father',
+    am: 'አባት',
+  },
+  relMother: {
+    en: 'Mother',
+    am: 'እናት',
+  },
+  relBrother: {
+    en: 'Brother',
+    am: 'ወንድም',
+  },
+  relSister: {
+    en: 'Sister',
+    am: 'እህት',
+  },
+  relGuardian: {
+    en: 'Guardian',
+    am: 'ሞግዚት / አሳዳጊ',
+  },
+  relSpouse: {
+    en: 'Spouse',
+    am: 'የትዳር አጋር',
+  },
+  relOther: {
+    en: 'Other Relative',
+    am: 'ሌላ ዘመድ',
+  },
+  accountSecuritySection: {
+    en: 'Account Login Credentials',
+    am: 'የመግቢያ መረጃ',
+  },
+  password: {
+    en: 'Password',
+    am: 'የይለፍ ቃል',
+  },
+  passwordPlaceholder: {
+    en: 'At least 6 characters',
+    am: 'ቢያንስ 6 ፊደላት/ቁጥሮች',
+  },
+  confirmPasswordLabel: {
+    en: 'Confirm Password',
+    am: 'የይለፍ ቃል ማረጋገጫ',
+  },
+  confirmPasswordPlaceholder: {
+    en: 'Re-enter your password',
+    am: 'የይለፍ ቃሉን በድጋሚ ያስገቡ',
+  },
+  loginCredentialNotice: {
+    en: 'To log in to your account, use your submitted Phone Number and this Password.',
+    am: 'በመለያዎ ወደ ሲስተሙ ለመግባት ከላይ ያስገቡትን ስልክ ቁጥር እና ይህንን የይለፍ ቃል ይጠቀሙ።',
+  },
+  submitApplicationBtn: {
+    en: 'Submit Registration ➔',
+    am: 'ይመዝገቡ ➔',
+  },
+  submittingApplication: {
+    en: 'Submitting Application...',
+    am: 'በመመዝገብ ላይ...',
+  },
+  registrationSuccessfulTitle: {
+    en: 'Registration Submitted Successfully!',
+    am: 'ምዝገባዎ በተሳካ ሁኔታ ተጠናቋል!',
+  },
+  regularSuccessDesc: {
+    en: 'Your application has been received and is being reviewed. Your Student ID will be issued upon approval.',
+    am: 'ማመልከቻዎ በስኬት ደርሷል፤ በአስተዳዳሪው እየተገመገመ ይገኛል። ሲረጋገጥ የመለያ ቁጥርዎ ይዘጋጃል።',
+  },
+  distanceSuccessDesc: {
+    en: 'To finalize your distance learning enrollment, please submit your payment receipt.',
+    am: 'የርቀት ትምህርት ምዝገባዎን ለማጠናቀቅ እባክዎ ክፍያ ከፍለው ደረሰኝዎን ይላኩ።',
+  },
+  registeredPhoneLabel: {
+    en: 'Registered Phone:',
+    am: 'የተመዘገበ ስልክ ቁጥር:',
+  },
+  loginMethodLabel: {
+    en: 'Login Method:',
+    am: 'የመግቢያ ዘዴ:',
+  },
+  phoneAndPasswordMethod: {
+    en: 'Phone Number + Password',
+    am: 'ስልክ ቁጥር + የይለፍ ቃል',
+  },
+  roadmapStep1Title: {
+    en: 'Application Received',
+    am: 'ምዝገባ ተልኳል',
+  },
+  roadmapStep1Desc: {
+    en: 'Your application data has been received by Sunday School administration.',
+    am: 'የአባልነት መረጃዎ ለሰንበት ትምህርት ቤቱ አስተዳደር ደርሷል።',
+  },
+  roadmapStep2Title: {
+    en: 'Administrative Review',
+    am: 'የአስተዳደር ማረጋገጫ',
+  },
+  roadmapStep2Desc: {
+    en: 'Upon review and approval, your official Student ID will be generated.',
+    am: 'መረጃዎ ሲጸድቅ ይፋዊ የተማሪ መለያ (Student ID) ተዘጋጅቶ ይሰጥዎታል።',
+  },
+  roadmapStep3Title: {
+    en: 'Classroom Access',
+    am: 'ወደ ትምህርት መግባት',
+  },
+  roadmapStep3Desc: {
+    en: 'Access your dashboard to view course materials, attendance, and grades.',
+    am: 'በተማሪ መለያ ቁጥርዎ ወደ ተማሪዎች ፖርታል ገብተው ትምህርትዎን ይከታተላሉ።',
+  },
+  checkStatusBtnText: {
+    en: 'Check Application Status',
+    am: 'የምዝገባ ሁኔታዎን ያረጋግጡ',
+  },
+  submitReceiptBtn: {
+    en: 'Proceed to Upload Payment Slip →',
+    am: 'የክፍያ ደረሰኝ ለመላክ ይቀጥሉ →',
+  },
+  uploadReceipt: {
+    en: 'Upload Receipt to Complete Registration →',
+    am: 'ደረሰኝ ያያይዙና ምዝገባዎን ያጠናቁ →',
+  },
+  officialStudentId: {
+    en: 'Official Student ID',
+    am: 'ይፋዊ የተማሪ መለያ ቁጥር (Student ID)',
+  },
+  copied: {
+    en: 'Copied!',
+    am: 'ተገልብጧል!',
+  },
+  copyNumberBtn: {
+    en: 'Copy',
+    am: 'ገልብጥ',
+  },
+  directLoginToPortal: {
+    en: 'Log in to Portal ➔',
+    am: 'ወደ መማሪያ ፖርታል ይግቡ ➔',
+  },
+  checkAnotherNumber: {
+    en: '← Check Another Phone Number',
+    am: '← ሌላ ስልክ ቁጥር ለመፈተሽ',
+  },
+  continueRegistrationTitle: {
+    en: 'Continue Registration',
+    am: 'ምዝገባዎን ይቀጥሉ',
+  },
+  continueRegistrationSubtitle: {
+    en: 'Distance Learning Payment Slip Submission',
+    am: 'የርቀት ትምህርት ክፍያ ደረሰኝ ማስገቢያ',
+  },
+  receiptSubmittedTitle: {
+    en: 'Payment Slip Submitted!',
+    am: 'የክፍያ ደረሰኝዎ ተልኳል!',
+  },
+  receiptSubmittedDesc: {
+    en: 'Your payment verification has been received and is under administrative review.',
+    am: 'የክፍያ ማረጋገጫዎ በተሳካ ሁኔታ ደርሶናል፤ በአስተዳዳሪዎች ክለሳ ይደረግበታል።',
+  },
+  applicationNumber: {
+    en: 'Your Application Number',
+    am: 'የማመልከቻ ቁጥርዎ',
+  },
+  receiptSubmittedNote: {
+    en: '💡 Once approved by administration, you can sign in with your phone and password to begin your distance courses.',
+    am: '💡 ማረጋገጫው በትምህርት ቤቱ አስተዳደር ሲጸድቅ በስልክዎ እና በይለፍ ቃልዎ ወደ ኦንላይን መማሪያ ፖርታል ገብተው ትምህርትዎን መጀመር ይችላሉ።',
+  },
+  proceedToLoginBtnText: {
+    en: 'Return to Login Page',
+    am: 'ወደ መግቢያ ገጽ ይመለሱ',
+  },
+  transactionRefLabel: {
+    en: 'Transaction Reference / FT Number',
+    am: 'የክፍያ ማረጋገጫ ቁጥር (Transaction Ref / FT ቁጥር)',
+  },
+  transactionRefPlaceholder: {
+    en: 'e.g. FT24089...',
+    am: 'ምሳሌ፡ FT24089...',
+  },
+  uploadReceiptFileLabel: {
+    en: 'Upload Payment Receipt Photo (PNG/JPG/PDF)',
+    am: 'የክፍያ ደረሰኝ ፎቶ ይጫኑ (PNG/JPG/PDF)',
+  },
+  dragAndDropSlip: {
+    en: 'Drag & drop receipt photo or click to browse',
+    am: 'የደረሰኝ ፎቶ እዚህ ይጎትቱ ወይም ይምረጡ',
+  },
+  maxFileSize5MB: {
+    en: 'Max file size: 5MB',
+    am: 'ከፍተኛ መጠን፡ 5MB',
+  },
+  submitPaymentProofBtn: {
+    en: 'Submit Payment Proof ➔',
+    am: 'የክፍያ ማረጋገጫ ላክ ➔',
+  },
+  submittingPaymentProof: {
+    en: 'Uploading payment proof...',
+    am: 'ደረሰኝ በመላክ ላይ...',
+  },
+  teacherRegisterTitle: {
+    en: 'Teacher Registration',
+    am: 'አዲስ መምህር መመዝገቢያ',
+  },
+  teacherOnlySubtitle: {
+    en: 'For Instructors & Teachers Only',
+    am: 'ለመምህራን ብቻ',
+  },
+  teacherSubjectPlaceholder: {
+    en: 'Subject / Course Specialization',
+    am: 'የሚያስተምሩት የትምህርት ዓይነት',
+  },
+  teacherExperiencePlaceholder: {
+    en: 'Teaching Experience (in years)',
+    am: 'የማስተማር ልምድ (በዓመታት)',
+  },
+  teacherSubjectHeader: {
+    en: '📚 Teaching Profile (Optional)',
+    am: '📚 የመምህርነት መረጃ (አማራጭ)',
+  },
+  regularStudentNoPaymentRequired: {
+    en: 'This is a regular student application. No payment is required.',
+    am: 'ይህ የመደበኛ ተማሪ ምዝገባ ነው። ክፍያ አያስፈልገውም።',
+  },
+  invalidPhoneOrPassword: {
+    en: 'Invalid phone number or password',
+    am: 'ትክክለኛ ያልሆነ ስልክ ቁጥር ወይም የይለፍ ቃል',
+  },
+  networkErrorRetry: {
+    en: 'Network error occurred. Please try again.',
+    am: 'የአውታረ መረብ ችግር ተፈጥሯል፤ እባክዎ እንደገና ይሞክሩ',
+  },
+  fileSizeExceeds5mb: {
+    en: 'File size must not exceed 5MB',
+    am: 'የፋይሉ መጠን ከ 5MB መብለጥ የለበትም',
+  },
+  paymentReceiptUploadedSuccess: {
+    en: 'Payment receipt uploaded successfully',
+    am: 'የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል',
+  },
+  failedToUploadReceipt: {
+    en: 'Failed to upload receipt',
+    am: 'ደረሰኝ መጫን አልተሳካም',
+  },
+  networkErrorDuringUpload: {
+    en: 'Network error occurred during receipt upload',
+    am: 'የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት',
+  },
+  pleaseEnterTransactionRef: {
+    en: 'Please enter the transaction reference / FT number',
+    am: 'እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ',
+  },
+  pleaseUploadReceipt: {
+    en: 'Please upload your payment receipt',
+    am: 'እባክዎ የደረሰኝ ፎቶ ይጫኑ',
+  },
+  paymentSubmissionFailed: {
+    en: 'Payment submission failed',
+    am: 'ክፍያ ማረጋገጥ አልተሳካም',
+  },
+  checkAnotherPhone: {
+    en: '← Check another phone number',
+    am: '← ሌላ ስልክ ቁጥር ለመፈተሽ',
+  },
+  teacherRegistrationTitle: {
+    en: 'Teacher Registration',
+    am: 'አዲስ መምህር መመዝገቢያ',
+  },
+  forTeachersOnly: {
+    en: 'For Instructors Only',
+    am: 'ለመምህራን ብቻ',
+  },
+  backToLogin: {
+    en: '← Back to Login',
+    am: '← ወደ መግቢያ ተመለስ',
+  },
+  userRole: {
+    en: 'User Role',
+    am: 'የተጠቃሚ ሚና',
+  },
+  roleTeacher: {
+    en: 'Teacher / Instructor',
+    am: 'መምህር',
+  },
+  studentRegNoticeTeacher: {
+    en: 'Students should register through the regular or distance student registration pages.',
+    am: 'ተማሪዎች በአስተዳዳሪው ወይም በተማሪዎች ምዝገባ ገጽ በኩል ይመዘገባሉ።',
+  },
+  fullNameRequiredPlaceholder: {
+    en: 'Full Name *',
+    am: 'ሙሉ ስም *',
+  },
+  emailRequiredPlaceholder: {
+    en: 'Email *',
+    am: 'ኢሜይል *',
+  },
+  passwordMin6Placeholder: {
+    en: 'Password * (min 6 characters)',
+    am: 'የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)',
+  },
+  confirmPasswordRequiredPlaceholder: {
+    en: 'Confirm Password *',
+    am: 'የይለፍ ቃል ያረጋግጡ *',
+  },
+  emergencyPersonNamePlaceholder: {
+    en: 'Emergency Contact Name',
+    am: 'የተጠሪ ስም',
+  },
+  emergencyPhonePlaceholder: {
+    en: 'Emergency Contact Phone',
+    am: 'የተጠሪ ስልክ',
+  },
+  teacherInfoOptional: {
+    en: '📚 Teaching Profile (Optional)',
+    am: '📚 የመምህርነት መረጃ (አማራጭ)',
+  },
+  subjectTaughtPlaceholder: {
+    en: 'Subject / Field Taught',
+    am: 'የሚያስተምሩት የትምህርት ዓይነት',
+  },
+  teachingExperiencePlaceholder: {
+    en: 'Teaching Experience (in years)',
+    am: 'የማስተማር ልምድ (በዓመታት)',
+  },
+  registerBtn: {
+    en: 'Register',
+    am: 'ይመዝገቡ',
+  },
+  haveAccountQuestion: {
+    en: 'Already have an account?',
+    am: 'አካውንት አለዎት?',
+  },
+  enterFullName: {
+    en: 'Please enter your full name',
+    am: 'እባክዎ ሙሉ ስምዎን ያስገቡ',
+  },
+  enterValidEmail: {
+    en: 'Please enter a valid email address',
+    am: 'እባክዎ ትክክለኛ የኢሜይል አድራሻ ያስገቡ',
+  },
+  passwordMin6: {
+    en: 'Password must be at least 6 characters',
+    am: 'የይለፍ ቃል ቢያንስ 6 ፊደላት/ቁጥሮች መሆን አለበት',
+  },
+  passwordsDoNotMatch: {
+    en: 'Passwords do not match',
+    am: 'የይለፍ ቃሎቹ አይመሳሰሉም',
+  },
+  teacherRegSuccess: {
+    en: 'Registration submitted successfully! You will be notified once reviewed by the administrator.',
+    am: 'ምዝገባዎ በተሳካ ሁኔታ ተከናውኗል! በአስተዳዳሪው ሲረጋገጥ ማሳወቂያ ይደርስዎታል።',
+  },
+  teacherRegFailed: {
+    en: 'Registration failed. Please try again.',
+    am: 'ምዝገባው አልተሳካም። እባክዎ እንደገና ይሞክሩ።',
+  },
+  statusApprovedBadge: {
+    en: '✓ Approved',
+    am: '✓ ምዝገባዎ ጸድቋል',
+  },
+  statusRejectedBadge: {
+    en: '✕ Rejected',
+    am: '✕ ምዝገባው ውድቅ ሆኗል',
+  },
+  statusPendingBadge: {
+    en: '⏳ Pending Review',
+    am: '⏳ በክለሳ ላይ ይገኛል',
+  },
+  checkingRegistrationStatus: {
+    en: 'Checking registration status...',
+    am: 'የምዝገባ ሁኔታን በማረጋገጥ ላይ...',
+  },
+  regFailedCheckInfo: {
+    en: 'Registration failed. Please check your information.',
+    am: 'ምዝገባ አልተሳካም፤ እባክዎ መረጃዎን በትክክል ያስገቡ',
+  },
 };
 
 export default translations;

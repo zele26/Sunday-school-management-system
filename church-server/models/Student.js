@@ -35,7 +35,7 @@ const studentSchema = new mongoose.Schema({
   emergencyLastName: { type: String, default: '' },
   relationship: {
     type: String,
-    enum: ['Father', 'Mother', 'Brother', 'Sister', 'Relative'],
+    enum: ['Father', 'Mother', 'Brother', 'Sister', 'Guardian', 'Spouse', 'Relative', 'Other', ''],
     default: 'Father',
   },
   emergencyPhone: { type: String, default: '' },

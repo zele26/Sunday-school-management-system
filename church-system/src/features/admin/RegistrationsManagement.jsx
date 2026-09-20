@@ -33,8 +33,11 @@ import {
 } from '../../hooks/queries';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { Sliders, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel } from '../../constants/registrationOptions';
+import { useLanguage } from '../../hooks/useLanguage';
 
 const RegistrationsManagement = () => {
+  const { isAmharic } = useLanguage();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
@@ -442,11 +445,15 @@ const RegistrationsManagement = () => {
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የትምህርት ደረጃ</span>
-                      <span className="text-slate-900 dark:text-white">{selectedRegistration.educationLevel || '—'}</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{getEducationLevelLabel(selectedRegistration.educationLevel, isAmharic) || selectedRegistration.educationLevel || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የሥራ ዘርፍ / ሙያ</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{getProfessionLabel(selectedRegistration.profession, isAmharic) || selectedRegistration.profession || '—'}</span>
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ጾታ</span>
-                      <span className="text-slate-900 dark:text-white">{selectedRegistration.gender || '—'}</span>
+                      <span className="text-slate-900 dark:text-white">{selectedRegistration.gender === 'Female' ? 'ሴት' : (selectedRegistration.gender === 'Male' ? 'ወንድ' : (selectedRegistration.gender || '—'))}</span>
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የትውልድ ቀን</span>
@@ -506,7 +513,7 @@ const RegistrationsManagement = () => {
                       </div>
                       <div>
                         <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ዝምድና</span>
-                        <span className="text-slate-900 dark:text-white">{selectedRegistration.relationship || 'ወላጅ/አሳዳጊ'}</span>
+                        <span className="text-slate-900 dark:text-white">{getRelationshipLabel(selectedRegistration.relationship, isAmharic) || selectedRegistration.relationship || 'ወላጅ/አሳዳጊ'}</span>
                       </div>
                       <div>
                         <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ስልክ ቁጥር</span>

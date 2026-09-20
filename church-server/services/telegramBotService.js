@@ -9,6 +9,7 @@ const Course = require('../models/education/Course');
 const ExamResult = require('../models/education/ExamResult');
 const Announcement = require('../models/Announcement');
 const Certificate = require('../models/education/Certificate');
+const TelegramGroup = require('../models/TelegramGroup');
 const { formatEthiopianDate } = require('../utils/ethiopianDate');
 
 let botInstance = null;
@@ -109,6 +110,131 @@ const buildPortalInlineButton = (text = '🎓 የተማሪዎች ፖርታል �
     return { text, callback_data: 'cmd_portal' };
   }
   return { text, url: fullUrl };
+};
+
+/**
+ * Helper to normalize grade strings (e.g., '7', 'grade 7', 'የ 7ኛ ክፍል' -> 'Grade 7')
+ */
+const normalizeGradeString = (input) => {
+  if (!input) return 'All Classes';
+  const str = input.trim();
+  if (/^(all|ሁሉም|all classes)$/i.test(str)) return 'All Classes';
+  if (/^(distance|የርቀት|ርቀት)$/i.test(str)) return 'Distance';
+  const match = str.match(/\d+/);
+  if (match) {
+    return `Grade ${match[0]}`;
+  }
+  return str;
+};
+
+/**
+ * Helper to normalize shift string ('weekend', 'night', 'all')
+ */
+const normalizeShiftString = (input) => {
+  if (!input) return 'all';
+  const str = input.toLowerCase().trim();
+  if (str.includes('night') || str.includes('ማታ')) return 'night';
+  if (str.includes('weekend') || str.includes('day') || str.includes('ቀን') || str.includes('ቅዳሜ') || str.includes('እሑድ')) return 'weekend';
+  return 'all';
+};
+
+/**
+ * Helper to parse combined grade and shift from user input (e.g., "Grade 7 night", "7 ማታ", "8 weekend")
+ */
+const parseGradeAndShift = (input) => {
+  if (!input) return { grade: 'All Classes', shift: 'all' };
+  const str = input.trim();
+  let shift = 'all';
+
+  if (/(night|ማታ)/i.test(str)) {
+    shift = 'night';
+  } else if (/(weekend|day|ቀን|ቅዳሜ|እሑድ)/i.test(str)) {
+    shift = 'weekend';
+  }
+
+  const cleanGrade = str.replace(/(night|weekend|day|all|ማታ|ቀን|ቅዳሜ|እሑድ|ፈረቃ|ክፍል|የማታ|የቀን)/gi, '').trim();
+  const grade = normalizeGradeString(cleanGrade || str);
+
+  return { grade, shift };
+};
+
+/**
+ * Check if a user is an authorized admin in a Telegram group or system admin
+ */
+const isAuthorizedAdmin = async (chatId, userId) => {
+  if (!userId) return false;
+  try {
+    // 1. Check if user is in env TELEGRAM_ADMIN_IDS
+    const adminIds = (process.env.TELEGRAM_ADMIN_IDS || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+    if (adminIds.includes(String(userId))) return true;
+
+    // 2. Check if user is an Admin/Superadmin in Sunday School DB
+    const dbUser = await User.findOne({ telegramChatId: String(userId) }).catch(() => null);
+    if (dbUser && (dbUser.role === 'admin' || dbUser.role === 'superadmin' || dbUser.roles?.includes('admin') || dbUser.roles?.includes('superadmin') || dbUser.role === 'teacher')) {
+      return true;
+    }
+
+    // 3. If in a group, verify if user is Group Creator / Owner or Group Administrator in Telegram
+    if (botInstance && chatId && (String(chatId).startsWith('-') || String(chatId).startsWith('-100'))) {
+      const member = await botInstance.getChatMember(chatId, userId).catch(() => null);
+      if (member && (member.status === 'creator' || member.status === 'administrator')) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch (err) {
+    console.warn('isAuthorizedAdmin check notice:', err.message);
+    return false;
+  }
+};
+
+/**
+ * Upsert or update a Telegram Group record in MongoDB
+ */
+const upsertTelegramGroup = async (chat, options = {}) => {
+  if (!chat || (chat.type !== 'group' && chat.type !== 'supergroup' && chat.type !== 'channel')) {
+    return null;
+  }
+  try {
+    const chatId = String(chat.id);
+    const title = chat.title || 'Telegram Group';
+    const type = chat.type;
+
+    let group = await TelegramGroup.findOne({ chatId });
+    if (!group) {
+      group = new TelegramGroup({
+        chatId,
+        title,
+        type,
+        assignedGrade: options.assignedGrade || 'All Classes',
+        isActive: true,
+        lastActivityAt: new Date(),
+      });
+    } else {
+      group.title = title;
+      group.type = type;
+      group.isActive = true;
+      group.lastActivityAt = new Date();
+      if (options.assignedGrade) {
+        group.assignedGrade = options.assignedGrade;
+      }
+    }
+
+    if (botInstance) {
+      const count = await botInstance.getChatMemberCount(chatId).catch(() => null);
+      if (count) group.memberCount = count;
+    }
+
+    await group.save();
+    return group;
+  } catch (err) {
+    console.warn('⚠️ Telegram group upsert notice:', err.message);
+    return null;
+  }
 };
 
 /**
@@ -333,10 +459,148 @@ const initTelegramBot = async () => {
       console.warn('Telegram Bot general notice:', error.message);
     });
 
+    // ---------- Group Activity & Auto-Discovery Listeners ----------
+    botInstance.on('message', async (msg) => {
+      if (!msg.chat) return;
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (!isGroup) return;
+
+      // 1. Auto-discover / update group record
+      const group = await upsertTelegramGroup(msg.chat);
+
+      const text = (msg.text || '').trim();
+
+      // Check if this is an administrative command
+      const isSetClassCmd = /^\/(setclass|setgrade|linkclass|assignclass)/i.test(text);
+      const isSetShiftCmd = /^\/(setshift)/i.test(text);
+      const isGroupInfoCmd = /^\/(groupinfo|classinfo|groupstatus)/i.test(text);
+
+      if (isSetClassCmd || isSetShiftCmd || isGroupInfoCmd) {
+        // Enforce admin permission: only Group Creator / Admin or Sunday School Admin can configure
+        const isAuthorized = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAuthorized) {
+          const warnMsg = `⛔ *ይቅርታ! ይህን ትእዛዝ የማስፈጸም ፈቃድ የተሰጠው ለግሩፑ አስተዳዳሪ (Group Admin) ብቻ ነው።*\n\n_የክፍል እና የፈረቃ ምደባ ማስተካከል የሚችሉት የግሩፑ አስተዳዳሪዎች ብቻ ናቸው።_`;
+          await safeSendMessage(msg.chat.id, warnMsg, { parse_mode: 'Markdown' });
+          return;
+        }
+      }
+
+      // 2. Handle /setclass or /setgrade command inside group
+      if (isSetClassCmd) {
+        const parts = text.split(/\s+/);
+        const rawArgs = parts.slice(1).join(' ');
+
+        if (!rawArgs) {
+          const currentShiftLabel = group?.shift === 'night' ? 'የማታ (Night)' : (group?.shift === 'weekend' ? 'የቀን (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+          const helpMsg = `ℹ️ *የክፍል እና የፈረቃ ምደባ ትእዛዝ (Set Class & Shift)*\n\nእባክዎ ክፍሉን እና ፈረቃውን (የቀን ወይም የማታ) ጨምረው ይጻፉ።\n\n*ምሳሌዎች፦*\n👉 \`/setclass Grade 7 weekend\` (ለ 7ኛ ክፍል የቀን/ቅዳሜ)\n👉 \`/setclass Grade 7 night\` (ለ 7ኛ ክፍል የማታ)\n👉 \`/setclass 8 ማታ\`\n👉 \`/setclass Grade 12 all\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n\nአሁን የተመደበለት፦ *${group?.assignedGrade || 'All Classes'}* (${currentShiftLabel})`;
+          await safeSendMessage(msg.chat.id, helpMsg, { parse_mode: 'Markdown' });
+          return;
+        }
+
+        const { grade: normalizedGrade, shift: normalizedShift } = parseGradeAndShift(rawArgs);
+        if (group) {
+          group.assignedGrade = normalizedGrade;
+          group.shift = normalizedShift;
+          group.lastActivityAt = new Date();
+          await group.save();
+        }
+
+        const shiftAm = normalizedShift === 'night' ? 'የማታ (Night)' : (normalizedShift === 'weekend' ? 'የቀን / ቅዳሜና እሑድ (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+        const successMsg = `✅ *የቴሌግራም ግሩፕ ከክፍልና ከፈረቃ ጋር ተገናኝቷል!*\n\n🏛️ *ግሩፕ፦* ${msg.chat.title}\n🎓 *ክፍል፦* *${normalizedGrade}*\n⏰ *ፈረቃ፦* *${shiftAm}*\n\n📢 ከአስተዳዳሪው ወይም ከመምህራን ለዚህ ክፍልና ፈረቃ የሚላኩ መልእክቶችና ማስታወቂያዎች በቀጥታ ወደዚህ ግሩፕ ይደርሳሉ።`;
+        await safeSendMessage(msg.chat.id, successMsg, { parse_mode: 'Markdown' });
+        return;
+      }
+
+      // Handle /setshift command directly
+      if (isSetShiftCmd) {
+        const parts = text.split(/\s+/);
+        const rawShift = parts.slice(1).join(' ');
+        const normalizedShift = normalizeShiftString(rawShift);
+        if (group) {
+          group.shift = normalizedShift;
+          group.lastActivityAt = new Date();
+          await group.save();
+        }
+        const shiftAm = normalizedShift === 'night' ? 'የማታ (Night)' : (normalizedShift === 'weekend' ? 'የቀን / ቅዳሜና እሑድ (Weekend/Day)' : 'ሁሉም ፈረቃዎች (All Shifts)');
+        await safeSendMessage(msg.chat.id, `✅ የግሩፑ ፈረቃ ወደ *${shiftAm}* ተቀይሯል!`, { parse_mode: 'Markdown' });
+        return;
+      }
+
+      // 3. Handle /groupinfo or /classinfo command
+      if (isGroupInfoCmd) {
+        const currentGrade = group?.assignedGrade || 'All Classes';
+        const currentShiftLabel = group?.shift === 'night' ? '🌙 የማታ (Night)' : (group?.shift === 'weekend' ? '☀️ የቀን / ቅዳሜና እሑድ (Weekend/Day)' : '✨ ሁሉም ፈረቃዎች (All Shifts)');
+        const infoMsg = `📋 *የግሩፕ መረጃ (Group Info)*\n\n🏛️ *የግሩፕ ስም፦* ${msg.chat.title}\n🆔 *Chat ID፦* \`${msg.chat.id}\`\n🎓 *የተመደበለት ክፍል፦* *${currentGrade}*\n⏰ *የተመደበለት ፈረቃ፦* *${currentShiftLabel}*\n👥 *የአባላት ብዛት፦* ${group?.memberCount || 'ያልታወቀ'}\n⚡ *ሁኔታ፦* ${group?.isActive ? '✅ ንቁ (Active)' : '❌ ቦዘኔ (Inactive)'}\n\n💡 _ክፍሉን ወይም ፈረቃውን ለመቀየር_ \`/setclass Grade 7 night\` _ብለው ይጻፉ ወይም በአስተዳዳሪው ፖርታል ያስተካክሉ።_`;
+        await safeSendMessage(msg.chat.id, infoMsg, { parse_mode: 'Markdown' });
+        return;
+      }
+    });
+
+    // Detect when bot is added to a group
+    botInstance.on('new_chat_members', async (msg) => {
+      if (!msg.chat || (msg.chat.type !== 'group' && msg.chat.type !== 'supergroup')) return;
+      const botUser = botInfo;
+      const isBotAdded = msg.new_chat_members?.some(
+        (member) => member.id === botUser?.id || member.username === botUser?.username
+      );
+
+      if (isBotAdded) {
+        await upsertTelegramGroup(msg.chat);
+        const welcomeGroupMsg = `🕊️ *ሰላም ለሁላችሁ!* 🕊️\n\nየ *ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት* ይፋዊ የቴሌግራም ቦት ወደዚህ ግሩፕ ተቀላቅሏል! ⛪\n\nይህን ግሩፕ ከተማሪዎች ክፍል ጋር ለማገናኘት፡\n👉 \`/setclass Grade 7\` (ለምሳሌ ለ 7ኛ ክፍል)\n👉 \`/setclass Grade 8\`\n👉 \`/setclass All\` (ለሁሉም ክፍሎች)\n\nወይም በአስተዳዳሪው ፖርታል (Admin Dashboard) ውስጥ በቀላሉ መመደብ ይችላሉ።\n\nመልካም የትምህርት ጊዜ! ✨`;
+        await safeSendMessage(msg.chat.id, welcomeGroupMsg, { parse_mode: 'Markdown' });
+      }
+    });
+
+    // Detect when bot membership status updates in chat/channel/supergroup
+    botInstance.on('my_chat_member', async (update) => {
+      try {
+        if (!update || !update.chat) return;
+        const newStatus = update.new_chat_member?.status;
+        const chatId = String(update.chat.id);
+        if (newStatus === 'member' || newStatus === 'administrator') {
+          await upsertTelegramGroup(update.chat);
+        } else if (newStatus === 'left' || newStatus === 'kicked') {
+          await TelegramGroup.findOneAndUpdate(
+            { chatId },
+            { isActive: false, lastActivityAt: new Date() }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('my_chat_member notice:', err.message);
+      }
+    });
+
+    // Detect posts in channels
+    botInstance.on('channel_post', async (msg) => {
+      if (msg && msg.chat) {
+        await upsertTelegramGroup(msg.chat);
+      }
+    });
+
+    // Detect when bot is removed from group
+    botInstance.on('left_chat_member', async (msg) => {
+      if (!msg.chat) return;
+      const botUser = botInfo;
+      if (msg.left_chat_member?.id === botUser?.id) {
+        await TelegramGroup.findOneAndUpdate(
+          { chatId: String(msg.chat.id) },
+          { isActive: false, lastActivityAt: new Date() }
+        ).catch(() => {});
+      }
+    });
+
     // ---------- 1. /start & /menu Commands ----------
     botInstance.onText(/\/start|\/menu/, async (msg) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+
+        if (isGroup) {
+          // In groups, only group admins or owners can trigger bot menu
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const firstName = msg.from.first_name || 'ወዳጃችን';
         const student = await findLinkedStudent(chatId).catch(() => null);
 
@@ -775,7 +1039,14 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/announcements|📢 ማስታወቂያዎች/, (msg) => handleAnnouncements(msg.chat.id));
+    botInstance.onText(/\/announcements|📢 ማስታወቂያዎች/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handleAnnouncements(msg.chat.id);
+    });
 
     // ---------- 8. /portal & "🎓 የተማሪዎች ፖርታል" ----------
     const handlePortal = async (chatId) => {
@@ -805,12 +1076,25 @@ const initTelegramBot = async () => {
       });
     };
 
-    botInstance.onText(/\/portal|🎓 የተማሪዎች ፖርታል/, (msg) => handlePortal(msg.chat.id));
+    botInstance.onText(/\/portal|🎓 የተማሪዎች ፖርታል/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handlePortal(msg.chat.id);
+    });
 
     // ---------- 9. /verify & Certificate / ID Verification ----------
     botInstance.onText(/\/verify(?:\s+(.+))?|🔍 መታወቂያ \/ ሰርተፊኬት/, async (msg, match) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const certInput = match && match[1] ? match[1].trim() : null;
 
         if (!certInput) {
@@ -888,6 +1172,12 @@ const initTelegramBot = async () => {
     botInstance.onText(/\/status(?:\s+(.+))?/, async (msg, match) => {
       try {
         const chatId = msg.chat.id;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          if (!isAdmin) return;
+        }
+
         const regInput = match && match[1] ? match[1].trim() : null;
 
         if (!regInput) {
@@ -962,15 +1252,31 @@ const initTelegramBot = async () => {
       });
     };
 
-    botInstance.onText(/\/help|❓ እርዳታ/, (msg) => handleHelp(msg.chat.id));
+    botInstance.onText(/\/help|❓ እርዳታ/, async (msg) => {
+      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+      if (isGroup) {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        if (!isAdmin) return;
+      }
+      handleHelp(msg.chat.id);
+    });
 
     // Handle inline button callbacks
     botInstance.on('callback_query', async (query) => {
       const chatId = query.message?.chat?.id;
+      const isGroup = query.message?.chat?.type === 'group' || query.message?.chat?.type === 'supergroup';
       const data = query.data;
       if (!chatId) return;
 
       try {
+        if (isGroup) {
+          const isAdmin = await isAuthorizedAdmin(chatId, query.from?.id);
+          if (!isAdmin) {
+            await botInstance.answerCallbackQuery(query.id, { text: 'ይህ አገልግሎት ለአስተዳዳሪዎች ብቻ የተፈቀደ ነው።', show_alert: true }).catch(() => {});
+            return;
+          }
+        }
+
         await botInstance.answerCallbackQuery(query.id).catch(() => {});
         if (data === 'cmd_profile') handleProfile(chatId);
         else if (data === 'cmd_attendance') handleAttendance(chatId);
@@ -1078,18 +1384,101 @@ const broadcastToStudents = async (messageText, { filterGrade = null, filterShif
 };
 
 /**
+ * Send targeted message to Telegram Groups matching student class/grade
+ */
+const sendMessageToGroups = async ({
+  messageText,
+  targetGrade = null, // e.g. 'Grade 7', 'Grade 8', or 'All Classes' / null
+  targetShift = null,
+  targetGroupId = null, // specific group _id or chatId
+  targetGroupIds = null, // array of group _ids or chatIds
+  sendToDirectStudents = false,
+} = {}) => {
+  if (!botInstance) return { success: false, message: 'Telegram Bot is not active' };
+
+  try {
+    let groupQuery = { isActive: true };
+
+    if (targetGroupIds && Array.isArray(targetGroupIds) && targetGroupIds.length > 0) {
+      groupQuery = {
+        $or: [
+          { _id: { $in: targetGroupIds } },
+          { chatId: { $in: targetGroupIds.map(String) } },
+        ],
+        isActive: true,
+      };
+    } else if (targetGroupId) {
+      groupQuery = {
+        $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
+        isActive: true,
+      };
+    } else if (targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes') {
+      // Matches specific grade OR groups configured for "All Classes"
+      groupQuery.assignedGrade = {
+        $in: [targetGrade, 'All Classes', 'All', 'ሁሉም ክፍሎች', null, ''],
+      };
+      if (targetShift && targetShift !== 'all') {
+        groupQuery.shift = { $in: [targetShift, 'all'] };
+      }
+    } else if (targetShift && targetShift !== 'all') {
+      groupQuery.shift = { $in: [targetShift, 'all'] };
+    }
+
+    const groups = await TelegramGroup.find(groupQuery);
+    let sentGroups = 0;
+    let failedGroups = 0;
+
+    for (const grp of groups) {
+      try {
+        await safeSendMessage(grp.chatId, messageText, { parse_mode: 'Markdown' });
+        grp.lastMessageSentAt = new Date();
+        grp.lastActivityAt = new Date();
+        await grp.save().catch(() => {});
+        sentGroups++;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      } catch (e) {
+        console.warn(`Failed to send to Telegram group ${grp.title} (${grp.chatId}):`, e.message);
+        failedGroups++;
+      }
+    }
+
+    let directResult = null;
+    if (sendToDirectStudents) {
+      directResult = await broadcastToStudents(messageText, {
+        filterGrade: targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes' ? targetGrade : null,
+        filterShift: targetShift && targetShift !== 'all' ? targetShift : null,
+      });
+    }
+
+    return {
+      success: true,
+      totalGroups: groups.length,
+      sentGroups,
+      failedGroups,
+      directStudents: directResult || null,
+      message: `መልእክቱ ለ ${sentGroups} የቴሌግራም ግሩፖች ${directResult ? `እና ለ ${directResult.sent} ተማሪዎች ` : ''}በተሳካ ሁኔታ ተልኳል!`,
+    };
+  } catch (err) {
+    console.error('sendMessageToGroups error:', err);
+    return { success: false, message: err.message };
+  }
+};
+
+/**
  * Get bot operational status
  */
 const getBotStatus = async () => {
   const isConfigured = Boolean(process.env.TELEGRAM_BOT_TOKEN && !process.env.TELEGRAM_BOT_TOKEN.includes('your_token'));
   let linkedStudentsCount = 0;
   let linkedUsersCount = 0;
+  let connectedGroupsCount = 0;
 
   try {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       linkedStudentsCount = await Student.countDocuments({ telegramChatId: { $exists: true, $ne: null } }).maxTimeMS(2000).catch(() => 0);
       linkedUsersCount = await User.countDocuments({ telegramChatId: { $exists: true, $ne: null } }).maxTimeMS(2000).catch(() => 0);
+      connectedGroupsCount = await TelegramGroup.countDocuments({ isActive: true }).maxTimeMS(2000).catch(() => 0);
     }
   } catch (e) {}
 
@@ -1101,6 +1490,7 @@ const getBotStatus = async () => {
     botLink: botInfo?.username ? `https://t.me/${botInfo.username}` : null,
     linkedStudentsCount,
     linkedUsersCount,
+    connectedGroupsCount,
     webAppUrl: getWebAppUrl(),
   };
 };
@@ -1110,6 +1500,12 @@ module.exports = {
   getBotInstance: () => botInstance,
   validateTelegramInitData,
   broadcastToStudents,
+  sendMessageToGroups,
+  upsertTelegramGroup,
+  normalizeGradeString,
+  normalizeShiftString,
+  parseGradeAndShift,
   getBotStatus,
   findLinkedStudent,
 };
+

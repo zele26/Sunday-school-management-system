@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { RELATIONSHIP_OPTIONS } from '../../constants/registrationOptions';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const Register = () => {
     emergencyFirstName: '', // Fixed to match your input fields
     emergencyMiddleName: '',
     emergencyLastName: '',
-    relationship: '',
+    relationship: 'Father',
     contactPhone: '',
     contactAddress: '',
     contactEmail: ''
@@ -116,7 +117,17 @@ const Register = () => {
               <input type="text" placeholder="የአያት ስም" className="border p-3 rounded-xl" onChange={(e) => updateData({ emergencyLastName: e.target.value })} value={formData.emergencyLastName} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="text" placeholder="ዝምድና (ምሳሌ፡ እናት)" className="border p-3 rounded-xl" onChange={(e) => updateData({ relationship: e.target.value })} value={formData.relationship} />
+              <select
+                className="border p-3 rounded-xl bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100"
+                value={formData.relationship || 'Father'}
+                onChange={(e) => updateData({ relationship: e.target.value })}
+              >
+                {RELATIONSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.labelAm} ({opt.labelEn})
+                  </option>
+                ))}
+              </select>
               <input type="tel" placeholder="የተጠሪ ስልክ ቁጥር" className="border p-3 rounded-xl" onChange={(e) => updateData({ contactPhone: e.target.value })} value={formData.contactPhone} />
             </div>
             <input type="email" placeholder="የተጠሪ ኢሜይል አድራሻ" className="w-full border p-3 rounded-xl" onChange={(e) => updateData({ contactEmail: e.target.value })} value={formData.contactEmail} />

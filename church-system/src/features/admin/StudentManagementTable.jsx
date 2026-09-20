@@ -26,6 +26,7 @@ import {
   Sun,
   Moon,
 } from 'lucide-react';
+import { getRelationshipLabel } from '../../constants/registrationOptions';
 
 /**
  * Format grade values (e.g. "Grade 10", "GRADE 10", "10") into Amharic ("10ኛ ክፍል")
@@ -312,14 +313,14 @@ export default function StudentManagementTable({
       onExportCsv();
       return;
     }
-    const headers = 'ID,Name,Grade,Type,Shift,Phone,Status\n';
+    const headers = 'የተማሪ መለያ,ሙሉ ስም,ክፍል,የተማሪ ዓይነት,ፈረቃ,ስልክ ቁጥር,ሁኔታ\n';
     const rows = filteredStudents
       .map(
         (s) =>
-          `"${s.studentId}","${s.firstName} ${s.lastName}","${s.grade}","${s.studentType}","${s.shift || ''}","${s.contactPhone || ''}","${s.qrCode ? 'Active' : 'No QR'}"`
+          `"${s.studentId || ''}","${s.firstName || ''} ${s.lastName || ''}","${s.grade || ''}","${s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}","${s.shift === 'night' ? 'የማታ' : (s.shift === 'weekend' ? 'የቀን / ሳምንት መጨረሻ' : (s.shift || ''))}","${s.contactPhone || s.studentPhone || ''}","${s.qrCode ? 'ገባሪ (Active)' : 'QR የለውም'}"`
       )
       .join('\n');
-    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + headers + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -992,7 +993,7 @@ export default function StudentManagementTable({
                     <span>የአደጋ ጊዜ ተጠሪ</span>
                   </p>
                   <p className="text-slate-700 dark:text-slate-300">
-                    {activeStudent.emergencyFirstName} {activeStudent.emergencyLastName} ({activeStudent.relationship}) —{' '}
+                    {activeStudent.emergencyFirstName} {activeStudent.emergencyLastName} ({getRelationshipLabel(activeStudent.relationship)}) —{' '}
                     <span className="font-mono font-semibold">{activeStudent.emergencyPhone}</span>
                   </p>
                 </div>
