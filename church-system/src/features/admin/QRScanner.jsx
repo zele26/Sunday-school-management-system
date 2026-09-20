@@ -144,12 +144,20 @@ const QRScanner = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await apiFetch('/api/courses');
+        const res = await apiFetch('/api/admin/courses');
         if (res.ok) {
           const data = await res.json();
           setCourses(Array.isArray(data) ? data : data.courses || []);
+        } else {
+          const fallbackRes = await apiFetch('/api/education/courses');
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            setCourses(Array.isArray(data) ? data : data.courses || []);
+          }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.warn('QRScanner courses fetch error:', err);
+      }
     };
     fetchCourses();
   }, []);
@@ -490,21 +498,30 @@ const QRScanner = () => {
 
           {/* 3. Course Selector */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
-              <span>የክፍለ ጊዜ / ኮርስ</span>
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-[#1657b8] dark:text-amber-400" />
+                <span>የክፍለ ጊዜ / ኮርስ</span>
+              </span>
+              {courses.length > 0 && (
+                <span className="text-[10px] font-semibold text-slate-400 font-mono">
+                  ({courses.length} ኮርሶች)
+                </span>
+              )}
             </label>
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
               className="w-full p-2.5 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] transition-all cursor-pointer"
             >
-              <option value="">🏛️ አጠቃላይ መገኘት</option>
-              {courses.map((c) => (
-                <option key={c._id} value={c._id}>
-                  📖 {c.name} {c.code ? `(${c.code})` : ''}
-                </option>
-              ))}
+              <option value="">🏛️ አጠቃላይ መገኘት (General Attendance)</option>
+              {courses
+                .filter((c) => !studentTypeFilter || !c.studentType || c.studentType === studentTypeFilter)
+                .map((c) => (
+                  <option key={c._id} value={c._id}>
+                    📖 {c.name} {c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''} {c.shift ? `(${c.shift})` : ''}
+                  </option>
+                ))}
             </select>
           </div>
 

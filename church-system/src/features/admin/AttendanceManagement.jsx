@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { PageHeader, Card, Button, Badge } from '../../components/ui';
 import { FadeIn, MotionCard } from '../../components/motion';
 
@@ -86,13 +87,23 @@ const AttendanceManagement = () => {
 
   const fetchCourses = async () => {
     try {
-      const res = await apiFetch('/api/courses');
+      const res = await apiFetch('/api/admin/courses');
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.courses || [];
         setCourses(list);
         if (list.length > 0 && !selectedCourseId) {
           setSelectedCourseId(list[0]._id);
+        }
+      } else {
+        const fallbackRes = await apiFetch('/api/courses');
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          const list = Array.isArray(data) ? data : data.courses || [];
+          setCourses(list);
+          if (list.length > 0 && !selectedCourseId) {
+            setSelectedCourseId(list[0]._id);
+          }
         }
       }
     } catch (err) {
@@ -655,10 +666,10 @@ const AttendanceManagement = () => {
                   onChange={(e) => setSelectedCourseId(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                 >
-                  <option value="">-- አጠቃላይ መገኘት --</option>
+                  <option value="">-- አጠቃላይ መገኘት (General Attendance) --</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>
-                      {c.name}
+                      📖 {c.name} {c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''}
                     </option>
                   ))}
                 </select>
@@ -920,10 +931,10 @@ const AttendanceManagement = () => {
                   onChange={(e) => setSingleCourseId(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                 >
-                  <option value="">-- አጠቃላይ መገኘት --</option>
+                  <option value="">-- አጠቃላይ መገኘት (General Attendance) --</option>
                   {courses.map((c) => (
                     <option key={c._id} value={c._id}>
-                      {c.name}
+                      📖 {c.name} {c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''}
                     </option>
                   ))}
                 </select>

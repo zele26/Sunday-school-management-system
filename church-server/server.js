@@ -61,6 +61,7 @@ try { eduCourseEnrollmentRoutes = require('./routes/education/courseEnrollmentRo
 try { eduCertificateRoutes = require('./routes/education/certificateRoutes'); } catch (e) { console.warn('⚠️ certificateRoutes not loaded:', e.message); }
 try { eduProgressionRoutes = require('./routes/education/progressionRoutes'); } catch (e) { console.warn('⚠️ progressionRoutes not loaded:', e.message); }
 try { eduTeacherProfileRoutes = require('./routes/education/teacherProfileRoutes'); } catch (e) { console.warn('⚠️ teacherProfileRoutes not loaded:', e.message); }
+try { eduCourseRoutes = require('./routes/education/courseRoutes'); } catch (e) { console.warn('⚠️ courseRoutes not loaded:', e.message); }
 let distanceLmsRoutes = null;
 try { distanceLmsRoutes = require('./routes/education/distanceLmsRoutes'); } catch (e) { console.warn('⚠️ distanceLmsRoutes not loaded:', e.message); }
 try { tempMigrationRoutes = require('./routes/admin/tempMigrationRoutes'); } catch (e) { console.warn('⚠️ tempMigrationRoutes not loaded:', e.message); }
@@ -181,7 +182,10 @@ if (eduScheduleRoutes) app.use('/api/education/schedules', eduScheduleRoutes);
 if (eduCourseEnrollmentRoutes) app.use('/api/education', eduCourseEnrollmentRoutes);
 if (eduCertificateRoutes) app.use('/api/education', eduCertificateRoutes);
 if (eduProgressionRoutes) app.use('/api/education', eduProgressionRoutes);
-if (eduCourseRoutes) app.use('/api/education/courses', eduCourseRoutes);
+if (eduCourseRoutes) {
+  app.use('/api/education/courses', eduCourseRoutes);
+  app.use('/api/courses', eduCourseRoutes);
+}
 if (distanceLmsRoutes) {
   app.use('/api/education/distance', distanceLmsRoutes);
   app.use('/api/public/certificates', distanceLmsRoutes);

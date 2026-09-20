@@ -1,9 +1,12 @@
 // church-server/routes/education/attendanceRoutes.js
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { protect, authorize } = require('../../middleware/auth');
 const Attendance = require('../../models/education/Attendance');
 const Student = require('../../models/Student');
+const User = require('../../models/User');
+const StudentProfile = require('../../models/education/StudentProfile');
 const Course = require('../../models/education/Course');
 
 const getStudentFullName = (s) => {
@@ -398,8 +401,36 @@ router.get('/student/:studentId', authorize('admin', 'teacher'), async (req, res
     const { studentId } = req.params;
     const { courseId, startDate, endDate } = req.query;
 
-    const query = { student: studentId };
-    if (courseId) query.course = courseId;
+    let targetStudentIds = [];
+    if (mongoose.Types.ObjectId.isValid(studentId)) {
+      targetStudentIds.push(new mongoose.Types.ObjectId(studentId));
+    }
+    const studentUser = await User.findOne({
+      $or: [
+        { studentId: studentId },
+        ...(mongoose.Types.ObjectId.isValid(studentId) ? [{ _id: new mongoose.Types.ObjectId(studentId) }] : [])
+      ]
+    });
+    if (studentUser) {
+      targetStudentIds.push(studentUser._id);
+    }
+    const profile = await StudentProfile.findOne({ studentId: studentId });
+    if (profile) {
+      if (profile.userId) targetStudentIds.push(profile.userId);
+      if (profile._id) targetStudentIds.push(profile._id);
+    }
+
+    const validObjectIds = targetStudentIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    const query = validObjectIds.length > 0
+      ? {
+          $or: [
+            { student: { $in: validObjectIds } },
+            { studentProfileId: { $in: validObjectIds } },
+          ]
+        }
+      : { studentName: studentId };
+
+    if (courseId && mongoose.Types.ObjectId.isValid(courseId)) query.course = courseId;
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
