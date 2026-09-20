@@ -391,9 +391,9 @@ const StudentLayout = ({ children, onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans flex flex-col transition-colors duration-200 selection:bg-[var(--brand-gold)] selection:text-slate-950 pb-20 md:pb-6">
       {/* Top Navbar Header */}
-      <header className="bg-[#1e3a8a] dark:bg-slate-900 text-white px-4 sm:px-8 py-3 flex justify-between items-center shadow-md border-b border-blue-900 dark:border-slate-800 sticky top-0 z-30">
-        <Link to="/dashboard" onClick={handleTabClick} className="flex items-center space-x-3 space-x-reverse group">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white p-1 border border-amber-400/60 flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
+      <header className="bg-[#1e3a8a] dark:bg-slate-900 text-white px-3 sm:px-8 py-2.5 sm:py-3 flex justify-between items-center shadow-md border-b border-blue-900 dark:border-slate-800 sticky top-0 z-30">
+        <Link to="/dashboard" onClick={handleTabClick} className="flex items-center space-x-2 sm:space-x-3 space-x-reverse group min-w-0 flex-shrink">
+          <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-white p-1 border border-amber-400/60 flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
             <Image
               src={ChurchLogo}
               alt="Church Logo"
@@ -403,30 +403,30 @@ const StudentLayout = ({ children, onLogout }) => {
               className="w-full h-full object-contain"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs sm:text-base font-black tracking-tight text-white leading-tight truncate">
               {t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}
             </span>
-            <span className="text-[10px] sm:text-[11px] text-amber-300 font-extrabold uppercase tracking-wider">
+            <span className="text-[9px] sm:text-[11px] text-amber-300 font-extrabold uppercase tracking-wider truncate">
               {t('studentPortal', 'የተማሪዎች ፖርታል')}
             </span>
           </div>
         </Link>
 
         {/* Right Top Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick QR ID Badge Button */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+          {/* Quick QR ID Badge Button (Hidden on small mobile since floating center dock button is active) */}
           <button
             onClick={handleOpenQrModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-xs min-h-[38px] cursor-pointer active:scale-95"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-xs min-h-[36px] cursor-pointer active:scale-95"
             title={isAmharic ? 'የእኔ QR ባጅ (My QR Badge)' : 'My QR Attendance Badge'}
           >
             <QrCode className="w-4 h-4" />
-            <span className="hidden sm:inline">{isAmharic ? 'የእኔ QR ባጅ' : 'My QR'}</span>
+            <span>{isAmharic ? 'የእኔ QR ባጅ' : 'My QR'}</span>
           </button>
 
-          <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px]" />
-          <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 min-h-[38px] min-w-[38px]" />
+          <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-8 sm:h-9 px-2 sm:px-2.5 text-[11px]" />
+          <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 min-w-[32px] sm:min-w-[36px]" />
 
           {/* Role Switcher to Admin if user has delegated staff/admin duties */}
           {(['admin', 'superadmin', 'department_admin', 'staff'].includes(user?.role?.toLowerCase()) ||
@@ -434,35 +434,35 @@ const StudentLayout = ({ children, onLogout }) => {
             (Array.isArray(user?.permissions) && user.permissions.length > 0)) && (
             <a
               href="/admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs min-h-[38px]"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs h-8 sm:h-9"
               title={t('switchToAdmin', 'ወደ አስተዳዳሪ ክፍል ይቀይሩ (Switch to Admin Portal)')}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
+              <span className="hidden md:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
             </a>
           )}
 
-          {/* User Profile Pill */}
+          {/* User Profile Pill (Desktop only, mobile has bottom navigation dock) */}
           <Link
             to="/dashboard/profile"
             onClick={handleTabClick}
-            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold min-h-[38px]"
+            className="hidden md:flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold h-9"
             title={t('myProfile', 'የግል መረጃ ይመልከቱ')}
           >
             <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-2xs">
               {initials}
             </div>
-            <span className="hidden sm:inline-block max-w-[120px] truncate">{studentName}</span>
+            <span className="inline-block max-w-[120px] truncate">{studentName}</span>
           </Link>
 
-          {/* Logout Button */}
+          {/* Logout Button (Always prominent and never clipped!) */}
           <button
             onClick={handleLogoutClick}
-            className="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/30 hover:border-rose-500 text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer min-h-[38px]"
+            className="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/40 hover:border-rose-500 text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer h-8 sm:h-9 flex-shrink-0"
             title={t('logout', 'ከሲስተሙ ውጣ')}
           >
-            <span className="hidden sm:inline">{t('logout', 'ውጣ')}</span>
             <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t('logout', 'ውጣ')}</span>
           </button>
         </div>
       </header>
