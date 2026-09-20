@@ -414,17 +414,7 @@ const StudentLayout = ({ children, onLogout }) => {
         </Link>
 
         {/* Right Top Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-          {/* Quick QR ID Badge Button (Hidden on small mobile since floating center dock button is active) */}
-          <button
-            onClick={handleOpenQrModal}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-xs min-h-[36px] cursor-pointer active:scale-95"
-            title={isAmharic ? 'የእኔ QR ባጅ (My QR Badge)' : 'My QR Attendance Badge'}
-          >
-            <QrCode className="w-4 h-4" />
-            <span>{isAmharic ? 'የእኔ QR ባጅ' : 'My QR'}</span>
-          </button>
-
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <LanguageToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-8 sm:h-9 px-2 sm:px-2.5 text-[11px]" />
           <ThemeToggle className="bg-white/10 text-white border-white/20 hover:bg-white/20 h-8 w-8 sm:h-9 sm:w-9 min-w-[32px] sm:min-w-[36px]" />
 
@@ -434,28 +424,15 @@ const StudentLayout = ({ children, onLogout }) => {
             (Array.isArray(user?.permissions) && user.permissions.length > 0)) && (
             <a
               href="/admin"
-              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs h-8 sm:h-9"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs h-8 sm:h-9"
               title={t('switchToAdmin', 'ወደ አስተዳዳሪ ክፍል ይቀይሩ (Switch to Admin Portal)')}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
+              <span className="hidden sm:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
             </a>
           )}
 
-          {/* User Profile Pill (Desktop only, mobile has bottom navigation dock) */}
-          <Link
-            to="/dashboard/profile"
-            onClick={handleTabClick}
-            className="hidden md:flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-all text-xs font-semibold h-9"
-            title={t('myProfile', 'የግል መረጃ ይመልከቱ')}
-          >
-            <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 font-black flex items-center justify-center text-xs shadow-2xs">
-              {initials}
-            </div>
-            <span className="inline-block max-w-[120px] truncate">{studentName}</span>
-          </Link>
-
-          {/* Logout Button (Always prominent and never clipped!) */}
+          {/* Logout Button (Always prominent, clear, and visible) */}
           <button
             onClick={handleLogoutClick}
             className="bg-rose-500/20 hover:bg-rose-600 text-rose-200 hover:text-white border border-rose-400/40 hover:border-rose-500 text-xs font-bold px-2.5 sm:px-3 py-1 sm:py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer h-8 sm:h-9 flex-shrink-0"
