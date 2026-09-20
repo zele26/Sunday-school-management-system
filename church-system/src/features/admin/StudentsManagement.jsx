@@ -517,6 +517,7 @@ const StudentsManagement = () => {
         header: () => <div className="text-right">ተግባራት</div>,
         cell: ({ row }) => {
           const s = row.original;
+          const fullName = s.fullName || [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || 'ተማሪ';
           return (
             <TooltipProvider delayDuration={150}>
               <div className="flex items-center justify-end gap-1">
