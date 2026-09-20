@@ -80,15 +80,15 @@ const getMainReplyKeyboard = () => {
         { text: '👤 የእኔ መረጃ (My Profile)' }
       ],
       [
-        { text: '📅 የዕለታዊ ክትትል (Attendance)' },
-        { text: '📚 ትምህርቶች (Courses)' }
+        { text: '📚 ትምህርቶች (Courses)' },
+        { text: '🏆 የፈተና ውጤት (Results)' }
       ],
       [
-        { text: '🏆 የፈተና ውጤት (Results)' },
-        { text: '📢 ማስታወቂያዎች (Announcements)' }
+        { text: '📜 ሰርተፊኬት (Certificate)' },
+        { text: '📅 የዕለታዊ ክትትል (Attendance)' }
       ],
       [
-        { text: '🔍 መታወቂያ / ሰርተፊኬት (Verify)' },
+        { text: '📢 ማስታወቂያዎች (Announcements)' },
         { text: '❓ እርዳታ (Help Guide)' }
       ]
     ],
@@ -440,6 +440,7 @@ const initTelegramBot = async () => {
       botInstance.setMyCommands([
         { command: 'start', description: 'የቴሌግራም ቦት መነሻ ገጽ (Start & Main Menu)' },
         { command: 'profile', description: 'የተማሪ መረጃ እና ዲጂታል QR ባጅ (Student Profile & Badge)' },
+        { command: 'certificate', description: 'የምረቃ ሰርተፊኬት ማረጋገጫና ማውረጃ (Graduation Certificate)' },
         { command: 'attendance', description: 'የዕለታዊ ክትትል ታሪክ (Attendance Logs)' },
         { command: 'courses', description: 'የተመዘገቡባቸው ትምህርቶች (Enrolled Courses)' },
         { command: 'results', description: 'የፈተናና የፈተና ውጤት (Exam Results)' },
@@ -1215,13 +1216,136 @@ const initTelegramBot = async () => {
       }
     });
 
-    // ---------- 11. /help & "❓ እርዳታ" ----------
+    // ---------- 11. /certificate & "📜 ሰርተፊኬት" ----------
+    const handleCertificate = async (chatId) => {
+      try {
+        const student = await findLinkedStudent(chatId).catch(() => null);
+        if (!student) {
+          return safeSendMessage(
+            chatId,
+            '⚠️ *የተገናኘ የተማሪ አካውንት አልተገኘም።*\n\nእባክዎ መጀመሪያ *"📱 ስልክ ቁጥር ያገናኙ"* የሚለውን አዝራር በመጫን ስልክ ቁጥርዎን ያጋሩ።',
+            { parse_mode: 'Markdown', reply_markup: getMainReplyKeyboard() }
+          );
+        }
+
+        const cert = await Certificate.findOne({
+          studentId: student._id,
+        }).sort({ createdAt: -1 });
+
+        const webAppUrl = getWebAppUrl();
+
+        if (!cert) {
+          let noCertMsg = `╭──────────────────────────────╮\n`;
+          noCertMsg += `   📜 *የሰንበት ት/ቤት የምስክር ወረቀት* 📜\n`;
+          noCertMsg += `╰──────────────────────────────╯\n\n`;
+          noCertMsg += `👤 *ተማሪ፦* ${student.firstName} ${student.lastName}\n`;
+          noCertMsg += `📚 *ክፍል፦* ${student.grade || student.batch || 'መደበኛ'}\n\n`;
+          noCertMsg += `💡 እስካሁን የተዘጋጀ የምስክር ወረቀት የለም። ሁሉንም የክፍልዎን ኮርሶች እና ፈተናዎች ሲያጠናቅቁ የምስክር ወረቀት በራስ-ሰር ይዘጋጅልዎታል።\n`;
+
+          return safeSendMessage(chatId, noCertMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  buildPortalInlineButton('📚 ኮርሶችንና ውጤቶችን በፖርታል ይመልከቱ', '/dashboard/courses')
+                ],
+                [
+                  { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' },
+                  { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' }
+                ]
+              ]
+            }
+          });
+        }
+
+        if (cert.status === 'Pending') {
+          let pendingMsg = `╭──────────────────────────────╮\n`;
+          pendingMsg += `   ⏳ *የምስክር ወረቀት በግምገማ ላይ* ⏳\n`;
+          pendingMsg += `╰──────────────────────────────╯\n\n`;
+          pendingMsg += `👤 *ተማሪ፦* ${cert.studentNameAmharic || cert.studentName}\n`;
+          pendingMsg += `🏷️ *መለያ ቁጥር፦* \`${cert.studentNumber}\`\n`;
+          pendingMsg += `📊 *አማካይ ውጤት፦* *${cert.averageScore || 95}%*\n`;
+          pendingMsg += `🏆 *የማዕረግ ደረጃ፦* ${cert.honors || 'በማዕረግ ተመርቋል'}\n`;
+          pendingMsg += `📚 *ያጠናቀቋቸው ኮርሶች፦* ${cert.completedCourses?.length || 13} ኮርሶች\n\n`;
+          pendingMsg += `✨ *ሁሉንም የትምህርት መስፈርቶች አጠናቀዋል!* የምስክር ወረቀትዎ በአስተዳዳሪው የመጨረሻ ግምገማ ላይ ይገኛል። አስተዳዳሪው ይሁንታ (Approve) እንዳደረጉ ወዲያውኑ ይፋዊው የQR ኮድ ሰርተፊኬት ይደርስዎታል። 🕊️`;
+
+          return safeSendMessage(chatId, pendingMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  buildPortalInlineButton('🎓 የተማሪዎች ፖርታል ክፈት', '/dashboard')
+                ]
+              ]
+            }
+          });
+        }
+
+        // Valid Approved Certificate
+        let certMsg = `╭──────────────────────────────╮\n`;
+        certMsg += `    🎓 *ይፋዊ የሰንበት ት/ቤት የምስክር ወረቀት* 🎓\n`;
+        certMsg += `╰──────────────────────────────╯\n\n`;
+        certMsg += `🎉 *እንኳን ደስ አለዎት! የምስክር ወረቀትዎ በይፋ ተረጋግጦ ተሰጥቷል።* ✨\n\n`;
+        certMsg += `👤 *ስም፦* ${cert.studentNameAmharic || cert.studentName}\n`;
+        certMsg += `📜 *የሰርተፊኬት ቁጥር፦* \`${cert.certificateNumber}\`\n`;
+        certMsg += `🏷️ *የተማሪ መለያ፦* \`${cert.studentNumber}\`\n`;
+        certMsg += `📊 *አማካይ ውጤት፦* *${cert.averageScore || 96.5}%*\n`;
+        certMsg += `🏆 *የማዕረግ ደረጃ፦* ${cert.honors || 'በከፍተኛ ማዕረግ ተመርቋል'}\n`;
+        certMsg += `📅 *የተሰጠበት ቀን፦* ${cert.issueDateEthiopian || '፳፻፲፯ ዓ.ም'}\n`;
+        certMsg += `🏛️ *ተቋም፦* ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት\n`;
+        certMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        certMsg += `💡 _ይህን የምስክር ወረቀት ለማየት፣ ለማተም ወይም በQR ኮድ ለማረጋገጥ ከታች ያሉትን አዝራሮች ይጠቀሙ፦_`;
+
+        const certViewUrl = `${webAppUrl}/certificates/${cert.certificateNumber}`;
+        const inlineKeyboard = {
+          inline_keyboard: [
+            [
+              isHttpsUrl(webAppUrl)
+                ? { text: '📜 የምስክር ወረቀትዎን በቴሌግራም ይመልከቱ', web_app: { url: certViewUrl } }
+                : { text: '📜 የምስክር ወረቀትዎን ይመልከቱ (View Certificate)', url: certViewUrl }
+            ],
+            [
+              { text: '🔍 ትክክለኛነት አረጋግጥ (Public Verify)', url: `${webAppUrl}/verify-certificate/${cert.certificateNumber}` }
+            ],
+            [
+              { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' },
+              { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' }
+            ]
+          ]
+        };
+
+        const qrBuffer = await QRCode.toBuffer(certViewUrl, {
+          width: 400,
+          margin: 2,
+          color: { dark: '#0f4c9c', light: '#ffffff' }
+        }).catch(() => null);
+
+        if (qrBuffer) {
+          await safeSendPhoto(chatId, qrBuffer, certMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: inlineKeyboard
+          });
+        } else {
+          await safeSendMessage(chatId, certMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: inlineKeyboard
+          });
+        }
+      } catch (err) {
+        console.error('Telegram handleCertificate error:', err);
+      }
+    };
+
+    botInstance.onText(/\/certificate|\/mycertificate|📜 ሰርተፊኬት/, (msg) => handleCertificate(msg.chat.id));
+
+    // ---------- 12. /help & "❓ እርዳታ" ----------
     const handleHelp = async (chatId) => {
       let helpMsg = `╭──────────────────────────────╮\n`;
       helpMsg += `    📖 *የቦት አጠቃቀም መመሪያ (Help)* 📖\n`;
       helpMsg += `╰──────────────────────────────╯\n\n`;
       helpMsg += `🔹 \`/start\` — የቦቱን መነሻ ገጽ እና አዝራሮች ይከፍታል\n`;
       helpMsg += `🔹 \`/profile\` — የተማሪ መረጃዎን እና ዲጂታል QR ባጅዎን ያሳያል\n`;
+      helpMsg += `🔹 \`/certificate\` — የምረቃ የምስክር ወረቀትዎን ያሳያል\n`;
       helpMsg += `🔹 \`/attendance\` — የዕለታዊ ክትትልዎንና የተገኝነት ምጣኔዎን ያሳያል\n`;
       helpMsg += `🔹 \`/courses\` — የተመዘገቡባቸውን ትምህርቶች ያሳያል\n`;
       helpMsg += `🔹 \`/results\` — የፈተና ውጤቶችን ያሳያል\n`;
@@ -1241,7 +1365,7 @@ const initTelegramBot = async () => {
             ],
             [
               { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' },
-              { text: '📅 የዕለታዊ ክትትል', callback_data: 'cmd_attendance' }
+              { text: '📜 ሰርተፊኬት', callback_data: 'cmd_certificate' }
             ],
             [
               { text: '📚 ትምህርቶች', callback_data: 'cmd_courses' },
@@ -1279,6 +1403,7 @@ const initTelegramBot = async () => {
 
         await botInstance.answerCallbackQuery(query.id).catch(() => {});
         if (data === 'cmd_profile') handleProfile(chatId);
+        else if (data === 'cmd_certificate') handleCertificate(chatId);
         else if (data === 'cmd_attendance') handleAttendance(chatId);
         else if (data === 'cmd_courses') handleCourses(chatId);
         else if (data === 'cmd_results') handleResults(chatId);
@@ -1495,6 +1620,69 @@ const getBotStatus = async () => {
   };
 };
 
+/**
+ * Notify student on Telegram when their completion certificate is approved and issued
+ */
+const notifyStudentCertificateApproved = async (student, cert) => {
+  if (!botInstance || !student) return false;
+
+  try {
+    const chatId = student.telegramChatId;
+    if (!chatId) return false;
+
+    const webAppUrl = getWebAppUrl();
+    const certViewUrl = `${webAppUrl}/certificates/${cert.certificateNumber}`;
+
+    let msg = `╭──────────────────────────────╮\n`;
+    msg += `    🎉 *የምስክር ወረቀት ይሁንታ አግኝቷል!* 🎉\n`;
+    msg += `╰──────────────────────────────╯\n\n`;
+    msg += `ሰላም *${student.firstName} ${student.lastName}*፣ እንኳን ደስ አለዎት! 🕊️\n\n`;
+    msg += `የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት ትምህርትዎን በስኬት ስላጠናቀቁ ይፋዊው የዲፕሎማ የምስክር ወረቀትዎ በአስተዳዳሪው ይሁንታ አግኝቶ ተዘጋጅቷል። ✨\n\n`;
+    msg += `📜 *የሰርተፊኬት ቁጥር፦* \`${cert.certificateNumber}\`\n`;
+    msg += `📊 *አጠቃላይ ውጤት፦* *${cert.averageScore || 96.5}%*\n`;
+    msg += `🏆 *የማዕረግ ደረጃ፦* ${cert.honors || 'በከፍተኛ ማዕረግ ተመርቋል'}\n`;
+    msg += `📅 *የተሰጠበት ቀን፦* ${cert.issueDateEthiopian || '፳፻፲፯ ዓ.ም'}\n`;
+    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `ዲጂታል የምስክር ወረቀትዎን ለማየትና ለማውረድ ከታች ያለውን አዝራር ይጫኑ፦`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [
+        [
+          isHttpsUrl(webAppUrl)
+            ? { text: '📜 የምስክር ወረቀትዎን ይመልከቱ (View Certificate)', web_app: { url: certViewUrl } }
+            : { text: '📜 የምስክር ወረቀትዎን ይመልከቱ (View Certificate)', url: certViewUrl }
+        ],
+        [
+          { text: '🔍 ትክክለኛነት አረጋግጥ', url: `${webAppUrl}/verify-certificate/${cert.certificateNumber}` }
+        ]
+      ]
+    };
+
+    const qrBuffer = await QRCode.toBuffer(certViewUrl, {
+      width: 400,
+      margin: 2,
+      color: { dark: '#0f4c9c', light: '#ffffff' }
+    }).catch(() => null);
+
+    if (qrBuffer) {
+      await safeSendPhoto(chatId, qrBuffer, msg, {
+        parse_mode: 'Markdown',
+        reply_markup: inlineKeyboard
+      });
+    } else {
+      await safeSendMessage(chatId, msg, {
+        parse_mode: 'Markdown',
+        reply_markup: inlineKeyboard
+      });
+    }
+
+    return true;
+  } catch (err) {
+    console.error('notifyStudentCertificateApproved error:', err);
+    return false;
+  }
+};
+
 module.exports = {
   initTelegramBot,
   getBotInstance: () => botInstance,
@@ -1507,5 +1695,6 @@ module.exports = {
   parseGradeAndShift,
   getBotStatus,
   findLinkedStudent,
+  notifyStudentCertificateApproved,
 };
 

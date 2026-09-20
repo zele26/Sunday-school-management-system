@@ -95,7 +95,6 @@ const certificateSchema = new mongoose.Schema({
 
 // Security and Verification Indexes
 certificateSchema.index({ certificateNumber: 1 });
-certificateSchema.index({ verificationHash: 1 });
 certificateSchema.index({ studentId: 1, status: 1 });
 certificateSchema.index({ userId: 1 });
 certificateSchema.index({ status: 1 });

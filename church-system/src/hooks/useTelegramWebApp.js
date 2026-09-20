@@ -10,6 +10,7 @@ export function useTelegramWebApp() {
   const [telegramUser, setTelegramUser] = useState(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [themeParams, setThemeParams] = useState({});
 
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
   const login = useAuthStore((state) => state.login);
@@ -26,12 +27,21 @@ export function useTelegramWebApp() {
     if (hasInitData || hasTgUser) {
       setIsTelegram(true);
       setTelegramUser(tg.initDataUnsafe?.user || null);
+      setThemeParams(tg.themeParams || {});
 
-      // Expand to full height inside Telegram
+      // Optimize Telegram Mini App Environment
       try {
         tg.ready();
         tg.expand();
         tg.enableClosingConfirmation?.();
+
+        // Sync header and background styling to midnight navy
+        if (tg.setHeaderColor) {
+          tg.setHeaderColor('#0f172a');
+        }
+        if (tg.setBackgroundColor) {
+          tg.setBackgroundColor('#0f172a');
+        }
       } catch (e) {
         console.warn('Telegram WebApp expansion warning:', e);
       }
@@ -62,7 +72,7 @@ export function useTelegramWebApp() {
 
       if (res.ok && data.success && data.accessToken && data.user) {
         login(data.accessToken, data.user);
-        // Trigger haptic feedback on successful auto-login
+        // Trigger celebratory haptic feedback on successful auto-login
         try {
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
         } catch (e) {}
@@ -87,6 +97,8 @@ export function useTelegramWebApp() {
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.(type);
       } else if (['error', 'success', 'warning'].includes(type)) {
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.(type);
+      } else if (type === 'selection') {
+        window.Telegram?.WebApp?.HapticFeedback?.selectionChanged?.();
       }
     } catch (e) {}
   }, []);
@@ -97,13 +109,27 @@ export function useTelegramWebApp() {
     } catch (e) {}
   }, []);
 
+  const openTelegramLink = useCallback((url) => {
+    try {
+      if (window.Telegram?.WebApp?.openTelegramLink) {
+        window.Telegram.WebApp.openTelegramLink(url);
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      window.open(url, '_blank');
+    }
+  }, []);
+
   return {
     isTelegram,
     telegramUser,
     isAuthenticating,
     authError,
+    themeParams,
     triggerHaptic,
     closeTelegramApp,
+    openTelegramLink,
     webApp: typeof window !== 'undefined' ? window.Telegram?.WebApp : null,
   };
 }

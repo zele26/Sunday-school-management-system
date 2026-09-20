@@ -372,6 +372,17 @@ router.patch('/certificates/:id/approve', protect, authorize('admin'), async (re
     cert.issueDateGregorian = new Date();
     await cert.save();
 
+    // Trigger celebratory Telegram Bot notification if student has linked Telegram
+    try {
+      const { notifyStudentCertificateApproved } = require('../../services/telegramBotService');
+      const student = await Student.findById(cert.studentId);
+      if (student && student.telegramChatId) {
+        notifyStudentCertificateApproved(student, cert).catch(() => {});
+      }
+    } catch (telegramErr) {
+      console.warn('Telegram certificate notification notice:', telegramErr.message);
+    }
+
     res.json({
       success: true,
       message: 'የምስክር ወረቀቱ ይሁንታ አግኝቶ ይፋዊ ሆኗል (Certificate approved and issued successfully)',
@@ -384,7 +395,42 @@ router.patch('/certificates/:id/approve', protect, authorize('admin'), async (re
 });
 
 // ============================================================================
-// 5. PATCH /api/education/certificates/:id/reject – Admin Review Rejection
+// 5. GET /api/education/certificates/my-certificates – Get Student's Certificates
+// ============================================================================
+router.get('/certificates/my-certificates', protect, async (req, res) => {
+  try {
+    let student = await Student.findOne({ userId: req.user._id });
+    if (!student) {
+      student = await Student.findOne({ email: req.user.email });
+    }
+    if (!student && req.user.phone) {
+      const cleanDigits = String(req.user.phone).replace(/\D/g, '').slice(-9);
+      if (cleanDigits.length >= 8) {
+        const phoneRegex = new RegExp(cleanDigits + '$');
+        student = await Student.findOne({
+          $or: [{ studentPhone: phoneRegex }, { contactPhone: phoneRegex }]
+        });
+      }
+    }
+
+    if (!student) {
+      return res.json({ success: true, certificates: [] });
+    }
+
+    const certificates = await Certificate.find({
+      studentId: student._id,
+      status: 'Valid'
+    }).sort({ createdAt: -1 });
+
+    res.json({ success: true, certificates });
+  } catch (err) {
+    console.error('my-certificates error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ============================================================================
+// 6. PATCH /api/education/certificates/:id/reject – Admin Review Rejection
 // ============================================================================
 router.patch('/certificates/:id/reject', protect, authorize('admin'), async (req, res) => {
   try {
@@ -412,7 +458,7 @@ router.patch('/certificates/:id/reject', protect, authorize('admin'), async (req
 });
 
 // ============================================================================
-// 6. DELETE /api/education/certificates/:id – Delete / Revoke
+// 7. DELETE /api/education/certificates/:id – Delete / Revoke
 // ============================================================================
 router.delete('/certificates/:id', protect, authorize('admin'), async (req, res) => {
   try {
