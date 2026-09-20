@@ -471,12 +471,32 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
     const query = {};
 
     if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      query.date = { $gte: s, $lte: e };
+    } else if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      query.date = { $gte: s };
+    } else if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      query.date = { $lte: e };
     }
-    if (courseId) query.course = courseId;
-    if (grade) query.grade = grade;
+
+    if (courseId && mongoose.Types.ObjectId.isValid(courseId)) query.course = courseId;
+    if (grade) {
+      const m = grade.match(/\d+/);
+      if (m) {
+        query.grade = { $regex: new RegExp(`(${m[0]}|${grade})`, 'i') };
+      } else {
+        query.grade = { $regex: new RegExp(grade, 'i') };
+      }
+    }
     if (status) query.status = status;
-    if (teacher) query.teacher = teacher;
+    if (teacher && mongoose.Types.ObjectId.isValid(teacher)) query.teacher = teacher;
     if (studentId) query.student = studentId;
     if (studentType) {
       query.$or = [
@@ -499,14 +519,41 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
       .populate('recordedBy', 'fullName')
       .sort({ date: -1, checkInTime: -1 });
 
+    const total = attendances.length;
+    const present = attendances.filter(a => a.status === 'Present').length;
+    const late = attendances.filter(a => a.status === 'Late').length;
+    const absent = attendances.filter(a => a.status === 'Absent').length;
+    const excused = attendances.filter(a => a.status === 'Excused').length;
+    const regular = attendances.filter(a => (a.studentType || a.student?.studentType) === 'regular').length;
+    const distance = attendances.filter(a => (a.studentType || a.student?.studentType) === 'distance').length;
+    const attendanceRate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+    const onTimeRate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+    // Grade / Class breakdown
+    const byGrade = {};
+    attendances.forEach((a) => {
+      const g = a.grade || a.student?.grade || 'አጠቃላይ';
+      if (!byGrade[g]) {
+        byGrade[g] = { total: 0, present: 0, late: 0, absent: 0, excused: 0 };
+      }
+      byGrade[g].total++;
+      if (a.status === 'Present') byGrade[g].present++;
+      else if (a.status === 'Late') byGrade[g].late++;
+      else if (a.status === 'Absent') byGrade[g].absent++;
+      else if (a.status === 'Excused') byGrade[g].excused++;
+    });
+
     const summary = {
-      total: attendances.length,
-      present: attendances.filter(a => a.status === 'Present').length,
-      absent: attendances.filter(a => a.status === 'Absent').length,
-      late: attendances.filter(a => a.status === 'Late').length,
-      excused: attendances.filter(a => a.status === 'Excused').length,
-      regular: attendances.filter(a => (a.studentType || a.student?.studentType) === 'regular').length,
-      distance: attendances.filter(a => (a.studentType || a.student?.studentType) === 'distance').length,
+      total,
+      present,
+      absent,
+      late,
+      excused,
+      regular,
+      distance,
+      attendanceRate,
+      onTimeRate,
+      byGrade,
     };
 
     res.json({

@@ -1,9 +1,7 @@
-// src/features/teacher/TeacherAttendanceSummary.jsx
-'use client';
-
 import React, { useState, useEffect } from 'react';
 import { CalendarCheck, BookOpen } from 'lucide-react';
-import { API_BASE_URL } from '../../api/apiClient';
+import { apiFetch } from '../../api/apiClient';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { Card, CardHeader, CardTitle, CardContent, Badge } from '../../components/ui';
 
 const TeacherAttendanceSummary = () => {
@@ -16,12 +14,12 @@ const TeacherAttendanceSummary = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/api/teacher/my-courses`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setCourses(data);
+        const res = await apiFetch('/api/teacher/my-courses');
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data.courses || [];
+          setCourses(list);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -32,21 +30,19 @@ const TeacherAttendanceSummary = () => {
   const fetchSummary = async (courseId) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const url = courseId
-        ? `${API_BASE_URL}/api/teacher/attendance-summary?courseId=${courseId}&token=${token}`
-        : `${API_BASE_URL}/api/teacher/attendance-summary?token=${token}`;
+        ? `/api/teacher/attendance-summary?courseId=${courseId}`
+        : `/api/teacher/attendance-summary`;
 
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      // Find the summary for the selected course (if specific) or show all
-      if (courseId) {
-        const courseSummary = data.find(s => s.courseId === courseId);
-        setSummary(courseSummary || null);
-      } else {
-        setSummary(data.length ? data[0] : null);
+      const res = await apiFetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (courseId) {
+          const courseSummary = data.find(s => s.courseId === courseId);
+          setSummary(courseSummary || null);
+        } else {
+          setSummary(data.length ? data[0] : null);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -85,7 +81,9 @@ const TeacherAttendanceSummary = () => {
           >
             <option value="">-- ኮርስ ይምረጡ --</option>
             {courses.map(c => (
-              <option key={c._id} value={c._id}>{c.name}</option>
+              <option key={c._id} value={c._id}>
+                📖 {c.name} {c.grade ? `(${formatGradeAmharic(c.grade)})` : ''}
+              </option>
             ))}
           </select>
         </div>

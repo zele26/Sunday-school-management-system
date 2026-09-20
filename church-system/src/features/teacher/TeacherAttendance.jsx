@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '../../components/ui';
 import { FadeIn } from '../../components/motion';
 
@@ -187,7 +188,7 @@ const TeacherAttendance = () => {
           >
             {courses.map((c) => (
               <option key={c._id} value={c._id}>
-                📖 {c.name}
+                📖 {c.name} {c.grade ? `(${formatGradeAmharic(c.grade)})` : ''}
               </option>
             ))}
           </select>

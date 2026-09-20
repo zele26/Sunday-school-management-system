@@ -151,6 +151,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
 
 const AttendanceReports = () => {
   const navigate = useNavigate();
+  const [activeViewTab, setActiveViewTab] = useState('table'); // 'table' | 'classes' | 'insights'
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -167,6 +168,22 @@ const AttendanceReports = () => {
   const { data: teachers = [] } = useTeachers();
   const { data: records = [], isLoading, isFetching, refetch } = useAttendanceReport(filters);
 
+  // Available courses cascaded by selected grade/studentType
+  const availableCoursesForFilter = useMemo(() => {
+    return courses.filter((c) => {
+      if (filters.studentType && c.studentType && c.studentType !== filters.studentType) return false;
+      if (filters.grade && c.grade) {
+        const norm = (str) => {
+          const m = str.match(/\d+/);
+          if (m) return (str.toLowerCase().includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+          return str.toLowerCase().replace(/\s+/g, '');
+        };
+        if (norm(c.grade) !== norm(filters.grade)) return false;
+      }
+      return true;
+    });
+  }, [courses, filters.studentType, filters.grade]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => {
@@ -174,6 +191,10 @@ const AttendanceReports = () => {
       // If studentType changed to distance, clear shift
       if (name === 'studentType' && value === 'distance') {
         next.shift = '';
+      }
+      // If grade changed and courseId is no longer valid for that grade, clear courseId
+      if (name === 'grade') {
+        next.courseId = '';
       }
       return next;
     });
@@ -254,6 +275,37 @@ const AttendanceReports = () => {
   const regularCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType || 'regular') === 'regular').length;
   const distanceCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType) === 'distance').length;
   const attendanceRate = totalCount > 0 ? Math.round(((presentCount + lateCount) / totalCount) * 100) : 0;
+  const onTimeRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+
+  // Class-by-Class Comparative Analytics
+  const gradeAnalytics = useMemo(() => {
+    const gradesList = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12', 'Batch 1', 'Batch 2'];
+    return gradesList.map((g) => {
+      const norm = (str) => {
+        const m = str.match(/\d+/);
+        if (m) return (str.toLowerCase().includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+        return str.toLowerCase().replace(/\s+/g, '');
+      };
+      const classRecords = filteredRecords.filter((r) => {
+        const rGrade = r.grade || r.student?.grade || '';
+        return norm(rGrade) === norm(g);
+      });
+      const total = classRecords.length;
+      const present = classRecords.filter((r) => r.status === 'Present').length;
+      const late = classRecords.filter((r) => r.status === 'Late').length;
+      const absent = classRecords.filter((r) => r.status === 'Absent').length;
+      const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
+      return {
+        grade: g,
+        label: formatGradeAmharic(g),
+        total,
+        present,
+        late,
+        absent,
+        rate,
+      };
+    });
+  }, [filteredRecords]);
 
   const columns = useMemo(
     () => [
@@ -594,13 +646,33 @@ const AttendanceReports = () => {
               onChange={handleChange}
               className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
-              <option value="">ሁሉም</option>
+              <option value="">ሁሉም ዘርፎች</option>
               <option value="regular">🏛️ መደበኛ</option>
               <option value="distance">🌐 የርቀት</option>
             </select>
           </div>
 
-          {/* 2. Shift (If Regular or All: Weekend vs Night) */}
+          {/* 2. Grade */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
+              ክፍል / ባች
+            </label>
+            <select
+              name="grade"
+              value={filters.grade}
+              onChange={handleChange}
+              className="w-full p-2 text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
+            >
+              <option value="">ሁሉም ክፍሎች</option>
+              {GRADE_OPTIONS.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Shift */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               ፈረቃ
@@ -618,38 +690,10 @@ const AttendanceReports = () => {
             </select>
           </div>
 
-          {/* 3. Start Date */}
+          {/* 4. Course */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              የመጀመሪያ ቀን
-            </label>
-            <input
-              type="date"
-              name="startDate"
-              value={filters.startDate}
-              onChange={handleChange}
-              className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8]"
-            />
-          </div>
-
-          {/* 4. End Date */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              የማጠቃለያ ቀን
-            </label>
-            <input
-              type="date"
-              name="endDate"
-              value={filters.endDate}
-              onChange={handleChange}
-              className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8]"
-            />
-          </div>
-
-          {/* 5. Course */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ኮርስ
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block truncate">
+              ኮርስ {availableCoursesForFilter.length > 0 ? `(${availableCoursesForFilter.length})` : ''}
             </label>
             <select
               name="courseId"
@@ -658,35 +702,15 @@ const AttendanceReports = () => {
               className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
             >
               <option value="">ሁሉም ኮርሶች</option>
-              {courses.map((c) => (
+              {availableCoursesForFilter.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name}
+                  📖 {c.name} {!filters.grade && c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* 6. Grade */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
-              ክፍል
-            </label>
-            <select
-              name="grade"
-              value={filters.grade}
-              onChange={handleChange}
-              className="w-full p-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8] cursor-pointer"
-            >
-              <option value="">ሁሉም ክፍሎች</option>
-              {GRADE_OPTIONS.map((g) => (
-                <option key={g.value} value={g.value}>
-                  {g.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 7. Status */}
+          {/* 5. Status */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               ሁኔታ
@@ -704,7 +728,7 @@ const AttendanceReports = () => {
             </select>
           </div>
 
-          {/* 8. Teacher */}
+          {/* 6. Teacher */}
           <div className="space-y-1">
             <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
               መምህር
@@ -722,6 +746,34 @@ const AttendanceReports = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* 7. Start Date */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
+              የመጀመሪያ ቀን
+            </label>
+            <input
+              type="date"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleChange}
+              className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8]"
+            />
+          </div>
+
+          {/* 8. End Date */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
+              የማጠቃለያ ቀን
+            </label>
+            <input
+              type="date"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleChange}
+              className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:border-[#1657b8]"
+            />
           </div>
         </div>
 
@@ -749,52 +801,240 @@ const AttendanceReports = () => {
         </div>
       </Card>
 
-      {/* 🌟 4. Attendance DataTable with Inspiring Empty State */}
-      <Card variant="default" padding="none" className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden rounded-3xl">
-        {filteredRecords.length === 0 && !isLoading ? (
-          <div className="py-16 px-4 text-center space-y-4 max-w-md mx-auto">
-            <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-amber-400 mx-auto flex items-center justify-center text-2xl shadow-inner">
-              <ClipboardCheck className="w-8 h-8" />
+      {/* 🌟 4. Interactive View Tabs (Table vs Class Breakdown vs Shift Insights) */}
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveViewTab('table')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeViewTab === 'table'
+                ? 'bg-[#1657b8] text-white shadow-md'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            <span>📋 የተማሪዎች ዝርዝር መዝገብ</span>
+            <Badge variant={activeViewTab === 'table' ? 'approved' : 'neutral'} size="sm" className="ml-1">
+              {totalCount}
+            </Badge>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveViewTab('classes')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeViewTab === 'classes'
+                ? 'bg-[#1657b8] text-white shadow-md'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>🏫 የክፍል-በ-ክፍል ንጽጽር</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveViewTab('insights')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeViewTab === 'insights'
+                ? 'bg-[#1657b8] text-white shadow-md'
+                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>📊 የፈረቃና የሰዓት ትንታኔ</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 🌟 5. Tab Content 1: Detailed Table View */}
+      {activeViewTab === 'table' && (
+        <Card variant="default" padding="none" className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden rounded-3xl">
+          {filteredRecords.length === 0 && !isLoading ? (
+            <div className="py-16 px-4 text-center space-y-4 max-w-md mx-auto">
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-[#1657b8] dark:text-amber-400 mx-auto flex items-center justify-center text-2xl shadow-inner">
+                <ClipboardCheck className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">ምንም የመገኘት መረጃ አልተገኘም</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  በተመረጡት ማጣሪያዎች ውስጥ ምንም የተመዘገበ ተማሪ የለም። ማጣሪያዎችን አስተካክለው ይሞክሩ ወይም በቀጥታ በQR ስካነር መገኘትን ይመዝግቡ።
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetFilters}
+                  className="gap-1.5 text-xs font-bold"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>ማጣሪያዎችን አጽዳ</span>
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => navigate('/admin/qr-scanner')}
+                  className="gap-1.5 bg-[#1657b8] text-white text-xs font-bold shadow-sm"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>QR ስካነር ክፈት ➔</span>
+                </Button>
+              </div>
             </div>
-            <div>
-              <h3 className="text-base font-black text-slate-900 dark:text-white">ምንም የመገኘት መረጃ አልተገኘም</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                በተመረጡት ማጣሪያዎች ውስጥ ምንም የተመዘገበ ተማሪ የለም። ማጣሪያዎችን አስተካክለው ይሞክሩ ወይም በቀጥታ በQR ስካነር መገኘትን ይመዝግቡ።
-              </p>
+          ) : (
+            <div className="p-4">
+              <DataTable
+                columns={columns}
+                data={filteredRecords}
+                isLoading={isLoading}
+                emptyMessage="ምንም የመገኘት መረጃ አልተገኘም።"
+                emptyIcon={ClipboardCheck}
+              />
             </div>
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetFilters}
-                className="gap-1.5 text-xs font-bold"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>ማጣሪያዎችን አጽዳ</span>
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => navigate('/admin/qr-scanner')}
-                className="gap-1.5 bg-[#1657b8] text-white text-xs font-bold shadow-sm"
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>QR ስካነር ክፈት ➔</span>
-              </Button>
+          )}
+        </Card>
+      )}
+
+      {/* 🌟 5. Tab Content 2: Class-by-Class Comparative Analytics */}
+      {activeViewTab === 'classes' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {gradeAnalytics.map((item) => (
+            <MotionCard key={item.grade} hoverY={-3}>
+              <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3.5 flex flex-col justify-between h-full">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <GraduationCap className="w-4 h-4 text-[#1657b8] dark:text-amber-400" />
+                      <span>{item.label}</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400 font-semibold mt-0.5">
+                      ጠቅላላ መዝገቦች፦ <strong>{item.total}</strong>
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs font-black px-2.5 py-1 rounded-xl border ${
+                      item.rate >= 80
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                        : item.rate >= 50
+                        ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800'
+                        : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                    }`}
+                  >
+                    {item.rate}%
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-1">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 rounded-full ${
+                        item.rate >= 80 ? 'bg-emerald-500' : item.rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                      }`}
+                      style={{ width: `${Math.min(item.rate, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                    <span className="text-emerald-600">✓ {item.present} በሰዓቱ</span>
+                    <span className="text-amber-600">🕒 {item.late} ያረፈዱ</span>
+                    <span className="text-rose-600">✗ {item.absent} የቀሩ</span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFilters((prev) => ({ ...prev, grade: item.grade }));
+                    setActiveViewTab('table');
+                  }}
+                  className="w-full text-xs font-bold gap-1 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[#1657b8] dark:text-blue-300 border-slate-200 dark:border-slate-700"
+                >
+                  <span>ዝርዝሩን አጣራ</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Button>
+              </div>
+            </MotionCard>
+          ))}
+        </div>
+      )}
+
+      {/* 🌟 5. Tab Content 3: Shift & Punctuality Insights */}
+      {activeViewTab === 'insights' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Shift Comparison */}
+          <Card variant="default" padding="lg" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-3xl">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <Sun className="w-4 h-4 text-amber-500" />
+              <span>የመማሪያ ፈረቃ ንጽጽር (Day vs Night Shift)</span>
+            </h3>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 space-y-1">
+                <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span>የቀን / ቅዳሜና እሁድ</span>
+                </span>
+                <p className="text-2xl font-black text-amber-900 dark:text-amber-100">
+                  {filteredRecords.filter((r) => (r.shift || r.student?.shift) !== 'night').length}
+                </p>
+                <p className="text-[11px] text-slate-500">የተገኙ መደበኛ ተማሪዎች</p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/50 space-y-1">
+                <span className="text-xs font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-1">
+                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>የማታ ፈረቃ</span>
+                </span>
+                <p className="text-2xl font-black text-indigo-900 dark:text-indigo-100">
+                  {filteredRecords.filter((r) => (r.shift || r.student?.shift) === 'night').length}
+                </p>
+                <p className="text-[11px] text-slate-500">የተገኙ የማታ ተማሪዎች</p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="p-4">
-            <DataTable
-              columns={columns}
-              data={filteredRecords}
-              isLoading={isLoading}
-              emptyMessage="ምንም የመገኘት መረጃ አልተገኘም።"
-              emptyIcon={ClipboardCheck}
-            />
-          </div>
-        )}
-      </Card>
+          </Card>
+
+          {/* Punctuality & Time Analysis */}
+          <Card variant="default" padding="lg" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-3xl">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <Clock className="w-4 h-4 text-[#1657b8] dark:text-blue-400" />
+              <span>የሰዓት አከባበር ምጣኔ (Punctuality Rate)</span>
+            </h3>
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                  <span className="text-emerald-700 dark:text-emerald-400">በሰዓቱ የመድረስ ምጣኔ (On-Time)</span>
+                  <span className="text-emerald-700 dark:text-emerald-400">{onTimeRate}%</span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${onTimeRate}%` }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                  <span className="text-amber-700 dark:text-amber-400">የማርፈድ ምጣኔ (Late Arrivals)</span>
+                  <span className="text-amber-700 dark:text-amber-400">
+                    {totalCount > 0 ? Math.round((lateCount / totalCount) * 100) : 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                  <div
+                    className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${totalCount > 0 ? Math.round((lateCount / totalCount) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
     </div>
   );
 };
