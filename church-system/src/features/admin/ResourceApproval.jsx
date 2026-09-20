@@ -30,6 +30,7 @@ const ResourceApproval = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectId, setRejectId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
 
   const { data: resources = [], isLoading, isFetching, refetch } = useAdminResources(filter);
   const approveMutation = useApproveResource();
@@ -41,14 +42,16 @@ const ResourceApproval = () => {
   const openRejectModal = (id) => {
     setRejectId(id);
     setRejectReason('');
+    setRejectError('');
     setShowRejectModal(true);
   };
 
   const handleRejectConfirm = () => {
     if (!rejectReason.trim()) {
-      alert('እባክዎ ውድቅ የተደረገበትን ምክንያት ያስገቡ');
+      setRejectError('እባክዎ ውድቅ የተደረገበትን ምክንያት ያስገቡ');
       return;
     }
+    setRejectError('');
     approveMutation.mutate(
       { id: rejectId, action: 'reject', rejectionReason: rejectReason.trim() },
       { onSuccess: () => setShowRejectModal(false) }
@@ -197,13 +200,25 @@ const ResourceApproval = () => {
             <p className="text-xs text-slate-500">
               እባክዎ ሰነዱ ውድቅ የሚደረግበትን ምክንያት ይግለጹ፡
             </p>
-            <textarea
-              rows={3}
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full p-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              placeholder="ምክንያት..."
-            />
+            <div>
+              <textarea
+                rows={3}
+                value={rejectReason}
+                onChange={(e) => {
+                  setRejectReason(e.target.value);
+                  if (e.target.value.trim()) setRejectError('');
+                }}
+                className={`w-full p-2.5 text-sm rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white ${
+                  rejectError ? 'border-rose-500 ring-1 ring-rose-500' : 'border-slate-200 dark:border-slate-700'
+                }`}
+                placeholder="ምክንያት..."
+              />
+              {rejectError && (
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1">
+                  {rejectError}
+                </p>
+              )}
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => setShowRejectModal(false)}>
                 ሰርዝ

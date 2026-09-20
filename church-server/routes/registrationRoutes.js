@@ -303,6 +303,7 @@ const handleStatusCheck = async (req, res) => {
       studentType: reg.studentType,
       receiptUrl: reg.receiptUrl,
       studentId: reg.status === 'Approved' ? reg.studentId : null,
+      rejectionReason: reg.rejectionReason || null,
       batch: reg.batch || null,
       phone: reg.phone,
     });

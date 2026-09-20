@@ -229,6 +229,19 @@ const CheckStatusContent = () => {
               </div>
             ) : null}
 
+            {/* Rejection Reason Notice */}
+            {result.status === 'Rejected' && result.rejectionReason && (
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border-2 border-rose-200 dark:border-rose-800 text-left space-y-2 shadow-xs">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-xs uppercase tracking-wider">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{isAmharic ? 'ውድቅ የተደረገበት ምክንያት' : 'Rejection Reason'}</span>
+                </div>
+                <p className="text-sm font-bold text-rose-950 dark:text-rose-100 leading-relaxed bg-white/80 dark:bg-slate-900/80 p-3 rounded-xl border border-rose-200/80 dark:border-rose-900/80">
+                  {result.rejectionReason}
+                </p>
+              </div>
+            )}
+
             {/* Explainer Note */}
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 text-left">
               {getStatusMessage(result.status, result.studentType, isAmharic)}

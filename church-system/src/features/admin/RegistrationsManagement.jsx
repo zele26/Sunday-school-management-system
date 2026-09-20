@@ -42,7 +42,9 @@ const RegistrationsManagement = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
   const [showConfigModal, setShowConfigModal] = useState(false);
 
   // Queries & Mutations
@@ -107,22 +109,26 @@ const RegistrationsManagement = () => {
       onSuccess: () => {
         setShowDetailModal(false);
         setSelectedRegistration(null);
+        setIsRejecting(false);
       },
     });
   };
 
   const handleReject = (id) => {
     if (!rejectReason.trim()) {
-      alert('እባክዎ ውድቅ የሚደረግበትን ምክንያት ያስገቡ');
+      setRejectError('እባክዎ ውድቅ የሚደረግበትን ምክንያት ያስገቡ');
       return;
     }
+    setRejectError('');
     rejectMutation.mutate(
       { id, reason: rejectReason.trim() },
       {
         onSuccess: () => {
           setShowDetailModal(false);
           setSelectedRegistration(null);
+          setIsRejecting(false);
           setRejectReason('');
+          setRejectError('');
         },
       }
     );
@@ -130,8 +136,18 @@ const RegistrationsManagement = () => {
 
   const openDetailModal = (registration) => {
     setSelectedRegistration(registration);
+    setIsRejecting(false);
     setRejectReason('');
+    setRejectError('');
     setShowDetailModal(true);
+  };
+
+  const closeDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedRegistration(null);
+    setIsRejecting(false);
+    setRejectReason('');
+    setRejectError('');
   };
 
   const isImageUrl = (url) => {
@@ -376,7 +392,7 @@ const RegistrationsManagement = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={() => setShowDetailModal(false)}
+              onClick={closeDetailModal}
               className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
             />
 
@@ -395,7 +411,7 @@ const RegistrationsManagement = () => {
                     <p className="text-xs text-blue-200">የተማሪውን መረጃና ደረሰኝ ያረጋግጡ</p>
                   </div>
                   <button
-                    onClick={() => setShowDetailModal(false)}
+                    onClick={closeDetailModal}
                     className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold cursor-pointer"
                   >
                     ✕
@@ -573,26 +589,125 @@ const RegistrationsManagement = () => {
                       </div>
                     </div>
                   </div>
+                  {/* Rejection Form Box */}
+                  <AnimatePresence>
+                    {isRejecting && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden border-t-2 border-rose-300 dark:border-rose-900 bg-rose-50/80 dark:bg-rose-950/40 p-5 rounded-2xl space-y-3 shadow-inner"
+                      >
+                        <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-sm">
+                          <XCircle className="w-4 h-4" />
+                          <span>ማመልከቻውን ውድቅ ማድረጊያ ምክንያት (Rejection Reason)</span>
+                        </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                          እባክዎ ምዝገባው ለምን ውድቅ እንደተደረገ ይግለጹ፤ ምክንያቱ ለተማሪው በሁኔታ መፈተሻ ገጹ ላይ ይታያል፦
+                        </p>
+
+                        {/* Preset Quick Chips */}
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {[
+                            'የክፍያ ደረሰኝ አልተያያዘም ወይም ግልጽ አይደለም',
+                            'የተሳሳተ ወይም ያልተሟላ የግል መረጃ',
+                            'የተማሪው ዕድሜ ከ 14 ዓመት በታች ነው',
+                            'ተደጋጋሚ ወይም ቀደም ሲል የተመዘገበ',
+                          ].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => {
+                                setRejectReason(preset);
+                                setRejectError('');
+                              }}
+                              className="text-[11px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors cursor-pointer shadow-2xs"
+                            >
+                              + {preset}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div>
+                          <textarea
+                            value={rejectReason}
+                            onChange={(e) => {
+                              setRejectReason(e.target.value);
+                              if (e.target.value.trim()) setRejectError('');
+                            }}
+                            placeholder="ውድቅ የሚደረግበትን ምክንያት እዚህ ይጻፉ... (ለምሳሌ፡ የክፍያ ደረሰኙ ትክክል ስላልሆነ በድጋሚ ይላኩ)"
+                            rows={3}
+                            className={`w-full text-sm rounded-xl border p-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition-all ${
+                              rejectError
+                                ? 'border-rose-500 ring-2 ring-rose-500/20'
+                                : 'border-slate-300 dark:border-slate-700 focus:ring-rose-500/20 focus:border-rose-500'
+                            }`}
+                          />
+                          {rejectError && (
+                            <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold mt-1.5 flex items-center gap-1">
+                              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                              <span>{rejectError}</span>
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex justify-end gap-2.5 pt-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="button"
+                            onClick={() => {
+                              setIsRejecting(false);
+                              setRejectReason('');
+                              setRejectError('');
+                            }}
+                            disabled={rejectMutation.isPending}
+                            className="cursor-pointer"
+                          >
+                            ተመለስ
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            type="button"
+                            onClick={() => handleReject(selectedRegistration._id)}
+                            disabled={rejectMutation.isPending}
+                            className="bg-rose-600 hover:bg-rose-700 text-white font-bold cursor-pointer"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            {rejectMutation.isPending ? 'በማስኬድ ላይ...' : 'ውድቅ ማድረጉን አረጋግጥ'}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleReject(selectedRegistration._id)}
-                    disabled={rejectMutation.isPending || approveMutation.isPending}
-                    className="border-rose-300 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20"
-                  >
-                    <X className="w-4 h-4 mr-1" /> {rejectMutation.isPending ? 'በማስኬድ ላይ...' : 'ውድቅ አድርግ'}
-                  </Button>
-                  <Button
-                    onClick={() => handleApprove(selectedRegistration._id)}
-                    disabled={approveMutation.isPending || rejectMutation.isPending}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    <Check className="w-4 h-4 mr-1" /> {approveMutation.isPending ? 'በማስኬድ ላይ...' : 'አጽድቅና አካውንት ፍጠር'}
-                  </Button>
-                </div>
+                {!isRejecting && (
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => {
+                        setIsRejecting(true);
+                        setRejectError('');
+                      }}
+                      disabled={rejectMutation.isPending || approveMutation.isPending}
+                      className="border-rose-300 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer"
+                    >
+                      <X className="w-4 h-4 mr-1" /> ውድቅ አድርግ
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleApprove(selectedRegistration._id)}
+                      disabled={approveMutation.isPending || rejectMutation.isPending}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                    >
+                      <Check className="w-4 h-4 mr-1" /> {approveMutation.isPending ? 'በማስኬድ ላይ...' : 'አጽድቅና አካውንት ፍጠር'}
+                    </Button>
+                  </div>
+                )}
               </Card>
             </motion.div>
           </div>
