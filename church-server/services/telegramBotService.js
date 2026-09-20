@@ -590,20 +590,56 @@ const initTelegramBot = async () => {
       }
     });
 
-    // ---------- 1. /start & /menu Commands ----------
-    botInstance.onText(/\/start|\/menu/, async (msg) => {
+    /**
+     * Send polite privacy notice and 1-click private chat redirect button for group interactions
+     */
+    const sendGroupToPrivateRedirect = async (chatId, fromUser, action = 'start') => {
+      const username = botInfo?.username;
+      const botLink = username ? `https://t.me/${username}?start=${action}` : 'https://t.me';
+      const name = fromUser?.first_name || 'ተማሪ';
+
+      const text = `🔒 *የግል መረጃ ጥበቃ (Private Student Access)*\n\n` +
+        `ሰላም *${name}*፣ የእርስዎን የግል የተማሪ ማህደር፣ የፈተና ውጤት፣ የዕለታዊ ክትትልና ሰርተፊኬት ደህንነት ለመጠበቅ አገልግሎቱ የሚሰጠው *በግል (Direct Message)* ብቻ ነው።\n\n` +
+        `👇 ከታች ያለውን አዝራር በመጫን በግል አካውንትዎ ይክፈቱ፦`;
+
+      const inlineKeyboard = {
+        inline_keyboard: [
+          [
+            { text: '💬 በግል አካውንትዎ ይክፈቱ (Open Private Chat)', url: botLink }
+          ]
+        ]
+      };
+
+      return await safeSendMessage(chatId, text, {
+        parse_mode: 'Markdown',
+        reply_markup: inlineKeyboard
+      });
+    };
+
+    // ---------- 1. /start & /menu Commands (With Deep Linking Support) ----------
+    botInstance.onText(/\/start(?:\s+(.+))?|\/menu/, async (msg, match) => {
       try {
         const chatId = msg.chat.id;
         const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        const actionParam = match && match[1] ? match[1].trim().toLowerCase() : null;
 
+        // Group chats should strictly redirect students to private DM
         if (isGroup) {
-          // In groups, only group admins or owners can trigger bot menu
-          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
-          if (!isAdmin) return;
+          return sendGroupToPrivateRedirect(chatId, msg.from, actionParam || 'menu');
         }
 
-        const firstName = msg.from.first_name || 'ወዳጃችን';
+        const firstName = msg.from?.first_name || 'ወዳጃችን';
         const student = await findLinkedStudent(chatId).catch(() => null);
+
+        // Instant deep-link routing if arrived from private button or group redirect
+        if (actionParam === 'profile') return handleProfile(chatId);
+        if (actionParam === 'certificate') return handleCertificate(chatId);
+        if (actionParam === 'attendance') return handleAttendance(chatId);
+        if (actionParam === 'courses') return handleCourses(chatId);
+        if (actionParam === 'results') return handleResults(chatId);
+        if (actionParam === 'announcements') return handleAnnouncements(chatId);
+        if (actionParam === 'portal') return handlePortal(chatId);
+        if (actionParam === 'help') return handleHelp(chatId);
 
         let welcomeMsg = `╭──────────────────────────────╮\n`;
         welcomeMsg += `    ⛪ *ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት* ⛪\n`;
@@ -641,7 +677,10 @@ const initTelegramBot = async () => {
               { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' }
             ],
             [
-              { text: '📢 ማስታወቂያዎች', callback_data: 'cmd_announcements' },
+              { text: '📜 ሰርተፊኬት', callback_data: 'cmd_certificate' },
+              { text: '📢 ማስታወቂያዎች', callback_data: 'cmd_announcements' }
+            ],
+            [
               { text: '❓ እርዳታ', callback_data: 'cmd_help' }
             ]
           ]
@@ -665,8 +704,17 @@ const initTelegramBot = async () => {
     botInstance.on('contact', async (msg) => {
       try {
         const chatId = msg.chat.id;
-        const contact = msg.contact;
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
 
+        // If shared inside a group, immediately delete the contact message to protect phone number and redirect to DM
+        if (isGroup) {
+          if (botInstance.deleteMessage) {
+            botInstance.deleteMessage(chatId, msg.message_id).catch(() => {});
+          }
+          return sendGroupToPrivateRedirect(chatId, msg.from, 'link');
+        }
+
+        const contact = msg.contact;
         if (!contact || !contact.phone_number) {
           return safeSendMessage(chatId, '⚠️ ስልክ ቁጥር ማግኘት አልተቻለም። እባክዎ እንደገና ይሞክሩ።');
         }
@@ -802,7 +850,12 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/profile|👤 የእኔ መረጃ/, (msg) => handleProfile(msg.chat.id));
+    botInstance.onText(/\/profile|👤 የእኔ መረጃ/, (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'profile');
+      }
+      handleProfile(msg.chat.id);
+    });
 
     // ---------- 4. /attendance & "📅 የዕለታዊ ክትትል" (Visual Progress Bar) ----------
     const handleAttendance = async (chatId) => {
@@ -883,7 +936,12 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/attendance|📅 የዕለታዊ ክትትል/, (msg) => handleAttendance(msg.chat.id));
+    botInstance.onText(/\/attendance|📅 የዕለታዊ ክትትል/, (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'attendance');
+      }
+      handleAttendance(msg.chat.id);
+    });
 
     // ---------- 5. /courses & "📚 ትምህርቶች" ----------
     const handleCourses = async (chatId) => {
@@ -944,7 +1002,12 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/courses|📚 ትምህርቶች/, (msg) => handleCourses(msg.chat.id));
+    botInstance.onText(/\/courses|📚 ትምህርቶች/, (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'courses');
+      }
+      handleCourses(msg.chat.id);
+    });
 
     // ---------- 6. /results & "🏆 የፈተና ውጤት" (With Medals & Grades) ----------
     const handleResults = async (chatId) => {
@@ -998,7 +1061,12 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/results|🏆 የፈተና ውጤት/, (msg) => handleResults(msg.chat.id));
+    botInstance.onText(/\/results|🏆 የፈተና ውጤት/, (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'results');
+      }
+      handleResults(msg.chat.id);
+    });
 
     // ---------- 7. /announcements & "📢 ማስታወቂያዎች" ----------
     const handleAnnouncements = async (chatId) => {
@@ -1044,7 +1112,9 @@ const initTelegramBot = async () => {
       const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
       if (isGroup) {
         const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
-        if (!isAdmin) return;
+        if (!isAdmin) {
+          return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'announcements');
+        }
       }
       handleAnnouncements(msg.chat.id);
     });
@@ -1078,10 +1148,8 @@ const initTelegramBot = async () => {
     };
 
     botInstance.onText(/\/portal|🎓 የተማሪዎች ፖርታል/, async (msg) => {
-      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
-      if (isGroup) {
-        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
-        if (!isAdmin) return;
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'portal');
       }
       handlePortal(msg.chat.id);
     });
@@ -1093,7 +1161,9 @@ const initTelegramBot = async () => {
         const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
         if (isGroup) {
           const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
-          if (!isAdmin) return;
+          if (!isAdmin) {
+            return sendGroupToPrivateRedirect(chatId, msg.from, 'verify');
+          }
         }
 
         const certInput = match && match[1] ? match[1].trim() : null;
@@ -1176,7 +1246,9 @@ const initTelegramBot = async () => {
         const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
         if (isGroup) {
           const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
-          if (!isAdmin) return;
+          if (!isAdmin) {
+            return sendGroupToPrivateRedirect(chatId, msg.from, 'status');
+          }
         }
 
         const regInput = match && match[1] ? match[1].trim() : null;
@@ -1336,7 +1408,12 @@ const initTelegramBot = async () => {
       }
     };
 
-    botInstance.onText(/\/certificate|\/mycertificate|📜 ሰርተፊኬት/, (msg) => handleCertificate(msg.chat.id));
+    botInstance.onText(/\/certificate|\/mycertificate|📜 ሰርተፊኬት/, (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'certificate');
+      }
+      handleCertificate(msg.chat.id);
+    });
 
     // ---------- 12. /help & "❓ እርዳታ" ----------
     const handleHelp = async (chatId) => {
@@ -1377,10 +1454,8 @@ const initTelegramBot = async () => {
     };
 
     botInstance.onText(/\/help|❓ እርዳታ/, async (msg) => {
-      const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
-      if (isGroup) {
-        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
-        if (!isAdmin) return;
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'help');
       }
       handleHelp(msg.chat.id);
     });
@@ -1394,11 +1469,22 @@ const initTelegramBot = async () => {
 
       try {
         if (isGroup) {
-          const isAdmin = await isAuthorizedAdmin(chatId, query.from?.id);
-          if (!isAdmin) {
-            await botInstance.answerCallbackQuery(query.id, { text: 'ይህ አገልግሎት ለአስተዳዳሪዎች ብቻ የተፈቀደ ነው።', show_alert: true }).catch(() => {});
-            return;
-          }
+          const username = botInfo?.username;
+          const cmdParam = (data || '').replace('cmd_', '');
+          const dmUrl = username ? `https://t.me/${username}?start=${cmdParam}` : 'https://t.me';
+
+          await botInstance.answerCallbackQuery(query.id, {
+            text: '🔒 የግል መረጃዎ እንዲጠበቅ እባክዎ ከቦቱ ጋር በግል (Direct Message) ይወያዩ።',
+            show_alert: true,
+            url: dmUrl
+          }).catch(async () => {
+            await botInstance.answerCallbackQuery(query.id, {
+              text: '🔒 የግል መረጃዎ እንዲጠበቅ እባክዎ ከቦቱ ጋር በግል ይወያዩ።',
+              show_alert: true
+            }).catch(() => {});
+          });
+
+          return;
         }
 
         await botInstance.answerCallbackQuery(query.id).catch(() => {});

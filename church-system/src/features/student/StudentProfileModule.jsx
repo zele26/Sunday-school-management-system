@@ -18,6 +18,10 @@ import {
   CalendarCheck,
   RefreshCw,
   Sparkles,
+  Send,
+  CheckCircle2,
+  ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { apiFetch, API_BASE_URL } from '../../api/apiClient';
 import useAuthStore from '../../store/authStore';
@@ -34,6 +38,7 @@ const StudentProfile = () => {
   const [profile, setProfile] = useState(null);
   const [attendance, setAttendance] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [botStatus, setBotStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -56,10 +61,11 @@ const StudentProfile = () => {
         }
       }
 
-      const [profRes, attRes, crsRes] = await Promise.allSettled([
+      const [profRes, attRes, crsRes, botRes] = await Promise.allSettled([
         apiFetch('/api/student/profile'),
         apiFetch('/api/student/my-attendance'),
         apiFetch('/api/student/my-courses'),
+        apiFetch('/api/telegram/status'),
       ]);
 
       // 1. Profile response
@@ -83,6 +89,12 @@ const StudentProfile = () => {
       if (crsRes.status === 'fulfilled' && crsRes.value.ok) {
         const crsData = await crsRes.value.json();
         if (Array.isArray(crsData)) setCourses(crsData);
+      }
+
+      // 4. Telegram Bot Info
+      if (botRes.status === 'fulfilled' && botRes.value.ok) {
+        const bData = await botRes.value.json().catch(() => ({}));
+        setBotStatus(bData);
       }
     } catch (err) {
       console.error('Student profile load error:', err);
@@ -533,6 +545,104 @@ const StudentProfile = () => {
               </table>
             </div>
           )}
+        </Card>
+      </FadeIn>
+
+      {/* ✈️ 6. TELEGRAM PRIVATE ACCOUNT INTEGRATION */}
+      <FadeIn delay={0.3}>
+        <Card variant="default" padding="lg" className="border border-sky-500/20 dark:border-sky-500/30 overflow-hidden relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white flex items-center justify-center shadow-md shadow-sky-500/20">
+                <Send className="w-5 h-5 transform -rotate-12 translate-x-0.5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>{isAmharic ? 'የቴሌግራም አካውንት ግንኙነት' : 'Telegram Account Integration'}</span>
+                  {profile.telegramChatId || authUser?.telegramChatId ? (
+                    <Badge variant="success" size="sm" className="gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{isAmharic ? 'ተገናኝቷል' : 'Connected'}</span>
+                    </Badge>
+                  ) : (
+                    <Badge variant="warning" size="sm">
+                      {isAmharic ? 'አልተገናኘም' : 'Not Linked'}
+                    </Badge>
+                  )}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {isAmharic
+                    ? 'የግል የፈተና ውጤቶች፣ የዕለታዊ ክትትል፣ የምረቃ ሰርተፊኬትና ማስታወቂያዎች በግል የቴሌግራም ቦት'
+                    : 'Personal exam grades, attendance logs, graduation certificate & announcements via private bot'}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Status Pill */}
+            {botStatus?.botUsername && (
+              <span className="text-xs font-mono font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/50 px-3 py-1.5 rounded-xl border border-sky-200 dark:border-sky-800/60 flex items-center gap-1.5">
+                <span>@{botStatus.botUsername}</span>
+              </span>
+            )}
+          </div>
+
+          <div className="pt-4">
+            {profile.telegramChatId || authUser?.telegramChatId ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-1 text-xs">
+                    <p className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      <span>{isAmharic ? 'የቴሌግራም አካውንትዎ በተሳካ ሁኔታ ተገናኝቷል' : 'Your Telegram Account is Active & Verified'}</span>
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {isAmharic
+                        ? 'የእርስዎን መረጃዎች በቴሌግራም ቦት በግል (Direct Message) በማንኛውም ሰዓት መመልከት ይችላሉ።'
+                        : 'You can securely access your student records in private DM at any time.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <a
+                      href={botStatus?.botUsername ? `https://t.me/${botStatus.botUsername}?start=profile` : 'https://t.me'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-sky-500/20 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>{isAmharic ? 'ቦቱን በግል ክፈት' : 'Open in Telegram'}</span>
+                      <ExternalLink className="w-3 h-3 opacity-75" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-900 dark:text-amber-200 space-y-3">
+                  <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300 text-sm">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>{isAmharic ? 'ቴሌግራምን እንዴት ማገናኘት ይቻላል?' : 'How to Link Your Telegram:'}</span>
+                  </div>
+                  <ol className="space-y-1.5 text-slate-700 dark:text-slate-300 list-decimal list-inside">
+                    <li>{isAmharic ? 'ከታች ያለውን "በቴሌግራም ቦት ያገናኙ" አዝራር ይጫኑ።' : 'Tap the "Connect via Telegram Bot" button below.'}</li>
+                    <li>{isAmharic ? 'በቦቱ ውይይት ውስጥ "📱 ስልክ ቁጥር ያገናኙ" የሚለውን በመጫን ስልክዎን ያጋሩ።' : 'Inside the bot chat, tap the "📱 Link Phone" button.'}</li>
+                  </ol>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <a
+                    href={botStatus?.botUsername ? `https://t.me/${botStatus.botUsername}?start=link` : 'https://t.me'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{isAmharic ? 'በቴሌግራም ቦት ያገናኙ (Connect to Bot)' : 'Connect via Telegram Bot'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
       </FadeIn>
     </div>
