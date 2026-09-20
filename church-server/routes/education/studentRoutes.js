@@ -175,36 +175,11 @@ const getStudentCourses = async (req, res) => {
       .populate({
         path: 'courses',
         populate: { path: 'teacher', select: 'fullName email phone' }
-      });
+      })
+      .lean();
 
-    let coursesList = (student?.courses || []).filter(Boolean);
-
-    // If no explicit courses are manually assigned yet, but the student has a grade or studentType,
-    // automatically retrieve all active courses for their grade/type
-    if (coursesList.length === 0) {
-      const EducationCourse = require('../../models/education/Course');
-      const orConditions = [];
-
-      if (student?.grade) {
-        orConditions.push({ grade: student.grade });
-        orConditions.push({ grade: `Grade ${student.grade}` });
-      }
-
-      if (student?.studentType) {
-        orConditions.push({ studentType: student.studentType });
-      }
-
-      if (orConditions.length > 0) {
-        const autoCourses = await EducationCourse.find({
-          $or: orConditions,
-          status: { $regex: /^active$/i }
-        })
-          .populate('teacher', 'fullName email phone')
-          .sort({ createdAt: -1 });
-
-        coursesList = autoCourses;
-      }
-    }
+    // Only return courses that were explicitly assigned to the student
+    const coursesList = (student?.courses || []).filter(Boolean);
 
     res.json(coursesList);
   } catch (err) {

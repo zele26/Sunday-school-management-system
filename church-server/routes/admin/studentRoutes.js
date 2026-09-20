@@ -412,6 +412,147 @@ router.post('/generate-qr', protect, authorize('admin'), async (req, res) => {
   }
 });
 
+// ---------- Bulk Assign Courses to Multiple Students ----------
+router.post('/bulk-assign-courses', protect, authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { studentIds, courseIds, mode = 'replace' } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'studentIds array is required and cannot be empty' });
+    }
+    if (!courseIds || !Array.isArray(courseIds)) {
+      return res.status(400).json({ success: false, message: 'courseIds array is required' });
+    }
+
+    const uniqueCourseIds = [...new Set(courseIds.map(id => id ? String(id) : null).filter(Boolean))];
+    const EducationCourse = require('../../models/education/Course');
+    
+    let uniqueTeacherIds = [];
+    if (uniqueCourseIds.length > 0) {
+      const validCourses = await EducationCourse.find({ _id: { $in: uniqueCourseIds } });
+      if (validCourses.length !== uniqueCourseIds.length) {
+        return res.status(400).json({ success: false, message: 'Some course IDs are invalid' });
+      }
+      const courseTeacherIds = validCourses
+        .map(c => c.teacher ? String(c.teacher) : null)
+        .filter(Boolean);
+      uniqueTeacherIds = [...new Set(courseTeacherIds)];
+    }
+
+    if (mode === 'append') {
+      await Student.updateMany(
+        { _id: { $in: studentIds } },
+        {
+          $addToSet: {
+            courses: { $each: uniqueCourseIds },
+            teachers: { $each: uniqueTeacherIds }
+          }
+        }
+      );
+      if (uniqueTeacherIds.length > 0) {
+        await Student.updateMany(
+          { _id: { $in: studentIds }, teacher: { $exists: false } },
+          { $set: { teacher: uniqueTeacherIds[0] } }
+        );
+        await Student.updateMany(
+          { _id: { $in: studentIds }, teacher: null },
+          { $set: { teacher: uniqueTeacherIds[0] } }
+        );
+      }
+    } else {
+      const updateData = {
+        courses: uniqueCourseIds,
+        teachers: uniqueTeacherIds,
+      };
+      if (uniqueTeacherIds.length > 0) {
+        updateData.teacher = uniqueTeacherIds[0];
+      } else if (uniqueCourseIds.length === 0) {
+        updateData.teacher = null;
+      }
+      await Student.updateMany(
+        { _id: { $in: studentIds } },
+        { $set: updateData }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: `ኮርሶች ለ${studentIds.length} ተማሪዎች በተሳካ ሁኔታ ተመድበዋል (Courses assigned successfully to ${studentIds.length} student(s))`,
+      count: studentIds.length
+    });
+  } catch (err) {
+    console.error('Bulk assign courses error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Bulk Assign Teacher to Multiple Students ----------
+router.post('/bulk-assign-teacher', protect, authorize('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { studentIds, teacherId, mode = 'set' } = req.body;
+    if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'studentIds array is required and cannot be empty' });
+    }
+    if (!teacherId) {
+      return res.status(400).json({ success: false, message: 'teacherId is required' });
+    }
+
+    let targetUserId = null;
+    // 1. Check if teacherId is a User ID
+    try {
+      const userDoc = await User.findById(teacherId);
+      if (userDoc) {
+        targetUserId = userDoc._id;
+      }
+    } catch (e) {}
+
+    // 2. If not, resolve from Teacher document
+    if (!targetUserId) {
+      const Teacher = require('../../models/Teacher');
+      let teacherDoc = null;
+      try { teacherDoc = await Teacher.findById(teacherId); } catch (e) {}
+      if (!teacherDoc) {
+        try { teacherDoc = await Teacher.findOne({ teacherId }); } catch (e) {}
+      }
+      if (teacherDoc) {
+        targetUserId = teacherDoc.userId || teacherDoc._id;
+      }
+    }
+
+    if (!targetUserId) {
+      return res.status(400).json({ success: false, message: 'Teacher not found' });
+    }
+
+    if (mode === 'append') {
+      await Student.updateMany(
+        { _id: { $in: studentIds } },
+        {
+          $set: { teacher: targetUserId },
+          $addToSet: { teachers: targetUserId }
+        }
+      );
+    } else {
+      await Student.updateMany(
+        { _id: { $in: studentIds } },
+        {
+          $set: {
+            teacher: targetUserId,
+            teachers: [targetUserId]
+          }
+        }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: `መምህር ለ${studentIds.length} ተማሪዎች በተሳካ ሁኔታ ተመድቧል (Teacher assigned successfully to ${studentIds.length} student(s))`,
+      count: studentIds.length
+    });
+  } catch (err) {
+    console.error('Bulk assign teacher error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // ---------- Assign teacher to student ----------
 router.put('/:id/assign-teacher', protect, authorize('admin', 'superadmin'), async (req, res) => {
   try {

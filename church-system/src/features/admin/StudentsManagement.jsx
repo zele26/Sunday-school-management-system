@@ -52,6 +52,8 @@ import {
   useGenerateAllQR,
   useAssignTeacher,
   useAssignCourses,
+  useBulkAssignCourses,
+  useBulkAssignTeacher,
   useToggleStudentStatus,
   useBulkToggleStudentsStatus,
 } from '../../hooks/queries/useStudents';
@@ -116,6 +118,16 @@ const StudentsManagement = () => {
   const [assignedTeacherId, setAssignedTeacherId] = useState('');
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
 
+  // Bulk Assign Modals state
+  const [showBulkCourseModal, setShowBulkCourseModal] = useState(false);
+  const [showBulkTeacherModal, setShowBulkTeacherModal] = useState(false);
+  const [bulkSelectedCourseIds, setBulkSelectedCourseIds] = useState([]);
+  const [bulkCourseMode, setBulkCourseMode] = useState('replace'); // 'replace' or 'append'
+  const [bulkCourseGradeFilter, setBulkCourseGradeFilter] = useState('');
+  const [bulkCourseSearch, setBulkCourseSearch] = useState('');
+  const [bulkSelectedTeacherId, setBulkSelectedTeacherId] = useState('');
+  const [bulkTeacherMode, setBulkTeacherMode] = useState('set'); // 'set' or 'append'
+
   // Data Queries
   const { data, isLoading } = useStudents({
     page: pagination.pageIndex + 1,
@@ -135,6 +147,8 @@ const StudentsManagement = () => {
   const generateAllQRMutation = useGenerateAllQR();
   const assignTeacherMutation = useAssignTeacher();
   const assignCoursesMutation = useAssignCourses();
+  const bulkAssignCoursesMutation = useBulkAssignCourses();
+  const bulkAssignTeacherMutation = useBulkAssignTeacher();
   const toggleStudentStatusMutation = useToggleStudentStatus();
   const bulkToggleStudentStatusMutation = useBulkToggleStudentsStatus();
 
@@ -297,6 +311,71 @@ const StudentsManagement = () => {
     assignCoursesMutation.mutate(
       { studentId: selectedStudent._id, courseIds: selectedCourseIds },
       { onSuccess: () => setShowCourseModal(false) }
+    );
+  };
+
+  // Bulk course helper logic
+  const filteredBulkCourses = useMemo(() => {
+    return courses.filter((c) => {
+      if (bulkCourseGradeFilter && c.grade !== bulkCourseGradeFilter) return false;
+      if (bulkCourseSearch.trim()) {
+        const query = bulkCourseSearch.toLowerCase();
+        const matchesName = c.name?.toLowerCase().includes(query);
+        const matchesCode = c.code?.toLowerCase().includes(query);
+        const matchesTeacher = (c.teacher?.fullName || '').toLowerCase().includes(query);
+        if (!matchesName && !matchesCode && !matchesTeacher) return false;
+      }
+      return true;
+    });
+  }, [courses, bulkCourseGradeFilter, bulkCourseSearch]);
+
+  const toggleBulkCourseSelection = (courseId) => {
+    setBulkSelectedCourseIds((prev) =>
+      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+    );
+  };
+
+  const handleSelectAllBulkCourses = () => {
+    const ids = filteredBulkCourses.map((c) => c._id);
+    setBulkSelectedCourseIds((prev) => [...new Set([...prev, ...ids])]);
+  };
+
+  const handleDeselectAllBulkCourses = () => {
+    const idsToRemove = new Set(filteredBulkCourses.map((c) => c._id));
+    setBulkSelectedCourseIds((prev) => prev.filter((id) => !idsToRemove.has(id)));
+  };
+
+  const handleBulkAssignCourses = () => {
+    if (selectedStudentIds.length === 0) return;
+    bulkAssignCoursesMutation.mutate(
+      {
+        studentIds: selectedStudentIds,
+        courseIds: bulkSelectedCourseIds,
+        mode: bulkCourseMode,
+      },
+      {
+        onSuccess: () => {
+          setShowBulkCourseModal(false);
+          setRowSelection({});
+        },
+      }
+    );
+  };
+
+  const handleBulkAssignTeacher = () => {
+    if (selectedStudentIds.length === 0 || !bulkSelectedTeacherId) return;
+    bulkAssignTeacherMutation.mutate(
+      {
+        studentIds: selectedStudentIds,
+        teacherId: bulkSelectedTeacherId,
+        mode: bulkTeacherMode,
+      },
+      {
+        onSuccess: () => {
+          setShowBulkTeacherModal(false);
+          setRowSelection({});
+        },
+      }
     );
   };
 
@@ -880,6 +959,41 @@ const StudentsManagement = () => {
         {/* Batch Actions Button Bar */}
         {selectedStudentIds.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Bulk Assign Courses */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setBulkSelectedCourseIds([]);
+                setBulkCourseMode('replace');
+                setBulkCourseSearch('');
+                setBulkCourseGradeFilter('');
+                setShowBulkCourseModal(true);
+              }}
+              className="bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 gap-1.5 shrink-0 font-bold"
+              title="ለተመረጡት ተማሪዎች ኮርሶችን በጅምላ መድብ"
+            >
+              <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>ኮርስ መድብ ({selectedStudentIds.length})</span>
+            </Button>
+
+            {/* Bulk Assign Teacher */}
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => {
+                setBulkSelectedTeacherId('');
+                setBulkTeacherMode('set');
+                setShowBulkTeacherModal(true);
+              }}
+              className="bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 gap-1.5 shrink-0 font-bold"
+              title="ለተመረጡት ተማሪዎች መምህር በጅምላ መድብ"
+            >
+              <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <span>መምህር መድብ ({selectedStudentIds.length})</span>
+            </Button>
+
+            {/* Bulk Disable */}
             <Button
               variant="warning"
               size="md"
@@ -891,6 +1005,8 @@ const StudentsManagement = () => {
               <UserX className="w-4 h-4" />
               <span>{bulkToggleStudentStatusMutation.isPending ? 'በማቦዘን ላይ...' : `አቦዝን (${selectedStudentIds.length})`}</span>
             </Button>
+
+            {/* Bulk Enable */}
             <Button
               variant="success"
               size="md"
@@ -902,6 +1018,8 @@ const StudentsManagement = () => {
               <UserCheck className="w-4 h-4" />
               <span>{bulkToggleStudentStatusMutation.isPending ? 'በማንቃት ላይ...' : `አንቃ (${selectedStudentIds.length})`}</span>
             </Button>
+
+            {/* Bulk Delete */}
             <Button
               variant="danger"
               size="md"
@@ -1236,6 +1354,316 @@ const StudentsManagement = () => {
                 disabled={assignCoursesMutation.isPending}
               >
                 {assignCoursesMutation.isPending ? 'በማስቀመጥ ላይ...' : 'አስቀምጥ'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Bulk Course Assignment Modal */}
+      {showBulkCourseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <Card
+            variant="default"
+            padding="none"
+            className="max-w-xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    ኮርሶችን በጅምላ መድብ (Bulk Assign Courses)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    ለ<span className="font-bold text-blue-600 dark:text-blue-400"> {selectedStudentIds.length} </span> የተመረጡ ተማሪዎች
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBulkCourseModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              {/* Assignment Mode Selection */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 space-y-2">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  የመመደቢያ ዘዴ (Assignment Mode):
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
+                    bulkCourseMode === 'replace'
+                      ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 text-blue-950 dark:text-blue-100 font-semibold'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="bulkCourseMode"
+                      value="replace"
+                      checked={bulkCourseMode === 'replace'}
+                      onChange={() => setBulkCourseMode('replace')}
+                      className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-bold">የነበሩትን ኮርሶች ተካ (Replace)</div>
+                      <div className="text-[11px] opacity-75 font-normal mt-0.5">ተማሪዎቹ የተመረጡትን ኮርሶች ብቻ ይወስዳሉ</div>
+                    </div>
+                  </label>
+
+                  <label className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
+                    bulkCourseMode === 'append'
+                      ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-700 text-blue-950 dark:text-blue-100 font-semibold'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="bulkCourseMode"
+                      value="append"
+                      checked={bulkCourseMode === 'append'}
+                      onChange={() => setBulkCourseMode('append')}
+                      className="mt-0.5 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <div className="font-bold">በነበሩት ላይ ጨምር (Append)</div>
+                      <div className="text-[11px] opacity-75 font-normal mt-0.5">ነባር ኮርሶቻቸው ሳይጠፉ አዲስ ይጨመራሉ</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Filters for courses */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex-1">
+                  <Input
+                    icon={Search}
+                    placeholder="ኮርስ በስም ወይም በኮድ ይፈልጉ..."
+                    value={bulkCourseSearch}
+                    onChange={(e) => setBulkCourseSearch(e.target.value)}
+                  />
+                </div>
+                <div className="w-full sm:w-40">
+                  <Select
+                    value={bulkCourseGradeFilter}
+                    onChange={(e) => setBulkCourseGradeFilter(e.target.value)}
+                  >
+                    <option value="">ሁሉም ክፍሎች</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
+                      <option key={g} value={`Grade ${g}`}>
+                        {g}ኛ ክፍል
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              {/* Course Selection Controls */}
+              <div className="flex items-center justify-between text-xs px-1">
+                <span className="font-bold text-slate-600 dark:text-slate-300">
+                  የተመረጡ ኮርሶች፡ <span className="text-blue-600 dark:text-blue-400">{bulkSelectedCourseIds.length}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSelectAllBulkCourses}
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    ሁሉንም ምረጥ
+                  </button>
+                  <span className="text-slate-300 dark:text-slate-600">|</span>
+                  <button
+                    type="button"
+                    onClick={handleDeselectAllBulkCourses}
+                    className="text-slate-500 dark:text-slate-400 hover:underline font-semibold cursor-pointer"
+                  >
+                    ሁሉንም ሰርዝ
+                  </button>
+                </div>
+              </div>
+
+              {/* Course List */}
+              <div className="max-h-56 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-800 p-2 rounded-2xl">
+                {filteredBulkCourses.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-6">ምንም የተገኘ ኮርስ የለም</p>
+                ) : (
+                  filteredBulkCourses.map((c) => {
+                    const isSelected = bulkSelectedCourseIds.includes(c._id);
+                    return (
+                      <label
+                        key={c._id}
+                        className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer text-xs transition-colors border ${
+                          isSelected
+                            ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200'
+                            : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleBulkCourseSelection(c._id)}
+                            className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 block truncate">
+                              {c.name}
+                            </span>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">
+                              {c.code && <span className="font-mono">{c.code}</span>}
+                              {c.grade && <span>• {formatGradeAmharic(c.grade)}</span>}
+                              {c.teacher?.fullName && <span>• መምህር: {c.teacher.fullName}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <span className="shrink-0 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-0.5 rounded-full">
+                            የተመረጠ
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2.5 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="outline" size="sm" onClick={() => setShowBulkCourseModal(false)}>
+                ሰርዝ
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkAssignCourses}
+                disabled={bulkAssignCoursesMutation.isPending}
+                className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>
+                  {bulkAssignCoursesMutation.isPending
+                    ? 'በመመደብ ላይ...'
+                    : `ኮርሶችን መድብ (${bulkSelectedCourseIds.length})`}
+                </span>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Bulk Teacher Assignment Modal */}
+      {showBulkTeacherModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <Card
+            variant="default"
+            padding="none"
+            className="max-w-md w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    መምህር በጅምላ መድብ (Bulk Assign Teacher)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    ለ<span className="font-bold text-purple-600 dark:text-purple-400"> {selectedStudentIds.length} </span> የተመረጡ ተማሪዎች
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBulkTeacherModal(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Assignment Mode */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200/70 dark:border-slate-700/60 space-y-2">
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  የመመደቢያ ዘዴ:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer ${
+                    bulkTeacherMode === 'set'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-700 text-purple-900 dark:text-purple-200 font-semibold'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="bulkTeacherMode"
+                      value="set"
+                      checked={bulkTeacherMode === 'set'}
+                      onChange={() => setBulkTeacherMode('set')}
+                      className="text-purple-600 focus:ring-purple-500"
+                    />
+                    <span>ዋና መምህር አድርግና ተካ</span>
+                  </label>
+
+                  <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer ${
+                    bulkTeacherMode === 'append'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-700 text-purple-900 dark:text-purple-200 font-semibold'
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="bulkTeacherMode"
+                      value="append"
+                      checked={bulkTeacherMode === 'append'}
+                      onChange={() => setBulkTeacherMode('append')}
+                      className="text-purple-600 focus:ring-purple-500"
+                    />
+                    <span>ወደ መምህራን ዝርዝር ጨምር</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Teacher Select */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  መምህር ይምረጡ:
+                </label>
+                <Select
+                  value={bulkSelectedTeacherId}
+                  onChange={(e) => setBulkSelectedTeacherId(e.target.value)}
+                >
+                  <option value="">-- መምህር ይምረጡ --</option>
+                  {teachers.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.fullName || t.name} {t.phone ? `(${t.phone})` : ''}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2.5 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="outline" size="sm" onClick={() => setShowBulkTeacherModal(false)}>
+                ሰርዝ
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleBulkAssignTeacher}
+                disabled={bulkAssignTeacherMutation.isPending || !bulkSelectedTeacherId}
+                className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold"
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>{bulkAssignTeacherMutation.isPending ? 'በመመደብ ላይ...' : 'መምህር መድብ'}</span>
               </Button>
             </div>
           </Card>

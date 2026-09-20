@@ -230,3 +230,57 @@ export function useAssignCourses() {
     },
   });
 }
+
+/**
+ * Bulk assign courses to multiple students
+ */
+export function useBulkAssignCourses() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ studentIds, courseIds, mode = 'replace' }) => {
+      const res = await apiFetch('/api/admin/students/bulk-assign-courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds, courseIds, mode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Failed to bulk assign courses');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'ኮርሶች በተሳካ ሁኔታ ተመድበዋል!');
+      queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'ኮርሶችን በጅምላ መመደብ አልተቻለም');
+    },
+  });
+}
+
+/**
+ * Bulk assign teacher to multiple students
+ */
+export function useBulkAssignTeacher() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ studentIds, teacherId, mode = 'set' }) => {
+      const res = await apiFetch('/api/admin/students/bulk-assign-teacher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds, teacherId, mode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Failed to bulk assign teacher');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'መምህር በተሳካ ሁኔታ ተመድቧል!');
+      queryClient.invalidateQueries({ queryKey: STUDENTS_QUERY_KEY });
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'መምህር በጅምላ መመደብ አልተቻለም');
+    },
+  });
+}
+
+
