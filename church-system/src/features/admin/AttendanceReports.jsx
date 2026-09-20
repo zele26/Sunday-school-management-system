@@ -1035,8 +1035,5 @@ const AttendanceReports = () => {
     </div>
   );
 };
-    </div>
-  );
-};
 
 export default AttendanceReports;
