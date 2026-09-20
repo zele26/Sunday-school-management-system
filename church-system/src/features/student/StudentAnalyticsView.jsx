@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useStudentAnalytics } from '../../hooks/queries/useAnalytics';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 export default function StudentAnalyticsView({ studentId = null }) {
   const { data, isLoading, error, refetch } = useStudentAnalytics(studentId);
@@ -52,7 +53,7 @@ export default function StudentAnalyticsView({ studentId = null }) {
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{student?.fullName}</h1>
             <p className="text-slate-300 text-xs sm:text-sm mt-1">
-              የመታወቂያ ቁጥር፦ <span className="font-mono text-amber-300 font-bold">{student?.studentId || 'N/A'}</span> • {student?.grade} ({student?.shift === 'night' ? 'የማታ' : 'የቀን / Weekend'})
+              የመታወቂያ ቁጥር፦ <span className="font-mono text-amber-300 font-bold">{student?.studentId || 'N/A'}</span> • {formatGradeAmharic(student?.grade)} ({student?.shift === 'night' ? 'የማታ' : 'የቀን / Weekend'})
             </p>
           </div>
 

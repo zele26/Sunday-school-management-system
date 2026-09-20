@@ -40,16 +40,10 @@ import { useAttendanceReport } from '../../hooks/queries/useAttendance';
 import { useCourses } from '../../hooks/queries/useCourses';
 import { useTeachers } from '../../hooks/queries/useTeachers';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic, GRADE_FILTER_OPTIONS } from '../../constants/registrationOptions';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
 
-const GRADE_OPTIONS = [
-  { value: 'Grade 7', label: '7ኛ ክፍል' },
-  { value: 'Grade 8', label: '8ኛ ክፍል' },
-  { value: 'Grade 9', label: '9ኛ ክፍል' },
-  { value: 'Grade 10', label: '10ኛ ክፍል' },
-  { value: 'Grade 11', label: '11ኛ ክፍል' },
-  { value: 'Grade 12', label: '12ኛ ክፍል' },
-];
+const GRADE_OPTIONS = GRADE_FILTER_OPTIONS.filter(g => g.value !== '');
 
 const getStatusBadge = (status) => {
   switch (status) {
@@ -134,7 +128,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
         `"${r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '')}"`,
         `"${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}"`,
         `"${shift === 'night' ? 'የማታ' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ' : '-'}"`,
-        `"${r.grade || r.student?.grade || ''}"`,
+        `"${formatGradeAmharic(r.grade || r.student?.grade)}"`,
         `"${r.courseName || r.course?.name || 'አጠቃላይ'}"`,
         `"${r.teacherName || r.teacher?.fullName || '—'}"`,
         `"${formatEthiopianDate(r.date)}"`,
@@ -297,7 +291,7 @@ const AttendanceReports = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል" />,
         cell: ({ row }) => {
           const val = row.original.grade || row.original.student?.grade;
-          return <Badge variant="neutral" size="sm" className="font-semibold">{val || '—'}</Badge>;
+          return <Badge variant="neutral" size="sm" className="font-semibold">{formatGradeAmharic(val)}</Badge>;
         },
       },
       {

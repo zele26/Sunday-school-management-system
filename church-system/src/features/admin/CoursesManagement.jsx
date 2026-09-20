@@ -33,6 +33,7 @@ import {
 } from '../../hooks/queries/useCourses';
 import { useTeachers } from '../../hooks/queries/useTeachers';
 import { courseModalSchema } from '../../schemas';
+import { formatGradeAmharic, GRADE_FILTER_OPTIONS } from '../../constants/registrationOptions';
 
 const CoursesManagement = () => {
   const [search, setSearch] = useState('');
@@ -169,7 +170,7 @@ const CoursesManagement = () => {
       {
         accessorKey: 'grade',
         header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል / ደረጃ" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || 'ወጣቶች'}</Badge>,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{formatGradeAmharic(getValue()) || 'ወጣቶች'}</Badge>,
       },
       {
         accessorKey: 'studentType',
@@ -389,7 +390,7 @@ const CoursesManagement = () => {
                   {c.numberOfLessons || 12} ትምህርቶች
                 </span>
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  {c.grade || c.ageGroup || 'ወጣቶች'}
+                  {formatGradeAmharic(c.grade) || c.ageGroup || 'ወጣቶች'}
                 </span>
               </div>
             </Card>
@@ -399,34 +400,27 @@ const CoursesManagement = () => {
 
       {/* Course Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <Card
-            variant="default"
-            padding="lg"
-            className="max-w-xl w-full space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
-          >
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-              {editingCourse ? 'ኮርስ አሻሽል' : 'አዲስ ኮርስ ፍጠር'}
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <Card variant="elevated" padding="lg" className="w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
+              {editingCourse ? 'ኮርስ አርም' : 'አዲስ ኮርስ ፍጠር'}
             </h3>
 
             {conflictError && (
-              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5 animate-in fade-in">
-                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                <div>
-                  <p className="font-bold text-sm">የሰዓት መደራረብ ተገኝቷል</p>
-                  <p className="mt-0.5 leading-relaxed">{conflictError}</p>
-                </div>
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{conflictError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                   የኮርስ ስም *
                 </label>
                 <Input
                   {...register('name')}
-                  placeholder="ለምሳሌ፡ ነገረ ድኅነት"
+                  placeholder="ለምሳሌ፡ የነገረ መለኮት መሠረቶች"
                   error={errors.name?.message}
                 />
               </div>
@@ -434,7 +428,7 @@ const CoursesManagement = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    የምዝገባ ዓይነት
+                    የትምህርት ዓይነት
                   </label>
                   <Select {...register('studentType')}>
                     <option value="regular">መደበኛ</option>
@@ -448,7 +442,7 @@ const CoursesManagement = () => {
                   <Select {...register('grade')}>
                     {[7, 8, 9, 10, 11, 12].map((g) => (
                       <option key={g} value={`Grade ${g}`}>
-                        ክፍል {g}
+                        {g}ኛ ክፍል
                       </option>
                     ))}
                   </Select>

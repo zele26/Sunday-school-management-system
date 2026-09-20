@@ -11,6 +11,7 @@ import {
   DataTableColumnHeader,
 } from '../../components/ui';
 import { useAcademicEnrollments } from '../../hooks/queries/useAcademic';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const AcademicEnrollmentsManagement = () => {
   const { data: enrollments = [], isLoading, isFetching, refetch } = useAcademicEnrollments();
@@ -56,7 +57,7 @@ const AcademicEnrollmentsManagement = () => {
       {
         accessorKey: 'grade',
         header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል / ባች" />,
-        cell: ({ row }) => <span>{row.original.gradeId?.name || '-'}</span>,
+        cell: ({ row }) => <span>{formatGradeAmharic(row.original.gradeId?.name)}</span>,
       },
       {
         accessorKey: 'studyMode',

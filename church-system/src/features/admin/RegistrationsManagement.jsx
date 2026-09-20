@@ -33,7 +33,7 @@ import {
 } from '../../hooks/queries';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { Sliders, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
-import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel } from '../../constants/registrationOptions';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic } from '../../constants/registrationOptions';
 import { useLanguage } from '../../hooks/useLanguage';
 
 const RegistrationsManagement = () => {
@@ -437,7 +437,7 @@ const RegistrationsManagement = () => {
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">የክፍል ደረጃ / ምድብ</span>
-                      <span className="text-slate-900 dark:text-white font-medium">{selectedRegistration.grade}</span>
+                      <span className="text-slate-900 dark:text-white font-medium">{formatGradeAmharic(selectedRegistration.grade)}</span>
                     </div>
                   </div>
 

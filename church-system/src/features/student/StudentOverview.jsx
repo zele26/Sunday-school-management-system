@@ -25,6 +25,7 @@ import VerifiableCertificate from '../../components/VerifiableCertificate';
 import { FadeIn, MotionCard } from '../../components/motion';
 import { useLanguage } from '../../hooks/useLanguage';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const StudentOverview = () => {
   const navigate = useNavigate();
@@ -137,7 +138,8 @@ const StudentOverview = () => {
 
   const isDistance = profile?.studentType === 'distance' || profile?.studentId?.startsWith('TKD');
   const studentId = profile?.studentId || authUser?.studentId || '';
-  const gradeOrBatch = profile?.grade || profile?.batch || '';
+  const rawGradeOrBatch = profile?.grade || profile?.batch || '';
+  const gradeOrBatch = rawGradeOrBatch ? (isAmharic ? formatGradeAmharic(rawGradeOrBatch) : rawGradeOrBatch) : '';
 
   // Real Metrics Calculations
   const enrolledCount = courses.length;

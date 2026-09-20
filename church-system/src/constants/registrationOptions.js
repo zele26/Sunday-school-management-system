@@ -71,3 +71,64 @@ export const getRelationshipLabel = (value, isAmharic = true) => {
   if (found) return isAmharic ? found.labelAm : found.labelEn;
   return value;
 };
+
+/**
+ * Formats grade/batch strings into authentic Amharic labels
+ * E.g.
+ * - "Grade 7" / "GRADE 7" / "7" -> "7ኛ ክፍል"
+ * - "Grade 12" / "GRADE 12" / "12" -> "12ኛ ክፍል"
+ * - "Batch 1" / "BATCH 1" / "batch 2" -> "ባች 1", "ባች 2"
+ * - "KG" / "Kindergarten" -> "መዋዕለ ሕፃናት"
+ * - "All" / "All Classes" -> "ሁሉም ክፍሎች"
+ */
+export const formatGradeAmharic = (grade, fallback = '—') => {
+  if (grade === null || grade === undefined) return fallback;
+  const str = String(grade).trim();
+  if (!str || str === '—' || str === '-' || str === 'N/A' || str === 'null' || str === 'undefined') return fallback;
+
+  // If it already has Amharic designations, return it cleanly
+  if (str.includes('ክፍል') || str.includes('ባች') || str.includes('መዋዕለ') || str.includes('ሁሉም')) {
+    return str;
+  }
+
+  const lower = str.toLowerCase();
+
+  // All classes
+  if (lower === 'all' || lower === 'all classes' || lower.includes('ሁሉም')) {
+    return 'ሁሉም ክፍሎች';
+  }
+
+  // Batches (e.g. Batch 1, Batch 2)
+  if (lower.includes('batch')) {
+    const match = str.match(/\d+/);
+    return match ? `ባች ${match[0]}` : str;
+  }
+
+  // Kindergarten / Nursery / KG
+  if (lower === 'kg' || lower.includes('kindergarten') || lower.includes('nursery')) {
+    return 'መዋዕለ ሕፃናት';
+  }
+
+  // Grade numbers (Grade 7, GRADE 12, 10, etc.)
+  const match = str.match(/\d+/);
+  if (match) {
+    return `${match[0]}ኛ ክፍል`;
+  }
+
+  return str;
+};
+
+export const GRADE_FILTER_OPTIONS = [
+  { value: '', label: '-- ሁሉም ክፍሎች --' },
+  { value: 'Grade 7', label: '7ኛ ክፍል' },
+  { value: 'Grade 8', label: '8ኛ ክፍል' },
+  { value: 'Grade 9', label: '9ኛ ክፍል' },
+  { value: 'Grade 10', label: '10ኛ ክፍል' },
+  { value: 'Grade 11', label: '11ኛ ክፍል' },
+  { value: 'Grade 12', label: '12ኛ ክፍል' },
+  { value: 'Batch 1', label: 'ባች 1' },
+  { value: 'Batch 2', label: 'ባች 2' },
+  { value: 'Batch 3', label: 'ባች 3' },
+  { value: 'Batch 4', label: 'ባች 4' },
+];
+

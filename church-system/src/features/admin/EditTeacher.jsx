@@ -11,6 +11,7 @@ import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Badge } from '../../components/ui/Badge';
 import { toast } from '../../utils/toast';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const DAY_MAP = {
   sunday: 'SUNDAY',
@@ -373,7 +374,7 @@ const EditTeacher = () => {
                           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                             {c.grade && (
                               <span className="inline-block text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                                {c.grade}
+                                {formatGradeAmharic(c.grade)}
                               </span>
                             )}
                             {c.studentType === 'distance' && (

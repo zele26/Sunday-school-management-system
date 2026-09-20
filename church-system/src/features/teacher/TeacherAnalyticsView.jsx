@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTeacherAnalytics } from '../../hooks/queries/useAnalytics';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 export default function TeacherAnalyticsView() {
   const { data, isLoading, error, refetch } = useTeacherAnalytics();
@@ -86,7 +87,7 @@ export default function TeacherAnalyticsView() {
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">{c.courseName}</h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    {c.grade} • {c.shift === 'night' ? 'የማታ' : 'የቀን'}
+                    {formatGradeAmharic(c.grade)} • {c.shift === 'night' ? 'የማታ' : 'የቀን'}
                   </p>
                 </div>
                 <span className={`text-lg font-black ${c.attendanceRate >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
@@ -151,7 +152,7 @@ export default function TeacherAnalyticsView() {
                   <tr key={s.studentId} className="hover:bg-rose-50/50 dark:hover:bg-rose-950/20">
                     <td className="py-3 px-3 font-bold text-slate-900 dark:text-slate-100">{s.fullName}</td>
                     <td className="py-3 px-3 font-mono font-bold text-slate-600 dark:text-slate-400">{s.customStudentId || 'N/A'}</td>
-                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">{s.grade} ({s.shift === 'night' ? 'የማታ' : 'የቀን'})</td>
+                    <td className="py-3 px-3 text-slate-600 dark:text-slate-400">{formatGradeAmharic(s.grade)} ({s.shift === 'night' ? 'የማታ' : 'የቀን'})</td>
                     <td className="py-3 px-3 font-black text-rose-600 dark:text-rose-400">{s.attendanceRate}%</td>
                     <td className="py-3 px-3 font-bold text-amber-600 dark:text-amber-400">{s.avgScore} / 100</td>
                     <td className="py-3 px-3 font-mono">

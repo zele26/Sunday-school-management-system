@@ -43,6 +43,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { toast } from '../../utils/toast';
 
 // ------------------------------------------------------------------
@@ -408,7 +409,7 @@ const QRScanner = () => {
     const rows = recentScans.map((s) => [
       s.name,
       s.studentId || '-',
-      s.grade || '-',
+      formatGradeAmharic(s.grade),
       s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ',
       s.shift === 'night' ? 'ማታ' : 'ቀን',
       s.timestamp,
@@ -865,7 +866,7 @@ const QRScanner = () => {
                       {lastScannedStudent.name}
                     </h4>
                     <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                      <span>{lastScannedStudent.grade ? `${lastScannedStudent.grade}` : 'ተማሪ'}</span>
+                      <span>{lastScannedStudent.grade ? formatGradeAmharic(lastScannedStudent.grade) : 'ተማሪ'}</span>
                       <span>•</span>
                       <span className="text-amber-700 dark:text-amber-400 font-bold">
                         {lastScannedStudent.studentType === 'distance'

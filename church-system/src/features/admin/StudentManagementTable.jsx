@@ -28,21 +28,12 @@ import {
   Moon,
 } from 'lucide-react';
 
-import { getRelationshipLabel } from '../../constants/registrationOptions';
+import { getRelationshipLabel, formatGradeAmharic as formatGradeCentral } from '../../constants/registrationOptions';
 
 /**
- * Format grade values (e.g. "Grade 10", "GRADE 10", "10") into Amharic ("10ኛ ክፍል")
+ * Format grade values (e.g. "Grade 10", "GRADE 10", "10", "Batch 1") into Amharic ("10ኛ ክፍል", "ባች 1")
  */
-export const formatGradeAmharic = (grade) => {
-  if (!grade) return 'ያልተመደበ';
-  const str = String(grade).trim();
-  if (str.includes('ክፍል') || str.includes('ኛ')) return str;
-  const match = str.match(/\d+/);
-  if (match) {
-    return `${match[0]}ኛ ክፍል`;
-  }
-  return str;
-};
+export const formatGradeAmharic = (grade) => formatGradeCentral(grade, 'ያልተመደበ');
 
 /**
  * Format learning type / shift (Weekend vs Night)

@@ -1,4 +1,5 @@
 // src/utils/translations.js
+export { formatGradeAmharic } from '../constants/registrationOptions';
 
 export const translations = {
   // ==========================================

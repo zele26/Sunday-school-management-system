@@ -31,6 +31,7 @@ import {
   useStudentProfiles,
   useProgressStudent,
 } from '../../hooks/queries/usePeople';
+import { formatGradeAmharic, GRADE_FILTER_OPTIONS } from '../../constants/registrationOptions';
 
 const StudentProfilesManagement = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -44,10 +45,16 @@ const StudentProfilesManagement = () => {
   const progressMutation = useProgressStudent();
 
   const getCurrentGrade = (profile) => {
+    if (!profile) return '—';
     const enroll = profile.latestEnrollment;
-    if (profile.grade) return profile.grade;
-    if (!enroll) return profile.batch ? `Batch ${profile.batch}` : '—';
-    return enroll.gradeId?.name || (enroll.programId?.type === 'distance' ? (profile.batch ? `Batch ${profile.batch}` : 'Batch 1') : '—');
+    let raw = profile.grade;
+    if (!raw && enroll) {
+      raw = enroll.gradeId?.name || (enroll.programId?.type === 'distance' ? (profile.batch ? `Batch ${profile.batch}` : 'Batch 1') : null);
+    }
+    if (!raw && profile.batch) {
+      raw = `Batch ${profile.batch}`;
+    }
+    return formatGradeAmharic(raw);
   };
 
   const getAcademicYear = (profile) => {
@@ -77,10 +84,18 @@ const StudentProfilesManagement = () => {
       const pName = p.personId ? `${p.personId.firstName} ${p.personId.middleName || ''} ${p.personId.lastName}`.toLowerCase() : '';
       const pId = String(p.studentNumber || p.studentId || '').toLowerCase();
       const pGrade = String(getCurrentGrade(p)).toLowerCase();
+      const rawGrade = String(p.grade || p.latestEnrollment?.gradeId?.name || (p.batch ? `Batch ${p.batch}` : '')).toLowerCase();
       const pType = String(p.studentType || p.latestEnrollment?.programId?.type || '').toLowerCase();
 
       const matchesSearch = !searchQuery || pName.includes(searchQuery.toLowerCase()) || pId.includes(searchQuery.toLowerCase());
-      const matchesGrade = !gradeFilter || pGrade.includes(gradeFilter.toLowerCase());
+      
+      let matchesGrade = true;
+      if (gradeFilter) {
+        const gf = gradeFilter.toLowerCase();
+        const gfNum = gradeFilter.match(/\d+/)?.[0];
+        matchesGrade = pGrade.includes(gf) || rawGrade.includes(gf) || (gfNum && (pGrade.includes(gfNum) || rawGrade.includes(gfNum)));
+      }
+
       const matchesType = !typeFilter || pType === typeFilter.toLowerCase();
 
       return matchesSearch && matchesGrade && matchesType;
@@ -179,15 +194,11 @@ const StudentProfilesManagement = () => {
               onChange={(e) => setGradeFilter(e.target.value)}
               className="px-3 py-2 bg-surface-page rounded-xl border border-subtle text-xs text-main focus:outline-none"
             >
-              <option value="">-- ሁሉም ክፍሎች --</option>
-              <option value="Grade 7">Grade 7</option>
-              <option value="Grade 8">Grade 8</option>
-              <option value="Grade 9">Grade 9</option>
-              <option value="Grade 10">Grade 10</option>
-              <option value="Grade 11">Grade 11</option>
-              <option value="Grade 12">Grade 12</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
+              {GRADE_FILTER_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
 
             <select

@@ -9,6 +9,7 @@ import {
   Card,
 } from '../../components/ui';
 import { useMyStudents } from '../../hooks/queries/useTeacherPortal';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const TeacherStudents = () => {
   const { data: students = [], isLoading } = useMyStudents();
@@ -26,7 +27,7 @@ const TeacherStudents = () => {
       {
         accessorKey: 'grade',
         header: ({ column }) => <DataTableColumnHeader column={column} title="ክፍል" />,
-        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{getValue() || '-'}</Badge>,
+        cell: ({ getValue }) => <Badge variant="neutral" size="sm">{formatGradeAmharic(getValue())}</Badge>,
       },
       {
         accessorKey: 'email',

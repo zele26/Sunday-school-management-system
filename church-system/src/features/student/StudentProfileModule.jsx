@@ -29,7 +29,7 @@ import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { useLanguage } from '../../hooks/useLanguage';
 import { FadeIn } from '../../components/motion';
 import { Card, Badge, Button } from '../../components/ui';
-import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel } from '../../constants/registrationOptions';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic } from '../../constants/registrationOptions';
 
 const StudentProfile = () => {
   const { t, isAmharic } = useLanguage();
@@ -169,7 +169,8 @@ const StudentProfile = () => {
   const emergencyPhone = profile.emergencyPhone || profile.parentPhone || profile.contactPhone || '';
   const emergencyEmail = profile.emergencyEmail || profile.parentEmail || profile.contactEmail || '';
   const studentType = profile.studentType || 'regular';
-  const gradeDisplay = profile.grade || profile.batch || authUser?.grade || '-';
+  const rawGrade = profile.grade || profile.batch || authUser?.grade || '-';
+  const gradeDisplay = rawGrade !== '-' ? (isAmharic ? formatGradeAmharic(rawGrade) : rawGrade) : '-';
   const batchDisplay = profile.batch || '-';
   const studentIdDisplay = profile.studentId || authUser?.studentId || profile.registrationNumber || '-';
   const registrationNumber = profile.registrationNumber || '-';
@@ -468,7 +469,7 @@ const StudentProfile = () => {
                   <div>
                     <h4 className="font-bold text-slate-900 dark:text-white text-sm">{course.name}</h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {course.grade && <span>{course.grade}</span>}
+                      {course.grade && <span>{isAmharic ? formatGradeAmharic(course.grade) : course.grade}</span>}
                       {course.schedule && <span> • {course.schedule}</span>}
                       {course.teacher?.fullName && <span> • መምህር፦ {course.teacher.fullName}</span>}
                     </p>

@@ -31,6 +31,7 @@ import { Select } from '../../components/ui/Select';
 import { Input } from '../../components/ui/Input';
 import { toast } from '../../utils/toast';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 // ─── CSV helpers & Exporter with UTF-8 BOM ───────────────────────────
 const escapeCSV = (val) => {
@@ -71,7 +72,7 @@ const generateCSV = (data, reportType) => {
         ...churchHeader,
         '"=== የተማሪው መረጃ (STUDENT PROFILE) ==="',
         `"ሙሉ ስም:",${escapeCSV(student.fullName)},"የተማሪ መለያ ቁጥር (ID):",${escapeCSV(student.studentId || '—')}`,
-        `"የክፍል ደረጃ:",${escapeCSV(student.grade || '—')},"የትምህርት ዓይነት:",${escapeCSV(studentTypeLabel)}`,
+        `"የክፍል ደረጃ:",${escapeCSV(formatGradeAmharic(student.grade))},"የትምህርት ዓይነት:",${escapeCSV(studentTypeLabel)}`,
         `"ፈረቃ (Shift):",${escapeCSV(shiftLabel)},"ስልክ ቁጥር:",${escapeCSV(student.phone || '—')}`,
         `"ኢሜይል:",${escapeCSV(student.email || '—')}`,
         '""',
@@ -95,7 +96,7 @@ const generateCSV = (data, reportType) => {
           escapeCSV(c.courseCode || '—'),
           escapeCSV(c.courseName || '—'),
           escapeCSV(c.teacherName || '—'),
-          escapeCSV(c.grade || '—'),
+          escapeCSV(formatGradeAmharic(c.grade)),
           c.totalSessions || 0,
           c.attended || 0,
           c.missed || 0,
@@ -169,7 +170,7 @@ const generateCSV = (data, reportType) => {
         `"=== የኮርስ መገኘትና የተማሪዎች ክትትል ሪፖርት: ${course.name || '—'} ==="`,
         `"የኮርስ ስም:",${escapeCSV(course.name || '—')},"የኮርስ ኮድ:",${escapeCSV(course.code || '—')}`,
         `"የተመደበው መምህር:",${escapeCSV(course.teacherName || 'ያልተመደበ')},"የመምህር ስልክ/ኢሜይል:",${escapeCSV((course.teacherPhone || '—') + ' / ' + (course.teacherEmail || '—'))}`,
-        `"የክፍል ደረጃ / ፈረቃ:",${escapeCSV((course.grade || '—') + ' / ' + (course.shift || '—'))}`,
+        `"የክፍል ደረጃ / ፈረቃ:",${escapeCSV((formatGradeAmharic(course.grade)) + ' / ' + (course.shift || '—'))}`,
         `"የተመዘገቡ ተማሪዎች ብዛት:",${summary.totalEnrolled ?? students.length}`,
         `"አጠቃላይ የተካሄዱ የክፍል ቀናት:",${summary.totalSessions ?? 0}`,
         `"አማካይ የኮርስ የመገኘት ምጣኔ:",${escapeCSV((summary.averageRate ?? 0) + '%')}`,
@@ -185,7 +186,7 @@ const generateCSV = (data, reportType) => {
           idx + 1,
           escapeCSV(s.studentCustomId || '—'),
           escapeCSV(s.studentName || '—'),
-          escapeCSV(s.grade || course.grade || '—'),
+          escapeCSV(formatGradeAmharic(s.grade || course.grade)),
           escapeCSV(s.phone || '—'),
           s.attended || 0,
           s.missed || 0,
@@ -211,7 +212,7 @@ const generateCSV = (data, reportType) => {
       ];
 
       courses.forEach((c, cIdx) => {
-        rows.push(`"=== ኮርስ ${cIdx + 1}: ${c.courseName} (${c.courseCode || '—'}) | ክፍል: ${c.grade || '—'} | የተካሄዱ ቀናት: ${c.totalSessions || 0} ==="`);
+        rows.push(`"=== ኮርስ ${cIdx + 1}: ${c.courseName} (${c.courseCode || '—'}) | ክፍል: ${formatGradeAmharic(c.grade)} | የተካሄዱ ቀናት: ${c.totalSessions || 0} ==="`);
         rows.push('"ተ.ቁ","የተማሪ መለያ ቁጥር","ሙሉ ስም","ክፍል","የተገኘበት","የቀረበት","አጠቃላይ ክፍለ ጊዜ","የመገኘት ምጣኔ %"');
         (c.students || []).forEach((s, sIdx) => {
           const rate = s.rate ?? (s.totalSessions > 0 ? Math.round((s.attended / s.totalSessions) * 100) : 0);
@@ -219,7 +220,7 @@ const generateCSV = (data, reportType) => {
             sIdx + 1,
             escapeCSV(s.studentCustomId || '—'),
             escapeCSV(s.studentName || '—'),
-            escapeCSV(s.grade || c.grade || '—'),
+            escapeCSV(formatGradeAmharic(s.grade || c.grade)),
             s.attended || 0,
             s.missed || 0,
             s.totalSessions || 0,
@@ -252,7 +253,7 @@ const generateCSV = (data, reportType) => {
           escapeCSV(timeStr),
           escapeCSV(r.studentId || '—'),
           escapeCSV(r.studentName || '—'),
-          escapeCSV(r.grade || '—'),
+          escapeCSV(formatGradeAmharic(r.grade)),
           escapeCSV(r.studentType === 'distance' ? 'የርቀት' : r.studentType === 'adult' ? 'የአዋቂ' : 'መደበኛ'),
           escapeCSV(r.shift === 'night' ? 'የማታ' : 'የቀን / ሳምንት መጨረሻ'),
           escapeCSV(r.courseName || '—'),
@@ -420,7 +421,7 @@ const ReportsManagement = () => {
       <div className="space-y-6">
         <ReportHeaderBanner 
           title={`የተማሪ ${student.fullName} የተሟላ የመገኘትና የትምህርት ሪፖርት`}
-          subtitle={`የተማሪ መለያ ቁጥር: ${student.studentId || '—'} | ክፍል: ${student.grade || '—'}`}
+          subtitle={`የተማሪ መለያ ቁጥር: ${student.studentId || '—'} | ክፍል: ${formatGradeAmharic(student.grade)}`}
         />
 
         {/* Student Profile & Quick Info */}
@@ -436,7 +437,7 @@ const ReportsManagement = () => {
               <span className="text-[11px] font-semibold text-muted uppercase">መለያ ቁጥር / ክፍል</span>
               <div className="text-sm font-bold text-main flex items-center gap-2">
                 <Badge variant="primary">{student.studentId || '—'}</Badge>
-                <Badge variant="neutral">{student.grade || '—'}</Badge>
+                <Badge variant="neutral">{formatGradeAmharic(student.grade)}</Badge>
               </div>
             </div>
             <div className="space-y-1">
@@ -744,7 +745,7 @@ const ReportsManagement = () => {
       <div className="space-y-6">
         <ReportHeaderBanner 
           title={`የኮርስ መገኘት ሪፖርት: ${course.name || '—'}`}
-          subtitle={`ኮድ: ${course.code || '—'} | መምህር: ${course.teacherName || 'ያልተመደበ'} | ክፍል: ${course.grade || '—'}`}
+          subtitle={`ኮድ: ${course.code || '—'} | መምህር: ${course.teacherName || 'ያልተመደበ'} | ክፍል: ${formatGradeAmharic(course.grade)}`}
         />
 
         {/* Summary KPI Cards */}
@@ -874,7 +875,7 @@ const ReportsManagement = () => {
                 <h4 className="font-bold text-base text-main">{c.courseName}</h4>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="primary">{c.courseCode || '—'}</Badge>
-                  <Badge variant="neutral">ክፍል: {c.grade || '—'}</Badge>
+                  <Badge variant="neutral">ክፍል: {formatGradeAmharic(c.grade)}</Badge>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -888,18 +889,19 @@ const ReportsManagement = () => {
                 <thead className="bg-surface-page text-[11px] font-bold text-main uppercase border-b border-subtle">
                   <tr>
                     <th className="py-2.5 px-3">ተ.ቁ</th>
-                    <th className="py-2.5 px-3">መለያ ቁጥር</th>
-                    <th className="py-2.5 px-3">የተማሪ ስም</th>
+                    <th className="py-2.5 px-3">የተማሪ መለያ ቁጥር</th>
+                    <th className="py-2.5 px-3">የተማሪ ሙሉ ስም</th>
+                    <th className="py-2.5 px-3">ክፍል</th>
                     <th className="py-2.5 px-3 text-center">የተገኘበት</th>
                     <th className="py-2.5 px-3 text-center">የቀረበት</th>
-                    <th className="py-2.5 px-3 text-center">ክፍለ ጊዜ</th>
-                    <th className="py-2.5 px-3 text-center">የመገኘት ምጣኔ</th>
+                    <th className="py-2.5 px-3 text-center">አጠቃላይ ክፍለ ጊዜ</th>
+                    <th className="py-2.5 px-3 text-center">የመገኘት ምጣኔ %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-subtle">
                   {(c.students || []).length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="py-4 text-center text-xs text-muted">ተማሪዎች አልተመዘገቡም።</td>
+                      <td colSpan="8" className="py-4 text-center text-muted">የተመዘገበ ተማሪ የለም።</td>
                     </tr>
                   ) : (
                     (c.students || []).map((s, sIdx) => {
@@ -909,14 +911,11 @@ const ReportsManagement = () => {
                           <td className="py-2.5 px-3">{sIdx + 1}</td>
                           <td className="py-2.5 px-3 font-mono font-bold text-brand-primary">{s.studentCustomId || '—'}</td>
                           <td className="py-2.5 px-3 font-semibold text-main">{s.studentName}</td>
-                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">{s.attended}</td>
-                          <td className="py-2.5 px-3 text-center font-bold text-rose-600 dark:text-rose-400">{s.missed}</td>
-                          <td className="py-2.5 px-3 text-center font-medium text-main">{s.totalSessions}</td>
-                          <td className="py-2.5 px-3 text-center font-bold">
-                            <Badge variant={rate >= 75 ? 'success' : rate >= 50 ? 'warning' : 'danger'}>
-                              {rate}%
-                            </Badge>
-                          </td>
+                          <td className="py-2.5 px-3">{formatGradeAmharic(s.grade || c.grade)}</td>
+                          <td className="py-2.5 px-3 text-center font-bold text-emerald-600">{s.attended || 0}</td>
+                          <td className="py-2.5 px-3 text-center font-bold text-rose-500">{s.missed || 0}</td>
+                          <td className="py-2.5 px-3 text-center">{s.totalSessions || 0}</td>
+                          <td className="py-2.5 px-3 text-center font-bold">{rate}%</td>
                         </tr>
                       );
                     })
@@ -978,7 +977,7 @@ const ReportsManagement = () => {
                       </td>
                       <td className="py-3 px-4 font-mono text-xs font-bold text-brand-primary">{r.studentId || '—'}</td>
                       <td className="py-3 px-4 font-semibold text-main">{r.studentName}</td>
-                      <td className="py-3 px-4 font-medium text-main">{r.grade || '—'}</td>
+                      <td className="py-3 px-4 font-medium text-main">{formatGradeAmharic(r.grade)}</td>
                       <td className="py-3 px-4 text-xs">
                         <span className="text-main">{r.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}</span>
                         <span className="text-muted ml-1">({r.shift === 'night' ? 'ማታ' : 'ቀን'})</span>
@@ -1062,7 +1061,7 @@ const ReportsManagement = () => {
                 <option value="">ተማሪ ይምረጡ</option>
                 {students.map((s) => (
                   <option key={s._id} value={s._id}>
-                    {s.firstName} {s.middleName || ''} {s.lastName || ''} ({s.studentId || s.grade || 'ተማሪ'})
+                    {s.firstName} {s.middleName || ''} {s.lastName || ''} ({s.studentId ? s.studentId : formatGradeAmharic(s.grade)})
                   </option>
                 ))}
               </Select>
@@ -1079,7 +1078,7 @@ const ReportsManagement = () => {
                 <option value="">የክፍል ደረጃ ይምረጡ</option>
                 {grades.map((g) => (
                   <option key={g} value={g}>
-                    {g}
+                    {formatGradeAmharic(g)}
                   </option>
                 ))}
               </Select>

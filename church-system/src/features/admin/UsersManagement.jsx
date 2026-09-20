@@ -55,6 +55,7 @@ import {
 import { useDepartments } from '../../hooks/queries/useDepartments';
 import { userEditModalSchema, userCreateModalSchema } from '../../schemas';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { PermissionSelector } from '../../components/admin/PermissionSelector';
 import { useLanguage } from '../../hooks/useLanguage';
 
@@ -1155,7 +1156,7 @@ const UsersManagement = () => {
                           </p>
                           <p>
                             <span className="font-semibold">{isAmharic ? 'ደረጃ/ባች: ' : 'Grade/Batch: '}</span>
-                            {journeyData.student.batch || journeyData.student.grade || '—'}
+                            {formatGradeAmharic(journeyData.student.batch || journeyData.student.grade)}
                           </p>
                           {journeyData.student.courses?.length > 0 && (
                             <p>

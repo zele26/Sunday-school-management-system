@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { toast } from '../../utils/toast';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const AcademicEnrollmentDetails = () => {
   const { enrollmentId } = useParams();
@@ -163,7 +164,7 @@ const AcademicEnrollmentDetails = () => {
             </div>
             <div>
               <span className="text-slate-400 block font-semibold uppercase">ደረጃ/ባች</span>
-              <span className="font-bold text-slate-900 dark:text-white text-sm">{enrollment.gradeId?.name || '—'}</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">{formatGradeAmharic(enrollment.gradeId?.name)}</span>
             </div>
             <div>
               <span className="text-slate-400 block font-semibold uppercase">የጥናት ሁነታ</span>
