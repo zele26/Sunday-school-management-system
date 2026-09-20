@@ -513,5 +513,15 @@
   "changePhotoBtn": "ፎቶ ቀይር",
   "removePhotoBtn": "አስወግድ",
   "confessionFatherBadgeYes": "የንስሐ አባት አላቸው",
-  "confessionFatherBadgeNo": "የንስሐ አባት የላቸውም"
+  "confessionFatherBadgeNo": "የንስሐ አባት የላቸውም",
+  "passwordMatchSuccess": "የይለፍ ቃሉ በትክክል ተዛምዷል ✓",
+  "passwordMismatchError": "የይለፍ ቃሉ አይዛመድም! እባክዎ በትክክል ያረጋግጡ ✕",
+  "passwordMinLengthMet": "የይለፍ ቃል ርዝመት ትክክል ነው (ቢያንስ 6)",
+  "passwordMinLengthRequired": "አዲሱ የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት",
+  "passwordMustBeDifferent": "አዲሱ የይለፍ ቃል ከአሁኑ ጋር አንድ አይነት መሆን የለበትም",
+  "enterCurrentPassword": "የአሁኑን የይለፍ ቃል ያስገቡ",
+  "enterNewPassword": "አዲስ የይለፍ ቃል (ቢያንስ 6 ቁምፊዎች)",
+  "reenterNewPassword": "አዲሱን የይለፍ ቃል በድጋሚ ያስገቡ",
+  "showPassword": "የይለፍ ቃል አሳይ",
+  "hidePassword": "የይለፍ ቃል ደብቅ"
 }

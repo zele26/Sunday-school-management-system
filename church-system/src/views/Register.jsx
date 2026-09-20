@@ -9,12 +9,15 @@ import { Card, BackButton } from '../components/ui';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { LanguageToggle } from '../components/ui/LanguageToggle';
 import { useLanguage } from '../hooks/useLanguage';
+import { Eye, EyeOff, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 const Register = () => {
   const { t, isAmharic } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     role: 'teacher',   // now fixed to teacher
     fullName: '',
@@ -220,24 +223,69 @@ const Register = () => {
             required
             className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
           />
-          <input
-            type="password"
-            name="password"
-            placeholder={t('passwordMin6Placeholder', 'የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)')}
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
-          />
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder={t('confirmPasswordRequiredPlaceholder', 'የይለፍ ቃል ያረጋግጡ *')}
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="p-3 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder={t('passwordMin6Placeholder', 'የይለፍ ቃል * (ቢያንስ 6 ቁምፊዎች)')}
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full p-3 pr-10 bg-slate-800/90 border border-slate-700 rounded-xl text-white text-xs outline-none focus:ring-2 focus:ring-indigo-500 placeholder-slate-400"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              placeholder={t('confirmPasswordRequiredPlaceholder', 'የይለፍ ቃል ያረጋግጡ *')}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              className={`w-full p-3 pr-10 bg-slate-800/90 border rounded-xl text-white text-xs outline-none focus:ring-2 placeholder-slate-400 ${
+                formData.confirmPassword && formData.password === formData.confirmPassword
+                  ? 'border-emerald-500 focus:ring-emerald-500/20'
+                  : formData.confirmPassword && formData.password !== formData.confirmPassword
+                  ? 'border-rose-400 focus:ring-rose-500/20'
+                  : 'border-slate-700 focus:ring-indigo-500'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {formData.confirmPassword && (
+            <div className={`col-span-full flex items-center gap-2 p-2 rounded-lg text-xs font-semibold ${
+              formData.password === formData.confirmPassword
+                ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-800'
+                : 'bg-rose-950/40 text-rose-300 border border-rose-800'
+            }`}>
+              {formData.password === formData.confirmPassword ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{t('passwordMatchSuccess', 'የይለፍ ቃሉ በትክክል ተዛምዷል ✓')}</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{t('passwordMismatchError', 'የይለፍ ቃሉ አይዛመድም! እባክዎ በትክክል ያረጋግጡ ✕')}</span>
+                </>
+              )}
+            </div>
+          )}
 
           <input
             type="text"

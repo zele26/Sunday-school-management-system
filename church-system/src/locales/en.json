@@ -513,5 +513,15 @@
   "changePhotoBtn": "Change Photo",
   "removePhotoBtn": "Remove",
   "confessionFatherBadgeYes": "Has Confession Father",
-  "confessionFatherBadgeNo": "No Confession Father"
+  "confessionFatherBadgeNo": "No Confession Father",
+  "passwordMatchSuccess": "Passwords match successfully ✓",
+  "passwordMismatchError": "Passwords do not match! Please check again ✕",
+  "passwordMinLengthMet": "Password length is valid (6+)",
+  "passwordMinLengthRequired": "New password must be at least 6 characters",
+  "passwordMustBeDifferent": "New password cannot be the same as current password",
+  "enterCurrentPassword": "Enter current password",
+  "enterNewPassword": "Enter new password (min. 6 characters)",
+  "reenterNewPassword": "Re-enter new password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
 }

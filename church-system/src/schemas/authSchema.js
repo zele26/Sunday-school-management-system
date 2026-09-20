@@ -30,4 +30,8 @@ export const changePasswordSchema = z
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: 'አዲሱ የይለፍ ቃል እና ማረጋገጫው አይዛመዱም',
     path: ['confirmPassword'],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'አዲሱ የይለፍ ቃል ከአሁኑ የይለፍ ቃል የተለየ መሆን አለበት',
+    path: ['newPassword'],
   });

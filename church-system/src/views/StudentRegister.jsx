@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { API_BASE_URL } from '../api/apiClient';
 import { studentSelfRegisterSchema } from '../schemas';
 import EthiopianDatePicker from '../components/ui/EthiopianDatePicker';
-import PhotoUploadField from '../components/ui/PhotoUploadField';
 import { BackButton } from '../components/ui';
 import { calculateAgeFromDOB } from '../utils/ethiopianDate';
+import { Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 
 const ADDIS_ABABA_SUBCITIES = [
   'አዲስ ከተማ',
@@ -69,6 +69,13 @@ const StudentRegister = () => {
 
   const studentType = watch('studentType');
   const hasConfessionFather = watch('hasConfessionFather');
+  const password = watch('password') || '';
+  const confirmPassword = watch('confirmPassword') || '';
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const isMatch = confirmPassword.length > 0 && password === confirmPassword;
+  const isMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
   const onSubmit = async (data) => {
     setServerError('');
@@ -360,13 +367,64 @@ const StudentRegister = () => {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የይለፍ ቃል *</label>
-            <input type="password" placeholder="የይለፍ ቃል" {...register('password')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.password ? 'border-rose-400' : 'border-slate-200'}`} />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="የይለፍ ቃል"
+                {...register('password')}
+                className={`w-full p-2.5 pr-10 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.password ? 'border-rose-400' : 'border-slate-200'}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             {errors.password && <p className="text-xs text-rose-500 mt-1">{errors.password.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የይለፍ ቃል ማረጋገጫ *</label>
-            <input type="password" placeholder="የይለፍ ቃሉን በድጋሚ ያስገቡ" {...register('confirmPassword')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.confirmPassword ? 'border-rose-400' : 'border-slate-200'}`} />
-            {errors.confirmPassword && <p className="text-xs text-rose-500 mt-1">{errors.confirmPassword.message}</p>}
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="የይለፍ ቃሉን በድጋሚ ያስገቡ"
+                {...register('confirmPassword')}
+                className={`w-full p-2.5 pr-10 border rounded-xl dark:bg-slate-800 dark:text-white ${
+                  isMatch
+                    ? 'border-emerald-500 ring-1 ring-emerald-500/20'
+                    : isMismatch || errors.confirmPassword
+                    ? 'border-rose-400 ring-1 ring-rose-400/20'
+                    : 'border-slate-200 dark:border-slate-700'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {confirmPassword.length > 0 && (
+              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-semibold ${
+                isMatch ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+              }`}>
+                {isMatch ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>የይለፍ ቃሉ ተዛምዷል ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                    <span>የይለፍ ቃሉ አይዛመድም ✕</span>
+                  </>
+                )}
+              </div>
+            )}
+            {errors.confirmPassword && !confirmPassword && <p className="text-xs text-rose-500 mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </div>
 
