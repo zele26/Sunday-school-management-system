@@ -85,6 +85,7 @@ try {
 
 // --- CORS CONFIGURATION ---
 const rawAllowedOrigins = [
+  'https://teklesawiros-senbet-timhrt-bet-system.vercel.app',
   'https://sunday-school-management-system.vercel.app',
   'https://sunday-school-management-system-u68.vercel.app',
   'http://localhost:5173',

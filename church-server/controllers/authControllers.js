@@ -454,6 +454,7 @@ exports.forgotPassword = async (req, res) => {
 
     let user = null;
     const escapedInput = input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cleanDigits = input.replace(/\D/g, '').slice(-9);
 
     // 1. If email format
     if (input.includes('@')) {
@@ -496,7 +497,6 @@ exports.forgotPassword = async (req, res) => {
 
       // 4. Check Phone number (flexible digits matching)
       if (!user) {
-        const cleanDigits = input.replace(/\D/g, '').slice(-9);
         const phoneConds = [{ phone: input }];
         if (cleanDigits && cleanDigits.length >= 8) {
           phoneConds.push({ phone: new RegExp(cleanDigits + '$') });
@@ -530,8 +530,9 @@ exports.forgotPassword = async (req, res) => {
           }
         }
       }
+    }
 
-    // 🔍 Check Registration records if still not linked
+    // 5. Check Registration records if still not linked
     if (!user && cleanDigits && cleanDigits.length >= 8) {
       try {
         const Registration = require('../models/education/Registration');
