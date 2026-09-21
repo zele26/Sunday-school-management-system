@@ -342,7 +342,7 @@ const StudentRegister = () => {
             <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-blue-200/50 dark:border-slate-700">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
-                  የንስሐ አባት ስም <span className="text-[10px] text-slate-400 font-normal">(በአማርኛ ብቻ)</span>
+                  የንስሐ አባት ስም <span className="text-[10px] text-slate-400 font-normal">(በአማርኛ ብቻ)</span> <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"

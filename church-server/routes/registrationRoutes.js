@@ -197,12 +197,20 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       });
     }
 
-    // Validate Confession Father Name if provided
-    if (normalizedConfessionFatherName && !isAmharicOnly(normalizedConfessionFatherName)) {
-      return res.status(400).json({
-        success: false,
-        message: 'የንስሐ አባት ስም በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
-      });
+    // Validate Confession Father Name if student has confession father
+    if (isHasConfessionFather) {
+      if (!normalizedConfessionFatherName) {
+        return res.status(400).json({
+          success: false,
+          message: 'የንስሐ አባት አለኝ ብለው ስለመረጡ፣ የንስሐ አባት ስም ማስገባት ግዴታ ነው።',
+        });
+      }
+      if (!isAmharicOnly(normalizedConfessionFatherName)) {
+        return res.status(400).json({
+          success: false,
+          message: 'የንስሐ አባት ስም በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
+        });
+      }
     }
 
     // Validate Emergency Contact Names

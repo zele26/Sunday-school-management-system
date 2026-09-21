@@ -145,6 +145,15 @@ export const regularRegistrationSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
+}).refine((data) => {
+  const hasFather = data.hasConfessionFather === true || String(data.hasConfessionFather).toLowerCase() === 'true';
+  if (hasFather) {
+    return Boolean(data.confessionFatherName && data.confessionFatherName.trim().length > 0);
+  }
+  return true;
+}, {
+  message: 'የንስሐ አባት ስም ማስገባት ግዴታ ነው',
+  path: ['confessionFatherName'],
 });
 
 export const distanceRegistrationSchema = z.object({
@@ -254,6 +263,15 @@ export const distanceRegistrationSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
+}).refine((data) => {
+  const hasFather = data.hasConfessionFather === true || String(data.hasConfessionFather).toLowerCase() === 'true';
+  if (hasFather) {
+    return Boolean(data.confessionFatherName && data.confessionFatherName.trim().length > 0);
+  }
+  return true;
+}, {
+  message: 'የንስሐ አባት ስም ማስገባት ግዴታ ነው',
+  path: ['confessionFatherName'],
 });
 
 export const studentSelfRegisterSchema = z.object({
@@ -262,13 +280,13 @@ export const studentSelfRegisterSchema = z.object({
   photoUrl: z.string().optional().or(z.literal('')),
   gender: z.string().default('Male'),
   age: z
-    .union([z.string(), z.number()])
-    .refine((val) => {
-      const n = Number(val);
-      return !isNaN(n) && n > 14;
-    }, {
-      message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት',
-    }),
+  .union([z.string(), z.number()])
+  .refine((val) => {
+    const n = Number(val);
+    return !isNaN(n) && n > 14;
+  }, {
+    message: 'የተማሪ ዕድሜ ከ 14 ዓመት በላይ መሆን አለበት',
+  }),
   dateOfBirth: z.string().optional().or(z.literal('')),
   shift: z.string().optional().or(z.literal('')),
   hasConfessionFather: z.union([z.boolean(), z.string()]).default(false),
@@ -291,4 +309,13 @@ export const studentSelfRegisterSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'የይለፍ ቃሎቹ አይመሳሰሉም',
   path: ['confirmPassword'],
+}).refine((data) => {
+  const hasFather = data.hasConfessionFather === true || String(data.hasConfessionFather).toLowerCase() === 'true';
+  if (hasFather) {
+    return Boolean(data.confessionFatherName && data.confessionFatherName.trim().length > 0);
+  }
+  return true;
+}, {
+  message: 'የንስሐ አባት ስም ማስገባት ግዴታ ነው',
+  path: ['confessionFatherName'],
 });
