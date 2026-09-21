@@ -55,7 +55,7 @@ const downloadCSV = (csvString, filename) => {
 
 const generateCSV = (data, reportType) => {
   const churchHeader = [
-    '"ደብረ ገሊላ ቅዱስ ጊዮርጊስ እና ቅዱስ ተክለሃይማኖት አንድነት ቤተክርስቲያን"',
+    '"ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን — ተክለ ሳዊሮስ ሰንበት ት/ቤት"',
     '"የሰንበት ትምህርት ቤት አስተዳደር ስርዓት (Sunday School Management System)"',
     `"የተዘጋጀበት ቀን:",${escapeCSV(formatEthiopianDate(new Date()) + ' (' + new Date().toLocaleDateString() + ')')}`,
     `"የተዘጋጀው በ:",${escapeCSV('የሰንበት ት/ቤት አስተዳደር (Admin)')}`,
@@ -394,7 +394,7 @@ const ReportsManagement = () => {
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#1657b8] animate-pulse"></span>
           <p className="text-xs font-bold tracking-wider text-[#1657b8] dark:text-blue-400 uppercase">
-            ደብረ ገሊላ ቅዱስ ጊዮርጊስ እና ቅዱስ ተክለሃይማኖት አንድነት ቤተክርስቲያን
+            ማህደረ ስብሐት ቅድስት ልደታ ለማርያም ደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን • ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት
           </p>
         </div>
         <h2 className="text-xl font-black text-main tracking-tight">{title}</h2>
