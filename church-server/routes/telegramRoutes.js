@@ -232,7 +232,7 @@ router.delete('/groups/:id', protect, authorize('admin', 'superadmin'), async (r
 // ---------- 7. Send Message to Groups Based on Student Class / Grade ----------
 router.post('/groups/send-message', protect, authorize('admin', 'superadmin', 'teacher'), async (req, res) => {
   try {
-    const { message, targetGrade, targetShift, targetGroupId, targetGroupIds, sendToDirectStudents } = req.body;
+    const { message, targetGrade, targetShift, targetGroupId, targetGroupIds, sendToGroups = true, sendToDirectStudents } = req.body;
 
     if (!message || message.trim() === '') {
       return res.status(400).json({ success: false, message: 'የመልእክት ጽሑፍ ያስፈልጋል (Message text is required)' });
@@ -244,6 +244,7 @@ router.post('/groups/send-message', protect, authorize('admin', 'superadmin', 't
       targetShift: targetShift || null,
       targetGroupId: targetGroupId || null,
       targetGroupIds: targetGroupIds || null,
+      sendToGroups: sendToGroups !== false,
       sendToDirectStudents: Boolean(sendToDirectStudents),
     });
 
