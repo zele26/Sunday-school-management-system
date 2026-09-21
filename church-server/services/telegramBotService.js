@@ -1715,18 +1715,31 @@ const sendMessageToGroups = async ({
       let groupQuery = { isActive: true };
 
       if (targetGroupIds && Array.isArray(targetGroupIds) && targetGroupIds.length > 0) {
+        const mongoose = require('mongoose');
+        const validObjIds = targetGroupIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+        const chatIds = targetGroupIds.map(String);
+        const orConditions = [{ chatId: { $in: chatIds } }];
+        if (validObjIds.length > 0) {
+          orConditions.push({ _id: { $in: validObjIds } });
+        }
         groupQuery = {
-          $or: [
-            { _id: { $in: targetGroupIds } },
-            { chatId: { $in: targetGroupIds.map(String) } },
-          ],
+          $or: orConditions,
           isActive: true,
         };
       } else if (targetGroupId) {
-        groupQuery = {
-          $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
-          isActive: true,
-        };
+        const mongoose = require('mongoose');
+        const isObjId = mongoose.Types.ObjectId.isValid(targetGroupId);
+        if (isObjId) {
+          groupQuery = {
+            $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
+            isActive: true,
+          };
+        } else {
+          groupQuery = {
+            chatId: String(targetGroupId),
+            isActive: true,
+          };
+        }
       } else if (targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes') {
         const gradeNorm = normalizeGradeString(targetGrade);
         const matchNum = String(targetGrade).match(/\d+/);
@@ -1766,6 +1779,21 @@ const sendMessageToGroups = async ({
         filterGrade: targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes' ? targetGrade : null,
         filterShift: targetShift && targetShift !== 'all' ? targetShift : null,
       });
+    }
+
+    if (sendToGroups && sentGroups === 0 && (!sendToDirectStudents || directResult?.sent === 0)) {
+      let warningMsg = '⚠️ መልእክት የሚላክለት ንቁ የቴሌግራም ግሩፕ አልተገኘም።';
+      if (targetGrade && targetGrade !== 'all' && targetGrade !== 'All Classes') {
+        warningMsg = `⚠️ ለ "${targetGrade}" የተመደበ የቴሌግራም ግሩፕ አልተገኘም። እባክዎ ቦቱን በግሩፑ ውስጥ /setclass ብለው ያስመዝግቡ።`;
+      }
+      return {
+        success: false,
+        totalGroups,
+        sentGroups: 0,
+        failedGroups,
+        directStudents: directResult || null,
+        message: warningMsg,
+      };
     }
 
     let resultMsg = '';

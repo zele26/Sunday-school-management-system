@@ -173,8 +173,14 @@ const AnnouncementsManagement = () => {
       return;
     }
 
+    if (sendToTelegramGroups && targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length === 0) {
+      toast.error('እባክዎ ቢያንስ አንድ የቴሌግራም ግሩፕ ይምረጡ ወይም "በክፍልና በፈረቃ" የሚለውን ይምረጡ');
+      return;
+    }
+
     setLoading(true);
     let webSuccess = false;
+    let tgSuccess = false;
 
     try {
       if (postToWeb) {
@@ -191,7 +197,8 @@ const AnnouncementsManagement = () => {
         if (res.ok) {
           webSuccess = true;
         } else {
-          toast.error('ማስታወቂያውን በድረ-ገጽ መለጠፍ አልተቻለም');
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.message || 'ማስታወቂያውን በድረ-ገጽ መለጠፍ አልተቻለም');
         }
       }
 
@@ -213,7 +220,7 @@ const AnnouncementsManagement = () => {
           sendToDirectStudents: sendToDirectStudents,
         };
 
-        if (targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length > 0) {
+        if (targetingMode === 'custom_groups') {
           payload.targetGroupIds = selectedGroupIdsForBroadcast;
         } else {
           payload.targetGrade = targetGrade === 'All Classes' ? null : targetGrade;
@@ -228,9 +235,10 @@ const AnnouncementsManagement = () => {
 
         const resData = await res.json().catch(() => ({}));
         if (res.ok && resData.success) {
+          tgSuccess = true;
           toast.success(resData.message || 'ማስታወቂያው ወደ ቴሌግራም በተሳካ ሁኔታ ተልኳል! 📢');
         } else {
-          toast.warning(resData.message || 'ማስታወቂያው ወደ ቴሌግራም መላክ አልተቻለም (ቦቱ መስራቱን ያረጋግጡ)');
+          toast.warning(resData.message || 'ማስታወቂያው ወደ ቴሌግራም መላክ አልተቻለም (የቴሌግራም ቦቱ መስራቱን ያረጋግጡ)');
         }
       }
 
@@ -238,13 +246,17 @@ const AnnouncementsManagement = () => {
         toast.success('ማስታወቂያው በድረ-ገጹ ላይ በተሳካ ሁኔታ ተለጥፏል! 📢');
       }
 
-      setTitle('');
-      setMessage('');
-      setSelectedGroupIdsForBroadcast([]);
+      if (webSuccess || tgSuccess) {
+        setTitle('');
+        setMessage('');
+        setSelectedGroupIdsForBroadcast([]);
+      }
+
       fetchAnnouncements();
       fetchBotStatus();
       fetchGroups();
     } catch (err) {
+      console.error('handlePostAnnouncement error:', err);
       toast.error('የአውታረ መረብ ስህተት ተከሰቷል።');
     } finally {
       setLoading(false);
