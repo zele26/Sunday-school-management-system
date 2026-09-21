@@ -1,4 +1,3 @@
-without affecting the functionality lets improve this dramatically
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
