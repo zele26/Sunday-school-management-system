@@ -77,12 +77,15 @@ const RegisterRegularContent = () => {
     const lastName = data.lastName.trim();
 
     try {
+      const tgUser = typeof window !== 'undefined' ? window.Telegram?.WebApp?.initDataUnsafe?.user : null;
       const payload = {
         ...data,
         firstName,
         middleName,
         lastName,
         fullName: [firstName, middleName, lastName].filter(Boolean).join(' '),
+        telegramChatId: tgUser?.id ? String(tgUser.id) : undefined,
+        telegramUsername: tgUser?.username || undefined,
       };
 
       const baseUrl = API_BASE_URL || '';

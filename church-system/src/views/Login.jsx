@@ -141,6 +141,25 @@ const Login = () => {
           sessionStorage.removeItem('tg_manual_logout');
         }
         loginStore(resData.accessToken, resData.user);
+
+        // Auto-link Telegram account if user is logging in inside Telegram
+        try {
+          const tgUser = typeof window !== 'undefined' ? window.Telegram?.WebApp?.initDataUnsafe?.user : null;
+          if (tgUser?.id && resData.accessToken) {
+            fetch(`${API_BASE_URL || ''}/api/telegram/link-current-user`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${resData.accessToken}`,
+              },
+              body: JSON.stringify({
+                telegramChatId: String(tgUser.id),
+                telegramUsername: tgUser.username || '',
+              }),
+            }).catch((e) => console.warn('Telegram auto-link on login notice:', e));
+          }
+        } catch (e) {}
+
         const destination = getDestinationPath(resData.user);
         router.replace(destination);
       } else {

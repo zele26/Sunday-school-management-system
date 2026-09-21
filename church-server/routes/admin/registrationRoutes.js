@@ -162,6 +162,9 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       status: 'approved',
       christianName: reg.christianName || '',
       profilePicture: reg.photoUrl || '',
+      telegramChatId: reg.telegramChatId || '',
+      telegramUsername: reg.telegramUsername || '',
+      telegramLinkedAt: reg.telegramChatId ? new Date() : undefined,
     });
 
     // Generate official student ID
@@ -180,6 +183,8 @@ router.put('/:id/approve', protect, authorize('admin'), async (req, res) => {
       userId: user._id,
       studentId,
       registrationNumber: reg.registrationNumber,
+      telegramChatId: reg.telegramChatId || '',
+      telegramUsername: reg.telegramUsername || '',
       firstName: reg.firstName || reg.fullName,
       middleName: reg.middleName || '',
       lastName: reg.lastName || '',

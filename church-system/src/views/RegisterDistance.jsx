@@ -76,6 +76,7 @@ const RegisterDistanceContent = () => {
     const lastName = data.lastName.trim();
 
     try {
+      const tgUser = typeof window !== 'undefined' ? window.Telegram?.WebApp?.initDataUnsafe?.user : null;
       const payload = {
         ...data,
         firstName,
@@ -83,6 +84,8 @@ const RegisterDistanceContent = () => {
         lastName,
         fullName: [firstName, middleName, lastName].filter(Boolean).join(' '),
         grade: 'Batch 1',
+        telegramChatId: tgUser?.id ? String(tgUser.id) : undefined,
+        telegramUsername: tgUser?.username || undefined,
       };
 
       const baseUrl = API_BASE_URL || '';

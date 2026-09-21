@@ -292,6 +292,8 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       password: hashedPassword,
       studentType,
       receiptUrl,
+      telegramChatId: req.body.telegramChatId ? String(req.body.telegramChatId) : '',
+      telegramUsername: req.body.telegramUsername ? String(req.body.telegramUsername) : '',
       status: studentType === 'distance' ? 'Pending Payment' : 'Pending Verification',
     });
 

@@ -439,6 +439,7 @@ const initTelegramBot = async () => {
       // Register standard bot commands
       botInstance.setMyCommands([
         { command: 'start', description: 'የቴሌግራም ቦት መነሻ ገጽ (Start & Main Menu)' },
+        { command: 'register', description: 'አዲስ የተማሪ ምዝገባ (New Student Registration)' },
         { command: 'profile', description: 'የተማሪ መረጃ እና ዲጂታል QR ባጅ (Student Profile & Badge)' },
         { command: 'certificate', description: 'የምረቃ ሰርተፊኬት ማረጋገጫና ማውረጃ (Graduation Certificate)' },
         { command: 'attendance', description: 'የዕለታዊ ክትትል ታሪክ (Attendance Logs)' },
@@ -658,32 +659,49 @@ const initTelegramBot = async () => {
           welcomeMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
           welcomeMsg += `ከዚህ በታች ያሉትን አዝራሮች በመጠቀም መረጃዎን ማግኘት ወይም ሙሉውን የተማሪ ፖርታል በቴሌግራም ውስጥ መክፈት ይችላሉ፦`;
         } else {
-          welcomeMsg += `💡 *አካውንትዎን ለማገናኘት፦*\n`;
-          welcomeMsg += `እባክዎ ከታች ያለውን *"📱 ስልክ ቁጥር ያገናኙ (Link Phone)"* የሚለውን አዝራር በመጫን በሰንበት ት/ቤቱ የተመዘገቡበትን ስልክ ቁጥር ያጋሩ።\n\n`;
-          welcomeMsg += `ወይም ቀጥታ የተማሪዎች ፖርታልን ለመክፈት ከታች ያለውን አዝራር ይጫኑ፦`;
+          welcomeMsg += `✨ *አዲስ ተማሪ ከሆኑ፦*\n`;
+          welcomeMsg += `በቀጥታ በኦንላይን ለመመዝገብ ከታች ያለውን *"📝 አዲስ ተማሪ ምዝገባ (Register Now)"* የሚለውን ይጫኑ።\n\n`;
+          welcomeMsg += `💡 *ቀድመው የተመዘገቡ ተማሪ ከሆኑ፦*\n`;
+          welcomeMsg += `እባክዎ ከታች ያለውን *"📱 ስልክ ቁጥር ያገናኙ (Link Phone)"* የሚለውን አዝራር በመጫን በሰንበት ት/ቤቱ የተመዘገቡበትን ስልክ ቁጥር ያጋሩ።`;
         }
 
         const inlineKeyboard = {
-          inline_keyboard: [
-            [
-              buildPortalInlineButton('🎓 የተማሪዎች ፖርታል ክፈት (Open Portal)', '/dashboard')
-            ],
-            [
-              { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' },
-              { text: '📅 የዕለታዊ ክትትል', callback_data: 'cmd_attendance' }
-            ],
-            [
-              { text: '📚 ትምህርቶች', callback_data: 'cmd_courses' },
-              { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' }
-            ],
-            [
-              { text: '📜 ሰርተፊኬት', callback_data: 'cmd_certificate' },
-              { text: '📢 ማስታወቂያዎች', callback_data: 'cmd_announcements' }
-            ],
-            [
-              { text: '❓ እርዳታ', callback_data: 'cmd_help' }
-            ]
-          ]
+          inline_keyboard: student
+            ? [
+                [
+                  buildPortalInlineButton('🎓 የተማሪዎች ፖርታል ክፈት (Open Portal)', '/dashboard')
+                ],
+                [
+                  { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' },
+                  { text: '📅 የዕለታዊ ክትትል', callback_data: 'cmd_attendance' }
+                ],
+                [
+                  { text: '📚 ትምህርቶች', callback_data: 'cmd_courses' },
+                  { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' }
+                ],
+                [
+                  { text: '📜 ሰርተፊኬት', callback_data: 'cmd_certificate' },
+                  { text: '📢 ማስታወቂያዎች', callback_data: 'cmd_announcements' }
+                ],
+                [
+                  { text: '❓ እርዳታ', callback_data: 'cmd_help' }
+                ]
+              ]
+            : [
+                [
+                  buildPortalInlineButton('📝 አዲስ ተማሪ ምዝገባ (Register Now)', '/register-regular')
+                ],
+                [
+                  buildPortalInlineButton('🌐 የርቀት ትምህርት ምዝገባ (Distance)', '/register-distance')
+                ],
+                [
+                  buildPortalInlineButton('🎓 የተማሪዎች ፖርታል (Open Portal)', '/dashboard')
+                ],
+                [
+                  { text: '🔍 የምዝገባ ሁኔታ ማረጋገጫ', callback_data: 'cmd_status_prompt' },
+                  { text: '❓ እርዳታ', callback_data: 'cmd_help' }
+                ]
+              ]
         };
 
         await safeSendMessage(chatId, welcomeMsg, {
@@ -1461,6 +1479,42 @@ const initTelegramBot = async () => {
       });
     };
 
+    // ---------- 12. /register & "📝 አዲስ ተማሪ ምዝገባ" ----------
+    const handleRegister = async (chatId) => {
+      let msg = `╭──────────────────────────────╮\n`;
+      msg += `    📝 *የተማሪዎች ምዝገባ (Registration)* 📝\n`;
+      msg += `╰──────────────────────────────╯\n\n`;
+      msg += `በ *ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት* ለመማር አዲስ ተማሪ ከሆኑ ከታች ያሉትን አዝራሮች በመጫን በኦንላይን በቀላሉ መመዝገብ ይችላሉ። ✨\n\n`;
+      msg += `🔹 *የመደበኛ ትምህርት ምዝገባ (Regular)* — በቅዳሜና እሑድ ወይም በማታ ፈረቃ\n`;
+      msg += `🔹 *የርቀት ትምህርት ምዝገባ (Distance)* — በኦንላይንና በርቀት\n\n`;
+      msg += `👇 ለመመዝገብ የሚፈልጉትን የትምህርት ዓይነት ይምረጡ፦`;
+
+      await safeSendMessage(chatId, msg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              buildPortalInlineButton('📝 የመደበኛ ተማሪዎች ምዝገባ (Regular)', '/register-regular'),
+            ],
+            [
+              buildPortalInlineButton('🌐 የርቀት ትምህርት ምዝገባ (Distance)', '/register-distance'),
+            ],
+            [
+              { text: '🔍 የምዝገባ ሁኔታ ማረጋገጫ', callback_data: 'cmd_status_prompt' },
+              { text: '❓ እርዳታ', callback_data: 'cmd_help' }
+            ]
+          ]
+        }
+      });
+    };
+
+    botInstance.onText(/\/register|📝 አዲስ ተማሪ ምዝገባ/, async (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'register');
+      }
+      handleRegister(msg.chat.id);
+    });
+
     botInstance.onText(/\/help|❓ እርዳታ/, async (msg) => {
       if (msg.chat.type !== 'private') {
         return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'help');
@@ -1503,6 +1557,10 @@ const initTelegramBot = async () => {
         else if (data === 'cmd_results') handleResults(chatId);
         else if (data === 'cmd_announcements') handleAnnouncements(chatId);
         else if (data === 'cmd_portal') handlePortal(chatId);
+        else if (data === 'cmd_register') handleRegister(chatId);
+        else if (data === 'cmd_status_prompt') {
+          safeSendMessage(chatId, `📝 *የምዝገባ ሁኔታን ለማረጋገጥ፦*\n\nእባክዎ \`/status <የማመልከቻ ቁጥር>\` ብለው ይላኩ።\nምሳሌ፦ \`/status REG-2026-0042\``, { parse_mode: 'Markdown' });
+        }
         else if (data === 'cmd_help') handleHelp(chatId);
       } catch (e) {
         console.error('Telegram callback_query error:', e);

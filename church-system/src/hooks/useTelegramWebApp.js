@@ -5,28 +5,33 @@ import { useEffect, useState, useCallback } from 'react';
 import useAuthStore from '../store/authStore';
 import { apiFetch } from '../api/apiClient';
 
+/**
+ * Strict verification if the client is ACTUALLY running inside a Telegram Mini App.
+ * In standard web browsers, window.Telegram.WebApp exists because the SDK script is loaded in layout.jsx,
+ * but initData is empty, initDataUnsafe.user is undefined, and platform is 'unknown'.
+ */
+const checkIsActuallyTelegram = () => {
+  if (typeof window === 'undefined') return false;
+
+  const tg = window.Telegram?.WebApp;
+  const hasInitData = Boolean(tg?.initData && tg.initData.length > 0);
+  const hasTgUser = Boolean(tg?.initDataUnsafe?.user);
+  const isTgPlatform = Boolean(tg?.platform && tg.platform !== 'unknown');
+  const hasTgHash = window.location.hash.includes('tgWebAppData') || window.location.hash.includes('tgWebAppPlatform');
+  const hasTgQuery = window.location.search.includes('tgWebApp=1') || window.location.search.includes('tgWebAppVersion');
+
+  return hasInitData || hasTgUser || (isTgPlatform && (hasTgHash || hasTgQuery)) || (hasTgHash && hasTgQuery);
+};
+
 export function useTelegramWebApp() {
-  const [isTelegram, setIsTelegram] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return Boolean(
-      window.Telegram?.WebApp?.initData ||
-      window.Telegram?.WebApp?.initDataUnsafe?.user ||
-      window.location.search.includes('tgWebApp=1') ||
-      window.location.hash.includes('tgWebAppData')
-    );
-  });
+  const [isTelegram, setIsTelegram] = useState(() => checkIsActuallyTelegram());
   const [telegramUser, setTelegramUser] = useState(() => {
     if (typeof window === 'undefined') return null;
-    return window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+    return checkIsActuallyTelegram() ? (window.Telegram?.WebApp?.initDataUnsafe?.user || null) : null;
   });
   const [isAuthenticating, setIsAuthenticating] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const isTg = Boolean(
-      window.Telegram?.WebApp?.initData ||
-      window.Telegram?.WebApp?.initDataUnsafe?.user ||
-      window.location.search.includes('tgWebApp=1') ||
-      window.location.hash.includes('tgWebAppData')
-    );
+    const isTg = checkIsActuallyTelegram();
     const token = localStorage.getItem('token');
     const isManuallyLoggedOut = sessionStorage.getItem('tg_manual_logout') === 'true';
     return isTg && !token && !isManuallyLoggedOut;
@@ -42,7 +47,7 @@ export function useTelegramWebApp() {
     setAuthError(null);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     try {
       const payload = {
@@ -86,10 +91,17 @@ export function useTelegramWebApp() {
     let attempts = 0;
 
     const initTelegram = () => {
+      const isTg = checkIsActuallyTelegram();
       const tg = window.Telegram?.WebApp;
-      const isTgQuery = window.location.search.includes('tgWebApp=1') || window.location.hash.includes('tgWebAppData');
 
-      if (!tg && !isTgQuery) return false;
+      if (!isTg) {
+        setIsTelegram(false);
+        setIsAuthenticating(false);
+        setTelegramUser(null);
+        return false;
+      }
+
+      setIsTelegram(true);
 
       if (tg) {
         try {
@@ -107,7 +119,6 @@ export function useTelegramWebApp() {
         const hasTgUser = Boolean(tg.initDataUnsafe?.user);
         const isManuallyLoggedOut = sessionStorage.getItem('tg_manual_logout') === 'true';
 
-        setIsTelegram(true);
         if (hasTgUser) {
           setTelegramUser(tg.initDataUnsafe.user);
         }
@@ -115,7 +126,7 @@ export function useTelegramWebApp() {
           setThemeParams(tg.themeParams);
         }
 
-        // Auto-authenticate ONLY if not logged in and NOT manually logged out
+        // Auto-authenticate ONLY if inside Telegram, not logged in, and NOT manually logged out
         if (!isLoggedIn && (hasInitData || hasTgUser) && !isManuallyLoggedOut) {
           authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
         } else if (isManuallyLoggedOut) {
@@ -126,17 +137,13 @@ export function useTelegramWebApp() {
         return true;
       }
 
-      if (isTgQuery) {
-        setIsTelegram(true);
-      }
-
       return false;
     };
 
     if (!initTelegram()) {
       checkInterval = setInterval(() => {
         attempts++;
-        if (initTelegram() || attempts > 40) {
+        if (initTelegram() || attempts > 20) {
           clearInterval(checkInterval);
         }
       }, 50);
@@ -161,7 +168,9 @@ export function useTelegramWebApp() {
 
   const closeTelegramApp = useCallback(() => {
     try {
-      window.Telegram?.WebApp?.close?.();
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp?.close) {
+        window.Telegram.WebApp.close();
+      }
     } catch (e) {}
   }, []);
 
@@ -195,7 +204,7 @@ export function useTelegramWebApp() {
 
   const retryAuth = useCallback(() => {
     const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
-    if (tg) {
+    if (tg && checkIsActuallyTelegram()) {
       authenticateWithTelegram(tg.initData, tg.initDataUnsafe?.user);
     } else if (typeof window !== 'undefined') {
       window.location.reload();

@@ -58,6 +58,8 @@ const registrationSchema = new mongoose.Schema({
   reviewedAt: { type: Date },
   rejectionReason: { type: String },
   studentId: { type: String, trim: true },
+  telegramChatId: { type: String, default: '' },
+  telegramUsername: { type: String, default: '' },
 }, {
   timestamps: true,
   toJSON: {
