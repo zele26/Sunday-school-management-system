@@ -1,31 +1,35 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useStudentAnalytics } from '../../hooks/queries/useAnalytics';
-import { formatGradeAmharic } from '../../constants/registrationOptions';
+import { formatGradeAmharic, formatShiftAmharic } from '../../constants/registrationOptions';
+import { useLanguage } from '../../hooks/useLanguage';
 
 export default function StudentAnalyticsView({ studentId = null }) {
+  const { isAmharic, t } = useLanguage();
   const { data, isLoading, error, refetch } = useStudentAnalytics(studentId);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4">
+      <div className="flex flex-col items-center justify-center py-16 space-y-4 font-sans">
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">የአናሊቲክስ መረጃ በመጫን ላይ...</p>
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          {isAmharic ? 'የአናሊቲክስ መረጃ በመጫን ላይ...' : 'Loading analytics data...'}
+        </p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="p-8 text-center bg-rose-50 dark:bg-rose-950/40 rounded-3xl border border-rose-200 dark:border-rose-800">
+      <div className="p-8 text-center bg-rose-50 dark:bg-rose-950/40 rounded-3xl border border-rose-200 dark:border-rose-800 font-sans">
         <p className="text-rose-600 dark:text-rose-400 font-semibold mb-3">
-          {error?.message || 'የአናሊቲክስ መረጃ ማግኘት አልተቻለም'}
+          {error?.message || (isAmharic ? 'የአናሊቲክስ መረጃ ማግኘት አልተቻለም' : 'Could not fetch analytics data')}
         </p>
         <button
           onClick={() => refetch()}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs"
+          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs cursor-pointer"
         >
-          እንደገና ይሞክሩ 🔄
+          {isAmharic ? 'እንደገና ይሞክሩ 🔄' : 'Retry 🔄'}
         </button>
       </div>
     );
@@ -34,9 +38,9 @@ export default function StudentAnalyticsView({ studentId = null }) {
   const { student, summary, courseBreakdown = [], gradeRecords = [], atRiskAlerts = [], recentAttendanceLog = [] } = data;
 
   const getStatusBadge = (rate) => {
-    if (rate >= 85) return { bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200', text: 'በጣም ጥሩ (Excellent)' };
-    if (rate >= 75) return { bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200', text: 'ጥሩ (Good)' };
-    return { bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200', text: 'ማስጠንቀቂያ (At Risk)' };
+    if (rate >= 85) return { bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200', text: isAmharic ? 'በጣም ጥሩ' : 'Excellent' };
+    if (rate >= 75) return { bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200', text: isAmharic ? 'ጥሩ' : 'Good' };
+    return { bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200', text: isAmharic ? 'ማስጠንቀቂያ' : 'At Risk' };
   };
 
   const overallBadge = getStatusBadge(summary.overallAttendanceRate);
@@ -49,16 +53,20 @@ export default function StudentAnalyticsView({ studentId = null }) {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-white/10 border border-white/20 backdrop-blur-md mb-3">
-              📊 የግል ትምህርት አናሊቲክስ
+              📊 {isAmharic ? 'የግል ትምህርት አናሊቲክስ' : 'Personal Academic Analytics'}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{student?.fullName}</h1>
             <p className="text-slate-300 text-xs sm:text-sm mt-1">
-              የመታወቂያ ቁጥር፦ <span className="font-mono text-amber-300 font-bold">{student?.studentId || 'N/A'}</span> • {formatGradeAmharic(student?.grade)} ({student?.shift === 'night' ? 'የማታ' : 'የቀን / Weekend'})
+              {isAmharic ? 'የመታወቂያ ቁጥር፦' : 'ID:'}{' '}
+              <span className="font-mono text-amber-300 font-bold">{student?.studentId || 'N/A'}</span> •{' '}
+              {isAmharic ? formatGradeAmharic(student?.grade) : (student?.grade || '—')} ({formatShiftAmharic(student?.shift, isAmharic)})
             </p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-4 rounded-2xl text-center shrink-0 min-w-[180px]">
-            <p className="text-xs text-slate-300 font-semibold mb-1">አጠቃላይ የተገኝነት መጠን</p>
+            <p className="text-xs text-slate-300 font-semibold mb-1">
+              {isAmharic ? 'አጠቃላይ የተገኝነት መጠን' : 'Overall Attendance Rate'}
+            </p>
             <span className="text-4xl font-black text-amber-400">{summary.overallAttendanceRate}%</span>
             <div className={`mt-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${overallBadge.bg}`}>
               {overallBadge.text}
@@ -75,7 +83,7 @@ export default function StudentAnalyticsView({ studentId = null }) {
           className="p-5 bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 rounded-r-2xl shadow-sm text-amber-900 dark:text-amber-200 space-y-2"
         >
           <div className="flex items-center gap-2 font-bold text-sm text-amber-800 dark:text-amber-300">
-            <span className="text-lg">⚠️</span> የትምህርት መገኘት ማስጠንቀቂያ ({atRiskAlerts.length})
+            <span className="text-lg">⚠️</span> {isAmharic ? 'የትምህርት መገኘት ማስጠንቀቂያ' : 'Attendance Warning'} ({atRiskAlerts.length})
           </div>
           {atRiskAlerts.map((alert, idx) => (
             <p key={idx} className="text-xs leading-relaxed ml-7">
@@ -88,27 +96,43 @@ export default function StudentAnalyticsView({ studentId = null }) {
       {/* Quick Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-xs text-slate-500 font-medium">የተገኙባቸው ቀናት</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {isAmharic ? 'የተገኙባቸው ቀናት' : 'Present Days'}
+          </p>
           <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{summary.presentCount}</p>
-          <span className="text-[10px] text-slate-400 font-semibold">ከ አጠቃላይ {summary.totalAttendanceCount} ቀናት</span>
+          <span className="text-[10px] text-slate-400 font-semibold">
+            {isAmharic ? `ከ አጠቃላይ ${summary.totalAttendanceCount} ቀናት` : `Out of ${summary.totalAttendanceCount} total days`}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-xs text-slate-500 font-medium">ዘግይተው የተገኙ</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {isAmharic ? 'ዘግይተው የተገኙ' : 'Late Arrivals'}
+          </p>
           <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{summary.lateCount}</p>
-          <span className="text-[10px] text-slate-400 font-semibold">በሰዓቱ መድረስ ይመረጣል</span>
+          <span className="text-[10px] text-slate-400 font-semibold">
+            {isAmharic ? 'በሰዓቱ መድረስ ይመረጣል' : 'Timely check-in recommended'}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-xs text-slate-500 font-medium">የቀሩባቸው ቀናት</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {isAmharic ? 'የቀሩባቸው ቀናት' : 'Absent Days'}
+          </p>
           <p className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{summary.absentCount}</p>
-          <span className="text-[10px] text-slate-400 font-semibold">የተፈቀደ፦ {summary.excusedCount} ቀናት</span>
+          <span className="text-[10px] text-slate-400 font-semibold">
+            {isAmharic ? `የተፈቀደ፦ ${summary.excusedCount} ቀናት` : `Excused: ${summary.excusedCount} days`}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-          <p className="text-xs text-slate-500 font-medium">የውጤት አማካይ (Marks)</p>
+          <p className="text-xs text-slate-500 font-medium">
+            {isAmharic ? 'የውጤት አማካይ' : 'Average Score'}
+          </p>
           <p className="text-2xl font-black text-[#1657b8] dark:text-blue-400 mt-1">{summary.averageScore} / 100</p>
-          <span className="text-[10px] text-slate-400 font-semibold">በ {summary.totalCoursesCount} ትምህርቶች</span>
+          <span className="text-[10px] text-slate-400 font-semibold">
+            {isAmharic ? `በ ${summary.totalCoursesCount} ትምህርቶች` : `Across ${summary.totalCoursesCount} courses`}
+          </span>
         </div>
       </div>
 
@@ -116,16 +140,22 @@ export default function StudentAnalyticsView({ studentId = null }) {
       <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">በየትምህርቱ የተገኝነት ደረጃ</h2>
-            <p className="text-xs text-slate-500">የእያንዳንዱ ትምህርት መገኘት መቶኛ</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              {isAmharic ? 'በየትምህርቱ የተገኝነት ደረጃ' : 'Course Attendance Breakdown'}
+            </h2>
+            <p className="text-xs text-slate-500">
+              {isAmharic ? 'የእያንዳንዱ ትምህርት መገኘት መቶኛ' : 'Attendance percentage per course'}
+            </p>
           </div>
           <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-            {courseBreakdown.length} ትምህርቶች
+            {courseBreakdown.length} {isAmharic ? 'ትምህርቶች' : 'Courses'}
           </span>
         </div>
 
         {courseBreakdown.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-6">እስካሁን የተመዘገበ የተገኝነት መረጃ የለም።</p>
+          <p className="text-sm text-slate-500 text-center py-6">
+            {isAmharic ? 'እስካሁን የተመዘገበ የተገኝነት መረጃ የለም።' : 'No attendance data recorded yet.'}
+          </p>
         ) : (
           <div className="space-y-5">
             {courseBreakdown.map((c) => (
@@ -134,7 +164,7 @@ export default function StudentAnalyticsView({ studentId = null }) {
                   <span className="font-bold text-slate-800 dark:text-slate-200">{c.courseName}</span>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-500">
-                      የተገኙ፦ <strong className="text-emerald-600">{c.present}</strong> | የቀሩ፦ <strong className="text-rose-600">{c.absent}</strong>
+                      {isAmharic ? 'የተገኙ፦' : 'Present:'} <strong className="text-emerald-600">{c.present}</strong> | {isAmharic ? 'የቀሩ፦' : 'Absent:'} <strong className="text-rose-600">{c.absent}</strong>
                     </span>
                     <span className={`font-black text-sm ${c.rate >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                       {c.rate}%
@@ -163,17 +193,17 @@ export default function StudentAnalyticsView({ studentId = null }) {
       {gradeRecords.length > 0 && (
         <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-            የፈተናና የቤት ሥራ ውጤቶች (Academic Records)
+            {isAmharic ? 'የፈተናና የቤት ሥራ ውጤቶች' : 'Academic & Exam Records'}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-500">
-                  <th className="py-2.5 px-3">ትምህርት</th>
-                  <th className="py-2.5 px-3">የቤት ሥራ (100)</th>
-                  <th className="py-2.5 px-3">ፈተና (100)</th>
-                  <th className="py-2.5 px-3">አጠቃላይ (Total)</th>
-                  <th className="py-2.5 px-3">ደረጃ (Pass/Fail)</th>
+                  <th className="py-2.5 px-3">{isAmharic ? 'ትምህርት' : 'Course'}</th>
+                  <th className="py-2.5 px-3">{isAmharic ? 'የቤት ሥራ (100)' : 'Assignment (100)'}</th>
+                  <th className="py-2.5 px-3">{isAmharic ? 'ፈተና (100)' : 'Exam (100)'}</th>
+                  <th className="py-2.5 px-3">{isAmharic ? 'አጠቃላይ' : 'Total'}</th>
+                  <th className="py-2.5 px-3">{isAmharic ? 'ደረጃ' : 'Status'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -187,7 +217,7 @@ export default function StudentAnalyticsView({ studentId = null }) {
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                         g.passFail === 'Pass' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                       }`}>
-                        {g.passFail}
+                        {g.passFail === 'Pass' ? (isAmharic ? 'አልፏል' : 'Pass') : (isAmharic ? 'አላለፈም' : 'Fail')}
                       </span>
                     </td>
                   </tr>

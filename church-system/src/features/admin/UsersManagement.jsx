@@ -90,6 +90,8 @@ const UsersManagement = () => {
     formState: { errors: createErrors, isSubmitting: createSubmitting },
   } = useForm({
     resolver: zodResolver(userCreateModalSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       fullName: '',
       email: '',
@@ -116,6 +118,8 @@ const UsersManagement = () => {
     formState: { errors: editErrors, isSubmitting: editSubmitting },
   } = useForm({
     resolver: zodResolver(userEditModalSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       fullName: '',
       email: '',

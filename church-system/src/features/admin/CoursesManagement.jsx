@@ -54,6 +54,8 @@ const CoursesManagement = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(courseModalSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       name: '',
       studentType: 'regular',

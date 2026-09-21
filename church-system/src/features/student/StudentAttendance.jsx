@@ -339,7 +339,7 @@ const StudentAttendance = () => {
                     <tr>
                       <th className="p-4">{isAmharic ? 'የፈተና ርዕስ' : 'Exam Title'}</th>
                       <th className="p-4">{isAmharic ? 'ቀን' : 'Date'}</th>
-                      <th className="p-4 text-center">{isAmharic ? 'ውጤት (Score)' : 'Score'}</th>
+                      <th className="p-4 text-center">{isAmharic ? 'ውጤት' : 'Score'}</th>
                       <th className="p-4 text-center">{isAmharic ? 'ሁኔታ' : 'Status'}</th>
                     </tr>
                   </thead>

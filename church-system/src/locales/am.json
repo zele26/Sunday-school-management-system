@@ -344,6 +344,7 @@
   "fillFormCarefully": "እባክዎ ከታች ያለውን ቅጽ በትክክል ይሙሉ",
   "distanceFormSubtitle": "በርቀት ለሚማሩ ተማሪዎች የመመዝገቢያ ቅጽ",
   "personalInfoSection": "የግል መረጃ",
+  "amharicOnlyHint": "በአማርኛ ብቻ",
   "firstNameLabel": "ስም",
   "firstNamePlaceholder": "የመጀመሪያ ስም",
   "middleNameLabel": "የአባት ስም",

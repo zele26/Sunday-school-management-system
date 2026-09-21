@@ -264,7 +264,7 @@ const StudentProfile = () => {
               </div>
               <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-3 flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span>{isAmharic ? 'የተረጋገጠ ዲጂታል QR ባጅ' : 'Verified Digital QR Badge'}</span>
+                <span>{isAmharic ? 'የተረጋገጠ ዲጂታል መታወቂያ' : 'Verified Digital QR Badge'}</span>
               </p>
             </div>
 
@@ -278,7 +278,7 @@ const StudentProfile = () => {
               </div>
               <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
                 <span className="font-medium text-slate-500 dark:text-slate-400">
-                  {isAmharic ? 'ክፍል / ደረጃ' : 'Class / Grade'}
+                  {isAmharic ? 'የክፍል ደረጃ' : 'Class / Grade'}
                 </span>
                 <span className="font-bold text-blue-600 dark:text-blue-400">{gradeDisplay}</span>
               </div>
@@ -385,8 +385,8 @@ const StudentProfile = () => {
                 </span>
                 <span className="font-bold text-[#1657b8] dark:text-amber-400">
                   {profile.shift === 'night'
-                    ? (isAmharic ? 'የማታ (Night)' : 'Night')
-                    : (isAmharic ? 'የቀን / ቅዳሜና እሁድ' : 'Weekend / Day')}
+                    ? (isAmharic ? 'የማታ' : 'Night')
+                    : (isAmharic ? 'የቀን (ቅዳሜና እሑድ)' : 'Weekend / Day')}
                 </span>
               </div>
             )}
@@ -723,7 +723,7 @@ const StudentProfile = () => {
                     className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-500/25 transition-all flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
-                    <span>{isAmharic ? 'በቴሌግራም ቦት ያገናኙ (Connect to Bot)' : 'Connect via Telegram Bot'}</span>
+                    <span>{isAmharic ? 'በቴሌግራም ቦት ያገናኙ' : 'Connect via Telegram Bot'}</span>
                     <ExternalLink className="w-3.5 h-3.5 opacity-80" />
                   </a>
                 </div>
@@ -755,7 +755,7 @@ const StudentProfile = () => {
               className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-amber-400 dark:hover:bg-amber-300 text-white dark:text-slate-950 font-bold text-xs transition-all shadow-xs"
             >
               <KeyRound className="w-3.5 h-3.5" />
-              <span>{isAmharic ? 'የይለፍ ቃል ቀይር (Change Password)' : 'Change Password'}</span>
+              <span>{isAmharic ? 'የይለፍ ቃል ቀይር' : 'Change Password'}</span>
             </a>
           </div>
         </Card>
@@ -789,7 +789,7 @@ const StudentProfile = () => {
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-all shadow-md active:scale-98 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>{isAmharic ? 'ከሲስተሙ ውጣ (Logout)' : 'Log Out'}</span>
+              <span>{isAmharic ? 'ከሲስተሙ ውጣ' : 'Log Out'}</span>
             </button>
           </div>
         </Card>

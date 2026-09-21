@@ -218,7 +218,7 @@ const StudentOverview = () => {
                 className="flex-1 md:flex-initial px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <QrCode className="w-4 h-4" />
-                <span>{isAmharic ? 'የተማሪ QR ባጅ' : 'Digital QR Pass'}</span>
+                <span>{isAmharic ? 'የተማሪ ዲጂታል መታወቂያ' : 'Digital ID Pass'}</span>
               </button>
 
               <a
@@ -542,7 +542,7 @@ const StudentOverview = () => {
                 {isAmharic ? 'የተማሪ ዲጂታል መታወቂያ' : 'Student Digital ID'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isAmharic ? 'ለመገኘትና ለመግቢያ መቃኛ ይህን QR ያሳዩ' : 'Present this QR for attendance verification'}
+                {isAmharic ? 'ለመገኘትና ለመግቢያ መቃኛ ይህን መታወቂያ ያሳዩ' : 'Present this QR for attendance verification'}
               </p>
             </div>
 

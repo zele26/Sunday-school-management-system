@@ -344,6 +344,7 @@
   "fillFormCarefully": "Please fill out the application form carefully",
   "distanceFormSubtitle": "Online application form for distance learning students",
   "personalInfoSection": "Personal Information",
+  "amharicOnlyHint": "Amharic only",
   "firstNameLabel": "First Name",
   "firstNamePlaceholder": "First Name",
   "middleNameLabel": "Father's Name",

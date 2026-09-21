@@ -44,6 +44,12 @@ const isValidPhone = (phone) => {
   return /^0[79]\d{8}$/.test(normalized);
 };
 
+const AMHARIC_TEXT_REGEX = /^[\u1200-\u135A\u135F\u1361\u2D80-\u2DDF\uAB00-\uAB2F\s]+$/;
+const isAmharicOnly = (text) => {
+  if (!text || String(text).trim() === '') return true;
+  return AMHARIC_TEXT_REGEX.test(String(text).trim());
+};
+
 const generateRegNumber = async () => {
   const year = new Date().getFullYear();
   const count = await Registration.countDocuments();
@@ -172,6 +178,42 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'የመጀመሪያ፣ የአባት እና የአያት ስም፣ የትምህርት ደረጃ፣ ሙያ፣ ስልክ ቁጥር እና የይለፍ ቃል ግዴታ ናቸው።',
+      });
+    }
+
+    // 🔒 Enforce Amharic-only characters for student names (no English, no digits, no special symbols)
+    if (!isAmharicOnly(normalizedFirstName) || !isAmharicOnly(normalizedMiddleName) || !isAmharicOnly(normalizedLastName)) {
+      return res.status(400).json({
+        success: false,
+        message: 'የተማሪው ስም (የመጀመሪያ፣ የአባት እና የአያት ስም) በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
+      });
+    }
+
+    // Validate Christian Name if provided
+    if (normalizedChristianName && !isAmharicOnly(normalizedChristianName)) {
+      return res.status(400).json({
+        success: false,
+        message: 'የክርስትና ስም በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
+      });
+    }
+
+    // Validate Confession Father Name if provided
+    if (normalizedConfessionFatherName && !isAmharicOnly(normalizedConfessionFatherName)) {
+      return res.status(400).json({
+        success: false,
+        message: 'የንስሐ አባት ስም በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
+      });
+    }
+
+    // Validate Emergency Contact Names
+    if (
+      !isAmharicOnly(finalEmergencyFirstName) ||
+      !isAmharicOnly(finalEmergencyMiddleName) ||
+      !isAmharicOnly(finalEmergencyLastName)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'የአደጋ ጊዜ ተጠሪ ስም በአማርኛ ፊደላት ብቻ መሆን አለበት። እንግሊዝኛ ወይም ልዩ ምልክቶች አይፈቀዱም።',
       });
     }
 

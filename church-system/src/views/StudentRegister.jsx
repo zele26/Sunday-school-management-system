@@ -39,6 +39,8 @@ const StudentRegister = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(studentSelfRegisterSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       photoUrl: '',
       fullName: '',
@@ -167,13 +169,28 @@ const StudentRegister = () => {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ሙሉ ስም *</label>
-            <input type="text" placeholder="ሙሉ ስም" {...register('fullName')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.fullName ? 'border-rose-400' : 'border-slate-200'}`} />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+              ሙሉ ስም <span className="text-[10px] text-slate-400 font-normal">(በአማርኛ ብቻ)</span> *
+            </label>
+            <input
+              type="text"
+              placeholder="ምሳሌ፡ ዮሐንስ ተስፋዬ ገብሬ"
+              {...register('fullName')}
+              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.fullName ? 'border-rose-400' : 'border-slate-200'}`}
+            />
             {errors.fullName && <p className="text-xs text-rose-500 mt-1">{errors.fullName.message}</p>}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">✝️ የክርስትና ስም</label>
-            <input type="text" placeholder="የክርስትና ስም (ምሳሌ፡ ወልደ ሥላሴ)" {...register('christianName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+              ✝️ የክርስትና ስም <span className="text-[10px] text-slate-400 font-normal">(በአማርኛ ብቻ - አማራጭ)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="ምሳሌ፡ ወልደ ሥላሴ / ወለተ ማርያም"
+              {...register('christianName')}
+              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.christianName ? 'border-rose-400' : 'border-slate-200'}`}
+            />
+            {errors.christianName && <p className="text-xs text-rose-500 mt-1">{errors.christianName.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ጾታ</label>
@@ -260,24 +277,28 @@ const StudentRegister = () => {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ክፍለ ከተማ</label>
-            <select {...register('subcity')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+            <select {...register('subcity')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.subcity ? 'border-rose-400' : 'border-slate-200'}`}>
               <option value="">-- ክፍለ ከተማ ይምረጡ --</option>
               {ADDIS_ABABA_SUBCITIES.map((sc) => (
                 <option key={sc} value={sc}>{sc}</option>
               ))}
             </select>
+            {errors.subcity && <p className="text-xs text-rose-500 mt-1">{errors.subcity.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ወረዳ</label>
-            <input type="text" placeholder="ምሳሌ: 03" {...register('woreda')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+            <input type="text" placeholder="ምሳሌ: 03" {...register('woreda')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.woreda ? 'border-rose-400' : 'border-slate-200'}`} />
+            {errors.woreda && <p className="text-xs text-rose-500 mt-1">{errors.woreda.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ቀበሌ / የቤት ቁጥር</label>
-            <input type="text" placeholder="ቀበሌ ወይም የቤት ቁጥር" {...register('kebele')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+            <input type="text" placeholder="ቀበሌ ወይም የቤት ቁጥር" {...register('kebele')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.kebele ? 'border-rose-400' : 'border-slate-200'}`} />
+            {errors.kebele && <p className="text-xs text-rose-500 mt-1">{errors.kebele.message}</p>}
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">ልዩ አድራሻ</label>
-            <input type="text" placeholder="አድራሻ" {...register('address')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+            <input type="text" placeholder="አድራሻ" {...register('address')} className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.address ? 'border-rose-400' : 'border-slate-200'}`} />
+            {errors.address && <p className="text-xs text-rose-500 mt-1">{errors.address.message}</p>}
           </div>
         </div>
 
@@ -288,45 +309,48 @@ const StudentRegister = () => {
               <label className="block text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                 የንስሐ አባት አለዎት?
               </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                የንስሐ አባት ካለዎት መረጃቸውን ያስገቡ
-              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setValue('hasConfessionFather', true, { shouldValidate: true })}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  hasConfessionFather
-                    ? 'bg-[var(--brand-primary)] text-white shadow-xs'
-                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
-                }`}
-              >
-                ✓ አዎ
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('hasConfessionFather', false, { shouldValidate: true });
-                  setValue('confessionFatherName', '');
-                  setValue('confessionFatherPhone', '');
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  !hasConfessionFather
-                    ? 'bg-slate-700 text-white shadow-xs dark:bg-slate-600'
-                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
-                }`}
-              >
-                ✕ የለኝም
-              </button>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+                <input
+                  type="radio"
+                  name="hasConfessionFather"
+                  checked={hasConfessionFather === true}
+                  onChange={() => setValue('hasConfessionFather', true, { shouldValidate: true })}
+                  className="text-[var(--brand-primary)]"
+                />
+                አለኝ
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+                <input
+                  type="radio"
+                  name="hasConfessionFather"
+                  checked={hasConfessionFather === false}
+                  onChange={() => {
+                    setValue('hasConfessionFather', false, { shouldValidate: true });
+                    setValue('confessionFatherName', '');
+                    setValue('confessionFatherPhone', '');
+                  }}
+                  className="text-[var(--brand-primary)]"
+                />
+                የለኝም
+              </label>
             </div>
           </div>
 
           {hasConfessionFather && (
             <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-blue-200/50 dark:border-slate-700">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የንስሐ አባት ስም</label>
-                <input type="text" placeholder="የንስሐ አባት ስም" {...register('confessionFatherName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm" />
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                  የንስሐ አባት ስም <span className="text-[10px] text-slate-400 font-normal">(በአማርኛ ብቻ)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="የንስሐ አባት ስም (ምሳሌ፡ አባ ገብረ ኪዳን)"
+                  {...register('confessionFatherName')}
+                  className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white text-sm ${errors.confessionFatherName ? 'border-rose-400' : 'border-slate-200'}`}
+                />
+                {errors.confessionFatherName && <p className="text-xs text-rose-500 mt-1">{errors.confessionFatherName.message}</p>}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">የንስሐ አባት ስልክ</label>
@@ -353,9 +377,32 @@ const StudentRegister = () => {
           />
         </div>
         <div className="grid md:grid-cols-3 gap-4">
-          <input type="text" placeholder="የወላጅ ሙሉ ስም" {...register('parentName')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-          <input type="tel" placeholder="የወላጅ ስልክ" {...register('parentPhone')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
-          <input type="email" placeholder="የወላጅ ኢሜይል" {...register('parentEmail')} className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white" />
+          <div>
+            <input
+              type="text"
+              placeholder="የወላጅ ሙሉ ስም (በአማርኛ ብቻ)"
+              {...register('parentName')}
+              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.parentName ? 'border-rose-400' : 'border-slate-200'}`}
+            />
+            {errors.parentName && <p className="text-xs text-rose-500 mt-1">{errors.parentName.message}</p>}
+          </div>
+          <div>
+            <input
+              type="tel"
+              placeholder="የወላጅ ስልክ"
+              {...register('parentPhone')}
+              className={`w-full p-2.5 border rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white ${errors.parentPhone ? 'border-rose-400' : 'border-slate-200'}`}
+            />
+            {errors.parentPhone && <p className="text-xs text-rose-500 mt-1">{errors.parentPhone.message}</p>}
+          </div>
+          <div>
+            <input
+              type="email"
+              placeholder="የወላጅ ኢሜይል"
+              {...register('parentEmail')}
+              className="w-full p-2.5 border border-slate-200 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+            />
+          </div>
         </div>
 
         <h2 className="font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">የመግቢያ መረጃ</h2>

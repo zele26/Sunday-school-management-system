@@ -2957,6 +2957,10 @@ export const translations = {
     en: 'Personal Information',
     am: 'የግል መረጃ',
   },
+  amharicOnlyHint: {
+    en: 'Amharic only',
+    am: 'በአማርኛ ብቻ',
+  },
   firstNameLabel: {
     en: 'First Name',
     am: 'ስም',

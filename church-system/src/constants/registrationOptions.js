@@ -87,7 +87,7 @@ export const formatGradeAmharic = (grade, fallback = '—') => {
   if (!str || str === '—' || str === '-' || str === 'N/A' || str === 'null' || str === 'undefined') return fallback;
 
   // If it already has Amharic designations, return it cleanly
-  if (str.includes('ክፍል') || str.includes('ባች') || str.includes('መዋዕለ') || str.includes('ሁሉም')) {
+  if (str.includes('ክፍል') || str.includes('ባች') || str.includes('ዙር') || str.includes('መዋዕለ') || str.includes('ሁሉም')) {
     return str;
   }
 
@@ -131,4 +131,26 @@ export const GRADE_FILTER_OPTIONS = [
   { value: 'Batch 3', label: 'ባች 3' },
   { value: 'Batch 4', label: 'ባች 4' },
 ];
+
+export const formatShiftAmharic = (shift, isAmharic = true) => {
+  if (!shift) return '';
+  const s = String(shift).toLowerCase();
+  if (s === 'night' || s.includes('ማታ')) return isAmharic ? 'የማታ' : 'Night';
+  if (s === 'weekend' || s === 'day' || s.includes('ቀን')) return isAmharic ? 'የቀን (ቅዳሜና እሑድ)' : 'Weekend / Day';
+  return isAmharic && s === 'regular' ? 'መደበኛ' : shift;
+};
+
+export const formatStatusAmharic = (status, isAmharic = true) => {
+  if (!status) return '';
+  const st = String(status).toLowerCase();
+  if (st === 'active' || st === 'approved' || st === 'ንቁ') return isAmharic ? 'ንቁ' : 'Active';
+  if (st === 'pending' || st === 'በመጠባበቅ ላይ') return isAmharic ? 'በመጠባበቅ ላይ' : 'Pending';
+  if (st === 'rejected' || st === 'ውድቅ የተደረገ') return isAmharic ? 'ውድቅ የተደረገ' : 'Rejected';
+  if (st === 'completed' || st === 'የተመረቀ') return isAmharic ? 'የተመረቀ' : 'Completed';
+  if (st === 'present' || st === 'ተገኝቷል') return isAmharic ? 'ተገኝቷል' : 'Present';
+  if (st === 'absent' || st === 'አልተገኘም') return isAmharic ? 'አልተገኘም' : 'Absent';
+  if (st === 'late' || st === 'ዘግይቷል' || st === 'አርፍዷል') return isAmharic ? 'ዘግይቷል' : 'Late';
+  if (st === 'excused' || st === 'ፈቃድ') return isAmharic ? 'ፈቃድ' : 'Excused';
+  return status;
+};
 

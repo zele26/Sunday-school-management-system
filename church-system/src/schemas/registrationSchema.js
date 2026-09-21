@@ -2,6 +2,27 @@ import { z } from 'zod';
 
 const phoneRegex = /^(?:\+251|0)?[79]\d{8}$|^\d{10}$/;
 
+// Regex for strictly Amharic characters + whitespace + Ethiopic wordspace (፡)
+// Rejecting English characters, numbers, and special characters
+export const amharicTextRegex = /^[\u1200-\u135A\u135F\u1361\u2D80-\u2DDF\uAB00-\uAB2F\s]+$/;
+
+export const amharicNameValidator = (fieldNameAm = 'ስም') =>
+  z
+    .string()
+    .trim()
+    .min(1, `${fieldNameAm} ግዴታ ነው`)
+    .regex(amharicTextRegex, `${fieldNameAm} በአማርኛ ፊደላት ብቻ መሆን አለበት (እንግሊዝኛ ወይም ልዩ ምልክት አይፈቀድም)`);
+
+export const optionalAmharicNameValidator = (fieldNameAm = 'ስም') =>
+  z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(''))
+    .refine((val) => !val || amharicTextRegex.test(val), {
+      message: `${fieldNameAm} በአማርኛ ፊደላት ብቻ መሆን አለበት (እንግሊዝኛ ወይም ልዩ ምልክት አይፈቀድም)`,
+    });
+
 const optionalPhoneValidator = z
   .string()
   .trim()
@@ -12,23 +33,10 @@ const optionalPhoneValidator = z
   });
 
 export const regularRegistrationSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, 'የመጀመሪያ ስም ግዴታ ነው'),
-  middleName: z
-    .string()
-    .trim()
-    .min(1, 'የመካከለኛ ስም ግዴታ ነው'),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, 'የአያት ስም ግዴታ ነው'),
-  christianName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  firstName: amharicNameValidator('የመጀመሪያ ስም'),
+  middleName: amharicNameValidator('የመካከለኛ ስም'),
+  lastName: amharicNameValidator('የአያት ስም'),
+  christianName: optionalAmharicNameValidator('የክርስትና ስም'),
   photoUrl: z
     .string()
     .optional()
@@ -71,11 +79,7 @@ export const regularRegistrationSchema = z.object({
   hasConfessionFather: z
     .union([z.boolean(), z.string()])
     .default(false),
-  confessionFatherName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  confessionFatherName: optionalAmharicNameValidator('የንስሐ አባት ስም'),
   confessionFatherPhone: optionalPhoneValidator,
   // Address
   subcity: z
@@ -117,20 +121,9 @@ export const regularRegistrationSchema = z.object({
     .string()
     .optional()
     .or(z.literal('')),
-  emergencyFirstName: z
-    .string()
-    .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው'),
-  emergencyMiddleName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
-  emergencyLastName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  emergencyFirstName: amharicNameValidator('የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም'),
+  emergencyMiddleName: optionalAmharicNameValidator('የአደጋ ጊዜ ተጠሪ የአባት ስም'),
+  emergencyLastName: optionalAmharicNameValidator('የአደጋ ጊዜ ተጠሪ የአያት ስም'),
   relationship: z
     .string()
     .default('Father'),
@@ -155,23 +148,10 @@ export const regularRegistrationSchema = z.object({
 });
 
 export const distanceRegistrationSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, 'የመጀመሪያ ስም ግዴታ ነው'),
-  middleName: z
-    .string()
-    .trim()
-    .min(1, 'የመካከለኛ ስም ግዴታ ነው'),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, 'የአያት ስም ግዴታ ነው'),
-  christianName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  firstName: amharicNameValidator('የመጀመሪያ ስም'),
+  middleName: amharicNameValidator('የመካከለኛ ስም'),
+  lastName: amharicNameValidator('የአያት ስም'),
+  christianName: optionalAmharicNameValidator('የክርስትና ስም'),
   photoUrl: z
     .string()
     .optional()
@@ -208,11 +188,7 @@ export const distanceRegistrationSchema = z.object({
   hasConfessionFather: z
     .union([z.boolean(), z.string()])
     .default(false),
-  confessionFatherName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  confessionFatherName: optionalAmharicNameValidator('የንስሐ አባት ስም'),
   confessionFatherPhone: optionalPhoneValidator,
   // Address
   subcity: z
@@ -254,20 +230,9 @@ export const distanceRegistrationSchema = z.object({
     .string()
     .optional()
     .or(z.literal('')),
-  emergencyFirstName: z
-    .string()
-    .trim()
-    .min(1, 'የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም ግዴታ ነው'),
-  emergencyMiddleName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
-  emergencyLastName: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal('')),
+  emergencyFirstName: amharicNameValidator('የአደጋ ጊዜ ተጠሪ የመጀመሪያ ስም'),
+  emergencyMiddleName: optionalAmharicNameValidator('የአደጋ ጊዜ ተጠሪ የአባት ስም'),
+  emergencyLastName: optionalAmharicNameValidator('የአደጋ ጊዜ ተጠሪ የአያት ስም'),
   relationship: z
     .string()
     .default('Father'),
@@ -292,8 +257,8 @@ export const distanceRegistrationSchema = z.object({
 });
 
 export const studentSelfRegisterSchema = z.object({
-  fullName: z.string().trim().min(1, 'ሙሉ ስም ያስገቡ'),
-  christianName: z.string().trim().optional().or(z.literal('')),
+  fullName: amharicNameValidator('ሙሉ ስም'),
+  christianName: optionalAmharicNameValidator('የክርስትና ስም'),
   photoUrl: z.string().optional().or(z.literal('')),
   gender: z.string().default('Male'),
   age: z
@@ -307,7 +272,7 @@ export const studentSelfRegisterSchema = z.object({
   dateOfBirth: z.string().optional().or(z.literal('')),
   shift: z.string().optional().or(z.literal('')),
   hasConfessionFather: z.union([z.boolean(), z.string()]).default(false),
-  confessionFatherName: z.string().trim().optional().or(z.literal('')),
+  confessionFatherName: optionalAmharicNameValidator('የንስሐ አባት ስም'),
   confessionFatherPhone: optionalPhoneValidator,
   subcity: z.string().trim().optional().or(z.literal('')),
   woreda: z.string().trim().optional().or(z.literal('')),
@@ -317,7 +282,7 @@ export const studentSelfRegisterSchema = z.object({
   studentType: z.string().default('regular'),
   address: z.string().optional().or(z.literal('')),
   emergencyContactPhoto: z.string().optional().or(z.literal('')),
-  parentName: z.string().optional().or(z.literal('')),
+  parentName: optionalAmharicNameValidator('የወላጅ/ተጠሪ ስም'),
   parentPhone: z.string().optional().or(z.literal('')),
   parentEmail: z.string().optional().or(z.literal('')),
   email: z.string().trim().email('ትክክለኛ ኢሜይል ያስገቡ'),

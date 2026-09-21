@@ -26,6 +26,8 @@ export default function ForgotPassword() {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       identifier: '',
     },

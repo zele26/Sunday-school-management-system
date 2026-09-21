@@ -5,6 +5,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { apiFetch } from '../../api/apiClient';
 import useLanguage from '../../hooks/useLanguage';
 import ChurchLogo from '../../assets/ChurchLogo.png';
+import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 const DistanceClassroom = () => {
   const { courseId } = useParams();
@@ -273,7 +274,7 @@ const DistanceClassroom = () => {
             <h2 className="text-xs md:text-sm font-extrabold text-white truncate">
               {isAmharic ? course.nameAmharic || course.name : course.name}
             </h2>
-            <p className="text-[10px] text-amber-300/80 font-mono truncate">{course.code} • {course.grade || 'ዙር 1'}</p>
+            <p className="text-[10px] text-amber-300/80 font-mono truncate">{course.code} • {isAmharic ? formatGradeAmharic(course.grade || 'ዙር 1') : (course.grade || 'Batch 1')}</p>
           </div>
         </div>
 

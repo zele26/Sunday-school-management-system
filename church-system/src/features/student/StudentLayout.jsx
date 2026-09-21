@@ -365,12 +365,12 @@ const StudentLayout = ({ children, onLogout }) => {
     { label: t('home', 'መነሻ'), path: '/dashboard', icon: <Home className="w-4 h-4" />, end: true },
     { label: t('academic', 'አካዳሚክ'), path: '/dashboard/courses', icon: <BookOpen className="w-4 h-4" /> },
     { label: t('attendanceAndGrades', 'ተገኝነትና ውጤት'), path: '/dashboard/attendance', icon: <CalendarCheck className="w-4 h-4" /> },
-    { label: t('analytics', 'አናሊቲክስ (Analytics)'), path: '/dashboard/analytics', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+    { label: isAmharic ? 'አናሊቲክስ' : 'Analytics', path: '/dashboard/analytics', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
     { label: t('announcements', 'ማስታወቂያዎች'), path: '/dashboard/announcements', icon: <Bell className="w-4 h-4" /> },
     ...(canScanAttendance
       ? [
           {
-            label: isAmharic ? 'የQR መቃኛ (Scanner)' : 'QR Scanner',
+            label: isAmharic ? 'የQR መቃኛ' : 'QR Scanner',
             path: '/admin/qr-scanner',
             icon: <QrCode className="w-4 h-4 text-emerald-400 animate-pulse" />,
             isExternal: true,
@@ -425,7 +425,7 @@ const StudentLayout = ({ children, onLogout }) => {
             <a
               href="/admin"
               className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-amber-400 text-slate-950 hover:bg-amber-300 border border-amber-400 text-xs font-black transition-all shadow-xs h-8 sm:h-9"
-              title={t('switchToAdmin', 'ወደ አስተዳዳሪ ክፍል ይቀይሩ (Switch to Admin Portal)')}
+              title={isAmharic ? 'ወደ አስተዳዳሪ ክፍል ይቀይሩ' : 'Switch to Admin Portal'}
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t('adminPortalLink', 'የአስተዳደር ክፍል')}</span>
@@ -518,7 +518,7 @@ const StudentLayout = ({ children, onLogout }) => {
         <button
           onClick={handleOpenQrModal}
           className="relative -top-4 w-13 h-13 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/30 flex flex-col items-center justify-center border-2 border-slate-900 active:scale-95 transition-transform cursor-pointer"
-          title={isAmharic ? 'የእኔ QR ባጅ' : 'My QR'}
+          title={isAmharic ? 'የእኔ ዲጂታል መታወቂያ' : 'My QR'}
         >
           <QrCode className="w-6 h-6" />
         </button>
@@ -608,7 +608,7 @@ const StudentLayout = ({ children, onLogout }) => {
                 className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs transition-all shadow-md active:scale-98 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSavingBadge ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                <span>{isAmharic ? '💾 ምስሉን አስቀምጥ (Save Badge)' : '💾 Save Badge Image (PNG)'}</span>
+                <span>{isAmharic ? '💾 ምስሉን አስቀምጥ' : '💾 Save Badge Image (PNG)'}</span>
               </button>
 
               <button
@@ -616,7 +616,7 @@ const StudentLayout = ({ children, onLogout }) => {
                 className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>{isAmharic ? '🖨️ ባጁን አትም (Print Badge)' : '🖨️ Print Badge'}</span>
+                <span>{isAmharic ? '🖨️ ባጁን አትም' : '🖨️ Print Badge'}</span>
               </button>
             </div>
           </div>

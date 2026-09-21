@@ -60,6 +60,8 @@ const Login = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       credential: '',
       password: '',

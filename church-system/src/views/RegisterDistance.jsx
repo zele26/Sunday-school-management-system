@@ -34,6 +34,8 @@ const RegisterDistanceContent = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(distanceRegistrationSchema),
+    mode: 'all',
+    reValidateMode: 'onChange',
     defaultValues: {
       firstName: '',
       middleName: '',
@@ -451,11 +453,11 @@ const RegisterDistanceContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
-                  {t('firstNameLabel', 'ስም')} <span className="text-rose-500">*</span>
+                  {t('firstNameLabel', 'ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={t('firstNamePlaceholder', 'የመጀመሪያ ስም')}
+                  placeholder={t('firstNamePlaceholder', 'ምሳሌ፡ ዮሐንስ')}
                   {...register('firstName')}
                   className={`${inputClass} ${errors.firstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -463,11 +465,11 @@ const RegisterDistanceContent = () => {
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('middleNameLabel', 'የአባት ስም')} <span className="text-rose-500">*</span>
+                  {t('middleNameLabel', 'የአባት ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={t('middleNamePlaceholder', 'የአባት ስም')}
+                  placeholder={t('middleNamePlaceholder', 'ምሳሌ፡ ተስፋዬ')}
                   {...register('middleName')}
                   className={`${inputClass} ${errors.middleName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -475,11 +477,11 @@ const RegisterDistanceContent = () => {
               </div>
               <div>
                 <label className={labelClass}>
-                  {t('lastNameLabel', 'የአያት ስም')} <span className="text-rose-500">*</span>
+                  {t('lastNameLabel', 'የአያት ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={t('lastNamePlaceholder', 'የአያት ስም')}
+                  placeholder={t('lastNamePlaceholder', 'ምሳሌ፡ ገብሬ')}
                   {...register('lastName')}
                   className={`${inputClass} ${errors.lastName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
@@ -489,14 +491,15 @@ const RegisterDistanceContent = () => {
               {/* Christian / Baptismal Name (የክርስትና ስም) */}
               <div>
                 <label className={labelClass}>
-                  {t('christianNameLabel', 'የክርስትና ስም')} <span className="text-amber-600 dark:text-amber-400 text-xs font-normal">({t('emailOptional', 'አማራጭ')})</span>
+                  {t('christianNameLabel', 'የክርስትና ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-amber-600 dark:text-amber-400 text-xs font-normal">({t('emailOptional', 'አማራጭ')})</span>
                 </label>
                 <input
                   type="text"
                   placeholder={t('christianNamePlaceholder', 'ምሳሌ፡ ወልደ ማርያም / ወለተ ጊዮርጊስ')}
                   {...register('christianName')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.christianName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.christianName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.christianName.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>
@@ -646,7 +649,7 @@ const RegisterDistanceContent = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div>
                 <label className={labelClass}>{t('subcityLabel', 'ክፍለ ከተማ')}</label>
-                <select {...register('subcity')} className={inputClass}>
+                <select {...register('subcity')} className={`${inputClass} ${errors.subcity ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}>
                   <option value="">{t('selectSubcity', 'ክፍለ ከተማ ይምረጡ')}</option>
                   <option value="Bole">{t('subcityBole', 'ቦሌ')}</option>
                   <option value="Arada">{t('subcityArada', 'አራዳ')}</option>
@@ -661,6 +664,7 @@ const RegisterDistanceContent = () => {
                   <option value="Lemi Kura">{t('subcityLemiKura', 'ለሚ ኩራ')}</option>
                   <option value="Outside Addis Ababa">{t('subcityOutsideAA', 'ከአዲስ አበባ ውጪ')}</option>
                 </select>
+                {errors.subcity && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.subcity.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>{t('woredaLabel', 'ወረዳ')}</label>
@@ -668,8 +672,9 @@ const RegisterDistanceContent = () => {
                   type="text"
                   placeholder={t('woredaPlaceholder', 'ወረዳ (ምሳሌ፡ 03)')}
                   {...register('woreda')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.woreda ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.woreda && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.woreda.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>{t('kebeleLabel', 'ቀበሌ / የቤት ቁጥር')}</label>
@@ -677,8 +682,9 @@ const RegisterDistanceContent = () => {
                   type="text"
                   placeholder={t('kebelePlaceholder', 'ቀበሌ / የቤት ቁጥር')}
                   {...register('kebele')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.kebele ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.kebele && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.kebele.message}</p>}
               </div>
               <div className="sm:col-span-3">
                 <label className={labelClass}>{t('residentialAddressLabel', 'ተጨማሪ አድራሻ')}</label>
@@ -686,8 +692,9 @@ const RegisterDistanceContent = () => {
                   type="text"
                   placeholder={t('residentialAddressPlaceholder', 'ከተማ፣ የሰፈር ስም ወይም ልዩ ምልክት')}
                   {...register('address')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.address ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.address && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.address.message}</p>}
               </div>
             </div>
           </div>
@@ -779,7 +786,7 @@ const RegisterDistanceContent = () => {
                 >
                   <div>
                     <label className={labelClass}>
-                      {t('confessionFatherNameLabel', 'የንስሐ አባት ስም')} <span className="text-rose-500">*</span>
+                      {t('confessionFatherNameLabel', 'የንስሐ አባት ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -848,45 +855,52 @@ const RegisterDistanceContent = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
-                  {t('emergencyFirstNameLabel', 'ስም')} <span className="text-rose-500">*</span>
+                  {t('emergencyFirstNameLabel', 'የተጠሪ ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span> <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={t('firstNamePlaceholder', 'የመጀመሪያ ስም')}
+                  placeholder={t('emergencyFirstNamePlaceholder', 'ምሳሌ፡ በቀለ')}
                   {...register('emergencyFirstName')}
                   className={`${inputClass} ${errors.emergencyFirstName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
                 {errors.emergencyFirstName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyFirstName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>{t('emergencyMiddleNameLabel', 'የአባት ስም')}</label>
+                <label className={labelClass}>
+                  {t('emergencyMiddleNameLabel', 'የተጠሪ የአባት ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span>
+                </label>
                 <input
                   type="text"
-                  placeholder={t('middleNamePlaceholder', 'የአባት ስም')}
+                  placeholder={t('emergencyMiddleNamePlaceholder', 'ምሳሌ፡ ታደሰ')}
                   {...register('emergencyMiddleName')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.emergencyMiddleName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.emergencyMiddleName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyMiddleName.message}</p>}
               </div>
               <div>
-                <label className={labelClass}>{t('emergencyLastNameLabel', 'የአያት ስም')}</label>
+                <label className={labelClass}>
+                  {t('emergencyLastNameLabel', 'የተጠሪ የአያት ስም')} <span className="text-xs font-normal text-slate-400">({t('amharicOnlyHint', 'በአማርኛ ብቻ')})</span>
+                </label>
                 <input
                   type="text"
-                  placeholder={t('lastNamePlaceholder', 'የአያት ስም')}
+                  placeholder={t('emergencyLastNamePlaceholder', 'ምሳሌ፡ አሰፋ')}
                   {...register('emergencyLastName')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.emergencyLastName ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.emergencyLastName && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyLastName.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>
                   {t('relationshipLabel', 'ዝምድና')} <span className="text-rose-500">*</span>
                 </label>
-                <select {...register('relationship')} className={inputClass}>
+                <select {...register('relationship')} className={`${inputClass} ${errors.relationship ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}>
                   {RELATIONSHIP_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {isAmharic ? opt.labelAm : opt.labelEn}
                     </option>
                   ))}
                 </select>
+                {errors.relationship && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.relationship.message}</p>}
               </div>
               <div>
                 <label className={labelClass}>
@@ -916,8 +930,9 @@ const RegisterDistanceContent = () => {
                   type="text"
                   placeholder={t('addressPlaceholder', 'አድራሻ')}
                   {...register('emergencyAddress')}
-                  className={inputClass}
+                  className={`${inputClass} ${errors.emergencyAddress ? 'border-rose-400 ring-1 ring-rose-400' : ''}`}
                 />
+                {errors.emergencyAddress && <p className="text-[11px] text-rose-500 font-medium mt-1">{errors.emergencyAddress.message}</p>}
               </div>
             </div>
           </div>
