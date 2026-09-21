@@ -161,9 +161,31 @@ const parseGradeAndShift = (input) => {
 /**
  * Check if a user is an authorized admin in a Telegram group or system admin
  */
-const isAuthorizedAdmin = async (chatId, userId) => {
-  if (!userId) return false;
+const isAuthorizedAdmin = async (chatId, userId, msg = null) => {
   try {
+    // 0. Check Anonymous Admin / Channel Posting
+    // In Telegram groups, when an admin enables "Remain Anonymous" or sends as channel:
+    if (msg) {
+      // If sent on behalf of the group (sender_chat matches group id)
+      if (msg.sender_chat && String(msg.sender_chat.id) === String(chatId)) {
+        return true;
+      }
+      // If sent by Telegram's official GroupAnonymousBot
+      if (
+        msg.from?.id === 1087968824 ||
+        msg.from?.username === 'GroupAnonymousBot' ||
+        (msg.from?.is_bot && msg.from?.first_name === 'Group')
+      ) {
+        return true;
+      }
+      // If author_signature exists (often sent by channel admins)
+      if (msg.author_signature) {
+        return true;
+      }
+    }
+
+    if (!userId) return false;
+
     // 1. Check if user is in env TELEGRAM_ADMIN_IDS
     const adminIds = (process.env.TELEGRAM_ADMIN_IDS || '')
       .split(',')
@@ -181,6 +203,12 @@ const isAuthorizedAdmin = async (chatId, userId) => {
     if (botInstance && chatId && (String(chatId).startsWith('-') || String(chatId).startsWith('-100'))) {
       const member = await botInstance.getChatMember(chatId, userId).catch(() => null);
       if (member && (member.status === 'creator' || member.status === 'administrator')) {
+        return true;
+      }
+
+      // Fallback: check full group administrator list
+      const admins = await botInstance.getChatAdministrators(chatId).catch(() => []);
+      if (admins && admins.some((a) => String(a.user?.id) === String(userId))) {
         return true;
       }
     }
@@ -479,7 +507,7 @@ const initTelegramBot = async () => {
 
       if (isSetClassCmd || isSetShiftCmd || isGroupInfoCmd) {
         // Enforce admin permission: only Group Creator / Admin or Sunday School Admin can configure
-        const isAuthorized = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        const isAuthorized = await isAuthorizedAdmin(msg.chat.id, msg.from?.id, msg);
         if (!isAuthorized) {
           const warnMsg = `⛔ *ይቅርታ! ይህን ትእዛዝ የማስፈጸም ፈቃድ የተሰጠው ለግሩፑ አስተዳዳሪ (Group Admin) ብቻ ነው።*\n\n_የክፍል እና የፈረቃ ምደባ ማስተካከል የሚችሉት የግሩፑ አስተዳዳሪዎች ብቻ ናቸው።_`;
           await safeSendMessage(msg.chat.id, warnMsg, { parse_mode: 'Markdown' });
@@ -1137,7 +1165,7 @@ const initTelegramBot = async () => {
     botInstance.onText(/\/announcements|📢 ማስታወቂያዎች/, async (msg) => {
       const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
       if (isGroup) {
-        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id);
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id, msg);
         if (!isAdmin) {
           return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'announcements');
         }
@@ -1186,7 +1214,7 @@ const initTelegramBot = async () => {
         const chatId = msg.chat.id;
         const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
         if (isGroup) {
-          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id, msg);
           if (!isAdmin) {
             return sendGroupToPrivateRedirect(chatId, msg.from, 'verify');
           }
@@ -1271,7 +1299,7 @@ const initTelegramBot = async () => {
         const chatId = msg.chat.id;
         const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
         if (isGroup) {
-          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id);
+          const isAdmin = await isAuthorizedAdmin(chatId, msg.from?.id, msg);
           if (!isAdmin) {
             return sendGroupToPrivateRedirect(chatId, msg.from, 'status');
           }
