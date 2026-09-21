@@ -201,7 +201,7 @@ const AnnouncementsManagement = () => {
             }
 
             // 2. Broadcast to Telegram Groups & Direct Students if enabled
-            if ((sendToTelegramGroups || sendToDirectStudents) && botStatus?.isRunning) {
+            if (sendToTelegramGroups || sendToDirectStudents) {
                 let audienceLabel = '';
                 if (targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length > 0) {
                     audienceLabel = ` 📍 *ለተመረጡ ${selectedGroupIdsForBroadcast.length} ግሩፖች*`;
@@ -216,6 +216,7 @@ const AnnouncementsManagement = () => {
 
                 const payload = {
                     message: tgText,
+                    sendToGroups: sendToTelegramGroups,
                     sendToDirectStudents,
                 };
 
@@ -233,10 +234,14 @@ const AnnouncementsManagement = () => {
                 });
 
                 const resData = await res.json().catch(() => ({}));
-                if (res.ok) {
-                    toast.success(resData.message || 'ማስታወቂያው ወደ ቴሌግራም ግሩፖች በተሳካ ሁኔታ ተልኳል! 📢');
+                if (res.ok && resData.success !== false) {
+                    if (postToWeb) {
+                        toast.success('ማስታወቂያው በድረ-ገጽ ተለጥፏል፤ ወደ ቴሌግራም ግሩፖችም ተልኳል! 📢');
+                    } else {
+                        toast.success(resData.message || 'ማስታወቂያው ወደ ቴሌግራም ግሩፖች በተሳካ ሁኔታ ተልኳል! 📢');
+                    }
                 } else {
-                    toast.warning('ማስታወቂያው በድረ-ገጽ ተለጥፏል ነገር ግን ወደ ቴሌግራም መላክ አልተቻለም።');
+                    toast.warning(resData.message || 'ማስታወቂያው በድረ-ገጽ ተለጥፏል ነገር ግን ወደ ቴሌግራም መላክ አልተቻለም።');
                 }
             } else if (postToWeb) {
                 toast.success('ማስታወቂያው በድረ-ገጹ ላይ በተሳካ ሁኔታ ተለጥፏል! 📢');
@@ -386,8 +391,8 @@ const AnnouncementsManagement = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            const data = await res.json();
-            if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success !== false) {
                 toast.success(data.message || 'መልእክቱ በተሳካ ሁኔታ ተልኳል! 🚀');
                 setShowMessageModal(false);
                 setDirectMsgText('');

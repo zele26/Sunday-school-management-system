@@ -12,6 +12,7 @@ const {
   broadcastToStudents,
   sendMessageToGroups,
   getBotInstance,
+  autoDetectClassAndShift,
 } = require('../services/telegramBotService');
 
 // Helper to generate access token
@@ -275,6 +276,15 @@ router.post('/groups/sync', protect, authorize('admin', 'superadmin'), async (re
           if (count) grp.memberCount = count;
           grp.isActive = true;
           grp.lastActivityAt = new Date();
+
+          const detected = autoDetectClassAndShift(grp.title);
+          if (detected.assignedGrade && (grp.assignedGrade === 'All Classes' || !grp.assignedGrade)) {
+            grp.assignedGrade = detected.assignedGrade;
+          }
+          if (detected.shift && (grp.shift === 'all' || !grp.shift)) {
+            grp.shift = detected.shift;
+          }
+
           await grp.save();
           updated++;
         }
