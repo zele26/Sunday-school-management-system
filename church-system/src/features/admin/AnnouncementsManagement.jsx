@@ -378,7 +378,7 @@ const AnnouncementsManagement = () => {
             };
 
             if (modalTargetMode === 'single' && selectedGroup) {
-                payload.targetGroupId = selectedGroup._id;
+                payload.targetGroupId = selectedGroup.chatId || selectedGroup._id;
             } else if (modalTargetMode === 'selected_list' && selectedGroupIds.length > 0) {
                 payload.targetGroupIds = selectedGroupIds;
             } else {

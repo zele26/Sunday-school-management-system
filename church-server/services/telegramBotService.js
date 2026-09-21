@@ -307,7 +307,39 @@ const upsertTelegramGroup = async (chat, options = {}) => {
 };
 
 /**
- * Safe message sender with markdown fallback and error resilience
+ * Split long text into Telegram-compliant chunks (<= 3900 chars)
+ */
+const chunkText = (text, maxLength = 3900) => {
+  if (!text || typeof text !== 'string') return [];
+  if (text.length <= maxLength) return [text];
+  const chunks = [];
+  let remaining = text;
+
+  while (remaining.length > 0) {
+    if (remaining.length <= maxLength) {
+      chunks.push(remaining);
+      break;
+    }
+    let splitIdx = remaining.lastIndexOf('\n\n', maxLength);
+    if (splitIdx === -1 || splitIdx < maxLength * 0.4) {
+      splitIdx = remaining.lastIndexOf('\n', maxLength);
+    }
+    if (splitIdx === -1 || splitIdx < maxLength * 0.4) {
+      splitIdx = remaining.lastIndexOf(' ', maxLength);
+    }
+    if (splitIdx === -1 || splitIdx === 0) {
+      splitIdx = maxLength;
+    }
+
+    chunks.push(remaining.slice(0, splitIdx).trim());
+    remaining = remaining.slice(splitIdx).trim();
+  }
+
+  return chunks.filter(Boolean);
+};
+
+/**
+ * Safe message sender with auto-chunking, markdown fallback and error resilience
  */
 const safeSendMessage = async (chatId, text, options = {}) => {
   if (!botInstance && process.env.TELEGRAM_BOT_TOKEN) {
@@ -321,24 +353,41 @@ const safeSendMessage = async (chatId, text, options = {}) => {
     console.warn(`safeSendMessage: botInstance is null, cannot send to ${chatId}`);
     return null;
   }
-  try {
-    return await botInstance.sendMessage(chatId, text, options);
-  } catch (err) {
-    console.warn(`⚠️ Telegram sendMessage initial attempt failed (${err.message}). Retrying fallback...`);
+
+  if (!text || typeof text !== 'string') return null;
+
+  const chunks = chunkText(text, 3900);
+  let lastResult = null;
+
+  for (const chunk of chunks) {
+    let sent = null;
     try {
-      const fallbackOpts = { ...options };
-      delete fallbackOpts.parse_mode;
-      return await botInstance.sendMessage(chatId, text, fallbackOpts);
-    } catch (fallbackErr) {
-      console.warn(`⚠️ Telegram sendMessage fallback attempt failed (${fallbackErr.message}). Retrying plain message...`);
+      sent = await botInstance.sendMessage(chatId, chunk, options);
+    } catch (err) {
+      console.warn(`⚠️ Telegram sendMessage initial attempt failed for chat ${chatId} (${err.message}). Retrying fallback...`);
       try {
-        return await botInstance.sendMessage(chatId, text.replace(/[*_`[\]()]/g, ''));
-      } catch (finalErr) {
-        console.error(`❌ Telegram sendMessage completely failed for chat ${chatId}:`, finalErr.message);
-        return null;
+        const fallbackOpts = { ...options };
+        delete fallbackOpts.parse_mode;
+        sent = await botInstance.sendMessage(chatId, chunk, fallbackOpts);
+      } catch (fallbackErr) {
+        console.warn(`⚠️ Telegram sendMessage fallback attempt failed (${fallbackErr.message}). Retrying plain message...`);
+        try {
+          sent = await botInstance.sendMessage(chatId, chunk.replace(/[*_`[\]()]/g, ''));
+        } catch (finalErr) {
+          console.error(`❌ Telegram sendMessage completely failed for chat ${chatId}:`, finalErr.message);
+        }
+      }
+    }
+
+    if (sent) {
+      lastResult = sent;
+      if (chunks.length > 1) {
+        await new Promise((resolve) => setTimeout(resolve, 80));
       }
     }
   }
+
+  return lastResult;
 };
 
 /**
@@ -1774,7 +1823,9 @@ const sendMessageToGroups = async ({
 
       if (targetGroupIds && Array.isArray(targetGroupIds) && targetGroupIds.length > 0) {
         const mongoose = require('mongoose');
-        const validObjIds = targetGroupIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+        const validObjIds = targetGroupIds
+          .filter((id) => mongoose.Types.ObjectId.isValid(id))
+          .map((id) => new mongoose.Types.ObjectId(id));
         const chatIds = targetGroupIds.map(String);
         const orConditions = [{ chatId: { $in: chatIds } }];
         if (validObjIds.length > 0) {
@@ -1782,22 +1833,17 @@ const sendMessageToGroups = async ({
         }
         groupQuery = {
           $or: orConditions,
-          isActive: true,
         };
       } else if (targetGroupId) {
         const mongoose = require('mongoose');
         const isObjId = mongoose.Types.ObjectId.isValid(targetGroupId);
+        const orConditions = [{ chatId: String(targetGroupId) }];
         if (isObjId) {
-          groupQuery = {
-            $or: [{ _id: targetGroupId }, { chatId: String(targetGroupId) }],
-            isActive: true,
-          };
-        } else {
-          groupQuery = {
-            chatId: String(targetGroupId),
-            isActive: true,
-          };
+          orConditions.push({ _id: new mongoose.Types.ObjectId(targetGroupId) });
         }
+        groupQuery = {
+          $or: orConditions,
+        };
       } else {
         const andConditions = [{ isActive: true }];
 
