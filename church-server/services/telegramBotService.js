@@ -84,11 +84,18 @@ const getMainReplyKeyboard = () => {
         { text: '🏆 የፈተና ውጤት (Results)' }
       ],
       [
-        { text: '📜 ሰርተፊኬት (Certificate)' },
+        { text: '📝 ሳምንታዊ ፈተና (Quiz)' },
+        { text: '🎵 መዝሙርና ትምህርት (Media)' }
+      ],
+      [
+        { text: '🤖 መንፈሳዊ ረዳት (AI Q&A)' },
         { text: '📅 የዕለታዊ ክትትል (Attendance)' }
       ],
       [
-        { text: '📢 ማስታወቂያዎች (Announcements)' },
+        { text: '📜 ሰርተፊኬት (Certificate)' },
+        { text: '📢 ማስታወቂያዎች (Announcements)' }
+      ],
+      [
         { text: '❓ እርዳታ (Help Guide)' }
       ]
     ],
@@ -569,6 +576,10 @@ const initTelegramBot = async () => {
         { command: 'start', description: 'የቴሌግራም ቦት መነሻ ገጽ (Start & Main Menu)' },
         { command: 'register', description: 'አዲስ የተማሪ ምዝገባ (New Student Registration)' },
         { command: 'profile', description: 'የተማሪ መረጃ እና ዲጂታል QR ባጅ (Student Profile & Badge)' },
+        { command: 'quiz', description: 'ሳምንታዊ የመጽሐፍ ቅዱስና የትምህርት ፈተና (Weekly Quiz)' },
+        { command: 'mezmur', description: 'መንፈሳዊ መዝሙራትና የድምፅ ትምህርቶች (Audio Mezmurs & Sermons)' },
+        { command: 'ask', description: 'የመንፈሳዊ ትምህርት ረዳት (Spiritual AI Q&A Assistant)' },
+        { command: 'checkin', description: 'የመምህራን የተማሪ ክትትል መመዝገቢያ (Teacher Roll-Call Check-in)' },
         { command: 'certificate', description: 'የምረቃ ሰርተፊኬት ማረጋገጫና ማውረጃ (Graduation Certificate)' },
         { command: 'attendance', description: 'የዕለታዊ ክትትል ታሪክ (Attendance Logs)' },
         { command: 'courses', description: 'የተመዘገቡባቸው ትምህርቶች (Enrolled Courses)' },
@@ -1636,6 +1647,520 @@ const initTelegramBot = async () => {
       });
     };
 
+    // ---------- 13. /quiz & "📝 ሳምንታዊ ፈተና" (Interactive Telegram Quizzes) ----------
+    const CURATED_QUIZ_POOL = [
+      {
+        question: 'በኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን ቀኖና መሠረት የመጽሐፍ ቅዱስ መጻሕፍት ቁጥር ስንት ነው?',
+        options: ['66 መጻሕፍት', '73 መጻሕፍት', '81 መጻሕፍት', '88 መጻሕፍት'],
+        correctIndex: 2,
+        explanation: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን 81 መጻሕፍት (46 የብሉይ ኪዳን እና 35 የሐዲስ ኪዳን) ቀኖና አላት።',
+      },
+      {
+        question: 'ከሰባቱ ምስጢራተ ቤተክርስቲያን መካከል የማይደገሙት (አንድ ጊዜ ብቻ የሚፈጸሙት) የትኞቹ ናቸው?',
+        options: ['ጥምቀት፣ ሜሮን፣ ክህነት', 'ቁርባን፣ ንስሐ፣ ተክሊል', 'ቀንዲል፣ ጥምቀት፣ ንስሐ', 'ክህነት፣ ቁርባን፣ ተክሊል'],
+        correctIndex: 0,
+        explanation: 'ምስጢረ ጥምቀት፣ ምስጢረ ሜሮን እና ምስጢረ ክህነት በሰው ሕይወት ውስጥ አንዴ ብቻ የሚፈጸሙ የማይደገሙ ምስጢራት ናቸው።',
+      },
+      {
+        question: 'የሰንበት ትምህርት ቤታችን የተሰየመበት ታላቁ ቅዱስ አባት ማነው?',
+        options: ['ቅዱስ ተክለ ሳዊሮስ (የአንጾኪያ ፓትሪያርክ)', 'ቅዱስ ቴዎድሮስ', 'ቅዱስ ጊዮርጊስ', 'ቅዱስ ያሬድ'],
+        correctIndex: 0,
+        explanation: 'ቅዱስ ሳዊሮስ (ተክለ ሳዊሮስ) የአንጾኪያ ፓትሪያርክና የተዋሕዶ ሃይማኖት አርበኛ የነበረ ታላቅ ሊቅ ነው።',
+      },
+      {
+        question: 'የኢትዮጵያ ኦርቶዶክስ ተዋሕዶ ቤተክርስቲያን የስንት አጽዋማት (ዐበይት ጾሞች) ሥርዓት አላት?',
+        options: ['5 ጾሞች', '7 ጾሞች', '3 ጾሞች', '10 ጾሞች'],
+        correctIndex: 1,
+        explanation: 'ሰባቱ አጽዋማት፦ ዐቢይ ጾም፣ ጾመ ሐዋርያት፣ ጾመ ፍልሰታ፣ ጾመ ነቢያት፣ ጾመ ገሃድ፣ ጾመ ነነዌ እና ጾመ ድኅነት (ረቡዕና ዓርብ) ናቸው።',
+      },
+      {
+        question: 'ቅዱስ ያሬድ በመንፈስ ቅዱስ ተመርቶ የደረሳቸው ሦስቱ የዜማ ስልቶች እነማን ናቸው?',
+        options: ['ግዕዝ፣ ዕዝል፣ አራራይ', 'ማኅሌት፣ ሰዓታት፣ ቅዳሴ', 'ዋዜማ፣ ምልጣን፣ አቡን', 'ሰላም፣ መስተብቍዕ፣ ዚቅ'],
+        correctIndex: 0,
+        explanation: 'ቅዱስ ያሬድ ሦስቱን የዜማ ስልቶች፦ ግዕዝ፣ ዕዝል እና አራራይ ደርሷል።',
+      },
+      {
+        question: 'የእመቤታችን የቅድስት ድንግል ማርያም የፍልሰታ ጾም የሚጾመው በየትኛው ወር ነው?',
+        options: ['በጥር ወር', 'በነሐሴ ወር (ከነሐሴ 1-16)', 'በጥቅምት ወር', 'በሰኔ ወር'],
+        correctIndex: 1,
+        explanation: 'ጾመ ፍልሰታ ከነሐሴ 1 እስከ ነሐሴ 16 የሚጾም የእመቤታችን ዕርገት መታሰቢያ ጾም ነው።',
+      },
+      {
+        question: 'የመጀመሪያው የሰማዕታት አለቃ (ቀዳሜ ሰማዕት) ተብሎ የሚጠራው ቅዱስ ማነው?',
+        options: ['ቅዱስ እስጢፋኖስ ሊቀ ዲያቆናት', 'ቅዱስ ጊዮርጊስ', 'ቅዱስ መርቆሬዎስ', 'ቅዱስ ሚናስ'],
+        correctIndex: 0,
+        explanation: 'ቀዳሜ ሰማዕት (የሰማዕታት መጀመሪያ) ቅዱስ እስጢፋኖስ ሊቀ ዲያቆናት ነው።',
+      },
+    ];
+
+    const handleQuiz = async (chatId) => {
+      try {
+        const student = await findLinkedStudent(chatId).catch(() => null);
+
+        // 1. Try fetching published database quiz questions
+        const Quiz = require('../models/education/Quiz');
+        const Question = require('../models/education/Question');
+
+        let dbQuestion = null;
+        try {
+          const query = { published: true };
+          const activeQuizzes = await Quiz.find(query).limit(5).catch(() => []);
+          if (activeQuizzes.length > 0) {
+            const quizIds = activeQuizzes.map((q) => q._id);
+            const questions = await Question.find({ quiz: { $in: quizIds }, type: 'Multiple Choice' }).limit(10).catch(() => []);
+            if (questions.length > 0) {
+              const randomQ = questions[Math.floor(Math.random() * questions.length)];
+              if (randomQ.options && randomQ.options.length >= 2) {
+                const correctIdx = randomQ.options.findIndex(
+                  (opt) => String(opt).trim().toLowerCase() === String(randomQ.correctAnswer).trim().toLowerCase()
+                );
+                if (correctIdx >= 0) {
+                  dbQuestion = {
+                    question: randomQ.text || randomQ.questionText,
+                    options: randomQ.options.slice(0, 10),
+                    correctIndex: correctIdx,
+                    explanation: randomQ.explanation || 'ተክለ ሳዊሮስ ሰንበት ትምህርት ቤት',
+                  };
+                }
+              }
+            }
+          }
+        } catch (e) {}
+
+        const selected = dbQuestion || CURATED_QUIZ_POOL[Math.floor(Math.random() * CURATED_QUIZ_POOL.length)];
+
+        // Try Telegram native Poll Quiz
+        try {
+          await botInstance.sendPoll(
+            chatId,
+            `📝 ${selected.question}`,
+            selected.options,
+            {
+              type: 'quiz',
+              correct_option_id: selected.correctIndex,
+              explanation: selected.explanation,
+              is_anonymous: false,
+            }
+          );
+
+          await safeSendMessage(chatId, '✨ *ሳምንታዊ የመጽሐፍ ቅዱስና የሰንበት ት/ቤት ፈተና*\nመልስዎን በመምረጥ ይሳተፉ! 👇', {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '🔄 ቀጣይ ጥያቄ (Next Question)', callback_data: 'cmd_next_quiz' },
+                  buildPortalInlineButton('🎓 ሁሉንም ፈተናዎች በፖርታል ክፈት', '/dashboard/courses')
+                ]
+              ]
+            }
+          });
+          return;
+        } catch (pollErr) {
+          console.warn('sendPoll fallback to inline message:', pollErr.message);
+        }
+
+        // Fallback to text message if poll permission is restricted
+        let qMsg = `╭──────────────────────────────╮\n`;
+        qMsg += `   📝 *ሳምንታዊ የኦርቶዶክስ ተዋሕዶ ፈተና* 📝\n`;
+        qMsg += `╰──────────────────────────────╯\n\n`;
+        qMsg += `❓ *ጥያቄ፦* ${selected.question}\n\n`;
+        selected.options.forEach((opt, idx) => {
+          qMsg += `${idx + 1}. ${opt}\n`;
+        });
+        qMsg += `\n💡 _መልሱን ለማረጋገጥ ወይም ሙሉ ፈተናዎችን ለመውሰድ ከታች ያለውን ይጫኑ፦_`;
+
+        await safeSendMessage(chatId, qMsg, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '🔄 ቀጣይ ጥያቄ (Next Question)', callback_data: 'cmd_next_quiz' },
+                buildPortalInlineButton('🎓 ወደ ፈተና ፖርታል ሂድ', '/dashboard/courses')
+              ]
+            ]
+          }
+        });
+      } catch (err) {
+        console.error('Telegram handleQuiz error:', err);
+      }
+    };
+
+    // ---------- 14. /mezmur & /media (Audio Lessons, Mezmurs, Prayers & Handouts) ----------
+    const handleSpiritualMedia = async (chatId) => {
+      try {
+        const student = await findLinkedStudent(chatId).catch(() => null);
+        const Lesson = require('../models/education/Lesson');
+
+        const audioLessons = await Lesson.find({
+          audioUrl: { $exists: true, $ne: '' },
+          status: { $ne: 'Draft' }
+        }).limit(4).catch(() => []);
+
+        let mediaMsg = `╭──────────────────────────────╮\n`;
+        mediaMsg += `   🎵 *መንፈሳዊ መዝሙራትና የትምህርት ማዕከል* 🎵\n`;
+        mediaMsg += `╰──────────────────────────────╯\n\n`;
+        mediaMsg += `ሰላም ${student?.firstName || 'ወዳጃችን'}፣ የ *ተክለ ሳዊሮስ ሰንበት ት/ቤት* ዲጂታል የድምፅ ትምህርቶች፣ መዝሙራት እና የጸሎት መጻሕፍት ከዚህ በታች ተዘጋጅተውልዎታል፦ ✨\n\n`;
+        mediaMsg += `🔹 *መንፈሳዊ መዝሙራት* — በማኅሌት፣ በዕዝልና በአራራይ ዜማዎች\n`;
+        mediaMsg += `🔹 *የሳምንቱ የድምፅ ትምህርቶች* — በመምህራን የተዘጋጁ ስብከቶችና ትምህርቶች\n`;
+        mediaMsg += `🔹 *የዘወትር ጸሎትና ንባባት* — ውዳሴ ማርያምና የሰዓታት ጸሎቶች\n`;
+        mediaMsg += `🔹 *የትምህርት መጽሐፍት (PDF)* — የክፍል ማስታወሻዎችና መመሪያዎች\n`;
+
+        if (audioLessons.length > 0) {
+          mediaMsg += `\n🎧 *የቅርብ ጊዜ የትምህርት ድምፆች፦*\n`;
+          audioLessons.forEach((l, idx) => {
+            mediaMsg += `${idx + 1}. 🎙️ *${l.titleAmharic || l.title}* ${l.audioTitle ? `(${l.audioTitle})` : ''}\n`;
+          });
+        }
+
+        const inlineKeyboard = {
+          inline_keyboard: [
+            [
+              { text: '🎶 መዝሙራት (Mezmurs)', callback_data: 'cmd_mezmurs' },
+              { text: '✝️ የዘወትር ጸሎት (Daily Prayers)', callback_data: 'cmd_prayers' }
+            ],
+            [
+              buildPortalInlineButton('📚 የትምህርት ክፍሎችና ኦዲዮ በፖርታል', '/dashboard/courses'),
+              { text: '📝 ሳምንታዊ ፈተና', callback_data: 'cmd_quiz' }
+            ],
+            [
+              { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' },
+              { text: '❓ እርዳታ', callback_data: 'cmd_help' }
+            ]
+          ]
+        };
+
+        await safeSendMessage(chatId, mediaMsg, {
+          parse_mode: 'Markdown',
+          reply_markup: inlineKeyboard
+        });
+      } catch (err) {
+        console.error('Telegram handleSpiritualMedia error:', err);
+      }
+    };
+
+    const handleMezmurs = async (chatId) => {
+      let msg = `╭──────────────────────────────╮\n`;
+      msg += `     🎶 *የተመረጡ ኦርቶዶክሳዊ መዝሙራት* 🎶\n`;
+      msg += `╰──────────────────────────────╯\n\n`;
+      msg += `🕊️ *በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።*\n\n`;
+      msg += `1. 🎵 *«ተክለ ሳዊሮስ አባታችን»* — የሰንበት ት/ቤታችን መዝሙር\n`;
+      msg += `2. 🎵 *«ማርያም ፊደል»* — ምስጋና ለእመቤታችን\n`;
+      msg += `3. 🎵 *«በስመ አብ ወወልድ»* — የዘወትር መክፈቻ\n`;
+      msg += `4. 🎵 *«መድኃኔዓለም አዳነን»* — የደብራችን መዝሙር\n\n`;
+      msg += `💡 _ሙሉውን የመዝሙርና የዜማ ቤተ-መጽሐፍት በተማሪዎች ፖርታል ውስጥ ማዳመጥና ማውረድ ይችላሉ።_`;
+
+      await safeSendMessage(chatId, msg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              buildPortalInlineButton('🎧 መዝሙራትን በፖርታል ክፈት', '/dashboard/courses')
+            ],
+            [
+              { text: '🔙 ወደ ሚዲያ ማዕከል', callback_data: 'cmd_media' },
+              { text: '✝️ የዘወትር ጸሎት', callback_data: 'cmd_prayers' }
+            ]
+          ]
+        }
+      });
+    };
+
+    const handleDailyPrayers = async (chatId) => {
+      let msg = `╭──────────────────────────────╮\n`;
+      msg += `     ✝️ *የዘወትር የኦርቶዶክስ ጸሎት* ✝️\n`;
+      msg += `╰──────────────────────────────╯\n\n`;
+      msg += `✨ *በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።*\n\n`;
+      msg += `📖 *አባታችን ሆይ በሰማያት የምትኖር፦*\n`;
+      msg += `ስምህ ይቀደስ፤ መንግሥትህ ትምጣ፤ ፈቃድህ በሰማይ እንደ ሆነች እንዲሁም በምድር ትሁን፤ የዕለት እንጀራችንን ስጠን ዛሬ፤ እኛም የበደሉንን ይቅር እንደምንል በደላችንን ይቅር በለን፤ ከክፉ ሁሉ አድነን እንጂ ወደ ፈተና አታግባን፤ መንግሥት ያንተ ናትና ኃይልም ክብርም ለዘለዓለሙ፤ አሜን።\n\n`;
+      msg += `📖 *እመቤታችን ቅድስት ድንግል ማርያም ሆይ፦*\n`;
+      msg += `በመልአኩ በቅዱስ ገብርኤል ሰላምታ ሰላም እንልሻለን፤ በሐሳብሽ ድንግል ነሽ በሥጋሽም ድንግል ነሽ፤ የአሸናፊ የእግዚአብሔር እናት ሆይ ሰላምታ ላንቺ ይገባሻል፤ ከአንቺ የተወለደው አምላካችን መድኃኒታችን ኢየሱስ ክርስቶስ ኃጢአታችንን ያስተሠረይልን ዘንድ ወደ እርሱ ጸልዪልን ለዘለዓለሙ አሜን።\n\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      msg += `💡 _ውዳሴ ማርያምና ሰዓታትን በፖርታል ሙሉውን ያንብቡ።_`;
+
+      await safeSendMessage(chatId, msg, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              buildPortalInlineButton('📖 ሙሉ የጸሎት መጽሐፍ በፖርታል', '/dashboard')
+            ],
+            [
+              { text: '🔙 ወደ ሚዲያ ማዕከል', callback_data: 'cmd_media' },
+              { text: '🎶 መዝሙራት', callback_data: 'cmd_mezmurs' }
+            ]
+          ]
+        }
+      });
+    };
+
+    // ---------- 15. /ask & "🤖 መንፈሳዊ ረዳት" (Spiritual AI Q&A Assistant) ----------
+    const callGeminiAI = async (prompt) => {
+      const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+      if (!apiKey) return null;
+
+      try {
+        const systemPrompt = `You are a respectful, knowledgeable spiritual assistant for Teklesawiros Ethiopian Orthodox Tewahdo Sunday School (የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት). 
+Answer questions accurately based on Ethiopian Orthodox Tewahdo Church canon, teachings, fasting rules, sacraments, and Sunday school curriculum. 
+Answer in Amharic (or English if the user asks in English). 
+Start with 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።' when discussing spiritual matters. Keep answers concise, inspiring, and spiritually sound.`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser Question: ${prompt}` }] }],
+            generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
+          }),
+        });
+
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      } catch (err) {
+        console.warn('Gemini API call notice:', err.message);
+        return null;
+      }
+    };
+
+    const getLocalSpiritualKnowledge = (query) => {
+      const q = (query || '').toLowerCase();
+      if (/ጾም|መጾም|አጽዋማት|fasting/i.test(q)) {
+        return `📖 *ስለ ጾም ትምህርት (About Fasting)*\n\n` +
+          `ጾም ማለት ሰው ለተወሰነ ጊዜ ከምግብና ከመጠጥ እንዲሁም ከክፉ ነገር ሁሉ የሚከለከልበት መንፈሳዊ ተጋድሎ ነው።\n\n` +
+          `✝️ *ሰባቱ አጽዋማት፦*\n` +
+          `1. ዐቢይ ጾም (55 ቀናት)\n` +
+          `2. ጾመ ሐዋርያት\n` +
+          `3. ጾመ ፍልሰታ (ነሐሴ 1 - 16)\n` +
+          `4. ጾመ ነቢያት (ኅዳር 15 - ታኅሣሥ 28)\n` +
+          `5. ጾመ ገሃድ (የልደትና የጥምቀት ዋዜማ)\n` +
+          `6. ጾመ ነነዌ (3 ቀናት)\n` +
+          `7. ጾመ ድኅነት (የዓመቱ ረቡዕና ዓርብ)\n\n` +
+          `💡 _«ጾም የነፍስ ምግብ፣ የሥጋ ልጓም ነው» (ቅዱስ ዮሐንስ አፈወርቅ)_`;
+      }
+
+      if (/ምስጢር|ምስጢራት|sacrament/i.test(q)) {
+        return `📖 *ሰባቱ ምስጢራተ ቤተክርስቲያን (The Seven Sacraments)*\n\n` +
+          `1. *ምስጢረ ጥምቀት* — ዳግም ከውኃና ከመንፈስ ቅዱስ መወለድ (የማይደገም)\n` +
+          `2. *ምስጢረ ሜሮን* — የመንፈስ ቅዱስ ሀብት መቀበል (የማይደገም)\n` +
+          `3. *ምስጢረ ቁርባን* — የጌታችንን ቅዱስ ሥጋና ክቡር ደም መቀበል\n` +
+          `4. *ምስጢረ ንስሐ* — ከኃጢአት መንጻትና ወደ እግዚአብሔር መመለስ\n` +
+          `5. *ምስጢረ ክህነት* — የማገልገል ሥልጣን (የማይደገም)\n` +
+          `6. *ምስጢረ ተክሊል* — የጋብቻ ቅድስና\n` +
+          `7. *ምስጢረ ቀንዲል* — ለሕመምተኞች የሚጸለይ የፈውስ ጸሎት`;
+      }
+
+      if (/ጸሎት|መጸለይ|prayer/i.test(q)) {
+        return `📖 *ስለ ጸሎት ትምህርት (About Prayer)*\n\n` +
+          `ጸሎት ማለት ከልዑል እግዚአብሔር ጋር የሚደረግ ቅዱስ ንግግር ነው።\n\n` +
+          `⏰ *ሰባቱ የጸሎት ጊዜያት፦*\n` +
+          `1. ነግህ (ማለዳ - 12፡00 ሰዓት)\n` +
+          `2. ሠለስት (3፡00 ሰዓት)\n` +
+          `3. ቀትር (6፡00 ሰዓት)\n` +
+          `4. ተስዓቱ (9፡00 ሰዓት)\n` +
+          `5. ሠርክ (11፡00 ሰዓት)\n` +
+          `6. ነዋም (የመኝታ ሰዓት)\n` +
+          `7. መንፈቀ ሌሊት (እኩለ ሌሊት)`;
+      }
+
+      if (/ተክለ ሳዊሮስ|ሰንበት ትምህርት ቤት|sunday school/i.test(q)) {
+        return `⛪ *የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት*\n\n` +
+          `የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት በደብረ መድኃኒት መድኃኔዓለም ቤተክርስቲያን ሥር የሚገኝ ታላቅ የትምህርት ተቋም ነው።\n\n` +
+          `🎓 *የትምህርት ደረጃዎች፦* ከ 7ኛ እስከ 12ኛ ክፍል እና የርቀት ትምህርት (Distance Education)\n` +
+          `⏰ *ፈረቃዎች፦* የቀን (ቅዳሜና እሑድ) እና የማታ ፈረቃ\n` +
+          `📚 *የሚሰጡ ትምህርቶች፦* መጽሐፍ ቅዱስ ጥናት፣ ሥነ-ምግባር፣ የቤተክርስቲያን ታሪክ፣ ቀኖና፣ ዜማና ቅኔ`;
+      }
+
+      return null;
+    };
+
+    const handleSpiritualQA = async (chatId, queryText = '') => {
+      try {
+        const student = await findLinkedStudent(chatId).catch(() => null);
+        const cleanQuery = (queryText || '').trim();
+
+        if (!cleanQuery) {
+          let guideMsg = `╭──────────────────────────────╮\n`;
+          guideMsg += `   🤖 *መንፈሳዊ እና የሰንበት ት/ቤት ረዳት* 🤖\n`;
+          guideMsg += `╰──────────────────────────────╯\n\n`;
+          guideMsg += `ሰላም ${student?.firstName || 'ወዳጃችን'}፣ ስለ ሃይማኖት፣ ስለ ጾም፣ ስለ ምስጢራተ ቤተክርስቲያን፣ ስለ በዓላት ወይም ስለ ሰንበት ት/ቤቱ የፈለጉትን ጥያቄ ይጠይቁ። ✨\n\n`;
+          guideMsg += `📌 *ምሳሌዎች፦*\n`;
+          guideMsg += `• \`/ask ስለ ሰባቱ ምስጢራተ ቤተክርስቲያን አብራራልኝ\`\n`;
+          guideMsg += `• \`/ask ጾም ለምን እንጾማለን?\`\n`;
+          guideMsg += `• \`/ask ሰባቱ የጸሎት ጊዜያት እነማን ናቸው?\`\n`;
+          guideMsg += `• \`/ask የሰንበት ትምህርት ቤቱ መረጃ\`\n\n`;
+          guideMsg += `💡 _ትእዛዙን \`/ask <የጥያቄዎ ጽሑፍ>\` ብለው ይላኩ።_`;
+
+          return await safeSendMessage(chatId, guideMsg, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '📖 ስለ ጾም', callback_data: 'cmd_qa_fasting' },
+                  { text: '✝️ ስለ ምስጢራት', callback_data: 'cmd_qa_sacraments' }
+                ],
+                [
+                  { text: '⏰ የጸሎት ጊዜያት', callback_data: 'cmd_qa_prayers' },
+                  { text: '⛪ የሰንበት ት/ቤት መረጃ', callback_data: 'cmd_qa_school' }
+                ],
+                [
+                  { text: '📝 ሳምንታዊ ፈተና', callback_data: 'cmd_quiz' },
+                  { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' }
+                ]
+              ]
+            }
+          });
+        }
+
+        // Try AI generation or local curriculum engine
+        let answer = await callGeminiAI(cleanQuery);
+        if (!answer) {
+          answer = getLocalSpiritualKnowledge(cleanQuery);
+        }
+
+        if (!answer) {
+          answer = `✨ *በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።*\n\n` +
+            `ስለ ጠየቁት ጥያቄ፦ *«${cleanQuery}»*\n\n` +
+            `የተሟላ መንፈሳዊና ቀኖናዊ ማብራሪያ ለማግኘት እንዲሁም ጥያቄዎ የንስሐ ወይም ጥልቅ መንፈሳዊ ጉዳይ ከሆነ የሰንበት ት/ቤት ኃላፊ መምህርዎን ወይም የንስሐ አባትዎን ማማከር ይችላሉ። 🕊️`;
+        }
+
+        let respMsg = `╭──────────────────────────────╮\n`;
+        respMsg += `    🕊️ *መንፈሳዊ ምላሽና ማብራሪያ* 🕊️\n`;
+        respMsg += `╰──────────────────────────────╯\n\n`;
+        respMsg += `${answer}\n\n`;
+        respMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+        respMsg += `💡 _ሌላ ጥያቄ ለመጠየቅ_ \`/ask <ጥያቄዎ>\` _ብለው ይጻፉ።_`;
+
+        await safeSendMessage(chatId, respMsg, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '❓ ሌላ ጥያቄ ጠይቅ (Ask Another)', callback_data: 'cmd_ai' },
+                { text: '📝 ሳምንታዊ ፈተና', callback_data: 'cmd_quiz' }
+              ],
+              [
+                buildPortalInlineButton('🎓 የተማሪዎች ፖርታል ክፈት', '/dashboard')
+              ]
+            ]
+          }
+        });
+      } catch (err) {
+        console.error('Telegram handleSpiritualQA error:', err);
+      }
+    };
+
+    // ---------- 16. /checkin & Teacher Roll-Call Attendance Scanner ----------
+    const handleTeacherCheckin = async (chatId, queryText, msg) => {
+      try {
+        const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
+        const isAuth = await isAuthorizedAdmin(chatId, msg.from?.id, msg);
+
+        if (!isAuth) {
+          return await safeSendMessage(
+            chatId,
+            '⛔ *ይቅርታ! የተማሪዎችን የዕለታዊ ክትትል የመመዝገብ ፈቃድ የተሰጠው ለመምህራንና ለአስተዳዳሪዎች ብቻ ነው።*',
+            { parse_mode: 'Markdown' }
+          );
+        }
+
+        const cleanInput = (queryText || '').trim();
+        if (!cleanInput) {
+          let prompt = `📷 *የመምህራን የተማሪዎች ክትትል መመዝገቢያ (Teacher Attendance Check-in)*\n\n`;
+          prompt += `የተማሪውን መለያ ቁጥር (Student ID)፣ የማመልከቻ ቁጥር ወይም ስልክ ቁጥር አስገብተው ይላኩ።\n\n`;
+          prompt += `📌 *ምሳሌዎች፦*\n`;
+          prompt += `• \`/checkin STU-2026-0042\`\n`;
+          prompt += `• \`/checkin 0911223344\`\n`;
+          prompt += `• \`/markattendance STU-2026-0042 Present\`\n\n`;
+          prompt += `💡 _በተጨማሪም በተማሪዎች ፖርታል የካሜራ ስካነር (QR Scanner) አማካኝነት ባጁን በሰከንዶች ውስጥ መመዝገብ ይችላሉ።_`;
+
+          return await safeSendMessage(chatId, prompt, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  buildPortalInlineButton('📷 የካሜራ QR ስካነር ክፈት', '/dashboard/attendance')
+                ]
+              ]
+            }
+          });
+        }
+
+        // Split student ID and optional status
+        const parts = cleanInput.split(/\s+/);
+        const studentIdentifier = parts[0];
+        const statusArg = parts[1] || 'Present';
+
+        const result = await recordAttendanceFromQr({
+          teacherTelegramId: msg.from?.id,
+          studentIdentifier,
+          status: statusArg,
+          recordedBySource: 'TelegramBot',
+        });
+
+        if (!result.success) {
+          return await safeSendMessage(chatId, `❌ ${result.message}`, { parse_mode: 'Markdown' });
+        }
+
+        const student = result.student;
+        let successMsg = `╭──────────────────────────────╮\n`;
+        successMsg += `   ✅ *የተማሪ ክትትል በተሳካ ሁኔታ ተመዝግቧል!* ✅\n`;
+        successMsg += `╰──────────────────────────────╯\n\n`;
+        successMsg += `👤 *ተማሪ፦* ${student.firstName} ${student.lastName}\n`;
+        successMsg += `🏷️ *መለያ ቁጥር፦* \`${student.studentId || '-'}\`\n`;
+        successMsg += `📚 *ክፍል፦* ${student.grade || student.batch || '-'}\n`;
+        successMsg += `⏰ *ፈረቃ፦* ${student.shift === 'night' ? 'የማታ' : 'የቀን / ቅዳሜና እሁድ'}\n`;
+        successMsg += `⚡ *ሁኔታ፦* 🟢 *${result.status}*\n`;
+        successMsg += `📅 *ቀን፦* ${formatEthiopianDate(new Date())}\n`;
+        if (result.attendanceRate !== undefined) {
+          successMsg += `📈 *አጠቃላይ የተገኝነት ምጣኔ፦* *${result.attendanceRate}%*\n`;
+        }
+
+        await safeSendMessage(chatId, successMsg, {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                buildPortalInlineButton('📊 ሙሉ የክፍል ክትትል ዝርዝር', '/dashboard/attendance')
+              ]
+            ]
+          }
+        });
+      } catch (err) {
+        console.error('Telegram handleTeacherCheckin error:', err);
+      }
+    };
+
+    botInstance.onText(/\/quiz|📝 ሳምንታዊ ፈተና/, async (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'quiz');
+      }
+      handleQuiz(msg.chat.id);
+    });
+
+    botInstance.onText(/\/mezmur|\/media|\/lessons|🎵 መዝሙርና ትምህርት/, async (msg) => {
+      if (msg.chat.type !== 'private') {
+        return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'media');
+      }
+      handleSpiritualMedia(msg.chat.id);
+    });
+
+    botInstance.onText(/\/ask(?:\s+(.+))?|🤖 መንፈሳዊ ረዳት/, async (msg, match) => {
+      const queryText = match && match[1] ? match[1] : '';
+      if (msg.chat.type !== 'private') {
+        const isAdmin = await isAuthorizedAdmin(msg.chat.id, msg.from?.id, msg);
+        if (!isAdmin) {
+          return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'ask');
+        }
+      }
+      handleSpiritualQA(msg.chat.id, queryText);
+    });
+
+    botInstance.onText(/\/checkin(?:\s+(.+))?|\/markattendance(?:\s+(.+))?/, async (msg, match) => {
+      const queryText = match && (match[1] || match[2]) ? (match[1] || match[2]).trim() : '';
+      handleTeacherCheckin(msg.chat.id, queryText, msg);
+    });
+
     botInstance.onText(/\/register|📝 አዲስ ተማሪ ምዝገባ/, async (msg) => {
       if (msg.chat.type !== 'private') {
         return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'register');
@@ -1686,6 +2211,15 @@ const initTelegramBot = async () => {
         else if (data === 'cmd_announcements') handleAnnouncements(chatId);
         else if (data === 'cmd_portal') handlePortal(chatId);
         else if (data === 'cmd_register') handleRegister(chatId);
+        else if (data === 'cmd_quiz' || data === 'cmd_next_quiz') handleQuiz(chatId);
+        else if (data === 'cmd_media') handleSpiritualMedia(chatId);
+        else if (data === 'cmd_mezmurs') handleMezmurs(chatId);
+        else if (data === 'cmd_prayers') handleDailyPrayers(chatId);
+        else if (data === 'cmd_ai') handleSpiritualQA(chatId, '');
+        else if (data === 'cmd_qa_fasting') handleSpiritualQA(chatId, 'ስለ ጾም');
+        else if (data === 'cmd_qa_sacraments') handleSpiritualQA(chatId, 'ስለ ሰባቱ ምስጢራት');
+        else if (data === 'cmd_qa_prayers') handleSpiritualQA(chatId, 'የጸሎት ጊዜያት');
+        else if (data === 'cmd_qa_school') handleSpiritualQA(chatId, 'የሰንበት ትምህርት ቤት መረጃ');
         else if (data === 'cmd_status_prompt') {
           safeSendMessage(chatId, `📝 *የምዝገባ ሁኔታን ለማረጋገጥ፦*\n\nእባክዎ \`/status <የማመልከቻ ቁጥር>\` ብለው ይላኩ።\nምሳሌ፦ \`/status REG-2026-0042\``, { parse_mode: 'Markdown' });
         }
@@ -2041,6 +2575,185 @@ const notifyStudentCertificateApproved = async (student, cert) => {
   }
 };
 
+/**
+ * Record student attendance from QR scan or teacher manual check-in
+ */
+const recordAttendanceFromQr = async ({
+  teacherUserId = null,
+  teacherTelegramId = null,
+  studentIdentifier,
+  courseId = null,
+  status = 'Present',
+  session = 'Regular',
+  recordedBySource = 'Telegram',
+}) => {
+  try {
+    if (!studentIdentifier || String(studentIdentifier).trim() === '') {
+      return { success: false, message: 'የተማሪ መለያ ቁጥር ያስፈልጋል (Student identifier is required)' };
+    }
+
+    const cleanInput = String(studentIdentifier).trim();
+    const mongoose = require('mongoose');
+
+    // 1. Resolve Teacher
+    let teacherUser = null;
+    if (teacherUserId) {
+      teacherUser = await User.findById(teacherUserId).catch(() => null);
+    } else if (teacherTelegramId) {
+      teacherUser = await User.findOne({ telegramChatId: String(teacherTelegramId) }).catch(() => null);
+    }
+
+    // 2. Resolve Student by ID, Student ID, Registration Number, or Phone
+    const queryOr = [
+      { studentId: cleanInput },
+      { studentId: cleanInput.toUpperCase() },
+      { registrationNumber: cleanInput },
+      { registrationNumber: cleanInput.toUpperCase() },
+      { studentPhone: cleanInput },
+      { contactPhone: cleanInput },
+      { phone: cleanInput },
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(cleanInput)) {
+      queryOr.push({ _id: new mongoose.Types.ObjectId(cleanInput) });
+      queryOr.push({ userId: new mongoose.Types.ObjectId(cleanInput) });
+    }
+
+    // Also extract student ID if URL was passed from QR scanner (e.g. /verify-certificate?id=STU-001)
+    if (cleanInput.includes('id=')) {
+      try {
+        const urlParams = new URLSearchParams(cleanInput.split('?')[1]);
+        const idFromUrl = urlParams.get('id');
+        if (idFromUrl) {
+          queryOr.push({ studentId: idFromUrl });
+          queryOr.push({ studentId: idFromUrl.toUpperCase() });
+        }
+      } catch (e) {}
+    }
+
+    let student = await Student.findOne({ $or: queryOr }).populate('teacher', 'fullName email phone');
+
+    // Fallback search in User schema if not found in Student schema
+    if (!student) {
+      const userMatch = await User.findOne({
+        $or: [
+          { phone: cleanInput },
+          { email: cleanInput },
+          ...(mongoose.Types.ObjectId.isValid(cleanInput) ? [{ _id: new mongoose.Types.ObjectId(cleanInput) }] : []),
+        ]
+      });
+
+      if (userMatch) {
+        student = await Student.findOne({ userId: userMatch._id });
+        if (!student) {
+          student = {
+            _id: userMatch._id,
+            firstName: userMatch.fullName?.split(' ')[0] || userMatch.fullName || 'ተማሪ',
+            lastName: userMatch.fullName?.split(' ').slice(1).join(' ') || '',
+            studentId: userMatch.studentProfileId || 'STU-USER',
+            grade: userMatch.grade || 'መደበኛ',
+            shift: userMatch.shift || 'weekend',
+            studentPhone: userMatch.phone,
+            telegramChatId: userMatch.telegramChatId,
+          };
+        }
+      }
+    }
+
+    if (!student) {
+      return { success: false, message: `የተማሪ መረጃ አልተገኘም (${cleanInput})` };
+    }
+
+    // 3. Normalized Status
+    let normalizedStatus = 'Present';
+    const sLower = String(status).toLowerCase();
+    if (sLower === 'late' || sLower === 'አርፍዷል') normalizedStatus = 'Late';
+    else if (sLower === 'absent' || sLower === 'አልተገኘም') normalizedStatus = 'Absent';
+    else if (sLower === 'excused' || sLower === 'ፈቃድ') normalizedStatus = 'Excused';
+
+    // 4. Date normalizer (Midnight to 23:59 for today's entry)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    let attRecord = await Attendance.findOne({
+      student: student._id,
+      date: { $gte: todayStart, $lte: todayEnd },
+      ...(courseId ? { course: courseId } : {}),
+    });
+
+    const teacherName = teacherUser?.fullName || 'መምህር';
+
+    if (attRecord) {
+      attRecord.status = normalizedStatus;
+      attRecord.checkInTime = new Date();
+      if (teacherUser) {
+        attRecord.teacher = teacherUser._id;
+        attRecord.teacherName = teacherName;
+        attRecord.recordedBy = teacherUser._id;
+      }
+      await attRecord.save();
+    } else {
+      attRecord = new Attendance({
+        student: student._id,
+        studentName: `${student.firstName} ${student.lastName}`.trim(),
+        grade: student.grade || student.batch || 'Grade 7',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
+        status: normalizedStatus,
+        date: new Date(),
+        checkInTime: new Date(),
+        session: session || 'Regular',
+        course: courseId || null,
+        teacher: teacherUser ? teacherUser._id : null,
+        teacherName: teacherName,
+        recordedBy: teacherUser ? teacherUser._id : null,
+      });
+      await attRecord.save();
+    }
+
+    // Calculate updated attendance rate
+    const totalCount = await Attendance.countDocuments({ student: student._id }).catch(() => 1);
+    const presentCount = await Attendance.countDocuments({
+      student: student._id,
+      status: { $in: ['Present', 'present', 'Late', 'late'] },
+    }).catch(() => 1);
+    const attendanceRate = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 100;
+
+    // Send instant Telegram notification to the student if they have telegramChatId
+    if (student.telegramChatId && botInstance) {
+      const studentMsg = `🕊️ *የሰንበት ት/ቤት የዕለት ክትትልዎ ተመዝግቧል!*\n\n` +
+        `👤 *ተማሪ፦* ${student.firstName} ${student.lastName}\n` +
+        `📅 *ቀን፦* ${formatEthiopianDate(new Date())}\n` +
+        `⚡ *ሁኔታ፦* 🟢 *${normalizedStatus === 'Present' ? 'ተገኝተዋል (Present)' : normalizedStatus}*\n` +
+        `👨‍🏫 *የመዘገበው መምህር፦* ${teacherName}\n` +
+        `📈 *የአጠቃላይ ተገኝነት ምጣኔ፦* *${attendanceRate}%*`;
+
+      safeSendMessage(student.telegramChatId, studentMsg, { parse_mode: 'Markdown' }).catch(() => {});
+    }
+
+    return {
+      success: true,
+      message: 'የተማሪ ክትትል በተሳካ ሁኔታ ተመዝግቧል!',
+      student: {
+        id: student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        studentId: student.studentId,
+        grade: student.grade || student.batch,
+        shift: student.shift,
+      },
+      attendanceRecord: attRecord,
+      status: normalizedStatus,
+      attendanceRate,
+    };
+  } catch (err) {
+    console.error('recordAttendanceFromQr error:', err);
+    return { success: false, message: err.message };
+  }
+};
+
 module.exports = {
   initTelegramBot,
   getBotInstance: () => botInstance,
@@ -2055,5 +2768,6 @@ module.exports = {
   getBotStatus,
   findLinkedStudent,
   notifyStudentCertificateApproved,
+  recordAttendanceFromQr,
 };
 

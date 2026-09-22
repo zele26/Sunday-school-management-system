@@ -13,6 +13,7 @@ const {
   sendMessageToGroups,
   getBotInstance,
   autoDetectClassAndShift,
+  recordAttendanceFromQr,
 } = require('../services/telegramBotService');
 
 // Helper to generate access token
@@ -305,7 +306,157 @@ router.post('/groups/sync', protect, authorize('admin', 'superadmin'), async (re
   }
 });
 
-// ---------- 9. Link Telegram to Logged In User ----------
+// ---------- 10. Teacher Attendance QR Scanner Check-In ----------
+router.post('/attendance/scan-checkin', protect, authorize('teacher', 'admin', 'superadmin'), async (req, res) => {
+  try {
+    const { studentIdentifier, studentId, qrData, session, status, courseId } = req.body;
+    const targetId = studentIdentifier || studentId || qrData;
+
+    if (!targetId) {
+      return res.status(400).json({
+        success: false,
+        message: 'የተማሪ መለያ ወይም የQR ኮድ ዳታ ያስፈልጋል (Student identifier or QR data required)',
+      });
+    }
+
+    const result = await recordAttendanceFromQr({
+      teacherUserId: req.user._id,
+      studentIdentifier: targetId,
+      courseId,
+      status: status || 'Present',
+      session: session || 'Regular',
+      recordedBySource: 'TelegramWebAppScanner',
+    });
+
+    if (!result.success) {
+      return res.status(404).json(result);
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Telegram scan-checkin error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- 11. Active Quizzes for Telegram WebApp ----------
+router.get('/quizzes/active', async (req, res) => {
+  try {
+    const Quiz = require('../models/education/Quiz');
+    const Question = require('../models/education/Question');
+
+    const { grade } = req.query;
+    const query = { published: true };
+
+    const quizzes = await Quiz.find(query).sort({ createdAt: -1 }).limit(10);
+    const quizIds = quizzes.map((q) => q._id);
+    const questions = await Question.find({ quiz: { $in: quizIds } });
+
+    res.json({
+      success: true,
+      count: quizzes.length,
+      quizzes: quizzes.map((q) => ({
+        id: q._id,
+        title: q.title,
+        description: q.description,
+        quizType: q.quizType,
+        duration: q.duration || 15,
+        maxScore: q.maxScore || 100,
+        questionsCount: questions.filter((quest) => String(quest.quiz) === String(q._id)).length,
+      })),
+    });
+  } catch (err) {
+    console.error('Telegram get active quizzes error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- 12. Spiritual AI Assistant Endpoint ----------
+router.post('/ai/ask', async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question || !question.trim()) {
+      return res.status(400).json({ success: false, message: 'Question text is required' });
+    }
+
+    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+    let answer = null;
+
+    if (apiKey) {
+      try {
+        const systemPrompt = `You are a respectful, knowledgeable spiritual assistant for Teklesawiros Ethiopian Orthodox Tewahdo Sunday School (የተክለ ሳዊሮስ ሰንበት ትምህርት ቤት). 
+Answer questions accurately based on Ethiopian Orthodox Tewahdo Church canon, teachings, fasting rules, sacraments, and Sunday school curriculum. 
+Answer in Amharic (or English if the user asks in English). 
+Start with 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።' when discussing spiritual matters. Keep answers concise, inspiring, and spiritually sound.`;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const aiRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser Question: ${question}` }] }],
+            generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
+          }),
+        });
+
+        if (aiRes.ok) {
+          const data = await aiRes.json();
+          answer = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+        }
+      } catch (e) {
+        console.warn('Gemini API call in route notice:', e.message);
+      }
+    }
+
+    if (!answer) {
+      answer = `✨ *በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ አምላክ አሜን።*\n\n` +
+        `ስለ ጠየቁት መንፈሳዊ ጥያቄ የተሟላ ትምህርታዊ ማብራሪያ ለማግኘት የሰንበት ት/ቤት ኃላፊ መምህርዎን ወይም የንስሐ አባትዎን ማነጋገር ይችላሉ። 🕊️`;
+    }
+
+    res.json({
+      success: true,
+      question: question.trim(),
+      answer,
+    });
+  } catch (err) {
+    console.error('Telegram AI ask error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- 13. Spiritual Audio Lessons & Media Endpoint ----------
+router.get('/media/lessons', async (req, res) => {
+  try {
+    const Lesson = require('../models/education/Lesson');
+    const lessons = await Lesson.find({
+      status: { $ne: 'Draft' },
+      $or: [
+        { audioUrl: { $exists: true, $ne: '' } },
+        { videoUrl: { $exists: true, $ne: '' } },
+        { readingContent: { $exists: true, $ne: '' } },
+      ]
+    }).limit(20);
+
+    res.json({
+      success: true,
+      count: lessons.length,
+      lessons: lessons.map((l) => ({
+        id: l._id,
+        title: l.title,
+        titleAmharic: l.titleAmharic || l.title,
+        audioUrl: l.audioUrl || null,
+        audioTitle: l.audioTitle || null,
+        videoUrl: l.videoUrl || null,
+        bibleReferences: l.bibleReferences || [],
+      })),
+    });
+  } catch (err) {
+    console.error('Telegram media lessons error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- 14. Link Telegram to Logged In User ----------
 router.post('/link-current-user', protect, async (req, res) => {
   try {
     const { telegramChatId, telegramUsername } = req.body;

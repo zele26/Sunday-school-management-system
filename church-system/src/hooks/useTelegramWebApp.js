@@ -211,6 +211,37 @@ export function useTelegramWebApp() {
     }
   }, [authenticateWithTelegram]);
 
+  const scanQrCode = useCallback((textPrompt, callback) => {
+    try {
+      const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
+      if (tg?.showScanQrPopup) {
+        tg.showScanQrPopup(
+          { text: textPrompt || 'የተማሪውን QR ባጅ እዚህ ላይ ያሳዩ (Scan Student QR Badge)' },
+          (scannedText) => {
+            if (typeof callback === 'function') {
+              const shouldClose = callback(scannedText);
+              return shouldClose !== false;
+            }
+            return true;
+          }
+        );
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('Telegram scanQrCode error:', e);
+      return false;
+    }
+  }, []);
+
+  const closeQrScanner = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp?.closeScanQrPopup) {
+        window.Telegram.WebApp.closeScanQrPopup();
+      }
+    } catch (e) {}
+  }, []);
+
   return {
     isTelegram,
     telegramUser,
@@ -221,6 +252,8 @@ export function useTelegramWebApp() {
     setBackButton,
     closeTelegramApp,
     openTelegramLink,
+    scanQrCode,
+    closeQrScanner,
     retryAuth,
     webApp: typeof window !== 'undefined' ? window.Telegram?.WebApp : null,
   };
