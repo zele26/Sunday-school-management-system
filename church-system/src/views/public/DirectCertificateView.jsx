@@ -23,7 +23,7 @@ const DirectCertificateView = () => {
       setLoading(true);
       try {
         const res = await apiFetch(`/api/education/distance/public/certificate/${certNumber.trim().toUpperCase()}`);
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok && data.certificate) {
           setCert(data.certificate);
         } else {

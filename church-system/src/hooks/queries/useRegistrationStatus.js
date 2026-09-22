@@ -21,7 +21,9 @@ const getCachedStatus = () => {
       if (parsed && typeof parsed === 'object') return parsed;
     }
   } catch (err) {
-    // ignore parsing errors
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (e) {}
   }
   return undefined;
 };
@@ -48,8 +50,8 @@ export function useRegistrationStatus() {
             generalClosedMessage: 'የተማሪዎች ምዝገባ ለጊዜው ተዘግቷል።',
           };
         }
-        const json = await res.json();
-        const data = json.data;
+        const json = await res.json().catch(() => ({}));
+        const data = json?.data;
         if (data && typeof window !== 'undefined') {
           try {
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
@@ -86,7 +88,7 @@ export function useAdminRegistrationSettings() {
     queryFn: async () => {
       const res = await apiFetch('/api/admin/registrations/settings');
       if (!res.ok) throw new Error('Failed to fetch registration settings');
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       return data.settings || {};
     },
   });

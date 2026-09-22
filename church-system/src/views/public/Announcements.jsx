@@ -19,7 +19,7 @@ const PublicAnnouncements = () => {
       try {
         const res = await apiFetch('/api/announcements');
         if (res.ok && isMounted) {
-          const data = await res.json();
+          const data = await res.json().catch(() => []);
           if (Array.isArray(data)) {
             setAnnouncements(data);
           }

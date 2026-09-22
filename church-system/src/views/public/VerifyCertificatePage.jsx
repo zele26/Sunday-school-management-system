@@ -44,7 +44,7 @@ const VerifyCertificatePage = () => {
     try {
       const cleanNum = encodeURIComponent(num.trim().toUpperCase());
       const res = await apiFetch(`/api/public/certificates/verify/${cleanNum}`);
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok && data.isValid) {
         setCertData(data.certificate);
       } else {

@@ -73,7 +73,7 @@ const ChangePassword = () => {
           newPassword: data.newPassword,
         }),
       });
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (res.ok) {
         setMessage({
           text: resData.message || t('passwordChangedSuccess', 'የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል!'),

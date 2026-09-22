@@ -69,6 +69,7 @@ import { useTeachers } from '../../hooks/queries/useTeachers';
 
 import { useCourses } from '../../hooks/queries/useCourses';
 import { formatGradeAmharic as formatGradeCentral } from '../../constants/registrationOptions';
+import ExportStudentsModal from '../../components/ExportStudentsModal';
 
 /**
  * Format grade values (e.g. "Grade 10", "GRADE 10", "10", "Batch 1") into Amharic ("10ኛ ክፍል", "ባች 1")
@@ -115,6 +116,7 @@ const StudentsManagement = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [assignedTeacherId, setAssignedTeacherId] = useState('');
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
 
@@ -224,49 +226,8 @@ const StudentsManagement = () => {
 
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownload = async () => {
-    try {
-      setIsExporting(true);
-      const token = useAuthStore.getState().accessToken;
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (gradeFilter) params.append('grade', gradeFilter);
-      if (typeFilter) params.append('studentType', typeFilter);
-      if (shiftFilter) params.append('shift', shiftFilter);
-      if (token) params.append('token', token);
-
-      const url = `${API_BASE_URL}/api/admin/students/export?${params.toString()}`;
-      
-      const response = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to export students CSV');
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', `የተማሪዎች_ዝርዝር_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
-    } catch (err) {
-      console.warn('Direct CSV download failed, opening in new tab:', err);
-      const token = useAuthStore.getState().accessToken;
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (gradeFilter) params.append('grade', gradeFilter);
-      if (typeFilter) params.append('studentType', typeFilter);
-      if (shiftFilter) params.append('shift', shiftFilter);
-      if (token) params.append('token', token);
-      window.open(`${API_BASE_URL}/api/admin/students/export?${params.toString()}`, '_blank');
-    } finally {
-      setIsExporting(false);
-    }
+  const handleDownload = () => {
+    setShowExportModal(true);
   };
 
   const openProfileModal = (student) => {
@@ -624,16 +585,15 @@ const StudentsManagement = () => {
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            {/* CSV Export */}
+            {/* CSV / Excel Export */}
             <Button
               variant="outline"
               size="sm"
-              onClick={handleDownload}
-              disabled={isExporting}
-              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold gap-1.5"
+              onClick={() => setShowExportModal(true)}
+              className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold gap-1.5 shadow-xs"
             >
-              <Download className={`w-3.5 h-3.5 text-slate-600 dark:text-slate-300 ${isExporting ? 'animate-bounce' : ''}`} />
-              <span>{isExporting ? 'በማውረድ ላይ...' : 'መረጃ ላክ (CSV)'}</span>
+              <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>መረጃ ላክ (Export)</span>
             </Button>
 
             {/* Batch QR Generation */}
@@ -862,6 +822,16 @@ const StudentsManagement = () => {
               <span>{selectedStudentIds.length} ተማሪዎች ተመርጠዋል</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowExportModal(true)}
+                className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 gap-1.5 font-semibold text-xs"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>የተመረጡትን ላክ ({selectedStudentIds.length})</span>
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -1636,6 +1606,18 @@ const StudentsManagement = () => {
           </Card>
         </div>
       )}
+      {/* Advanced Export Students Modal */}
+      <ExportStudentsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        initialFilters={{
+          grade: gradeFilter,
+          studentType: typeFilter,
+          shift: shiftFilter,
+        }}
+        selectedStudentIds={selectedStudentIds}
+        totalAvailableCount={stats.total}
+      />
     </div>
   );
 };

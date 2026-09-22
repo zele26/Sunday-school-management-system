@@ -213,43 +213,114 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// ---------- Export Students as CSV ----------
+// ---------- Export Students as CSV or JSON ----------
 router.get('/export', protect, authorize('admin'), async (req, res) => {
   try {
-    const { search, grade, studentType, shift } = req.query;
+    const { search, grade, studentType, shift, gender, status, hasConfessionFather, selectedIds, format = 'csv' } = req.query;
     const query = {};
 
-    if (search && search.trim()) {
-      const s = search.trim();
-      const userQuery = {
-        $or: [
-          { fullName: { $regex: s, $options: 'i' } },
-          { email: { $regex: s, $options: 'i' } }
-        ]
-      };
-      const users = await User.find(userQuery).select('_id');
-      const userIds = users.map(u => u._id);
-
+    // 1. If explicit selectedIds are passed, restrict to them
+    if (selectedIds && typeof selectedIds === 'string' && selectedIds.trim()) {
+      const ids = selectedIds.split(',').map((id) => id.trim()).filter(Boolean);
+      const objIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id)).map((id) => new mongoose.Types.ObjectId(id));
       query.$or = [
-        { userId: { $in: userIds } },
-        { firstName: { $regex: s, $options: 'i' } },
-        { middleName: { $regex: s, $options: 'i' } },
-        { lastName: { $regex: s, $options: 'i' } },
-        { studentId: { $regex: s, $options: 'i' } },
-        { studentPhone: { $regex: s, $options: 'i' } },
+        { _id: { $in: objIds } },
+        { studentId: { $in: ids } },
+        { registrationNumber: { $in: ids } },
       ];
+    } else {
+      // 2. Search by name or email
+      if (search && search.trim()) {
+        const s = search.trim();
+        const userQuery = {
+          $or: [
+            { fullName: { $regex: s, $options: 'i' } },
+            { email: { $regex: s, $options: 'i' } }
+          ]
+        };
+        const users = await User.find(userQuery).select('_id');
+        const userIds = users.map((u) => u._id);
+
+        query.$or = [
+          { userId: { $in: userIds } },
+          { firstName: { $regex: s, $options: 'i' } },
+          { middleName: { $regex: s, $options: 'i' } },
+          { lastName: { $regex: s, $options: 'i' } },
+          { studentId: { $regex: s, $options: 'i' } },
+          { studentPhone: { $regex: s, $options: 'i' } },
+        ];
+      }
+
+      // Class / Grade filter (supports multiple or single)
+      if (grade && grade.trim() && grade !== 'all' && grade !== 'All Classes') {
+        if (grade.includes(',')) {
+          const gradeList = grade.split(',').map((g) => g.trim());
+          query.$or = [
+            { grade: { $in: gradeList } },
+            { batch: { $in: gradeList } }
+          ];
+        } else {
+          query.$or = [
+            { grade: grade.trim() },
+            { batch: grade.trim() }
+          ];
+        }
+      }
+
+      // Student Track / Type
+      if (studentType && studentType.trim() && studentType !== 'all') {
+        query.studentType = studentType.trim().toLowerCase();
+      }
+
+      // Shift (Day/Weekend vs Night)
+      if (shift && shift.trim() && shift !== 'all') {
+        const s = shift.trim().toLowerCase();
+        if (s === 'night') {
+          query.shift = { $in: ['night', 'Night'] };
+        } else if (s === 'weekend' || s === 'day') {
+          query.shift = { $in: ['weekend', 'Weekend', 'day', 'Day'] };
+        } else {
+          query.shift = shift.trim();
+        }
+      }
+
+      // Gender filter
+      if (gender && gender.trim() && gender !== 'all') {
+        query.gender = gender.trim();
+      }
+
+      // Confession Father filter
+      if (hasConfessionFather !== undefined && hasConfessionFather !== '' && hasConfessionFather !== 'all') {
+        query.hasConfessionFather = String(hasConfessionFather) === 'true';
+      }
     }
 
-    if (grade) query.grade = grade;
-    if (studentType) query.studentType = studentType;
-    if (shift) query.shift = shift;
-
     const students = await Student.find(query)
-      .populate('userId', 'email fullName')
-      .populate('teacher', 'fullName email')
+      .populate('userId', 'email fullName status')
+      .populate('teacher', 'fullName email phone')
       .populate('courses', 'name grade')
       .sort({ registrationDate: -1 })
       .lean();
+
+    // Filter by status if specified
+    let filteredStudents = students;
+    if (status && status !== 'all') {
+      filteredStudents = students.filter((s) => {
+        const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
+        if (status === 'disabled') return isDeactivated;
+        if (status === 'approved') return !isDeactivated;
+        return true;
+      });
+    }
+
+    // If JSON format is requested (for rich client-side Excel builder), return directly
+    if (format === 'json') {
+      return res.json({
+        success: true,
+        count: filteredStudents.length,
+        students: filteredStudents,
+      });
+    }
 
     const fields = [
       'የተማሪ መለያ',
@@ -354,7 +425,7 @@ router.get('/export', protect, authorize('admin'), async (req, res) => {
       }
     };
 
-    const csvData = students.map(s => ({
+    const csvData = filteredStudents.map(s => ({
       'የተማሪ መለያ': s.studentId || 'N/A',
       'የምዝገባ ቁጥር': s.registrationNumber || '',
       'የተማሪ ዓይነት': s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ',

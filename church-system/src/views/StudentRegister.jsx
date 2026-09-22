@@ -91,11 +91,11 @@ const StudentRegister = () => {
       if (receiptFile) fd.append('receipt', receiptFile);
 
       const res = await fetch(`${API_BASE_URL}/api/registrations`, { method: 'POST', body: fd });
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (res.ok) {
         setResult(resData.registration);
         const piRes = await fetch(`${API_BASE_URL}/api/registrations/payment-info`);
-        if (piRes.ok) setPaymentInfo(await piRes.json());
+        if (piRes.ok) setPaymentInfo(await piRes.json().catch(() => null));
         setStep('success');
       } else {
         setServerError(resData.message || 'ምዝገባ አልተሳካም');

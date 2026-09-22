@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 
 import { getRelationshipLabel, formatGradeAmharic as formatGradeCentral } from '../../constants/registrationOptions';
+import ExportStudentsModal from '../../components/ExportStudentsModal';
 
 /**
  * Format grade values (e.g. "Grade 10", "GRADE 10", "10", "Batch 1") into Amharic ("10ኛ ክፍል", "ባች 1")
@@ -110,6 +111,7 @@ export default function StudentManagementTable({
   // Modals state
   const [activeStudent, setActiveStudent] = useState(null);
   const [modalType, setModalType] = useState(null); // 'profile' | 'qr' | 'course' | null
+  const [showExportModal, setShowExportModal] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (msg) => {
@@ -272,28 +274,13 @@ export default function StudentManagementTable({
     showToast('ለተማሪው QR ኮድ ተዘጋጅቷል');
   };
 
-  // Export CSV
+  // Export CSV / Excel
   const handleExportCsv = () => {
     if (onExportCsv) {
       onExportCsv();
       return;
     }
-    const headers = 'የተማሪ መለያ,ሙሉ ስም,ክፍል,የተማሪ ዓይነት,ፈረቃ,ስልክ ቁጥር,ሁኔታ\n';
-    const rows = filteredStudents
-      .map(
-        (s) =>
-          `"${s.studentId || ''}","${s.firstName || ''} ${s.lastName || ''}","${s.grade || ''}","${s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}","${s.shift === 'night' ? 'የማታ' : (s.shift === 'weekend' ? 'የቀን / ሳምንት መጨረሻ' : (s.shift || ''))}","${s.contactPhone || s.studentPhone || ''}","${s.qrCode ? 'ገባሪ (Active)' : 'QR የለውም'}"`
-      )
-      .join('\n');
-    const blob = new Blob(['\uFEFF' + headers + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `students_export_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('የተማሪዎች መረጃ ወደ CSV ተልኳል');
+    setShowExportModal(true);
   };
 
   return (
@@ -1149,6 +1136,18 @@ export default function StudentManagementTable({
           </div>
         </div>
       )}
+      {/* Advanced Export Students Modal */}
+      <ExportStudentsModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        initialFilters={{
+          grade: gradeFilter,
+          studentType: typeFilter,
+          shift: shiftFilter,
+        }}
+        selectedStudentIds={Array.from(selectedIds)}
+        totalAvailableCount={stats.total}
+      />
     </div>
   );
 }

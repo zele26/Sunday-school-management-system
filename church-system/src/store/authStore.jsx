@@ -6,16 +6,38 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 const customStorage = {
   getItem: (name) => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(name);
+    try {
+      const raw = localStorage.getItem(name);
+      if (!raw) return null;
+      // Validate JSON to prevent SyntaxError from corrupted storage
+      try {
+        JSON.parse(raw);
+        return raw;
+      } catch {
+        console.warn(`Corrupted ${name} in localStorage, clearing.`);
+        localStorage.removeItem(name);
+        return null;
+      }
+    } catch {
+      return null;
+    }
   },
   setItem: (name, value) => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(name, value);
+      try {
+        localStorage.setItem(name, value);
+      } catch (e) {
+        console.warn(`Failed to set ${name} in localStorage:`, e);
+      }
     }
   },
   removeItem: (name) => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(name);
+      try {
+        localStorage.removeItem(name);
+      } catch (e) {
+        console.warn(`Failed to remove ${name} from localStorage:`, e);
+      }
     }
   },
 };
