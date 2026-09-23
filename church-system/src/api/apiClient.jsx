@@ -63,7 +63,7 @@ export function clearApiCache(pattern = null) {
 // ------------------------------------------------------------------
 export async function apiFetch(url, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
-  const token = useAuthStore.getState().accessToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+  const token = useAuthStore.getState().accessToken || (typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('accessToken')) : null);
 
   // If this is a mutation (POST, PUT, DELETE, PATCH), invalidate related cache
   if (method !== 'GET') {

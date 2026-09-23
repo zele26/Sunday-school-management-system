@@ -214,7 +214,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 });
 
 // ---------- Export Students as CSV or JSON ----------
-router.get('/export', protect, authorize('admin'), async (req, res) => {
+router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'department_admin'), async (req, res) => {
   try {
     const { search, grade, studentType, shift, gender, status, hasConfessionFather, selectedIds, format = 'csv' } = req.query;
     const query = {};

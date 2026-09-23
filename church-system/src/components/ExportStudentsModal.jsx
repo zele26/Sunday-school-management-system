@@ -15,7 +15,7 @@ import {
   Sparkles,
   CheckCircle2,
 } from 'lucide-react';
-import { API_BASE_URL } from '../api/apiClient';
+import { apiFetch } from '../api/apiClient';
 import useAuthStore from '../store/authStore';
 import { formatGradeAmharic, formatShiftAmharic } from '../constants/registrationOptions';
 import { formatEthiopianDate } from '../utils/ethiopianDate';
@@ -120,7 +120,7 @@ export default function ExportStudentsModal({
     setExportSuccess(false);
 
     try {
-      const token = useAuthStore.getState().accessToken;
+      const token = useAuthStore.getState().accessToken || (typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('accessToken')) : null);
       const params = new URLSearchParams();
 
       if (exportScope === 'selected' && selectedStudentIds.length > 0) {
@@ -137,13 +137,17 @@ export default function ExportStudentsModal({
       if (token) params.append('token', token);
       params.append('format', 'json'); // fetch structured JSON to build styled Excel/CSV
 
-      const url = `${API_BASE_URL}/api/admin/students/export?${params.toString()}`;
-      const response = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      const response = await apiFetch(`/api/admin/students/export?${params.toString()}`, {
+        skipCache: true,
       });
 
       if (!response.ok) {
-        throw new Error('ተማሪዎችን ማውረድ አልተቻለም። እባክዎ እንደገና ይሞክሩ።');
+        let errorMsg = 'ተማሪዎችን ማውረድ አልተቻለም። እባክዎ እንደገና ይሞክሩ።';
+        try {
+          const errData = await response.json().catch(() => null);
+          if (errData?.message) errorMsg = errData.message;
+        } catch (e) {}
+        throw new Error(errorMsg);
       }
 
       const responseText = await response.text();
