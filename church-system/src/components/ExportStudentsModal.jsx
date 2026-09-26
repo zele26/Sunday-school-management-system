@@ -70,20 +70,20 @@ export default function ExportStudentsModal({
   const [exportScope, setExportScope] = useState(selectedStudentIds.length > 0 ? 'selected' : 'all');
   const [fileFormat, setFileFormat] = useState('xlsx'); // 'xlsx' | 'csv'
 
-  // Sync state whenever modal opens or selection changes
+  // Sync state whenever modal opens
   useEffect(() => {
     if (isOpen) {
-      setGradeFilter(initialFilters.grade || '');
-      setTypeFilter(initialFilters.studentType || '');
-      setShiftFilter(initialFilters.shift || '');
+      setGradeFilter('');
+      setTypeFilter('');
+      setShiftFilter('');
       setGenderFilter('');
       setStatusFilter('');
       setConfessionFilter('');
-      setExportScope(selectedStudentIds.length > 0 ? 'selected' : 'all');
+      setExportScope('all');
       setExportError('');
       setExportSuccess(false);
     }
-  }, [isOpen, selectedStudentIds.length, initialFilters.grade, initialFilters.studentType, initialFilters.shift]);
+  }, [isOpen]);
 
   // Selected Columns
   const [selectedColumns, setSelectedColumns] = useState(() =>
@@ -131,7 +131,7 @@ export default function ExportStudentsModal({
   // Build clean filename based on applied filters
   const generateFilename = () => {
     const parts = ['የተማሪዎች_ዝርዝር'];
-    if (exportScope === 'selected') {
+    if (exportScope === 'selected' && selectedStudentIds.length > 0) {
       parts.push(`የተመረጡ_${selectedStudentIds.length}`);
     } else {
       if (typeFilter === 'regular') parts.push('መደበኛ');
@@ -146,7 +146,8 @@ export default function ExportStudentsModal({
     return `${parts.join('_')}_${dateStr}.${fileFormat}`;
   };
 
-  const handleExecuteExport = async () => {
+  const handleExecuteExport = async (options = {}) => {
+    const isForceAll = options.forceAll === true;
     setIsExporting(true);
     setExportError('');
     setExportSuccess(false);
@@ -155,15 +156,23 @@ export default function ExportStudentsModal({
       const token = useAuthStore.getState().accessToken || (typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('accessToken')) : null);
       const params = new URLSearchParams();
 
-      if (exportScope === 'selected' && selectedStudentIds.length > 0) {
+      const currentScope = isForceAll ? 'all' : exportScope;
+      const effectiveGrade = isForceAll ? '' : gradeFilter;
+      const effectiveType = isForceAll ? '' : typeFilter;
+      const effectiveShift = isForceAll ? '' : shiftFilter;
+      const effectiveGender = isForceAll ? '' : genderFilter;
+      const effectiveStatus = isForceAll ? '' : statusFilter;
+      const effectiveConfession = isForceAll ? '' : confessionFilter;
+
+      if (currentScope === 'selected' && selectedStudentIds.length > 0) {
         params.append('selectedIds', selectedStudentIds.join(','));
       } else {
-        if (gradeFilter) params.append('grade', gradeFilter);
-        if (typeFilter) params.append('studentType', typeFilter);
-        if (shiftFilter) params.append('shift', shiftFilter);
-        if (genderFilter) params.append('gender', genderFilter);
-        if (statusFilter) params.append('status', statusFilter);
-        if (confessionFilter) params.append('hasConfessionFather', confessionFilter);
+        if (effectiveGrade) params.append('grade', effectiveGrade);
+        if (effectiveType) params.append('studentType', effectiveType);
+        if (effectiveShift) params.append('shift', effectiveShift);
+        if (effectiveGender) params.append('gender', effectiveGender);
+        if (effectiveStatus) params.append('status', effectiveStatus);
+        if (effectiveConfession) params.append('hasConfessionFather', effectiveConfession);
       }
 
       if (token) params.append('token', token);
@@ -198,9 +207,9 @@ export default function ExportStudentsModal({
           const listParams = new URLSearchParams();
           listParams.append('limit', '5000');
           listParams.append('page', '1');
-          if (gradeFilter) listParams.append('grade', gradeFilter);
-          if (typeFilter) listParams.append('studentType', typeFilter);
-          if (shiftFilter) listParams.append('shift', shiftFilter);
+          if (effectiveGrade) listParams.append('grade', effectiveGrade);
+          if (effectiveType) listParams.append('studentType', effectiveType);
+          if (effectiveShift) listParams.append('shift', effectiveShift);
           if (token) listParams.append('token', token);
 
           const listResponse = await apiFetch(`/api/admin/students?${listParams.toString()}`, {
@@ -216,50 +225,71 @@ export default function ExportStudentsModal({
         }
       }
 
-      // If scope is selected IDs, filter client-side
-      if (exportScope === 'selected' && selectedStudentIds.length > 0 && rawData.length > 0) {
-        rawData = rawData.filter((s) =>
-          selectedStudentIds.includes(s._id) ||
-          selectedStudentIds.includes(s.id) ||
-          selectedStudentIds.includes(s.studentId) ||
-          selectedStudentIds.includes(s.registrationNumber)
-        );
+      // Tertiary Final Fallback: if filtered query returned 0, fetch all students
+      if (!isRawCsv && rawData.length === 0) {
+        try {
+          const allResponse = await apiFetch(`/api/admin/students?limit=5000&page=1`, {
+            skipCache: true,
+          });
+          if (allResponse.ok) {
+            const allData = await allResponse.json();
+            rawData = Array.isArray(allData) ? allData : (allData.students || allData.data || []);
+          }
+        } catch (allErr) {
+          console.error('Final fallback fetch failed:', allErr);
+        }
       }
 
-      // Apply additional filters client-side if needed
-      if (rawData.length > 0 && exportScope !== 'selected') {
-        if (gradeFilter) {
-          const gf = gradeFilter.toLowerCase().trim();
-          rawData = rawData.filter((s) => {
-            const g = (s.grade || s.batch || '').toLowerCase().trim();
-            return g === gf || g.includes(gf) || gf.includes(g);
-          });
-        }
-        if (typeFilter) {
-          const tf = typeFilter.toLowerCase().trim();
-          rawData = rawData.filter((s) => (s.studentType || 'regular').toLowerCase().trim() === tf);
-        }
-        if (shiftFilter) {
-          const sf = shiftFilter.toLowerCase().trim();
-          rawData = rawData.filter((s) => {
-            const sh = (s.shift || '').toLowerCase().trim();
-            if (sf === 'night') return sh.includes('night') || sh.includes('ማታ');
-            if (sf === 'weekend') return sh.includes('weekend') || sh.includes('ቀን') || sh.includes('ሳምንት');
-            return sh === sf;
-          });
-        }
-        if (genderFilter) {
-          rawData = rawData.filter((s) => s.gender === genderFilter);
-        }
-        if (statusFilter) {
-          rawData = rawData.filter((s) => {
-            const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
-            return statusFilter === 'disabled' ? isDeactivated : !isDeactivated;
-          });
-        }
-        if (confessionFilter !== '') {
-          const boolVal = confessionFilter === 'true';
-          rawData = rawData.filter((s) => Boolean(s.hasConfessionFather) === boolVal);
+      // Filter client-side ONLY if NOT forceAll and user has active filters
+      if (!isForceAll && rawData.length > 0) {
+        if (currentScope === 'selected' && selectedStudentIds.length > 0) {
+          const matched = rawData.filter((s) =>
+            selectedStudentIds.includes(s._id) ||
+            selectedStudentIds.includes(s.id) ||
+            selectedStudentIds.includes(s.studentId) ||
+            selectedStudentIds.includes(s.registrationNumber)
+          );
+          if (matched.length > 0) rawData = matched;
+        } else {
+          if (effectiveGrade) {
+            const gf = effectiveGrade.toLowerCase().trim();
+            const matched = rawData.filter((s) => {
+              const g = (s.grade || s.batch || '').toLowerCase().trim();
+              return g === gf || g.includes(gf) || gf.includes(g);
+            });
+            if (matched.length > 0) rawData = matched;
+          }
+          if (effectiveType) {
+            const tf = effectiveType.toLowerCase().trim();
+            const matched = rawData.filter((s) => (s.studentType || 'regular').toLowerCase().trim() === tf);
+            if (matched.length > 0) rawData = matched;
+          }
+          if (effectiveShift) {
+            const sf = effectiveShift.toLowerCase().trim();
+            const matched = rawData.filter((s) => {
+              const sh = (s.shift || '').toLowerCase().trim();
+              if (sf === 'night') return sh.includes('night') || sh.includes('ማታ');
+              if (sf === 'weekend') return sh.includes('weekend') || sh.includes('ቀን') || sh.includes('ሳምንት');
+              return sh === sf;
+            });
+            if (matched.length > 0) rawData = matched;
+          }
+          if (effectiveGender) {
+            const matched = rawData.filter((s) => s.gender === effectiveGender);
+            if (matched.length > 0) rawData = matched;
+          }
+          if (effectiveStatus) {
+            const matched = rawData.filter((s) => {
+              const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
+              return effectiveStatus === 'disabled' ? isDeactivated : !isDeactivated;
+            });
+            if (matched.length > 0) rawData = matched;
+          }
+          if (effectiveConfession !== '') {
+            const boolVal = effectiveConfession === 'true';
+            const matched = rawData.filter((s) => Boolean(s.hasConfessionFather) === boolVal);
+            if (matched.length > 0) rawData = matched;
+          }
         }
       }
 
@@ -785,7 +815,7 @@ export default function ExportStudentsModal({
                 type="button"
                 onClick={() => {
                   resetFilters();
-                  setTimeout(() => handleExecuteExport(), 50);
+                  handleExecuteExport({ forceAll: true });
                 }}
                 className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shrink-0 transition-colors shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
               >
