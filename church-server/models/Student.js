@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+require('./User');
+require('./education/Course');
 
 const studentSchema = new mongoose.Schema({
   studentId: { 

@@ -168,32 +168,78 @@ export default function ExportStudentsModal({
       if (token) params.append('token', token);
       params.append('format', 'json'); // fetch structured JSON to build styled Excel/CSV
 
-      const response = await apiFetch(`/api/admin/students/export?${params.toString()}`, {
-        skipCache: true,
-      });
-
-      if (!response.ok) {
-        let errorMsg = 'ተማሪዎችን ማውረድ አልተቻለም። እባክዎ እንደገና ይሞክሩ።';
-        try {
-          const errData = await response.json().catch(() => null);
-          if (errData?.message) errorMsg = errData.message;
-        } catch (e) {}
-        throw new Error(errorMsg);
-      }
-
-      const responseText = await response.text();
       let rawData = [];
       let isRawCsv = false;
+      let responseText = '';
 
+      // Primary Attempt: Try dedicated /export endpoint
       try {
-        if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
-          const jsonRes = JSON.parse(responseText);
-          rawData = Array.isArray(jsonRes) ? jsonRes : (jsonRes.students || jsonRes.data || []);
-        } else {
-          isRawCsv = true;
+        const response = await apiFetch(`/api/admin/students/export?${params.toString()}`, {
+          skipCache: true,
+        });
+
+        if (response.ok) {
+          responseText = await response.text();
+          if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
+            const jsonRes = JSON.parse(responseText);
+            rawData = Array.isArray(jsonRes) ? jsonRes : (jsonRes.students || jsonRes.data || []);
+          } else {
+            isRawCsv = true;
+          }
         }
-      } catch (e) {
-        isRawCsv = true;
+      } catch (err) {
+        console.warn('Dedicated export endpoint attempt failed, trying fallback list endpoint...', err);
+      }
+
+      // Secondary Fallback Attempt: If /export did not return data, fetch from /api/admin/students
+      if (!isRawCsv && rawData.length === 0) {
+        try {
+          const listParams = new URLSearchParams();
+          listParams.append('limit', '5000');
+          listParams.append('page', '1');
+          if (gradeFilter) listParams.append('grade', gradeFilter);
+          if (typeFilter) listParams.append('studentType', typeFilter);
+          if (shiftFilter) listParams.append('shift', shiftFilter);
+          if (token) listParams.append('token', token);
+
+          const listResponse = await apiFetch(`/api/admin/students?${listParams.toString()}`, {
+            skipCache: true,
+          });
+
+          if (listResponse.ok) {
+            const listData = await listResponse.json();
+            rawData = Array.isArray(listData) ? listData : (listData.students || listData.data || []);
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback students fetch failed:', fallbackErr);
+        }
+      }
+
+      // If scope is selected IDs, filter client-side
+      if (exportScope === 'selected' && selectedStudentIds.length > 0 && rawData.length > 0) {
+        rawData = rawData.filter((s) =>
+          selectedStudentIds.includes(s._id) ||
+          selectedStudentIds.includes(s.id) ||
+          selectedStudentIds.includes(s.studentId) ||
+          selectedStudentIds.includes(s.registrationNumber)
+        );
+      }
+
+      // Apply additional filters client-side if needed
+      if (rawData.length > 0 && exportScope !== 'selected') {
+        if (genderFilter) {
+          rawData = rawData.filter((s) => s.gender === genderFilter);
+        }
+        if (statusFilter) {
+          rawData = rawData.filter((s) => {
+            const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
+            return statusFilter === 'disabled' ? isDeactivated : !isDeactivated;
+          });
+        }
+        if (confessionFilter !== '') {
+          const boolVal = confessionFilter === 'true';
+          rawData = rawData.filter((s) => Boolean(s.hasConfessionFather) === boolVal);
+        }
       }
 
       const filename = generateFilename();
@@ -202,7 +248,6 @@ export default function ExportStudentsModal({
       if (isRawCsv || (rawData.length === 0 && responseText.includes('የተማሪ'))) {
         const cleanCsv = responseText.startsWith('\uFEFF') ? responseText : '\uFEFF' + responseText;
         if (fileFormat === 'xlsx') {
-          // Convert CSV string directly to Excel XLSX using SheetJS
           const workbook = XLSX.read(cleanCsv, { type: 'string' });
           const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
           const blob = new Blob([excelBuffer], {
