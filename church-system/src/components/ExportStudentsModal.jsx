@@ -110,6 +110,7 @@ export default function ExportStudentsModal({
     setStatusFilter('');
     setConfessionFilter('');
     setExportScope('all');
+    setExportError('');
   };
 
   // Presets
@@ -227,6 +228,26 @@ export default function ExportStudentsModal({
 
       // Apply additional filters client-side if needed
       if (rawData.length > 0 && exportScope !== 'selected') {
+        if (gradeFilter) {
+          const gf = gradeFilter.toLowerCase().trim();
+          rawData = rawData.filter((s) => {
+            const g = (s.grade || s.batch || '').toLowerCase().trim();
+            return g === gf || g.includes(gf) || gf.includes(g);
+          });
+        }
+        if (typeFilter) {
+          const tf = typeFilter.toLowerCase().trim();
+          rawData = rawData.filter((s) => (s.studentType || 'regular').toLowerCase().trim() === tf);
+        }
+        if (shiftFilter) {
+          const sf = shiftFilter.toLowerCase().trim();
+          rawData = rawData.filter((s) => {
+            const sh = (s.shift || '').toLowerCase().trim();
+            if (sf === 'night') return sh.includes('night') || sh.includes('ማታ');
+            if (sf === 'weekend') return sh.includes('weekend') || sh.includes('ቀን') || sh.includes('ሳምንት');
+            return sh === sf;
+          });
+        }
         if (genderFilter) {
           rawData = rawData.filter((s) => s.gender === genderFilter);
         }
@@ -755,9 +776,22 @@ export default function ExportStudentsModal({
 
           {/* Feedback & Error states */}
           {exportError && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-              <X className="w-4 h-4 shrink-0" />
-              <span>{exportError}</span>
+            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <X className="w-4 h-4 shrink-0" />
+                <span>{exportError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  resetFilters();
+                  setTimeout(() => handleExecuteExport(), 50);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] shrink-0 transition-colors shadow-xs cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>ማጣሪያዎችን አጽድተህ ሁሉንም አውርድ</span>
+              </button>
             </div>
           )}
 
