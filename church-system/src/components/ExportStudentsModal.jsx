@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Download,
@@ -14,6 +14,7 @@ import {
   Calendar,
   Sparkles,
   CheckCircle2,
+  RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '../api/apiClient';
 import useAuthStore from '../store/authStore';
@@ -69,6 +70,21 @@ export default function ExportStudentsModal({
   const [exportScope, setExportScope] = useState(selectedStudentIds.length > 0 ? 'selected' : 'all');
   const [fileFormat, setFileFormat] = useState('xlsx'); // 'xlsx' | 'csv'
 
+  // Sync state whenever modal opens or selection changes
+  useEffect(() => {
+    if (isOpen) {
+      setGradeFilter(initialFilters.grade || '');
+      setTypeFilter(initialFilters.studentType || '');
+      setShiftFilter(initialFilters.shift || '');
+      setGenderFilter('');
+      setStatusFilter('');
+      setConfessionFilter('');
+      setExportScope(selectedStudentIds.length > 0 ? 'selected' : 'all');
+      setExportError('');
+      setExportSuccess(false);
+    }
+  }, [isOpen, selectedStudentIds.length, initialFilters.grade, initialFilters.studentType, initialFilters.shift]);
+
   // Selected Columns
   const [selectedColumns, setSelectedColumns] = useState(() =>
     AVAILABLE_COLUMNS.filter((c) => c.default).map((c) => c.id)
@@ -83,6 +99,17 @@ export default function ExportStudentsModal({
     setSelectedColumns((prev) =>
       prev.includes(id) ? prev.filter((colId) => colId !== id) : [...prev, id]
     );
+  };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setGradeFilter('');
+    setTypeFilter('');
+    setShiftFilter('');
+    setGenderFilter('');
+    setStatusFilter('');
+    setConfessionFilter('');
+    setExportScope('all');
   };
 
   // Presets
@@ -103,12 +130,16 @@ export default function ExportStudentsModal({
   // Build clean filename based on applied filters
   const generateFilename = () => {
     const parts = ['የተማሪዎች_ዝርዝር'];
-    if (typeFilter === 'regular') parts.push('መደበኛ');
-    else if (typeFilter === 'distance') parts.push('የርቀት');
+    if (exportScope === 'selected') {
+      parts.push(`የተመረጡ_${selectedStudentIds.length}`);
+    } else {
+      if (typeFilter === 'regular') parts.push('መደበኛ');
+      else if (typeFilter === 'distance') parts.push('የርቀት');
 
-    if (gradeFilter) parts.push(gradeFilter.replace(/\s+/g, '_'));
-    if (shiftFilter === 'night') parts.push('የማታ');
-    else if (shiftFilter === 'weekend') parts.push('የቀን');
+      if (gradeFilter) parts.push(gradeFilter.replace(/\s+/g, '_'));
+      if (shiftFilter === 'night') parts.push('የማታ');
+      else if (shiftFilter === 'weekend') parts.push('የቀን');
+    }
 
     const dateStr = new Date().toISOString().split('T')[0];
     return `${parts.join('_')}_${dateStr}.${fileFormat}`;
@@ -173,17 +204,28 @@ export default function ExportStudentsModal({
         if (fileFormat === 'xlsx') {
           // Convert CSV string directly to Excel XLSX using SheetJS
           const workbook = XLSX.read(cleanCsv, { type: 'string' });
-          XLSX.writeFile(workbook, filename);
+          const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([excelBuffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+          });
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
         } else {
           const blob = new Blob([cleanCsv], { type: 'text/csv;charset=utf-8;' });
           const downloadUrl = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = downloadUrl;
-          link.setAttribute('download', filename.replace('.xlsx', '.csv'));
+          link.setAttribute('download', filename.endsWith('.csv') ? filename : filename.replace('.xlsx', '.csv'));
           document.body.appendChild(link);
           link.click();
           link.remove();
-          URL.revokeObjectURL(downloadUrl);
+          setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
         }
 
         setExportSuccess(true);
@@ -195,7 +237,7 @@ export default function ExportStudentsModal({
       }
 
       if (rawData.length === 0) {
-        throw new Error('በተመረጡት ማጣሪያዎች መሠረት ምንም ተማሪ አልተገኘም።');
+        throw new Error('በተመረጡት ማጣሪያዎች መሠረት ምንም ተማሪ አልተገኘም። እባክዎ ማጣሪያዎችን አጽድተው እንደገና ይሞክሩ።');
       }
 
       // Format row objects according to selected columns
@@ -315,7 +357,19 @@ export default function ExportStudentsModal({
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'የተማሪዎች ዝርዝር');
-        XLSX.writeFile(workbook, filename);
+        
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+        });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
       } else {
         // Generate UTF-8 BOM CSV for Excel compatibility
         const worksheet = XLSX.utils.json_to_sheet(formattedRows);
@@ -324,11 +378,11 @@ export default function ExportStudentsModal({
         const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.setAttribute('download', filename);
+        link.setAttribute('download', filename.endsWith('.csv') ? filename : filename.replace('.xlsx', '.csv'));
         document.body.appendChild(link);
         link.click();
         link.remove();
-        URL.revokeObjectURL(downloadUrl);
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
       }
 
       setExportSuccess(true);
@@ -345,6 +399,8 @@ export default function ExportStudentsModal({
   };
 
   if (!isOpen) return null;
+
+  const hasActiveFilters = gradeFilter || typeFilter || shiftFilter || genderFilter || statusFilter || confessionFilter;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -449,7 +505,7 @@ export default function ExportStudentsModal({
                     className="text-emerald-600 focus:ring-emerald-500"
                   />
                   <span className="text-slate-600 dark:text-slate-400">
-                    ሁሉንም የተጣሩ ተማሪዎችን
+                    ሁሉንም ተማሪዎች (ጠቅላላ)
                   </span>
                 </label>
               </div>
@@ -458,10 +514,23 @@ export default function ExportStudentsModal({
 
           {/* Section 2: Detailed Filters */}
           <div className="space-y-3">
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <Filter className="w-4 h-4 text-blue-500" />
-              <span>2. ማጣሪያዎች (Filter Mechanism)</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Filter className="w-4 h-4 text-blue-500" />
+                <span>2. ማጣሪያዎች (Filter Mechanism)</span>
+              </label>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>ማጣሪያዎችን አጽዳ (ሁሉንም አውርድ)</span>
+                </button>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Student Type / Track */}

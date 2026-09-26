@@ -3413,6 +3413,10 @@ export const translations = {
     en: 'Please upload your payment receipt',
     am: 'እባክዎ የደረሰኝ ፎቶ ይጫኑ',
   },
+  pleaseSelectFileFirst: {
+    en: 'Please select a file first',
+    am: 'እባክዎ መጀመሪያ ፋይል ይምረጡ',
+  },
   paymentSubmissionFailed: {
     en: 'Payment submission failed',
     am: 'ክፍያ ማረጋገጥ አልተሳካም',

@@ -465,6 +465,7 @@
   "networkErrorDuringUpload": "የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት",
   "pleaseEnterTransactionRef": "እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ",
   "pleaseUploadReceipt": "እባክዎ የደረሰኝ ፎቶ ይጫኑ",
+  "pleaseSelectFileFirst": "እባክዎ መጀመሪያ ፋይል ይምረጡ",
   "paymentSubmissionFailed": "ክፍያ ማረጋገጥ አልተሳካም",
   "checkAnotherPhone": "← ሌላ ስልክ ቁጥር ለመፈተሽ",
   "teacherRegistrationTitle": "አዲስ መምህር መመዝገቢያ",

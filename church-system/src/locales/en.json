@@ -465,6 +465,7 @@
   "networkErrorDuringUpload": "Network error occurred during receipt upload",
   "pleaseEnterTransactionRef": "Please enter the transaction reference / FT number",
   "pleaseUploadReceipt": "Please upload your payment receipt",
+  "pleaseSelectFileFirst": "Please select a file first",
   "paymentSubmissionFailed": "Payment submission failed",
   "checkAnotherPhone": "← Check another phone number",
   "teacherRegistrationTitle": "Teacher Registration",

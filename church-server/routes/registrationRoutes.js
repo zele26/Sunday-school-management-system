@@ -287,7 +287,7 @@ router.post('/', upload.single('receipt'), async (req, res) => {
       const dataURI = `data:${req.file.mimetype};base64,${b64}`;
       if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
         try {
-          const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
+          const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts', resource_type: 'auto' });
           receiptUrl = result.secure_url;
         } catch (cErr) {
           receiptUrl = dataURI;
@@ -434,8 +434,20 @@ const handleUploadReceipt = async (req, res) => {
     if (req.file) {
       const b64 = Buffer.from(req.file.buffer).toString('base64');
       const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-      const result = await cloudinary.uploader.upload(dataURI, { folder: 'receipts' });
-      receiptUrl = result.secure_url;
+      if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+        try {
+          const result = await cloudinary.uploader.upload(dataURI, {
+            folder: 'receipts',
+            resource_type: 'auto',
+          });
+          receiptUrl = result.secure_url;
+        } catch (cErr) {
+          console.error('Cloudinary receipt upload error, fallback to dataURI:', cErr.message);
+          receiptUrl = dataURI;
+        }
+      } else {
+        receiptUrl = dataURI;
+      }
     }
 
     if (!receiptUrl && !req.file) {

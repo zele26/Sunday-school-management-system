@@ -75,19 +75,27 @@ const ContinueRegistrationContent = () => {
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleFileUpload = async (fileParam) => {
+    // Determine file: either passed directly or from receiptFile state
+    const file = (fileParam instanceof File)
+      ? fileParam
+      : (fileParam?.target?.files ? fileParam.target.files[0] : receiptFile);
+
+    if (!file) {
+      setError(t('pleaseSelectFileFirst', 'እባክዎ መጀመሪያ ፋይል ይምረጡ'));
+      return null;
+    }
 
     // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError(t('fileSizeExceeds5mb', 'የፋይሉ መጠን ከ 5MB መብለጥ የለበትም'));
-      return;
+      return null;
     }
 
     setReceiptFile(file);
     setUploading(true);
     setError('');
+    setMessage('');
 
     const formData = new FormData();
     formData.append('receipt', file);
@@ -96,6 +104,9 @@ const ContinueRegistrationContent = () => {
     }
     if (registration?.phone) {
       formData.append('phone', registration.phone);
+    }
+    if (transactionRef) {
+      formData.append('transactionRef', transactionRef.trim());
     }
 
     try {
@@ -106,15 +117,18 @@ const ContinueRegistrationContent = () => {
       });
       const data = await res.json().catch(() => ({}));
 
-      if (res.ok) {
+      if (res.ok && data.receiptUrl) {
         setReceiptUrl(data.receiptUrl);
         setMessage(t('paymentReceiptUploadedSuccess', 'የክፍያ ደረሰኝ በተሳካ ሁኔታ ተጭኗል'));
+        return data.receiptUrl;
       } else {
         setError(data.message || t('failedToUploadReceipt', 'ደረሰኝ መጫን አልተሳካም'));
+        return null;
       }
     } catch (err) {
       console.error('Receipt upload error:', err);
       setError(t('networkErrorDuringUpload', 'የአውታረ መረብ ችግር ተፈጥሯል በደረሰኝ ጭነት ወቅት'));
+      return null;
     } finally {
       setUploading(false);
     }
@@ -126,9 +140,16 @@ const ContinueRegistrationContent = () => {
       setError(t('pleaseEnterTransactionRef', 'እባክዎ የክፍያ ማጣቀሻ ቁጥር (FT ቁጥር) ያስገቡ'));
       return;
     }
-    if (!receiptUrl) {
-      setError(t('pleaseUploadReceipt', 'እባክዎ የደረሰኝ ፎቶ ይጫኑ'));
-      return;
+
+    let finalReceiptUrl = receiptUrl;
+    if (!finalReceiptUrl) {
+      if (receiptFile) {
+        finalReceiptUrl = await handleFileUpload(receiptFile);
+        if (!finalReceiptUrl) return;
+      } else {
+        setError(t('pleaseUploadReceipt', 'እባክዎ የደረሰኝ ፎቶ ይጫኑ'));
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -143,7 +164,7 @@ const ContinueRegistrationContent = () => {
           phone: registration.phone,
           registrationNumber: registration.registrationNumber,
           transactionRef: transactionRef.trim(),
-          receiptUrl,
+          receiptUrl: finalReceiptUrl,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -593,12 +614,17 @@ const ContinueRegistrationContent = () => {
                     <input
                       type="file"
                       accept="image/*,application/pdf"
-                      onChange={(e) => setReceiptFile(e.target.files[0])}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setReceiptFile(file);
+                        setReceiptUrl('');
+                        setError('');
+                      }}
                       className="block w-full text-xs sm:text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-100 dark:file:bg-blue-950/70 file:text-[#1657b8] dark:file:text-blue-300 hover:file:bg-blue-200 transition-all cursor-pointer"
                     />
                     <button
                       type="button"
-                      onClick={handleFileUpload}
+                      onClick={() => handleFileUpload()}
                       disabled={uploading || !receiptFile}
                       className="w-full sm:w-auto whitespace-nowrap bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold text-xs transition-all disabled:opacity-50 flex justify-center items-center gap-2 shadow-md cursor-pointer"
                     >
@@ -629,7 +655,7 @@ const ContinueRegistrationContent = () => {
                   <button
                     type="button"
                     onClick={handleFinalSubmit}
-                    disabled={isSubmitting || !receiptUrl || !transactionRef}
+                    disabled={isSubmitting || uploading || (!receiptUrl && !receiptFile) || !transactionRef.trim()}
                     className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-98 text-white py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl shadow-emerald-600/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer"
                   >
                     {isSubmitting ? (
