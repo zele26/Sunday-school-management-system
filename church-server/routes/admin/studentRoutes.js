@@ -160,6 +160,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const [total, studentsRaw, statsAgg] = await Promise.all([
       Student.countDocuments(query),
       Student.find(query)
+        .select('-photoUrl -emergencyContactPhoto')
         .populate('userId', 'email fullName status')
         .populate('teacher', 'fullName email phone')
         .populate('teachers', 'fullName email phone')
@@ -302,6 +303,7 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
     const finalQuery = conditions.length > 0 ? { $and: conditions } : {};
 
     const students = await Student.find(finalQuery)
+      .select('-photoUrl -emergencyContactPhoto -qrCode')
       .populate('userId', 'email fullName status')
       .populate('teacher', 'fullName email phone')
       .populate('courses', 'name grade')

@@ -59,6 +59,7 @@ export default function ExportStudentsModal({
   initialFilters = {},
   selectedStudentIds = [],
   totalAvailableCount = 0,
+  fallbackStudents = [],
 }) {
   // Filter states
   const [gradeFilter, setGradeFilter] = useState(initialFilters.grade || '');
@@ -251,6 +252,12 @@ export default function ExportStudentsModal({
           console.error('Final fallback fetch failed:', allErr);
           lastServerError = allErr.message;
         }
+      }
+
+      // Quaternary Client Fallback: Use loaded table data if network calls failed
+      if (!isRawCsv && rawData.length === 0 && Array.isArray(fallbackStudents) && fallbackStudents.length > 0) {
+        console.info('Using client fallback students data for export...');
+        rawData = [...fallbackStudents];
       }
 
       // Filter client-side ONLY if NOT forceAll and user has active filters

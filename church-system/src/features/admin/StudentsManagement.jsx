@@ -1617,6 +1617,7 @@ const StudentsManagement = () => {
         }}
         selectedStudentIds={selectedStudentIds}
         totalAvailableCount={stats.total}
+        fallbackStudents={rawStudents}
       />
     </div>
   );

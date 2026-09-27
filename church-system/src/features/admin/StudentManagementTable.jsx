@@ -1147,6 +1147,7 @@ export default function StudentManagementTable({
         }}
         selectedStudentIds={Array.from(selectedIds)}
         totalAvailableCount={stats.total}
+        fallbackStudents={students}
       />
     </div>
   );
