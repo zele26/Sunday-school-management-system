@@ -175,12 +175,14 @@ export default function ExportStudentsModal({
         if (effectiveConfession) params.append('hasConfessionFather', effectiveConfession);
       }
 
-      if (token) params.append('token', token);
+      // Do not append massive JWT token to query string, apiFetch handles Bearer token in headers
       params.append('format', 'json'); // fetch structured JSON to build styled Excel/CSV
 
       let rawData = [];
       let isRawCsv = false;
       let responseText = '';
+      let lastServerError = null;
+      let lastStatusCode = null;
 
       // Primary Attempt: Try dedicated /export endpoint
       try {
@@ -188,6 +190,7 @@ export default function ExportStudentsModal({
           skipCache: true,
         });
 
+        lastStatusCode = response.status;
         if (response.ok) {
           responseText = await response.text();
           if (responseText.trim().startsWith('{') || responseText.trim().startsWith('[')) {
@@ -196,9 +199,12 @@ export default function ExportStudentsModal({
           } else {
             isRawCsv = true;
           }
+        } else {
+          lastServerError = `HTTP ${response.status} (${response.statusText || 'Server Error'})`;
         }
       } catch (err) {
         console.warn('Dedicated export endpoint attempt failed, trying fallback list endpoint...', err);
+        lastServerError = err.message || 'Connection error';
       }
 
       // Secondary Fallback Attempt: If /export did not return data, fetch from /api/admin/students
@@ -210,18 +216,21 @@ export default function ExportStudentsModal({
           if (effectiveGrade) listParams.append('grade', effectiveGrade);
           if (effectiveType) listParams.append('studentType', effectiveType);
           if (effectiveShift) listParams.append('shift', effectiveShift);
-          if (token) listParams.append('token', token);
 
           const listResponse = await apiFetch(`/api/admin/students?${listParams.toString()}`, {
             skipCache: true,
           });
 
+          lastStatusCode = listResponse.status;
           if (listResponse.ok) {
             const listData = await listResponse.json();
             rawData = Array.isArray(listData) ? listData : (listData.students || listData.data || []);
+          } else {
+            lastServerError = `HTTP ${listResponse.status}`;
           }
         } catch (fallbackErr) {
           console.error('Fallback students fetch failed:', fallbackErr);
+          lastServerError = fallbackErr.message;
         }
       }
 
@@ -231,12 +240,16 @@ export default function ExportStudentsModal({
           const allResponse = await apiFetch(`/api/admin/students?limit=5000&page=1`, {
             skipCache: true,
           });
+          lastStatusCode = allResponse.status;
           if (allResponse.ok) {
             const allData = await allResponse.json();
             rawData = Array.isArray(allData) ? allData : (allData.students || allData.data || []);
+          } else {
+            lastServerError = `HTTP ${allResponse.status}`;
           }
         } catch (allErr) {
           console.error('Final fallback fetch failed:', allErr);
+          lastServerError = allErr.message;
         }
       }
 
@@ -333,7 +346,16 @@ export default function ExportStudentsModal({
       }
 
       if (rawData.length === 0) {
-        throw new Error('በተመረጡት ማጣሪያዎች መሠረት ምንም ተማሪ አልተገኘም። እባክዎ ማጣሪያዎችን አጽድተው እንደገና ይሞክሩ።');
+        if (lastStatusCode === 502 || lastStatusCode === 504 || (lastServerError && lastServerError.includes('502'))) {
+          throw new Error('የሰርቨር ግንኙነት መዘግየት (502 Bad Gateway) አጋጥሟል። የጀርባ ሰርቨሩ (Server) ከእንቅልፉ እየነሳ (waking up) ሊሆን ስለሚችል እባክዎ ከ15-30 ሰከንዶች በኋላ "እንደገና አውርድ" የሚለውን ይጫኑ።');
+        }
+        if (lastServerError) {
+          throw new Error(`የሰርቨር ችግር አጋጥሟል (${lastServerError})። እባክዎ ጥቂት ቆይተው እንደገና ይሞክሩ።`);
+        }
+        if (hasActiveFilters && !isForceAll) {
+          throw new Error('በተመረጡት ማጣሪያዎች መሠረት ምንም ተማሪ አልተገኘም። እባክዎ ማጣሪያዎችን አጽድተው እንደገና ይሞክሩ።');
+        }
+        throw new Error('በሲስተሙ ውስጥ ምንም የተመዘገበ ተማሪ አልተገኘም።');
       }
 
       // Format row objects according to selected columns
