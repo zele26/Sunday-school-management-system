@@ -91,7 +91,7 @@ const rawAllowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:4173',
-  'https://church-api-3l2c.onrender.com',
+  'https://sunday-school-management-system-hfnd.onrender.com',
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((s) => s.trim()) : []),
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()) : [])
 ];

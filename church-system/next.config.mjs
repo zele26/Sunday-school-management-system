@@ -42,7 +42,7 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    const defaultUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://church-api-3l2c.onrender.com';
+    const defaultUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://sunday-school-management-system-hfnd.onrender.com';
     const backendUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || defaultUrl;
     return [
       {
