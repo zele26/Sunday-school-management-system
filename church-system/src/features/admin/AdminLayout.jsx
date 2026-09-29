@@ -68,7 +68,7 @@ const allNavSections = [
       { path: '/admin/courses', labelKey: 'navCourses', label: 'ትምህርቶች', icon: BookOpen, permission: PERMISSIONS.ACADEMIC_COURSES },
       { path: '/admin/teachers', labelKey: 'navTeachers', label: 'መምህራን', icon: Users, permission: PERMISSIONS.TEACHERS_VIEW },
       { path: '/admin/qr-scanner', labelKey: 'navQrScanner', label: 'የQR መቃኛ', icon: QrCode, permission: PERMISSIONS.ATTENDANCE_SCAN },
-      { path: '/admin/attendance-reports', labelKey: 'navAttendance', label: 'የመገኘት መዝገብ', icon: BarChart3, permission: [PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE] },
+      { path: '/admin/attendance', labelKey: 'navAttendance', label: 'የመገኘት መዝገብ', icon: ClipboardList, permission: [PERMISSIONS.ATTENDANCE_VIEW, PERMISSIONS.ATTENDANCE_MANAGE] },
       { path: '/admin/reports', labelKey: 'navReports', label: 'ሪፖርቶች', icon: FileText, permission: PERMISSIONS.REPORTS_VIEW },
       { path: '/admin/analytics', labelKey: 'navAnalytics', label: 'አናሊቲክስ', icon: BarChart3, permission: PERMISSIONS.ANALYTICS_VIEW },
       { path: '/admin/certificates', labelKey: 'navCertificates', label: 'የምስክር ወረቀቶች', icon: Award, permission: [PERMISSIONS.CERTIFICATES_VIEW, PERMISSIONS.CERTIFICATES_ISSUE] },

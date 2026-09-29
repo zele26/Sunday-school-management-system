@@ -20,13 +20,27 @@ const getRegistrationSettings = async (forceFresh = false) => {
   if (!forceFresh && cachedSettings && (now - lastSettingsFetch < SETTINGS_CACHE_TTL)) {
     return cachedSettings;
   }
-  let settings = await SystemSetting.findOne({ key: 'registration' });
-  if (!settings) {
-    settings = await SystemSetting.create({ key: 'registration' });
+  try {
+    let settings = await SystemSetting.findOne({ key: 'registration' });
+    if (!settings) {
+      settings = await SystemSetting.create({ key: 'registration' });
+    }
+    cachedSettings = settings;
+    lastSettingsFetch = now;
+    return settings;
+  } catch (err) {
+    console.warn('⚠️ getRegistrationSettings fallback:', err.message);
+    return cachedSettings || {
+      isRegistrationOpen: true,
+      isRegularOpen: true,
+      isDistanceOpen: true,
+      academicYear: '2018',
+      regularClosedMessage: '',
+      distanceClosedMessage: '',
+      generalClosedMessage: '',
+      updatedAt: new Date(),
+    };
   }
-  cachedSettings = settings;
-  lastSettingsFetch = now;
-  return settings;
 };
 
 const normalizeEthiopianPhone = (phone) => {

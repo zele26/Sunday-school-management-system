@@ -452,10 +452,20 @@ const AttendanceReports = () => {
               )}
 
               <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin/attendance')}
+                className="gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black border-none shadow-xs cursor-pointer"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>ሳምንታዊ ፕሮግራሞችና ክፍለ-ጊዜዎች</span>
+              </Button>
+
+              <Button
                 variant="primary"
                 size="sm"
                 onClick={() => navigate('/admin/qr-scanner')}
-                className="gap-1.5 bg-gradient-to-r from-[#1657b8] to-[#0f4699] text-white shadow-md"
+                className="gap-1.5 bg-gradient-to-r from-[#1657b8] to-[#0f4699] text-white shadow-md cursor-pointer"
               >
                 <QrCode className="w-3.5 h-3.5" />
                 <span>QR ስካነር ክፈት</span>

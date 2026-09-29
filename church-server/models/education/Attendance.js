@@ -47,6 +47,21 @@ const attendanceSchema = new mongoose.Schema({
     default: 'Present',
   },
   session: { type: String, trim: true },
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ClassSession',
+    default: null,
+    index: true,
+  },
+  scannedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  scanMethod: {
+    type: String,
+    enum: ['qr_scan', 'manual_override', 'auto_absent_on_close'],
+    default: 'qr_scan',
+  },
   recordedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -61,17 +76,24 @@ const attendanceSchema = new mongoose.Schema({
   note: { type: String, default: '' },
 }, { timestamps: true });
 
-// Unique indexes
+// Unique index for session-based attendance (one record per student per session)
+attendanceSchema.index(
+  { sessionId: 1, student: 1 },
+  { unique: true, partialFilterExpression: { sessionId: { $ne: null } } }
+);
+
+// Unique indexes for legacy course / date based attendance
 attendanceSchema.index(
   { student: 1, date: 1, course: 1 },
-  { unique: true, partialFilterExpression: { course: { $ne: null } } }
+  { unique: true, partialFilterExpression: { course: { $ne: null }, sessionId: null } }
 );
 attendanceSchema.index(
   { student: 1, date: 1 },
-  { unique: true, partialFilterExpression: { course: null } }
+  { unique: true, partialFilterExpression: { course: null, sessionId: null } }
 );
 
 // High-speed compound indexes for roll calls, reports & analytics
+attendanceSchema.index({ sessionId: 1, status: 1 });
 attendanceSchema.index({ student: 1, course: 1, status: 1 });
 attendanceSchema.index({ course: 1, status: 1, student: 1 });
 attendanceSchema.index({ student: 1, status: 1 });

@@ -2,6 +2,7 @@
 
 // src/features/teacher/TeacherAttendance.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ClipboardList,
   Calendar,
@@ -16,6 +17,7 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Check,
+  QrCode,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
@@ -215,19 +217,30 @@ const TeacherAttendance = () => {
           </div>
         </div>
 
-        {/* Course Dropdown */}
-        <div className="w-full sm:w-64">
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+        {/* Header Actions */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Link
+            to="/admin/qr-scanner"
+            className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                📖 {c.name} {c.grade ? `(${formatGradeAmharic(c.grade)})` : ''}
-              </option>
-            ))}
-          </select>
+            <QrCode className="w-4 h-4 text-slate-950" />
+            <span>ቀጥታ QR ስካነር</span>
+          </Link>
+
+          {/* Course Dropdown */}
+          <div className="w-full sm:w-64">
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(e.target.value)}
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+            >
+              {courses.map((c) => (
+                <option key={c._id} value={c._id}>
+                  📖 {c.name} {c.grade ? `(${formatGradeAmharic(c.grade)})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

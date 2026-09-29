@@ -60,7 +60,31 @@ const isStudentEligibleForCourse = (student, course) => {
 // All routes require authentication
 router.use(protect);
 
-// ---------- Scan QR and record attendance ----------
+// ============================================================================
+// NEW: CLASS SESSION & TIMETABLE-BASED ATTENDANCE ROUTES
+// ============================================================================
+const sessionCtrl = require('../../controllers/education/attendanceSessionController');
+
+// 1. Taker Sessions & QR Workflow
+router.get('/sessions/today', sessionCtrl.getTodayAuthorizedSessions);
+router.post('/sessions/:id/start', sessionCtrl.startSession);
+router.post('/sessions/:id/scan', sessionCtrl.scanStudentInSession);
+router.post('/sessions/:id/close', sessionCtrl.closeSession);
+router.get('/sessions/:id/live-roster', sessionCtrl.getSessionLiveRoster);
+
+// 2. Admin Sessions Management
+router.get('/sessions', authorize('admin', 'superadmin'), sessionCtrl.getAllSessions);
+router.post('/sessions/makeup', authorize('admin', 'superadmin'), sessionCtrl.createMakeUpSession);
+router.patch('/sessions/:id/reschedule', authorize('admin', 'superadmin'), sessionCtrl.rescheduleSession);
+router.patch('/sessions/:id/cancel', authorize('admin', 'superadmin'), sessionCtrl.cancelSession);
+
+// 3. Admin Timetable & Recurring Schedule Management
+router.get('/schedules', sessionCtrl.getSchedules);
+router.post('/schedules', authorize('admin', 'superadmin'), sessionCtrl.createSchedule);
+router.put('/schedules/:id', authorize('admin', 'superadmin'), sessionCtrl.updateSchedule);
+router.delete('/schedules/:id', authorize('admin', 'superadmin'), sessionCtrl.deleteSchedule);
+
+// ---------- Legacy Scan QR and record attendance ----------
 router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { qrCode, courseId, status: forcedStatus } = req.body;
