@@ -75,7 +75,7 @@ const TeacherAttendance = () => {
         setRoster(list);
         const initialMap = {};
         list.forEach((s) => {
-          initialMap[s._id] = s.status || 'Present';
+          initialMap[s._id] = s.status || 'Unmarked';
         });
         setRosterStatuses(initialMap);
       }
@@ -100,7 +100,7 @@ const TeacherAttendance = () => {
 
     const recordsPayload = roster.map((s) => ({
       studentId: s._id,
-      status: rosterStatuses[s._id] || 'Present',
+      status: rosterStatuses[s._id] === 'Unmarked' ? 'Absent' : (rosterStatuses[s._id] || 'Absent'),
     }));
 
     try {
@@ -126,10 +126,46 @@ const TeacherAttendance = () => {
     }
   };
 
+  // Auto-Mark Unscanned as Absent
+  const handleAutoMarkAbsent = async () => {
+    if (!selectedCourseId) return;
+    setIsSubmitting(true);
+    setFeedbackMessage(null);
+
+    try {
+      const res = await apiFetch('/api/admin/attendance/mark-unscanned-absent', {
+        method: 'POST',
+        body: JSON.stringify({
+          courseId: selectedCourseId,
+          date: rollCallDate,
+          defaultStatus: 'Absent',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFeedbackMessage({
+          type: 'success',
+          text: data.message || `ያልተገኙ ተማሪዎች (${data.markedAbsentCount || 0}) 'አልተገኘም' ተብለው ተመዝግበዋል!`,
+        });
+        fetchRoster();
+      } else {
+        setFeedbackMessage({ type: 'error', text: data.message || 'ስህተት ተፈጥሯል' });
+      }
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message || 'የኔትወርክ ስህተት ተፈጥሯል' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleMarkAll = (status) => {
     const updated = {};
     roster.forEach((s) => {
-      updated[s._id] = status;
+      if (s.status === 'Excused' && status !== 'Excused') {
+        updated[s._id] = 'Excused';
+      } else {
+        updated[s._id] = status;
+      }
     });
     setRosterStatuses(updated);
   };
@@ -236,7 +272,16 @@ const TeacherAttendance = () => {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAutoMarkAbsent}
+                disabled={isSubmitting || roster.length === 0}
+                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                title="ያላስነበቡትንና ያልተገኙትን ተማሪዎች በሙሉ አልተገኘም ብለህ መዝግብ"
+              >
+                <span>⚡ ያልተገኙትን "አልተገኘም" አድርግ</span>
+              </button>
               <button
                 type="button"
                 onClick={() => handleMarkAll('Present')}
@@ -287,12 +332,13 @@ const TeacherAttendance = () => {
                         <th className="p-3.5 w-10 text-center">#</th>
                         <th className="p-3.5">የተማሪው ስም</th>
                         <th className="p-3.5">መለያ ቁጥር</th>
-                        <th className="p-3.5 text-center">ሁኔታ</th>
+                        <th className="p-3.5">የስካን ሁኔታ</th>
+                        <th className="p-3.5 text-center">የተገኝነት ሁኔታ</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {roster.map((s, idx) => {
-                        const curStatus = rosterStatuses[s._id] || 'Present';
+                        const curStatus = rosterStatuses[s._id] || (s.status || 'Unmarked');
                         return (
                           <tr key={s._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                             <td className="p-3.5 text-center font-mono text-slate-400">{idx + 1}</td>
@@ -322,6 +368,25 @@ const TeacherAttendance = () => {
                               </div>
                             </td>
                             <td className="p-3.5 font-mono text-slate-500 font-bold">{s.studentId || '-'}</td>
+                            <td className="p-3.5">
+                              {s.status === 'Present' || s.status === 'Late' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 text-[10px] font-bold">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                  <span>በQR ተገኝቷል</span>
+                                </span>
+                              ) : s.status === 'Excused' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 text-[10px] font-bold">
+                                  <AlertCircle className="w-3 h-3 text-blue-600" />
+                                  <span>በፈቃድ የቀረ</span>
+                                </span>
+                              ) : s.status === 'Absent' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 text-[10px] font-bold">
+                                  <span>አልተገኘም</span>
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-[10px]">⚪ ያልተመዘገበ</span>
+                              )}
+                            </td>
                             <td className="p-3.5">
                               <div className="flex items-center justify-center gap-1.5">
                                 {[

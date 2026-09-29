@@ -185,19 +185,64 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
           teacherName = course.teacher.fullName;
         }
       }
-    } else if (req.body.grade) {
+    } else {
+      // General Attendance (Course is optional) - Validate Grade, Study Mode & Shift
       const targetGrade = req.body.grade;
-      const sGrade = (student.grade || student.batch || '').toString().trim().toLowerCase();
-      const norm = (str) => {
-        const m = str.match(/\d+/);
-        if (m) return (str.includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
-        return str.replace(/\s+/g, '');
-      };
-      if (sGrade && norm(sGrade) !== norm(targetGrade.toLowerCase())) {
+      const targetType = req.body.studentType;
+      const targetShift = req.body.shift;
+
+      // 1. Validate Grade if specified
+      if (targetGrade) {
+        const sGrade = (student.grade || student.batch || '').toString().trim().toLowerCase();
+        const norm = (str) => {
+          const m = str.match(/\d+/);
+          if (m) return (str.includes('batch') || str.includes('ዙር')) ? `batch_${m[0]}` : `grade_${m[0]}`;
+          return str.replace(/\s+/g, '');
+        };
+        if (sGrade && norm(sGrade) !== norm(targetGrade.toLowerCase())) {
+          return res.status(400).json({
+            success: false,
+            notAssigned: true,
+            message: `⚠️ ይህ ተማሪ ለተመረጠው ክፍል አልተመደበም። የተማሪው ክፍል፦ ${formatGradeAmharic(student.grade || student.batch)} | የተመረጠው ክፍል፦ ${formatGradeAmharic(targetGrade)}`,
+            student: {
+              id: student._id,
+              name: getStudentFullName(student),
+              grade: student.grade || student.batch || '',
+              studentType: student.studentType || 'regular',
+              shift: student.shift || '',
+              studentId: student.studentId || '',
+            },
+          });
+        }
+      }
+
+      // 2. Validate Student Type (Regular vs Distance) if specified
+      if (targetType && student.studentType && student.studentType.toLowerCase() !== targetType.toLowerCase()) {
+        const isTargetDist = targetType.toLowerCase() === 'distance';
+        const isStudentDist = student.studentType.toLowerCase() === 'distance';
         return res.status(400).json({
           success: false,
           notAssigned: true,
-          message: `⚠️ ይህ ተማሪ ለተመረጠው ክፍል አልተመደበም። የተማሪው ክፍል፦ ${formatGradeAmharic(student.grade || student.batch)} | የተመረጠው ክፍል፦ ${formatGradeAmharic(targetGrade)}`,
+          message: `⚠️ የተማሪው የምዝገባ ዘርፍ (${isStudentDist ? 'የርቀት' : 'መደበኛ'}) ከተመረጠው (${isTargetDist ? 'የርቀት' : 'መደበኛ'}) ጋር አይዛመድም።`,
+          student: {
+            id: student._id,
+            name: getStudentFullName(student),
+            grade: student.grade || student.batch || '',
+            studentType: student.studentType || 'regular',
+            shift: student.shift || '',
+            studentId: student.studentId || '',
+          },
+        });
+      }
+
+      // 3. Validate Shift (Day/Weekend vs Night) if specified and regular
+      if (targetShift && targetType !== 'distance' && student.shift && student.shift.toLowerCase() !== targetShift.toLowerCase()) {
+        const isTargetNight = targetShift.toLowerCase() === 'night';
+        const isStudentNight = student.shift.toLowerCase() === 'night';
+        return res.status(400).json({
+          success: false,
+          notAssigned: true,
+          message: `⚠️ የተማሪው ፈረቃ (${isStudentNight ? 'ማታ' : 'ቀን'}) ከተመረጠው ፈረቃ (${isTargetNight ? 'ማታ' : 'ቀን'}) ጋር አይዛመድም።`,
           student: {
             id: student._id,
             name: getStudentFullName(student),
@@ -306,7 +351,7 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
 // ---------- Manual attendance ----------
 router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
   try {
-    const { studentId, courseId, status: forcedStatus, date: customDate } = req.body;
+    const { studentId, courseId, status: forcedStatus, excuseReason, note, date: customDate } = req.body;
     if (!studentId) {
       return res.status(400).json({ success: false, message: 'Student ID required' });
     }
@@ -321,15 +366,27 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
     const nextDay = new Date(attendanceDate);
     nextDay.setDate(nextDay.getDate() + 1);
 
+    const targetStatus = forcedStatus || 'Present';
+    const targetReason = excuseReason || note || '';
+
     const alreadyMarked = await Attendance.findOne({
       student: student._id,
       date: { $gte: attendanceDate, $lt: nextDay },
       ...(courseId ? { course: courseId } : {}),
     });
+
     if (alreadyMarked) {
+      alreadyMarked.status = targetStatus;
+      if (targetReason) {
+        alreadyMarked.excuseReason = targetReason;
+        alreadyMarked.note = targetReason;
+      }
+      alreadyMarked.updatedBy = req.user._id;
+      await alreadyMarked.save();
+
       return res.json({
         success: true,
-        message: 'ለዚህ ቀን ቀደም ሲል ተመዝግቧል',
+        message: `የተማሪው ተገኝነት ተቀይሯል፦ ${targetStatus}`,
         student: {
           id: student._id,
           name: getStudentFullName(student),
@@ -338,7 +395,8 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
           shift: student.shift || '',
           studentId: student.studentId || '',
         },
-        alreadyRecorded: true,
+        status: targetStatus,
+        updated: true,
       });
     }
 
@@ -422,7 +480,9 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         teacherName,
         date: attendanceDate,
         checkInTime: customDate ? new Date(customDate) : new Date(),
-        status: forcedStatus || 'Present',
+        status: targetStatus,
+        excuseReason: targetReason,
+        note: targetReason,
         recordedBy: req.user._id,
         academicYear,
         semester,
@@ -740,16 +800,27 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
 router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { grade, courseId, date, studentType, shift } = req.query;
-    const query = { status: 'approved' };
+    const query = {};
 
-    if (grade) {
-      query.$or = [{ grade: grade }, { batch: grade }];
+    if (grade && grade.trim()) {
+      const num = grade.match(/\d+/);
+      if (num) {
+        query.$or = [
+          { grade: { $regex: new RegExp(`(${num[0]}|${grade})`, 'i') } },
+          { batch: { $regex: new RegExp(`(${num[0]}|${grade})`, 'i') } },
+        ];
+      } else {
+        query.$or = [
+          { grade: { $regex: new RegExp(grade, 'i') } },
+          { batch: { $regex: new RegExp(grade, 'i') } },
+        ];
+      }
     }
-    if (studentType) {
-      query.studentType = studentType;
+    if (studentType && studentType.trim()) {
+      query.studentType = { $regex: new RegExp(`^${studentType.trim()}$`, 'i') };
     }
-    if (shift) {
-      query.shift = shift;
+    if (shift && shift.trim()) {
+      query.shift = { $regex: new RegExp(shift.trim(), 'i') };
     }
 
     const students = await Student.find(query)
@@ -789,6 +860,8 @@ router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
         photo: s.photo || '',
         attendanceId: att ? att._id : null,
         status: att ? att.status : null,
+        excuseReason: att ? (att.excuseReason || att.note || '') : '',
+        note: att ? (att.note || att.excuseReason || '') : '',
         checkInTime: att ? att.checkInTime : null,
       };
     });
@@ -805,7 +878,158 @@ router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
   }
 });
 
-// ---------- Bulk attendance (Supports roster submission and itemized statuses) ----------
+// ---------- Finalize Attendance / Mark Unscanned as Absent ----------
+router.post(['/mark-unscanned-absent', '/finalize-session'], authorize('admin', 'teacher'), async (req, res) => {
+  try {
+    const { grade, courseId, date, studentType, shift, defaultStatus = 'Absent' } = req.body;
+    const attendanceDate = date ? new Date(date) : new Date();
+    attendanceDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(attendanceDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    let effectiveGrade = grade ? grade.trim() : '';
+    let effectiveStudentType = studentType ? studentType.trim() : '';
+    let effectiveShift = shift ? shift.trim() : '';
+
+    if (courseId && (!effectiveGrade || !effectiveStudentType)) {
+      const courseObj = await Course.findById(courseId);
+      if (courseObj) {
+        if (!effectiveGrade && courseObj.grade) effectiveGrade = courseObj.grade;
+        if (!effectiveStudentType && courseObj.studentType) effectiveStudentType = courseObj.studentType;
+        if (!effectiveShift && courseObj.shift) effectiveShift = courseObj.shift;
+      }
+    }
+
+    // 🛡️ CRITICAL SAFETY GUARDRAIL: Require grade, studentType, and shift (if regular)
+    // to prevent marking students from other classes who had no school today as absent!
+    if (!effectiveStudentType) {
+      return res.status(400).json({
+        success: false,
+        message: 'እባክዎ የምዝገባ ዓይነት (መደበኛ ወይም የርቀት) ይምረጡ። ያለ ዘርፍ ምርጫ በጅምላ "አልተገኘም" ማድረግ አይፈቀድም።',
+      });
+    }
+
+    if (!effectiveGrade) {
+      return res.status(400).json({
+        success: false,
+        message: 'እባክዎ የተወሰነ ክፍል (Class / Grade / Batch) ይምረጡ። ያለ ክፍል ምርጫ ሌሎች ትምህርት የሌላቸውን ተማሪዎች በስህተት "አልተገኘም" እንዳይባሉ ይጠብቃል።',
+      });
+    }
+
+    if (effectiveStudentType.toLowerCase() === 'regular' && !effectiveShift) {
+      return res.status(400).json({
+        success: false,
+        message: 'ለመደበኛ ተማሪዎች እባክዎ የመማሪያ ፈረቃ (ቀን ወይም ማታ) ይምረጡ።',
+      });
+    }
+
+    // Build strict query for enrolled students in this specific class & shift only
+    const studentQuery = {};
+    const num = effectiveGrade.match(/\d+/);
+    if (num) {
+      studentQuery.$or = [
+        { grade: { $regex: new RegExp(`(${num[0]}|${effectiveGrade})`, 'i') } },
+        { batch: { $regex: new RegExp(`(${num[0]}|${effectiveGrade})`, 'i') } },
+      ];
+    } else {
+      studentQuery.$or = [
+        { grade: { $regex: new RegExp(effectiveGrade, 'i') } },
+        { batch: { $regex: new RegExp(effectiveGrade, 'i') } },
+      ];
+    }
+
+    studentQuery.studentType = { $regex: new RegExp(`^${effectiveStudentType}$`, 'i') };
+
+    if (effectiveStudentType.toLowerCase() === 'regular' && effectiveShift) {
+      studentQuery.shift = { $regex: new RegExp(`^${effectiveShift}$`, 'i') };
+    }
+
+    const students = await Student.find(studentQuery);
+    if (!students || students.length === 0) {
+      return res.status(404).json({ success: false, message: 'ምንም ተማሪዎች አልተገኙም (No students found matching this criteria)' });
+    }
+
+    // Find already recorded students for today (Present, Late, Excused, Absent)
+    const existingRecords = await Attendance.find({
+      student: { $in: students.map(s => s._id) },
+      date: { $gte: attendanceDate, $lt: nextDay },
+      ...(courseId ? { course: courseId } : {}),
+    });
+
+    const recordedStudentIds = new Set(existingRecords.map(r => r.student.toString()));
+    const unscannedStudents = students.filter(s => !recordedStudentIds.has(s._id.toString()));
+
+    if (unscannedStudents.length === 0) {
+      return res.json({
+        success: true,
+        message: `ሁሉም (${students.length}) ተማሪዎች አስቀድመው ተመዝግበዋል። ምንም አዲስ ያልተገኘ ተማሪ የለም።`,
+        totalStudents: students.length,
+        alreadyRecordedCount: existingRecords.length,
+        markedAbsentCount: 0,
+      });
+    }
+
+    let courseName = '';
+    let teacher = null;
+    let teacherName = '';
+    if (courseId) {
+      const course = await Course.findById(courseId).populate('teacher', 'fullName');
+      if (course) {
+        courseName = course.name;
+        if (course.teacher) {
+          teacher = course.teacher._id;
+          teacherName = course.teacher.fullName;
+        }
+      }
+    }
+
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+    const academicYear = month >= 5 && month <= 11 ? `${year}/${year + 1}` : `${year - 1}/${year}`;
+    const semester = month >= 5 && month <= 11 ? 'First' : 'Second';
+
+    const newRecords = [];
+    for (const student of unscannedStudents) {
+      newRecords.push({
+        student: student._id,
+        studentName: getStudentFullName(student),
+        grade: student.grade || student.batch || '',
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
+        course: courseId || null,
+        courseName,
+        teacher,
+        teacherName,
+        date: attendanceDate,
+        checkInTime: new Date(),
+        status: defaultStatus || 'Absent',
+        recordedBy: req.user._id,
+        academicYear,
+        semester,
+      });
+    }
+
+    if (newRecords.length > 0) {
+      await Attendance.insertMany(newRecords, { ordered: false });
+    }
+
+    res.json({
+      success: true,
+      message: unscannedStudents.length > 0
+        ? `ክፍለ ጊዜው ተጠናቋል፦ ${unscannedStudents.length} ያልተገኙ ተማሪዎች 'አልተገኘም' (Absent) ተብለው ተመዝግበዋል።`
+        : 'ሁሉም ተማሪዎች አስቀድመው ተመዝግበዋል። ምንም አዲስ ያልተገኘ ተማሪ የለም።',
+      totalStudents: students.length,
+      alreadyRecordedCount: existingRecords.length,
+      markedAbsentCount: unscannedStudents.length,
+    });
+  } catch (err) {
+    console.error('Finalize session error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Bulk attendance (Supports roster submission and itemized statuses & notes) ----------
 router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { studentIds, records, courseId, status, date } = req.body;
@@ -843,6 +1067,7 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
     for (const item of items) {
       const targetId = item.studentId || item.id || item._id;
       const targetStatus = item.status || status || 'Present';
+      const targetReason = item.excuseReason || item.note || '';
 
       try {
         const student = await Student.findById(targetId);
@@ -859,6 +1084,10 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
 
         if (existing) {
           existing.status = targetStatus;
+          if (targetReason) {
+            existing.excuseReason = targetReason;
+            existing.note = targetReason;
+          }
           existing.updatedBy = req.user._id;
           await existing.save();
           results.push({
@@ -881,6 +1110,8 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
             date: attendanceDate,
             checkInTime: new Date(),
             status: targetStatus,
+            excuseReason: targetReason,
+            note: targetReason,
             recordedBy: req.user._id,
           });
           results.push({

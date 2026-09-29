@@ -19,7 +19,6 @@ const certificateSchema = new mongoose.Schema({
   certificateNumber: { 
     type: String, 
     trim: true,
-    index: true 
   },
   studentId: { 
     type: mongoose.Schema.Types.ObjectId, 

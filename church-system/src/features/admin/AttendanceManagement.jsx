@@ -28,6 +28,7 @@ import {
   Edit2,
   Trash2,
   Phone,
+  Zap,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
@@ -65,8 +66,14 @@ const AttendanceManagement = () => {
   const [roster, setRoster] = useState([]);
   const [rosterLoading, setRosterLoading] = useState(false);
   const [rosterStatuses, setRosterStatuses] = useState({});
+  const [rosterReasons, setRosterReasons] = useState({});
   const [isSubmittingRoster, setIsSubmittingRoster] = useState(false);
+  const [isAutoFinalizing, setIsAutoFinalizing] = useState(false);
   const [rosterMessage, setRosterMessage] = useState(null);
+
+  // Excuse modal / popover state
+  const [excuseModalStudent, setExcuseModalStudent] = useState(null);
+  const [excuseReasonInput, setExcuseReasonInput] = useState('');
 
   // --- TAB 3: QUICK SINGLE CHECK-IN ---
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +81,7 @@ const AttendanceManagement = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [singleStatus, setSingleStatus] = useState('Present');
+  const [singleExcuseReason, setSingleExcuseReason] = useState('');
   const [singleCourseId, setSingleCourseId] = useState('');
   const [singleDate, setSingleDate] = useState(new Date().toISOString().split('T')[0]);
   const [singleSubmitting, setSingleSubmitting] = useState(false);
@@ -143,12 +151,17 @@ const AttendanceManagement = () => {
         const list = data.roster || [];
         setRoster(list);
 
-        // Pre-fill statuses from existing record or default to Present
-        const initialMap = {};
+        // Pre-fill statuses & reasons
+        const initialStatusMap = {};
+        const initialReasonMap = {};
         list.forEach((s) => {
-          initialMap[s._id] = s.status || 'Present';
+          // If already recorded, use their status (Present, Late, Excused, Absent)
+          // If not recorded yet (null), leave as null or default to Absent for easy review
+          initialStatusMap[s._id] = s.status || 'Unmarked';
+          initialReasonMap[s._id] = s.excuseReason || s.note || '';
         });
-        setRosterStatuses(initialMap);
+        setRosterStatuses(initialStatusMap);
+        setRosterReasons(initialReasonMap);
       }
     } catch (err) {
       console.warn('Roster fetch error:', err);
@@ -171,7 +184,9 @@ const AttendanceManagement = () => {
 
     const records = roster.map((student) => ({
       studentId: student._id,
-      status: rosterStatuses[student._id] || 'Present',
+      status: rosterStatuses[student._id] === 'Unmarked' ? 'Absent' : (rosterStatuses[student._id] || 'Absent'),
+      excuseReason: rosterReasons[student._id] || '',
+      note: rosterReasons[student._id] || '',
     }));
 
     try {
@@ -198,13 +213,68 @@ const AttendanceManagement = () => {
     }
   };
 
+  // Auto-Mark Unscanned as Absent (Finalize Session)
+  const handleAutoMarkAbsent = async () => {
+    setIsAutoFinalizing(true);
+    setRosterMessage(null);
+
+    try {
+      const res = await apiFetch('/api/admin/attendance/mark-unscanned-absent', {
+        method: 'POST',
+        body: JSON.stringify({
+          grade: selectedGrade,
+          courseId: selectedCourseId || null,
+          date: rollCallDate,
+          defaultStatus: 'Absent',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRosterMessage({
+          type: 'success',
+          text: data.message || `ያልተገኙ ተማሪዎች (${data.markedAbsentCount || 0}) 'አልተገኘም' ተብለው ተመዝግበዋል!`,
+        });
+        fetchTodayAttendance();
+        fetchClassRoster();
+      } else {
+        setRosterMessage({ type: 'error', text: data.message || 'ስህተት ተፈጥሯል' });
+      }
+    } catch (err) {
+      setRosterMessage({ type: 'error', text: err.message || 'የኔትወርክ ስህተት ተፈጥሯል' });
+    } finally {
+      setIsAutoFinalizing(false);
+    }
+  };
+
   // Mark all roster helpers
   const handleMarkAll = (targetStatus) => {
     const updated = {};
     roster.forEach((s) => {
-      updated[s._id] = targetStatus;
+      // Don't overwrite students who have a verified excuse unless requested
+      if (s.status === 'Excused' && targetStatus !== 'Excused') {
+        updated[s._id] = 'Excused';
+      } else {
+        updated[s._id] = targetStatus;
+      }
     });
     setRosterStatuses(updated);
+  };
+
+  // Handle status toggle with excuse support
+  const handleSetStudentStatus = (student, status) => {
+    if (status === 'Excused') {
+      setExcuseModalStudent(student);
+      setExcuseReasonInput(rosterReasons[student._id] || 'የህመም ፈቃድ');
+    } else {
+      setRosterStatuses((prev) => ({ ...prev, [student._id]: status }));
+    }
+  };
+
+  const handleSaveExcuse = () => {
+    if (!excuseModalStudent) return;
+    setRosterStatuses((prev) => ({ ...prev, [excuseModalStudent._id]: 'Excused' }));
+    setRosterReasons((prev) => ({ ...prev, [excuseModalStudent._id]: excuseReasonInput }));
+    setExcuseModalStudent(null);
   };
 
   // Quick Single Student Search
@@ -691,27 +761,49 @@ const AttendanceManagement = () => {
             </div>
 
             {/* Quick Bulk Action Toggles */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-500">ፈጣን መራጭ፦</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">ፈጣን እርምጃዎች፦</span>
+                <button
+                  type="button"
+                  onClick={handleAutoMarkAbsent}
+                  disabled={isAutoFinalizing || roster.length === 0}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  title="QR ያላስነበቡትንና ያልተገኙትን ተማሪዎች በሙሉ አልተገኘም (Absent) ብለህ መዝግብ"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{isAutoFinalizing ? 'በማስላት ላይ...' : 'ያልተገኙትን በሙሉ "አልተገኘም" አድርግ'}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleMarkAll('Present')}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 transition-colors cursor-pointer"
                 >
                   ✓ ሁሉንም ተገኝቷል አድርግ
                 </button>
                 <button
                   type="button"
                   onClick={() => handleMarkAll('Absent')}
-                  className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
                 >
                   ✗ ሁሉንም አልተገኘም አድርግ
                 </button>
               </div>
 
-              <div className="text-xs font-bold text-slate-500">
-                ጠቅላላ ተማሪዎች፦ <strong>{roster.length}</strong>
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  ጠቅላላ፦ <strong>{roster.length}</strong>
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                  ተገኝተዋል፦ <strong>{Object.values(rosterStatuses).filter((v) => v === 'Present' || v === 'Late').length}</strong>
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400">
+                  ፈቃድ፦ <strong>{Object.values(rosterStatuses).filter((v) => v === 'Excused').length}</strong>
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400">
+                  አልተገኙም፦ <strong>{Object.values(rosterStatuses).filter((v) => v === 'Absent').length}</strong>
+                </span>
               </div>
             </div>
           </div>
@@ -750,21 +842,60 @@ const AttendanceManagement = () => {
                         <th className="p-4 w-12 text-center">#</th>
                         <th className="p-4">የተማሪው ስም</th>
                         <th className="p-4">መለያ ቁጥር</th>
-                        <th className="p-4">ስልክ</th>
+                        <th className="p-4">የቀጥታ ስካን ሁኔታ</th>
                         <th className="p-4 text-center">የተገኝነት ሁኔታ (Status)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                       {roster.map((s, idx) => {
-                        const currentStatus = rosterStatuses[s._id] || 'Present';
+                        const currentStatus = rosterStatuses[s._id] || (s.status || 'Unmarked');
+                        const excuseReason = rosterReasons[s._id] || s.excuseReason || s.note || '';
+
                         return (
                           <tr key={s._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                             <td className="p-4 text-center font-mono text-slate-400">{idx + 1}</td>
-                            <td className="p-4 font-bold text-slate-900 dark:text-white">
-                              {s.fullName}
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900 dark:text-white">
+                                {s.fullName}
+                              </div>
+                              {excuseReason && currentStatus === 'Excused' && (
+                                <div className="mt-1 flex items-center gap-1.5">
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800">
+                                    <span>📝 {excuseReason}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSetStudentStatus(s, 'Excused')}
+                                      className="text-blue-600 dark:text-blue-400 hover:underline text-[9px] ml-1 cursor-pointer"
+                                    >
+                                      ቀይር
+                                    </button>
+                                  </span>
+                                </div>
+                              )}
                             </td>
                             <td className="p-4 font-mono text-slate-500 font-bold">{s.studentId || '-'}</td>
-                            <td className="p-4 text-slate-500">{s.phone || '-'}</td>
+                            <td className="p-4">
+                              {s.status === 'Present' || s.status === 'Late' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 text-[11px] font-bold">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>በQR ተገኝቷል {s.checkInTime ? `(${new Date(s.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}</span>
+                                </span>
+                              ) : s.status === 'Excused' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 text-[11px] font-bold">
+                                  <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>በፈቃድ የተመዘገበ</span>
+                                </span>
+                              ) : s.status === 'Absent' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200 text-[11px] font-bold">
+                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>አልተገኘም ተብሏል</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[11px] font-medium">
+                                  <span>⚪ አልተመዘገበም (Unscanned)</span>
+                                </span>
+                              )}
+                            </td>
                             <td className="p-4">
                               <div className="flex items-center justify-center gap-1.5">
                                 {[
@@ -776,9 +907,7 @@ const AttendanceManagement = () => {
                                   <button
                                     key={opt.value}
                                     type="button"
-                                    onClick={() =>
-                                      setRosterStatuses((prev) => ({ ...prev, [s._id]: opt.value }))
-                                    }
+                                    onClick={() => handleSetStudentStatus(s, opt.value)}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                                       currentStatus === opt.value
                                         ? opt.activeBg
@@ -798,7 +927,10 @@ const AttendanceManagement = () => {
                 </div>
 
                 {/* Submit Roll Call Footer */}
-                <div className="p-5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <div className="p-5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <p className="text-xs text-slate-500">
+                    💡 ማስታወሻ፦ QR ያላስነበቡ ተማሪዎች በሙሉ እንደ <strong>"አልተገኘም"</strong> ይመዘገባሉ።
+                  </p>
                   <Button
                     onClick={handleSaveRollCall}
                     disabled={isSubmittingRoster || roster.length === 0}
@@ -811,6 +943,96 @@ const AttendanceManagement = () => {
               </div>
             )}
           </div>
+
+          {/* 🌟 Excuse Reason Modal Dialog */}
+          {excuseModalStudent && (
+            <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                        የፈቃድ ምክንያት መዝግብ
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        {excuseModalStudent.fullName}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setExcuseModalStudent(null)}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Preset Reason Options */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    የተለመዱ ምክንያቶች፦
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { label: '🏥 የህመም ፈቃድ', val: 'የህመም ፈቃድ' },
+                      { label: '👨‍👩‍👧 የቤተሰብ ጉዳይ', val: 'የቤተሰብ ጉዳይ / ጉዞ' },
+                      { label: '⛪ የቤተክርስቲያን አገልግሎት', val: 'የቤተክርስቲያን አገልግሎት' },
+                      { label: '📚 የትምህርት / ፈተና', val: 'የትምህርት / ፈተና' },
+                    ].map((preset) => (
+                      <button
+                        key={preset.val}
+                        type="button"
+                        onClick={() => setExcuseReasonInput(preset.val)}
+                        className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                          excuseReasonInput === preset.val
+                            ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-400 text-[#1e3a8a] dark:text-blue-300 shadow-xs'
+                            : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom input */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    ወይም ዝርዝር ማስታወሻ ጻፍ፦
+                  </label>
+                  <input
+                    type="text"
+                    value={excuseReasonInput}
+                    onChange={(e) => setExcuseReasonInput(e.target.value)}
+                    placeholder="ለምሳሌ፦ ለ2 ቀናት በፈቃድ..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setExcuseModalStudent(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  >
+                    ሰርዝ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveExcuse}
+                    className="px-5 py-2 rounded-xl bg-[#1e3a8a] hover:bg-[#163177] text-white text-xs font-bold shadow-md cursor-pointer"
+                  >
+                    ፈቃድ መዝግብ
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </FadeIn>
       )}
 
@@ -826,7 +1048,7 @@ const AttendanceManagement = () => {
                 <span>ፈጣን የተማሪ ተገኝነት መዝጋቢ (Single Student Check-In)</span>
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                ተማሪውን በስም ወይም በመለያ ቁጥር ፈልገው በ1-ክሊክ ተገኝነት ይመዝግቡ
+                ተማሪውን በስም ወይም በመለያ ቁጥር ፈልገው በ1-ክሊክ ተገኝነት ይመዝግቡ (በፈቃድ ወይም ተገኝቷል)
               </p>
             </div>
 
@@ -921,29 +1143,89 @@ const AttendanceManagement = () => {
                 </div>
               )}
 
-              {/* Course Selection */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  የትምህርት ዓይነት (ኮርስ)
+              {/* Status Selector */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  የተገኝነት ሁኔታ
                 </label>
-                <select
-                  value={singleCourseId}
-                  onChange={(e) => setSingleCourseId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-                >
-                  <option value="">-- አጠቃላይ መገኘት (General Attendance) --</option>
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      📖 {c.name} {c.grade ? `— ${formatGradeAmharic(c.grade)}` : ''}
-                    </option>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { value: 'Present', label: 'ተገኝቷል', activeBg: 'bg-emerald-600 text-white' },
+                    { value: 'Late', label: 'ዘግይቷል', activeBg: 'bg-amber-500 text-white' },
+                    { value: 'Excused', label: 'ፈቃድ', activeBg: 'bg-blue-600 text-white' },
+                    { value: 'Absent', label: 'አልተገኘም', activeBg: 'bg-rose-600 text-white' },
+                  ].map((st) => (
+                    <button
+                      key={st.value}
+                      type="button"
+                      onClick={() => setSingleStatus(st.value)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        singleStatus === st.value
+                          ? `${st.activeBg} border-transparent shadow-xs`
+                          : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {st.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {/* Date & Status */}
+              {/* If Excused, show Reason input */}
+              {singleStatus === 'Excused' && (
+                <div className="space-y-2 p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60">
+                  <label className="text-xs font-bold text-[#1e3a8a] dark:text-blue-300 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>የፈቃድ ምክንያት ይግለጹ</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    {['የህመም ፈቃድ', 'የቤተሰብ ጉዳይ / ጉዞ', 'የቤተክርስቲያን አገልግሎት', 'የትምህርት / ፈተና'].map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setSingleExcuseReason(r)}
+                        className={`p-2 rounded-xl text-left text-[11px] font-bold border cursor-pointer ${
+                          singleExcuseReason === r
+                            ? 'bg-blue-600 text-white border-transparent'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={singleExcuseReason}
+                    onChange={(e) => setSingleExcuseReason(e.target.value)}
+                    placeholder="ወይም የተለየ ምክንያት ይጻፉ..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+              )}
+
+              {/* Course & Date Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    የትምህርት ዓይነት (አማራጭ)
+                  </label>
+                  <select
+                    value={singleCourseId}
+                    onChange={(e) => setSingleCourseId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+                  >
+                    <option value="">-- አጠቃላይ መገኘት --</option>
+                    {courses.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     ቀን
                   </label>
                   <input
@@ -953,33 +1235,18 @@ const AttendanceManagement = () => {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                   />
                 </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                    የተገኝነት ሁኔታ
-                  </label>
-                  <select
-                    value={singleStatus}
-                    onChange={(e) => setSingleStatus(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-                  >
-                    <option value="Present">ተገኝቷል (Present)</option>
-                    <option value="Late">ዘግይቷል (Late)</option>
-                    <option value="Excused">ፈቃድ (Excused)</option>
-                    <option value="Absent">አልተገኘም (Absent)</option>
-                  </select>
-                </div>
               </div>
 
               {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={singleSubmitting || !selectedStudent}
-                className="w-full bg-[#1e3a8a] hover:bg-[#163177] text-white py-3 rounded-xl text-xs sm:text-sm font-black shadow-md cursor-pointer flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{singleSubmitting ? 'በመመዝገብ ላይ...' : 'ተገኝነት መዝግብ'}</span>
-              </Button>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={singleSubmitting || !selectedStudent}
+                  className="bg-[#1e3a8a] hover:bg-[#163177] text-white px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black shadow-md cursor-pointer disabled:opacity-50"
+                >
+                  {singleSubmitting ? 'በመመዝገብ ላይ...' : 'ተገኝነት መዝግብ'}
+                </Button>
+              </div>
             </form>
           </Card>
         </FadeIn>

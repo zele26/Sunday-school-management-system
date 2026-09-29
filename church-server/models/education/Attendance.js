@@ -57,6 +57,8 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['First', 'Second'],
     default: 'First',
   },
+  excuseReason: { type: String, default: '' },
+  note: { type: String, default: '' },
 }, { timestamps: true });
 
 // Unique indexes
