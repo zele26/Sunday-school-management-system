@@ -202,17 +202,7 @@ const AnnouncementsManagement = () => {
 
             // 2. Broadcast to Telegram Groups & Direct Students if enabled
             if (sendToTelegramGroups || sendToDirectStudents) {
-                let audienceLabel = '';
-                if (targetingMode === 'custom_groups' && selectedGroupIdsForBroadcast.length > 0) {
-                    audienceLabel = ` 📍 *ለተመረጡ ${selectedGroupIdsForBroadcast.length} ግሩፖች*`;
-                } else if (targetGrade && targetGrade !== 'All Classes') {
-                    const shiftBadge = targetShift === 'night' ? ' (የማታ)' : targetShift === 'weekend' ? ' (የቀን)' : '';
-                    audienceLabel = ` 📍 *ለ ${targetGrade}${shiftBadge} ተማሪዎች*`;
-                } else if (targetShift !== 'all') {
-                    audienceLabel = targetShift === 'night' ? ' 🌙 *(ለማታ ፈረቃ ተማሪዎች)*' : ' ☀️ *(ለቀን ፈረቃ ተማሪዎች)*';
-                }
-
-                const tgText = `📢 *${title.trim()}*${audienceLabel}\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
+                const tgText = `📢 *${title.trim()}*\n\n${message.trim()}\n\n🏛️ _ተክለ ሳዊሮስ ሰንበት ት/ቤት_`;
 
                 const payload = {
                     message: tgText,
