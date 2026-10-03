@@ -371,17 +371,31 @@ const safeSendMessage = async (chatId, text, options = {}) => {
     try {
       sent = await botInstance.sendMessage(chatId, chunk, options);
     } catch (err) {
-      console.warn(`⚠️ Telegram sendMessage initial attempt failed for chat ${chatId} (${err.message}). Retrying fallback...`);
-      try {
-        const fallbackOpts = { ...options };
-        delete fallbackOpts.parse_mode;
-        sent = await botInstance.sendMessage(chatId, chunk, fallbackOpts);
-      } catch (fallbackErr) {
-        console.warn(`⚠️ Telegram sendMessage fallback attempt failed (${fallbackErr.message}). Retrying plain message...`);
+      const errMsg = err.message || '';
+      const isRateLimit = errMsg.includes('429') || errMsg.toLowerCase().includes('too many requests');
+
+      if (isRateLimit) {
+        const retryMatch = errMsg.match(/retry after (\d+)/i);
+        const waitSec = retryMatch ? Math.min(parseInt(retryMatch[1], 10), 10) : 3;
+        console.warn(`⏳ Telegram rate limit for chat ${chatId}: retry after ${waitSec}s...`);
+        await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
         try {
-          sent = await botInstance.sendMessage(chatId, chunk.replace(/[*_`[\]()]/g, ''));
-        } catch (finalErr) {
-          console.error(`❌ Telegram sendMessage completely failed for chat ${chatId}:`, finalErr.message);
+          sent = await botInstance.sendMessage(chatId, chunk, options);
+        } catch (retryErr) {
+          console.error(`❌ Telegram rate-limited sendMessage failed for chat ${chatId}:`, retryErr.message);
+        }
+      } else {
+        console.warn(`⚠️ Telegram sendMessage parse notice for chat ${chatId} (${errMsg}). Retrying plain fallback...`);
+        try {
+          const fallbackOpts = { ...options };
+          delete fallbackOpts.parse_mode;
+          sent = await botInstance.sendMessage(chatId, chunk, fallbackOpts);
+        } catch (fallbackErr) {
+          try {
+            sent = await botInstance.sendMessage(chatId, chunk.replace(/[*_`[\]()]/g, ''));
+          } catch (finalErr) {
+            console.error(`❌ Telegram sendMessage completely failed for chat ${chatId}:`, finalErr.message);
+          }
         }
       }
     }
