@@ -2772,6 +2772,7 @@ module.exports = {
   initTelegramBot,
   getBotInstance: () => botInstance,
   validateTelegramInitData,
+  safeSendMessage,
   broadcastToStudents,
   sendMessageToGroups,
   upsertTelegramGroup,

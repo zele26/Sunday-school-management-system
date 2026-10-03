@@ -14,6 +14,7 @@ const {
   getBotInstance,
   autoDetectClassAndShift,
   recordAttendanceFromQr,
+  safeSendMessage,
 } = require('../services/telegramBotService');
 
 // Helper to generate access token
@@ -159,6 +160,68 @@ router.post('/broadcast', protect, authorize('admin', 'superadmin', 'teacher'), 
     res.json(result);
   } catch (err) {
     console.error('Telegram broadcast error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- 3b. Send Direct Telegram DM to a Specific Student / Phone / ChatID ----------
+router.post('/send-student-dm', protect, authorize('admin', 'superadmin', 'teacher'), async (req, res) => {
+  try {
+    const { studentId, phone, chatId, message } = req.body;
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ success: false, message: 'የመልእክት ጽሑፍ ያስፈልጋል (Message text is required)' });
+    }
+
+    let targetChatId = chatId ? String(chatId) : null;
+    let student = null;
+
+    if (!targetChatId && studentId) {
+      student = await Student.findOne({
+        $or: [{ _id: studentId.match(/^[0-9a-fA-F]{24}$/) ? studentId : null }, { studentId: studentId }]
+      });
+      if (student && student.telegramChatId) {
+        targetChatId = String(student.telegramChatId);
+      }
+    }
+
+    if (!targetChatId && phone) {
+      const cleanDigits = String(phone).replace(/\D/g, '').slice(-9);
+      if (cleanDigits.length >= 8) {
+        const phoneRegex = new RegExp(cleanDigits + '$');
+        student = await Student.findOne({
+          $or: [{ studentPhone: phoneRegex }, { contactPhone: phoneRegex }]
+        });
+        if (student && student.telegramChatId) {
+          targetChatId = String(student.telegramChatId);
+        }
+      }
+    }
+
+    if (!targetChatId) {
+      return res.status(404).json({
+        success: false,
+        message: 'ይህ ተማሪ የቴሌግራም አካውንቱን ከቦቱ ጋር አላገናኘም (This student has not linked their Telegram bot yet).'
+      });
+    }
+
+    const sent = await safeSendMessage(targetChatId, message.trim(), { parse_mode: 'Markdown' });
+    if (sent) {
+      const studentName = student ? [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') : 'ተማሪ';
+      return res.json({
+        success: true,
+        message: `መልእክቱ ለ "${studentName}" በግል ቴሌግራም በተሳካ ሁኔታ ተልኳል! ✨`,
+        studentName,
+        chatId: targetChatId,
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: 'መልእክቱን በቴሌግራም መላክ አልተቻለም (Could not deliver Telegram message)',
+      });
+    }
+  } catch (err) {
+    console.error('Send student DM error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
