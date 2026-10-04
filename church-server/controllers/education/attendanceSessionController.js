@@ -329,7 +329,13 @@ exports.scanStudentInSession = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Session not found.' });
     }
 
-    if (session.status !== 'open') {
+    if (session.status === 'scheduled') {
+      session.status = 'open';
+      if (!session.startTime) {
+        session.startTime = new Date();
+      }
+      await session.save();
+    } else if (session.status !== 'open') {
       return res.status(400).json({
         success: false,
         message: `Session is currently ${session.status.toUpperCase()}. Attendance can only be scanned when the session is OPEN.`,

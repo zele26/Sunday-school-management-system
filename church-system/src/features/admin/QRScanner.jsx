@@ -152,6 +152,21 @@ const QRScanner = () => {
   const lastScannedRef = useRef('');
   const lastScanTimeRef = useRef(0);
   const fileInputRef = useRef(null);
+  const selectedSessionRef = useRef(selectedSession);
+  const manualModeRef = useRef(manualMode);
+  const soundEnabledRef = useRef(soundEnabled);
+
+  useEffect(() => {
+    selectedSessionRef.current = selectedSession;
+  }, [selectedSession]);
+
+  useEffect(() => {
+    manualModeRef.current = manualMode;
+  }, [manualMode]);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
 
   // Load Today's Authorized Sessions
   const fetchTodaySessions = useCallback(async () => {
@@ -294,20 +309,24 @@ const QRScanner = () => {
 
   // Process Attendance Record (Session Mode or Fallback)
   const processAttendanceRecord = async (payload, isManual = false) => {
+    const currentSession = selectedSessionRef.current || selectedSession;
+    const isManualMode = manualModeRef.current ?? manualMode;
+    const isSound = soundEnabledRef.current ?? soundEnabled;
+
     // 1. Session-Driven Attendance (Primary)
-    if (!manualMode && selectedSession) {
-      if (selectedSession.status !== 'open') {
+    if (!isManualMode && currentSession) {
+      if (currentSession.status === 'closed') {
         toast.error(
           isAm
-            ? 'እባክዎ መጀመሪያ "ተገኝነት ጀምር" የሚለውን ቁልፍ በመጫን ክፍለ-ጊዜውን ይክፈቱ!'
-            : 'Please click "Start Attendance" to open the session first!'
+            ? 'ይህ ክፍለ-ጊዜ ተዘግቷል። ተጨማሪ ተገኝነት መመዝገብ አይቻልም።'
+            : 'This session is closed. No further attendance can be scanned.'
         );
-        playFeedback('warning', soundEnabled);
+        playFeedback('warning', isSound);
         return;
       }
 
       try {
-        const res = await apiFetch(`/api/education/attendance/sessions/${selectedSession._id}/scan`, {
+        const res = await apiFetch(`/api/education/attendance/sessions/${currentSession._id}/scan`, {
           method: 'POST',
           body: JSON.stringify({
             qrCode: payload.qrCode || payload.studentId || payload._id,
@@ -320,7 +339,7 @@ const QRScanner = () => {
           const studentInfo = {
             id: data.student?.id || data.student?._id || 'ID',
             name: data.student?.name || (isAm ? 'ተማሪ' : 'Student'),
-            grade: data.student?.grade || data.student?.enrolledGrade || selectedSession.grade,
+            grade: data.student?.grade || data.student?.enrolledGrade || currentSession.grade,
             studentId: data.student?.studentId || '',
             photoUrl: data.student?.photoUrl || '',
             phone: data.student?.phone || '',
@@ -334,10 +353,10 @@ const QRScanner = () => {
           setLastScannedStudent(studentInfo);
 
           if (data.alreadyMarked) {
-            playFeedback('warning', soundEnabled);
+            playFeedback('warning', isSound);
             toast.info(data.message || `${studentInfo.name} — ${isAm ? 'ቀደም ሲል ተመዝግቧል' : 'Already marked'}`);
           } else {
-            playFeedback('success', soundEnabled);
+            playFeedback('success', isSound);
             try {
               confetti({
                 particleCount: 40,
@@ -355,15 +374,17 @@ const QRScanner = () => {
               }`
             );
 
-            // Update live stats locally
-            if (selectedSession.stats) {
-              const updatedStats = { ...selectedSession.stats };
+            // Update live stats locally and ensure status is open
+            if (currentSession.stats) {
+              const updatedStats = { ...currentSession.stats };
               if (data.attendanceStatus === 'Late') {
                 updatedStats.lateCount = (updatedStats.lateCount || 0) + 1;
               } else {
                 updatedStats.presentCount = (updatedStats.presentCount || 0) + 1;
               }
-              setSelectedSession({ ...selectedSession, stats: updatedStats });
+              const updatedSession = { ...currentSession, status: 'open', stats: updatedStats };
+              setSelectedSession(updatedSession);
+              selectedSessionRef.current = updatedSession;
             }
           }
 
@@ -376,14 +397,14 @@ const QRScanner = () => {
           });
         } else {
           // Rejection / Class Mismatch / Not Found
-          playFeedback('error', soundEnabled);
+          playFeedback('error', isSound);
           toast.error(data.message || (isAm ? 'ተገኝነት ውድቅ ተደርጓል' : 'Attendance rejected'));
 
           setLastScannedStudent({
             id: data.student?.id || 'ID',
             name: data.student?.name || (isAm ? 'ያልታወቀ ተማሪ' : 'Unmatched Student'),
             grade: data.student?.enrolledGrade || (isAm ? 'ሌላ ክፍል' : 'Other Grade'),
-            sessionGrade: data.student?.sessionGrade || selectedSession.grade,
+            sessionGrade: data.student?.sessionGrade || currentSession.grade,
             studentId: data.student?.studentId || '',
             photoUrl: data.student?.photoUrl || '',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -393,7 +414,7 @@ const QRScanner = () => {
           });
         }
       } catch (err) {
-        playFeedback('error', soundEnabled);
+        playFeedback('error', isSound);
         toast.error(isAm ? 'የሰርቨር ግንኙነት ችግር አጋጥሟል' : 'Server error');
       }
       return;
@@ -463,6 +484,11 @@ const QRScanner = () => {
     [selectedSession, manualMode, soundEnabled, studentTypeFilter, gradeFilter, shiftFilter, selectedCourseId]
   );
 
+  const handleScanRef = useRef(handleScan);
+  useEffect(() => {
+    handleScanRef.current = handleScan;
+  }, [handleScan]);
+
   // Start Camera Scanner with multi-tier device fallback
   const startCamera = async (overrideFacing) => {
     setCameraError('');
@@ -512,7 +538,9 @@ const QRScanner = () => {
             aspectRatio: 1.0,
           },
           (decodedText) => {
-            handleScan(decodedText);
+            if (handleScanRef.current) {
+              handleScanRef.current(decodedText);
+            }
           },
           () => {}
         );
@@ -529,7 +557,9 @@ const QRScanner = () => {
               aspectRatio: 1.0,
             },
             (decodedText) => {
-              handleScan(decodedText);
+              if (handleScanRef.current) {
+                handleScanRef.current(decodedText);
+              }
             },
             () => {}
           );
@@ -543,7 +573,9 @@ const QRScanner = () => {
               aspectRatio: 1.0,
             },
             (decodedText) => {
-              handleScan(decodedText);
+              if (handleScanRef.current) {
+                handleScanRef.current(decodedText);
+              }
             },
             () => {}
           );
