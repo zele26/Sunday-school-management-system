@@ -51,69 +51,6 @@ const isGradeMatch = (studentGrade, sessionGrade) => {
   return normalizeGrade(studentGrade) === normalizeGrade(sessionGrade);
 };
 
-// Helper: Build query for expected active students based on grade, studentType, shift, and multi-grade targetGrades
-const getExpectedStudentsQuery = (sessionOrSchedule) => {
-  const isCombined = sessionOrSchedule.isCombinedSession ||
-    sessionOrSchedule.sessionType === 'assembly' ||
-    sessionOrSchedule.sessionType === 'holiday' ||
-    sessionOrSchedule.sessionType === 'combined' ||
-    sessionOrSchedule.grade?.toLowerCase() === 'all' ||
-    sessionOrSchedule.grade === 'ጠቅላላ ጉባኤ' ||
-    (Array.isArray(sessionOrSchedule.targetGrades) && sessionOrSchedule.targetGrades.length > 0);
-
-  const targetGrades = Array.isArray(sessionOrSchedule.targetGrades) ? sessionOrSchedule.targetGrades : [];
-  const targetTypes = Array.isArray(sessionOrSchedule.targetStudentTypes) ? sessionOrSchedule.targetStudentTypes : [];
-  const targetShifts = Array.isArray(sessionOrSchedule.targetShifts) ? sessionOrSchedule.targetShifts : [];
-
-  let query = {};
-
-  // 1. Grade filter
-  if (isCombined) {
-    if (targetGrades.length > 0 && !targetGrades.some(g => g.toLowerCase() === 'all')) {
-      const orConditions = [];
-      targetGrades.forEach(g => {
-        orConditions.push({ grade: g }, { batch: g });
-      });
-      query.$or = orConditions;
-    }
-  } else if (sessionOrSchedule.grade && sessionOrSchedule.grade.toLowerCase() !== 'all') {
-    query.$or = [{ grade: sessionOrSchedule.grade }, { batch: sessionOrSchedule.grade }];
-  }
-
-  // 2. Student Type filter (Regular vs Distance)
-  if (targetTypes.length > 0) {
-    const hasRegular = targetTypes.some(t => t.toLowerCase() === 'regular');
-    const hasDistance = targetTypes.some(t => t.toLowerCase() === 'distance');
-    const hasAll = targetTypes.some(t => t.toLowerCase() === 'all');
-
-    if (!hasAll && !(hasRegular && hasDistance)) {
-      if (hasDistance) query.studentType = 'distance';
-      else if (hasRegular) query.studentType = { $ne: 'distance' };
-    }
-  } else {
-    const sType = sessionOrSchedule.studentType || 'regular';
-    if (sType === 'distance') {
-      query.studentType = 'distance';
-    } else if (sType !== 'all') {
-      query.studentType = { $ne: 'distance' };
-    }
-  }
-
-  // 3. Shift filter (Weekend vs Night)
-  if (targetShifts.length > 0) {
-    const hasAllShifts = targetShifts.some(s => s.toLowerCase() === 'all');
-    const hasWeekend = targetShifts.some(s => s.toLowerCase() === 'weekend');
-    const hasNight = targetShifts.some(s => s.toLowerCase() === 'night');
-
-    if (!hasAllShifts && !(hasWeekend && hasNight)) {
-      query.shift = { $in: targetShifts };
-    }
-  } else if (sessionOrSchedule.shift && sessionOrSchedule.shift !== 'all') {
-    query.shift = sessionOrSchedule.shift;
-  }
-
-  return query;
-};
 
 // Helper: Check if user is authorized to take attendance for a session
 const isTakerAuthorized = (user, session) => {
