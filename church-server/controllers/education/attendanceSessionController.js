@@ -11,6 +11,9 @@ const {
   parseTimeToMinutes,
   formatMinutesToHHMM,
   getSessionTimeWindowStatus,
+  normalizeShift,
+  formatShiftLabel,
+  isShiftAllowed,
   getExpectedStudentsQuery,
   getStudentFullName,
   autoCloseSingleSession,
@@ -518,50 +521,30 @@ exports.scanStudentInSession = async (req, res) => {
 
     // 4c. Verify Shift Match (Day/Weekend vs Night) for Regular students
     if (studentType === 'regular') {
-      const studentShift = (student.shift || 'weekend').toLowerCase();
-      if (targetShifts.length > 0) {
-        const allowsAllShifts = targetShifts.some(s => s.toLowerCase() === 'all');
-        const allowsShift = allowsAllShifts || targetShifts.some(s => s.toLowerCase() === studentShift);
-        if (!allowsShift) {
-          return res.status(400).json({
-            success: false,
-            status: 'shift_mismatch',
-            rejected: true,
-            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${studentShift === 'night' ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ'}, which is not eligible for this session.`,
-            student: {
-              id: student._id,
-              studentId: student.studentId,
-              name: studentFullName,
-              enrolledGrade: studentGrade,
-              enrolledShift: student.shift,
-              sessionGrade: session.grade,
-              sessionShift: session.shift,
-              photoUrl: student.photoUrl,
-            },
-          });
-        }
-      } else if (!isCombined && session.shift && session.shift !== 'all' && student.shift) {
-        const sessionShift = session.shift.toLowerCase();
-        if (studentShift !== sessionShift) {
-          const isStudentNight = studentShift === 'night';
-          const isSessionNight = sessionShift === 'night';
-          return res.status(400).json({
-            success: false,
-            status: 'shift_mismatch',
-            rejected: true,
-            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${isStudentNight ? 'የማታ ፈረቃ (Night Shift)' : 'የቀን ፈረቃ (Day/Weekend Shift)'}, not ${isSessionNight ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ'}.`,
-            student: {
-              id: student._id,
-              studentId: student.studentId,
-              name: studentFullName,
-              enrolledGrade: studentGrade,
-              enrolledShift: student.shift,
-              sessionGrade: session.grade,
-              sessionShift: session.shift,
-              photoUrl: student.photoUrl,
-            },
-          });
-        }
+      const isEligible = isShiftAllowed(student.shift, session.shift, targetShifts);
+
+      if (!isEligible) {
+        const studentShiftLabel = formatShiftLabel(student.shift);
+        const sessionShiftLabel = targetShifts.length > 0
+          ? targetShifts.map(formatShiftLabel).join(', ')
+          : formatShiftLabel(session.shift);
+
+        return res.status(400).json({
+          success: false,
+          status: 'shift_mismatch',
+          rejected: true,
+          message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${studentShiftLabel}, which is not eligible for this ${sessionShiftLabel} session.`,
+          student: {
+            id: student._id,
+            studentId: student.studentId,
+            name: studentFullName,
+            enrolledGrade: studentGrade,
+            enrolledShift: student.shift || 'weekend',
+            sessionGrade: session.grade,
+            sessionShift: session.shift || 'weekend',
+            photoUrl: student.photoUrl,
+          },
+        });
       }
     }
 

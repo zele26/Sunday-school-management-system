@@ -121,6 +121,42 @@ const getSessionTimeWindowStatus = (session, ethTime = getEthiopianTimeInfo()) =
   };
 };
 
+// Helper: Normalize shift string ('weekend', 'night', 'all')
+const normalizeShift = (rawShift) => {
+  if (!rawShift) return 'weekend'; // Default regular shift is day/weekend
+  const s = String(rawShift).trim().toLowerCase();
+  if (s === 'night' || s === 'ማታ' || s === 'የማታ' || s.includes('night') || s.includes('ማታ')) {
+    return 'night';
+  }
+  if (s === 'all' || s === 'ሁሉም' || s === 'all shifts') {
+    return 'all';
+  }
+  return 'weekend';
+};
+
+const formatShiftLabel = (shift) => {
+  const norm = normalizeShift(shift);
+  if (norm === 'night') return 'የማታ ፈረቃ (Night Shift)';
+  if (norm === 'all') return 'ሁሉም ፈረቃዎች (All Shifts)';
+  return 'የቀን / ቅዳሜና እሁድ ፈረቃ (Day/Weekend Shift)';
+};
+
+const isShiftAllowed = (studentShiftRaw, sessionShiftRaw, targetShiftsRaw = []) => {
+  const studentShift = normalizeShift(studentShiftRaw);
+
+  const targetShifts = Array.isArray(targetShiftsRaw) ? targetShiftsRaw : [];
+  if (targetShifts.length > 0) {
+    const normalizedTargets = targetShifts.map(normalizeShift);
+    if (normalizedTargets.includes('all')) return true;
+    return normalizedTargets.includes(studentShift);
+  }
+
+  const sessionShift = normalizeShift(sessionShiftRaw || 'weekend');
+  if (sessionShift === 'all') return true;
+
+  return studentShift === sessionShift;
+};
+
 // Helper: Build query for expected active students based on grade, studentType, shift, and multi-grade targetGrades
 const getExpectedStudentsQuery = (sessionOrSchedule) => {
   const isCombined =
@@ -170,17 +206,32 @@ const getExpectedStudentsQuery = (sessionOrSchedule) => {
     }
   }
 
-  // 3. Shift filter
+  // 3. Shift filter (Regular students)
   if (targetShifts.length > 0) {
-    const hasAllShifts = targetShifts.some((s) => s.toLowerCase() === 'all');
-    const hasWeekend = targetShifts.some((s) => s.toLowerCase() === 'weekend');
-    const hasNight = targetShifts.some((s) => s.toLowerCase() === 'night');
+    const normalizedTargets = targetShifts.map((s) => normalizeShift(s));
+    const hasAllShifts = normalizedTargets.includes('all');
+    const hasWeekend = normalizedTargets.includes('weekend');
+    const hasNight = normalizedTargets.includes('night');
 
     if (!hasAllShifts && !(hasWeekend && hasNight)) {
-      query.shift = { $in: targetShifts };
+      if (hasNight) {
+        query.shift = { $in: ['night', 'Night', 'የማታ', 'ማታ'] };
+      } else if (hasWeekend) {
+        query.$and = (query.$and || []).concat([
+          { shift: { $nin: ['night', 'Night', 'የማታ', 'ማታ'] } },
+        ]);
+      }
     }
-  } else if (sessionOrSchedule.shift && sessionOrSchedule.shift !== 'all') {
-    query.shift = sessionOrSchedule.shift;
+  } else if (sessionOrSchedule.shift) {
+    const normShift = normalizeShift(sessionOrSchedule.shift);
+    if (normShift === 'night') {
+      query.shift = { $in: ['night', 'Night', 'የማታ', 'ማታ'] };
+    } else if (normShift !== 'all') {
+      // Day / Weekend session
+      query.$and = (query.$and || []).concat([
+        { shift: { $nin: ['night', 'Night', 'የማታ', 'ማታ'] } },
+      ]);
+    }
   }
 
   return query;
@@ -299,6 +350,9 @@ module.exports = {
   parseTimeToMinutes,
   formatMinutesToHHMM,
   getSessionTimeWindowStatus,
+  normalizeShift,
+  formatShiftLabel,
+  isShiftAllowed,
   getExpectedStudentsQuery,
   getStudentFullName,
   autoCloseSingleSession,
