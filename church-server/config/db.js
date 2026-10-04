@@ -10,9 +10,21 @@ const connectToDatabase = async () => {
       process.exit(1);
     }
 
-    // Determine environment and target database explicitly
-    const isProduction = process.env.NODE_ENV === 'production';
-    const targetDbName = process.env.DB_NAME || (isProduction ? 'church_db' : 'church_db_dev');
+    // Extract database name from MONGO_URI if specified
+    let uriDbName = null;
+    try {
+      const uriPath = MONGO_URI.split('?')[0];
+      const lastSlashIndex = uriPath.lastIndexOf('/');
+      if (lastSlashIndex !== -1 && lastSlashIndex < uriPath.length - 1) {
+        const candidate = uriPath.substring(lastSlashIndex + 1).trim();
+        if (candidate && !candidate.includes('@') && !candidate.includes(':')) {
+          uriDbName = candidate;
+        }
+      }
+    } catch (e) {}
+
+    // Priority: Explicit DB_NAME in env > Database name in URI string > Environment fallback
+    const targetDbName = process.env.DB_NAME || uriDbName || (process.env.NODE_ENV === 'production' ? 'church_db' : 'church_db_dev');
 
     // Mask credentials for safe logging
     const maskedUri = MONGO_URI.replace(/:([^:@]+)@/, ':****@');
@@ -22,7 +34,7 @@ const connectToDatabase = async () => {
 
     // Connection options for high throughput, pooling & reliability
     const options = {
-      dbName: targetDbName,    // Explicitly enforce target database (overrides URI path)
+      dbName: targetDbName,    // Explicitly enforce target database
       serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 10000,
