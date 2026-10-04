@@ -56,6 +56,20 @@ const connectToDatabase = async () => {
     console.log(`║  📌 Database Port        : ${String(mongoose.connection.port || 27017).padEnd(35)} ║`);
     console.log('╚════════════════════════════════════════════════════════════════╝');
     
+    // Auto-clean legacy conflicting indexes from attendances collection
+    try {
+      const attendanceColl = mongoose.connection.collection('attendances');
+      const existingIndexes = await attendanceColl.indexes();
+      for (const idx of existingIndexes) {
+        if (idx.name === 'student_1_date_1' || idx.name === 'student_1_date_1_course_1') {
+          console.log(`🧹 Auto-dropping legacy conflicting index '${idx.name}' from attendances collection...`);
+          await attendanceColl.dropIndex(idx.name).catch(() => {});
+        }
+      }
+    } catch (idxErr) {
+      // Non-blocking index check
+    }
+    
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);

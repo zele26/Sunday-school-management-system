@@ -616,25 +616,53 @@ exports.scanStudentInSession = async (req, res) => {
       }
     }
 
-    // 7. Save Attendance Record
-    const attendanceRecord = await Attendance.create({
-      sessionId: session._id,
-      student: student._id,
-      studentProfileId: student.studentProfileId || null,
-      course: session.course || null,
-      studentName: studentFullName,
-      grade: studentGrade,
-      studentType: student.studentType || 'regular',
-      shift: student.shift || '',
-      teacher: req.user._id,
-      teacherName: req.user.fullName || '',
-      date: new Date(session.sessionDate),
-      checkInTime: now,
-      scannedAt: now,
-      scanMethod: 'qr_scan',
-      status: calculatedStatus,
-      recordedBy: req.user._id,
-    });
+    // 7. Save Attendance Record (Gracefully handles duplicate / concurrency)
+    let attendanceRecord;
+    try {
+      attendanceRecord = await Attendance.create({
+        sessionId: session._id,
+        student: student._id,
+        studentProfileId: student.studentProfileId || null,
+        course: session.course || null,
+        studentName: studentFullName,
+        grade: studentGrade,
+        studentType: student.studentType || 'regular',
+        shift: student.shift || '',
+        teacher: req.user._id,
+        teacherName: req.user.fullName || '',
+        date: new Date(session.sessionDate),
+        checkInTime: now,
+        scannedAt: now,
+        scanMethod: 'qr_scan',
+        status: calculatedStatus,
+        recordedBy: req.user._id,
+      });
+    } catch (createErr) {
+      if (createErr.code === 11000) {
+        // Find existing attendance if duplicate
+        const existing = await Attendance.findOne({ sessionId: session._id, student: student._id });
+        if (existing) {
+          return res.status(200).json({
+            success: true,
+            status: 'duplicate',
+            alreadyMarked: true,
+            attendanceStatus: existing.status,
+            scannedAt: existing.scannedAt || existing.createdAt,
+            message: `ℹ️ ${studentFullName} is already marked as ${existing.status}.`,
+            student: {
+              id: student._id,
+              studentId: student.studentId,
+              name: studentFullName,
+              grade: studentGrade,
+              photoUrl: student.photoUrl,
+              phone: student.studentPhone,
+            },
+            sessionStats: session.stats,
+          });
+        }
+      }
+      throw createErr;
+    }
 
     // 8. Update Live Session Stats
     if (calculatedStatus === 'Present') {

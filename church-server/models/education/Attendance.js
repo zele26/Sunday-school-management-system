@@ -79,17 +79,13 @@ const attendanceSchema = new mongoose.Schema({
 // Unique index for session-based attendance (one record per student per session)
 attendanceSchema.index(
   { sessionId: 1, student: 1 },
-  { unique: true, partialFilterExpression: { sessionId: { $ne: null } } }
+  { unique: true, partialFilterExpression: { sessionId: { $exists: true, $ne: null } } }
 );
 
-// Unique indexes for legacy course / date based attendance
+// Unique index for legacy course / date based attendance (when sessionId is absent)
 attendanceSchema.index(
   { student: 1, date: 1, course: 1 },
-  { unique: true, partialFilterExpression: { course: { $ne: null }, sessionId: null } }
-);
-attendanceSchema.index(
-  { student: 1, date: 1 },
-  { unique: true, partialFilterExpression: { course: null, sessionId: null } }
+  { unique: true, partialFilterExpression: { course: { $exists: true, $ne: null }, sessionId: null } }
 );
 
 // High-speed compound indexes for roll calls, reports & analytics
