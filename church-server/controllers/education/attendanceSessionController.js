@@ -359,6 +359,9 @@ exports.scanStudentInSession = async (req, res) => {
       if (parsed.studentId) searchId = parsed.studentId;
       else if (parsed.qrCode) searchId = parsed.qrCode;
       else if (parsed.id) searchId = parsed.id;
+      else if (parsed.userId) searchId = parsed.userId;
+      else if (parsed.phone) searchId = parsed.phone;
+      else if (parsed.studentPhone) searchId = parsed.studentPhone;
       else if (parsed.certificateNumber) searchId = parsed.certificateNumber;
     } catch (e) {}
 
@@ -370,7 +373,10 @@ exports.scanStudentInSession = async (req, res) => {
         const queryId = urlObj.searchParams.get('id') ||
           urlObj.searchParams.get('studentId') ||
           urlObj.searchParams.get('certificateNumber') ||
-          urlObj.searchParams.get('certNumber');
+          urlObj.searchParams.get('certNumber') ||
+          urlObj.searchParams.get('code') ||
+          urlObj.searchParams.get('token') ||
+          urlObj.searchParams.get('phone');
         if (queryId) {
           searchId = queryId.trim();
         } else {
@@ -382,38 +388,104 @@ exports.scanStudentInSession = async (req, res) => {
       } catch (urlErr) {}
     }
 
+    // Build comprehensive search queries
+    const searchTerms = Array.from(new Set([
+      searchId,
+      searchId.toUpperCase(),
+      searchId.toLowerCase(),
+      trimmedQr,
+      trimmedQr.toUpperCase(),
+    ].filter(Boolean)));
+
+    // Generate phone variations if numeric or phone-like
+    const digitsOnly = searchId.replace(/\D/g, '');
+    const phoneCandidates = new Set();
+    if (digitsOnly.length >= 6) {
+      phoneCandidates.add(digitsOnly);
+      phoneCandidates.add(searchId);
+      if (!digitsOnly.startsWith('0') && (digitsOnly.startsWith('9') || digitsOnly.startsWith('7'))) {
+        phoneCandidates.add(`0${digitsOnly}`);
+        phoneCandidates.add(`+251${digitsOnly}`);
+        phoneCandidates.add(`251${digitsOnly}`);
+      }
+      if (digitsOnly.startsWith('0')) {
+        phoneCandidates.add(digitsOnly.slice(1));
+        phoneCandidates.add(`+251${digitsOnly.slice(1)}`);
+        phoneCandidates.add(`251${digitsOnly.slice(1)}`);
+      }
+      if (digitsOnly.startsWith('251')) {
+        phoneCandidates.add(`0${digitsOnly.slice(3)}`);
+        phoneCandidates.add(`+${digitsOnly}`);
+        phoneCandidates.add(digitsOnly.slice(3));
+      }
+    }
+
     let certStudentId = null;
     try {
       const matchedCert = await Certificate.findOne({
         $or: [
-          { certificateNumber: searchId.toUpperCase() },
-          { certificateNumber: searchId },
-          { certNumber: searchId.toUpperCase() },
-          { certNumber: searchId },
+          { certificateNumber: { $in: searchTerms } },
+          { certNumber: { $in: searchTerms } },
         ]
-      }).select('studentId');
-      if (matchedCert && matchedCert.studentId) {
-        certStudentId = matchedCert.studentId;
+      }).select('student studentId');
+      if (matchedCert) {
+        certStudentId = matchedCert.student || matchedCert.studentId;
       }
     } catch (certErr) {}
 
     const queryConditions = [
-      { qrCode: trimmedQr },
-      { qrCode: searchId },
-      { studentId: searchId },
-      { studentId: searchId.toUpperCase() },
-      { studentId: trimmedQr },
-      { studentId: trimmedQr.toUpperCase() },
-      { registrationNumber: searchId },
-      { registrationNumber: searchId.toUpperCase() },
-      { registrationNumber: trimmedQr },
+      { qrCode: { $in: searchTerms } },
+      { studentId: { $in: searchTerms } },
+      { registrationNumber: { $in: searchTerms } },
     ];
 
-    if (certStudentId) queryConditions.push({ _id: certStudentId });
-    if (mongoose.Types.ObjectId.isValid(searchId)) queryConditions.push({ _id: searchId });
-    if (mongoose.Types.ObjectId.isValid(trimmedQr)) queryConditions.push({ _id: trimmedQr });
+    if (phoneCandidates.size > 0) {
+      const phoneArr = Array.from(phoneCandidates);
+      queryConditions.push({ studentPhone: { $in: phoneArr } });
+      queryConditions.push({ contactPhone: { $in: phoneArr } });
+      queryConditions.push({ parentPhone: { $in: phoneArr } });
+      queryConditions.push({ emergencyPhone: { $in: phoneArr } });
+    }
 
-    const student = await Student.findOne({ $or: queryConditions });
+    if (certStudentId) queryConditions.push({ _id: certStudentId });
+    if (mongoose.Types.ObjectId.isValid(searchId)) queryConditions.push({ _id: searchId }, { userId: searchId });
+    if (mongoose.Types.ObjectId.isValid(trimmedQr)) queryConditions.push({ _id: trimmedQr }, { userId: trimmedQr });
+
+    // Step 1: Direct find on Student
+    let student = await Student.findOne({ $or: queryConditions });
+
+    // Step 2: Check User account by phone/id if not found directly
+    if (!student && (phoneCandidates.size > 0 || mongoose.Types.ObjectId.isValid(searchId))) {
+      try {
+        const userConditions = [];
+        if (mongoose.Types.ObjectId.isValid(searchId)) userConditions.push({ _id: searchId });
+        if (phoneCandidates.size > 0) userConditions.push({ phone: { $in: Array.from(phoneCandidates) } });
+
+        const matchedUser = await User.findOne({ $or: userConditions });
+        if (matchedUser) {
+          student = await Student.findOne({
+            $or: [
+              { userId: matchedUser._id },
+              { studentPhone: matchedUser.phone },
+            ].filter(Boolean),
+          });
+        }
+      } catch (userErr) {}
+    }
+
+    // Step 3: Partial / regex match on studentId or phone as fallback
+    if (!student && digitsOnly.length >= 6) {
+      try {
+        const regex = new RegExp(digitsOnly + '$', 'i');
+        student = await Student.findOne({
+          $or: [
+            { studentId: regex },
+            { studentPhone: regex },
+            { contactPhone: regex },
+          ],
+        });
+      } catch (regErr) {}
+    }
 
     if (!student) {
       return res.status(404).json({
