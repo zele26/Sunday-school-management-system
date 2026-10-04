@@ -460,7 +460,7 @@ async function start() {
   // 2. Initialize Telegram Bot concurrently
   initTelegramBot().catch((e) => console.warn('Telegram bot init error:', e.message));
 
-  // 3. Connect to MongoDB Atlas with resilient retry
+  // 3. Connect to Database with resilient retry and start background jobs
   const initDbAndServices = async () => {
     try {
       await connectToDatabase();
@@ -471,8 +471,16 @@ async function start() {
       try { await User.collection.dropIndex('phone_1'); } catch (e) {}
       await User.createIndexes();
       console.log('✅ Sparse indexes ensured for User model');
+
+      // Start Attendance Session Auto-Close Background Worker (every 30s)
+      try {
+        const { startSessionAutoCloseWorker } = require('./services/sessionAutoCloseService');
+        startSessionAutoCloseWorker();
+      } catch (workerErr) {
+        console.warn('⚠️ Auto-close worker init note:', workerErr.message);
+      }
     } catch (err) {
-      console.warn('⚠️ Initial MongoDB Atlas connection pending. Will retry in 5s...', err.message);
+      console.warn('⚠️ Initial MongoDB connection pending. Will retry in 5s...', err.message);
       setTimeout(initDbAndServices, 5000);
     }
   };

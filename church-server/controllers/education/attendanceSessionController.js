@@ -6,12 +6,14 @@ const Student = require('../../models/Student');
 const User = require('../../models/User');
 const Certificate = require('../../models/education/Certificate');
 const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
-
-// Helper: Ethiopian 3-part name or fallback
-const getStudentFullName = (s) => {
-  if (!s) return 'ተማሪ';
-  return [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim() || 'ተማሪ';
-};
+const {
+  getEthiopianTimeInfo,
+  parseTimeToMinutes,
+  getExpectedStudentsQuery,
+  getStudentFullName,
+  autoCloseSingleSession,
+  autoCloseExpiredSessions,
+} = require('../../services/sessionAutoCloseService');
 
 // Helper: Format grade in Amharic & English for clear rejection messages
 const formatGradeLabel = (g) => {
@@ -138,7 +140,11 @@ const getLocalDateString = (d = new Date()) => {
 // ============================================================================
 exports.getTodayAuthorizedSessions = async (req, res) => {
   try {
-    const queryDate = req.query.date || getLocalDateString();
+    // 0. Auto-close any expired sessions first so status is fresh
+    await autoCloseExpiredSessions();
+
+    const ethTime = getEthiopianTimeInfo();
+    const queryDate = req.query.date || ethTime.dateString;
     const targetDateObj = new Date(queryDate);
     const dayOfWeek = targetDateObj.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
 
@@ -329,10 +335,27 @@ exports.scanStudentInSession = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Session not found.' });
     }
 
+    const ethTime = getEthiopianTimeInfo();
+    const endMinutes = parseTimeToMinutes(session.endTime);
+
+    // Check if session has expired past its scheduled endTime
+    const isExpired =
+      session.sessionDate < ethTime.dateString ||
+      (session.sessionDate === ethTime.dateString && endMinutes !== null && ethTime.totalMinutes >= endMinutes);
+
+    if (isExpired) {
+      await autoCloseSingleSession(session);
+      return res.status(400).json({
+        success: false,
+        status: 'session_closed',
+        message: `⚠️ ይህ ክፍለ-ጊዜ ተዘግቷል። የተመደበው ሰዓት (${session.startTime || ''} - ${session.endTime || ''}) አልቋል። (Session has ended at ${session.endTime}).`,
+      });
+    }
+
     if (session.status === 'scheduled') {
       session.status = 'open';
-      if (!session.startTime) {
-        session.startTime = new Date();
+      if (!session.openedAt) {
+        session.openedAt = new Date();
       }
       await session.save();
     } else if (session.status !== 'open') {
@@ -591,29 +614,20 @@ exports.scanStudentInSession = async (req, res) => {
       });
     }
 
-    // 6. Calculate Present vs Late
+    // 6. Calculate Present vs Late using accurate Ethiopian / East Africa Time
     const now = new Date();
+    const startMinutes = parseTimeToMinutes(session.startTime);
+    const lateThresholdMinutes = Number(session.lateThresholdMinutes) >= 0 ? Number(session.lateThresholdMinutes) : 15;
+
     let calculatedStatus = 'Present';
 
-    if (session.startTime) {
-      const [startHour, startMinute] = session.startTime.split(':').map(Number);
-      const sessionDateObj = new Date(session.sessionDate);
-      
-      const sessionStart = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        startHour || 0,
-        startMinute || 0,
-        0
-      );
-
-      const lateThresholdMs = (session.lateThresholdMinutes || 15) * 60 * 1000;
-      const lateCutoffTime = new Date(sessionStart.getTime() + lateThresholdMs);
-
-      if (now > lateCutoffTime) {
+    if (session.sessionDate === ethTime.dateString && startMinutes !== null) {
+      const lateCutoffMinutes = startMinutes + lateThresholdMinutes;
+      if (ethTime.totalMinutes > lateCutoffMinutes) {
         calculatedStatus = 'Late';
       }
+    } else if (session.sessionDate < ethTime.dateString) {
+      calculatedStatus = 'Late';
     }
 
     // 7. Save Attendance Record (Gracefully handles duplicate / concurrency)
@@ -975,6 +989,8 @@ exports.deleteSchedule = async (req, res) => {
 // ============================================================================
 exports.getAllSessions = async (req, res) => {
   try {
+    await autoCloseExpiredSessions();
+
     const { startDate, endDate, grade, status } = req.query;
     const filter = {};
 
