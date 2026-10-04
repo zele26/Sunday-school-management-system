@@ -79,6 +79,11 @@ const classScheduleSchema = new mongoose.Schema({
     default: 15,
     min: 0,
   },
+  earlyCheckInWindowMinutes: {
+    type: Number,
+    default: 20,
+    min: 0,
+  },
   assignedTakers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

@@ -56,6 +56,11 @@ const classSessionSchema = new mongoose.Schema({
     default: 15,
     min: 0,
   },
+  earlyCheckInWindowMinutes: {
+    type: Number,
+    default: 20,
+    min: 0,
+  },
   status: {
     type: String,
     enum: ['scheduled', 'open', 'closed', 'cancelled', 'rescheduled'],

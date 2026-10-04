@@ -52,6 +52,75 @@ const parseTimeToMinutes = (timeStr) => {
   return null;
 };
 
+// Helper: Format total minutes from midnight to HH:MM string
+const formatMinutesToHHMM = (totalMinutes) => {
+  if (totalMinutes === null || totalMinutes === undefined || isNaN(totalMinutes)) return '';
+  const normalized = ((Math.floor(totalMinutes) % 1440) + 1440) % 1440;
+  const hours = Math.floor(normalized / 60);
+  const minutes = normalized % 60;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+// Helper: Determine session time window status (too_early, on_time, late_window, expired, closed)
+const getSessionTimeWindowStatus = (session, ethTime = getEthiopianTimeInfo()) => {
+  if (!session) return { state: 'invalid', message: 'No session provided' };
+  if (session.status === 'closed') return { state: 'closed', message: 'Session is closed' };
+  if (session.status === 'cancelled') return { state: 'cancelled', message: 'Session is cancelled' };
+
+  const startMinutes = parseTimeToMinutes(session.startTime);
+  const endMinutes = parseTimeToMinutes(session.endTime);
+  const earlyWindow = Number(session.earlyCheckInWindowMinutes) >= 0 ? Number(session.earlyCheckInWindowMinutes) : 20;
+  const lateThreshold = Number(session.lateThresholdMinutes) >= 0 ? Number(session.lateThresholdMinutes) : 15;
+
+  if (session.sessionDate < ethTime.dateString) {
+    return { state: 'expired', message: 'Session date has passed' };
+  }
+  if (session.sessionDate > ethTime.dateString) {
+    return { state: 'future_date', message: `Session scheduled for ${session.sessionDate}` };
+  }
+
+  if (startMinutes === null || endMinutes === null) {
+    return { state: 'on_time', opensAtStr: session.startTime || '00:00' };
+  }
+
+  const earliestCheckInMinutes = startMinutes - earlyWindow;
+  const lateCutoffMinutes = startMinutes + lateThreshold;
+
+  if (ethTime.totalMinutes < earliestCheckInMinutes) {
+    const minutesUntilOpen = earliestCheckInMinutes - ethTime.totalMinutes;
+    const opensAtStr = formatMinutesToHHMM(earliestCheckInMinutes);
+    return {
+      state: 'too_early',
+      earliestCheckInMinutes,
+      opensAtStr,
+      minutesUntilOpen,
+      earlyWindowMinutes: earlyWindow,
+      message: `Check-in opens at ${opensAtStr} (${minutesUntilOpen} min before class starts at ${session.startTime})`,
+    };
+  }
+
+  if (ethTime.totalMinutes >= endMinutes) {
+    return {
+      state: 'expired',
+      message: `Session ended at ${session.endTime}`,
+    };
+  }
+
+  if (ethTime.totalMinutes <= lateCutoffMinutes) {
+    return {
+      state: 'on_time',
+      opensAtStr: formatMinutesToHHMM(earliestCheckInMinutes),
+      message: 'Check-in is open (On-Time)',
+    };
+  }
+
+  return {
+    state: 'late_window',
+    opensAtStr: formatMinutesToHHMM(earliestCheckInMinutes),
+    message: 'Check-in is open (Late)',
+  };
+};
+
 // Helper: Build query for expected active students based on grade, studentType, shift, and multi-grade targetGrades
 const getExpectedStudentsQuery = (sessionOrSchedule) => {
   const isCombined =
@@ -228,6 +297,8 @@ const startSessionAutoCloseWorker = () => {
 module.exports = {
   getEthiopianTimeInfo,
   parseTimeToMinutes,
+  formatMinutesToHHMM,
+  getSessionTimeWindowStatus,
   getExpectedStudentsQuery,
   getStudentFullName,
   autoCloseSingleSession,

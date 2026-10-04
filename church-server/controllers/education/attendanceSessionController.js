@@ -9,6 +9,8 @@ const AcademicEnrollment = require('../../models/education/AcademicEnrollment');
 const {
   getEthiopianTimeInfo,
   parseTimeToMinutes,
+  formatMinutesToHHMM,
+  getSessionTimeWindowStatus,
   getExpectedStudentsQuery,
   getStudentFullName,
   autoCloseSingleSession,
@@ -201,6 +203,7 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
           startTime: schedule.startTime,
           endTime: schedule.endTime,
           lateThresholdMinutes: schedule.lateThresholdMinutes || 15,
+          earlyCheckInWindowMinutes: schedule.earlyCheckInWindowMinutes || 20,
           assignedTakers: schedule.assignedTakers || [],
           location: schedule.location || '',
           status: 'scheduled',
@@ -231,7 +234,7 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
       .populate('closedBy', 'fullName')
       .sort({ startTime: 1 });
 
-    // Refresh live stats for each session
+    // Refresh live stats and time window status for each session
     const enrichedSessions = await Promise.all(
       sessions.map(async (sess) => {
         const sessObj = sess.toObject();
@@ -252,6 +255,9 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
           absentCount: absent,
           excusedCount: excused,
         };
+
+        // Attach dynamic time window state (too_early, on_time, late_window, expired, closed)
+        sessObj.timeWindow = getSessionTimeWindowStatus(sess, ethTime);
 
         return sessObj;
       })
@@ -297,6 +303,31 @@ exports.startSession = async (req, res) => {
       });
     }
 
+    const ethTime = getEthiopianTimeInfo();
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.isAdmin;
+    const timeWindow = getSessionTimeWindowStatus(session, ethTime);
+
+    if (timeWindow.state === 'expired' || timeWindow.state === 'closed') {
+      await autoCloseSingleSession(session);
+      return res.status(400).json({
+        success: false,
+        status: 'session_closed',
+        message: `⚠️ This session cannot be opened because its scheduled time (${session.startTime} - ${session.endTime}) has ended.`,
+        amharicMessage: `⚠️ ይህ ክፍለ-ጊዜ የተመደበው ሰዓት (${session.startTime} - ${session.endTime}) ስላለቀ መክፈት አይቻልም።`,
+      });
+    }
+
+    if (timeWindow.state === 'too_early' && !isAdmin && !req.body.adminOverride) {
+      return res.status(400).json({
+        success: false,
+        status: 'too_early',
+        message: `⚠️ Check-in cannot be opened yet. Scanning opens at ${timeWindow.opensAtStr} (${timeWindow.minutesUntilOpen} minutes before class starts at ${session.startTime}).`,
+        amharicMessage: `⚠️ ክፍለ-ጊዜው ገና አልተከፈተም። መቃኘት የሚቻለው ከክፍለ-ጊዜው 20 ደቂቃ በፊት (በ ${timeWindow.opensAtStr}) ጀምሮ ነው።`,
+        opensAt: timeWindow.opensAtStr,
+        minutesUntilOpen: timeWindow.minutesUntilOpen,
+      });
+    }
+
     // Calculate current expected students count
     const expectedCount = await Student.countDocuments(getExpectedStudentsQuery(session));
 
@@ -336,19 +367,27 @@ exports.scanStudentInSession = async (req, res) => {
     }
 
     const ethTime = getEthiopianTimeInfo();
-    const endMinutes = parseTimeToMinutes(session.endTime);
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.isAdmin;
+    const timeWindow = getSessionTimeWindowStatus(session, ethTime);
 
-    // Check if session has expired past its scheduled endTime
-    const isExpired =
-      session.sessionDate < ethTime.dateString ||
-      (session.sessionDate === ethTime.dateString && endMinutes !== null && ethTime.totalMinutes >= endMinutes);
-
-    if (isExpired) {
+    // 1a. Check if session has expired past its scheduled endTime
+    if (timeWindow.state === 'expired' || timeWindow.state === 'closed') {
       await autoCloseSingleSession(session);
       return res.status(400).json({
         success: false,
         status: 'session_closed',
         message: `⚠️ ይህ ክፍለ-ጊዜ ተዘግቷል። የተመደበው ሰዓት (${session.startTime || ''} - ${session.endTime || ''}) አልቋል። (Session has ended at ${session.endTime}).`,
+      });
+    }
+
+    // 1b. Check if taker is scanning too early (> 20 min before start time)
+    if (timeWindow.state === 'too_early' && !isAdmin && !req.body.adminOverride) {
+      return res.status(400).json({
+        success: false,
+        status: 'too_early',
+        message: `⚠️ ተገኝነት ገና አልተከፈተም። መቃኘት የሚቻለው ከክፍለ-ጊዜው 20 ደቂቃ በፊት (በ ${timeWindow.opensAtStr}) ጀምሮ ነው። (Check-in opens at ${timeWindow.opensAtStr}, ${timeWindow.minutesUntilOpen} min remaining).`,
+        opensAt: timeWindow.opensAtStr,
+        minutesUntilOpen: timeWindow.minutesUntilOpen,
       });
     }
 
@@ -934,6 +973,7 @@ exports.createSchedule = async (req, res) => {
       startTime,
       endTime,
       lateThresholdMinutes: lateThresholdMinutes || 15,
+      earlyCheckInWindowMinutes: earlyCheckInWindowMinutes || 20,
       assignedTakers: assignedTakers || [],
       location: location || '',
       notes: notes || '',
@@ -1091,6 +1131,7 @@ exports.createMakeUpSession = async (req, res) => {
       startTime,
       endTime,
       lateThresholdMinutes: lateThresholdMinutes || 15,
+      earlyCheckInWindowMinutes: earlyCheckInWindowMinutes || 20,
       status: 'scheduled',
       isMakeUp: true,
       assignedTakers: assignedTakers || [],

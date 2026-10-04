@@ -396,8 +396,8 @@ const QRScanner = () => {
             return [studentInfo, ...prev.slice(0, 49)];
           });
         } else {
-          // Rejection / Class Mismatch / Not Found
-          playFeedback('error', isSound);
+          // Rejection / Class Mismatch / Not Found / Too Early
+          playFeedback(data.status === 'too_early' ? 'warning' : 'error', isSound);
           toast.error(data.message || (isAm ? 'ተገኝነት ውድቅ ተደርጓል' : 'Attendance rejected'));
 
           setLastScannedStudent({
@@ -408,9 +408,14 @@ const QRScanner = () => {
             studentId: data.student?.studentId || '',
             photoUrl: data.student?.photoUrl || '',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            status: data.status === 'class_mismatch' ? 'Class Mismatch' : 'Rejected',
+            status:
+              data.status === 'class_mismatch'
+                ? 'Class Mismatch'
+                : data.status === 'too_early'
+                ? 'Too Early'
+                : 'Rejected',
             isMismatch: true,
-            message: data.message || (isAm ? 'ይህ ተማሪ ለዚህ ክፍል አልተመደበም' : 'Class enrollment mismatch'),
+            message: data.message || (isAm ? 'ተገኝነት ውድቅ ተደርጓል' : 'Attendance rejected'),
           });
         }
       } catch (err) {
@@ -923,13 +928,17 @@ const QRScanner = () => {
                               ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 animate-pulse'
                               : isClosed
                               ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 border border-slate-300'
-                              : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300'
+                              : sess.timeWindow?.state === 'too_early'
+                              ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300'
+                              : 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-300'
                           }`}
                         >
                           {isOpen
                             ? isAm ? '🟢 ክፍት' : '🟢 Open'
                             : isClosed
                             ? isAm ? '🔒 ተዘግቷል' : '🔒 Closed'
+                            : sess.timeWindow?.state === 'too_early'
+                            ? isAm ? `⏳ በ ${sess.timeWindow.opensAtStr} ይከፈታል` : `⏳ Opens ${sess.timeWindow.opensAtStr}`
                             : isAm ? '⏳ ተይዟል' : '⏳ Scheduled'}
                         </span>
                       </div>
@@ -1017,6 +1026,18 @@ const QRScanner = () => {
                   <span>{selectedSession.startTime} - {selectedSession.endTime}</span>
                 </span>
               </div>
+
+              {/* Early Window Notification Banner */}
+              {selectedSession.timeWindow?.state === 'too_early' && selectedSession.status !== 'open' && (
+                <div className="w-full p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center gap-2 text-xs text-amber-800 dark:text-amber-300">
+                  <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>
+                    {isAm
+                      ? `⚠️ ተገኝነት መመዝገብ የሚጀምረው ከክፍለ-ጊዜው 20 ደቂቃ በፊት (በ ${selectedSession.timeWindow.opensAtStr}) ነው። (የቀረው ጊዜ፦ ${selectedSession.timeWindow.minutesUntilOpen} ደቂቃ)`
+                      : `⚠️ Check-in window opens 20 minutes before class at ${selectedSession.timeWindow.opensAtStr} (${selectedSession.timeWindow.minutesUntilOpen} minutes remaining).`}
+                  </span>
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <button
