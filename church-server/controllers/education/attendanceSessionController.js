@@ -20,14 +20,14 @@ const {
   autoCloseExpiredSessions,
 } = require('../../services/sessionAutoCloseService');
 
-// Helper: Format grade in Amharic & English for clear rejection messages
+// Helper: Format grade in Amharic for clear and simple feedback
 const formatGradeLabel = (g) => {
   if (!g) return 'ያልታወቀ ክፍል';
   const num = g.match(/\d+/);
   if (g.toLowerCase().includes('batch') || g.includes('ዙር')) {
-    return num ? `ዙር ${num[0]} / Batch ${num[0]}` : g;
+    return num ? `ዙር ${num[0]}` : g;
   }
-  if (num) return `${num[0]}ኛ ክፍል (Grade ${num[0]})`;
+  if (num) return `${num[0]}ኛ ክፍል`;
   return g;
 };
 
@@ -252,8 +252,7 @@ exports.startSession = async (req, res) => {
       return res.status(400).json({
         success: false,
         status: 'session_closed',
-        message: `⚠️ This session cannot be opened because its scheduled time (${session.startTime} - ${session.endTime}) has ended.`,
-        amharicMessage: `⚠️ ይህ ክፍለ-ጊዜ የተመደበው ሰዓት (${session.startTime} - ${session.endTime}) ስላለቀ መክፈት አይቻልም።`,
+        message: `⚠️ ይህ ክፍለ-ጊዜ የተመደበው ሰዓት (${session.startTime} - ${session.endTime}) ስላለቀ መክፈት አይቻልም።`,
       });
     }
 
@@ -261,8 +260,7 @@ exports.startSession = async (req, res) => {
       return res.status(400).json({
         success: false,
         status: 'too_early',
-        message: `⚠️ Check-in cannot be opened yet. Scanning opens at ${timeWindow.opensAtStr} (${timeWindow.minutesUntilOpen} minutes before class starts at ${session.startTime}).`,
-        amharicMessage: `⚠️ ክፍለ-ጊዜው ገና አልተከፈተም። መቃኘት የሚቻለው ከክፍለ-ጊዜው 20 ደቂቃ በፊት (በ ${timeWindow.opensAtStr}) ጀምሮ ነው።`,
+        message: `⚠️ ክፍለ-ጊዜው ገና አልተከፈተም። መቃኘት የሚቻለው በ${timeWindow.opensAtStr} (ከክፍለ-ጊዜው 20 ደቂቃ በፊት) ጀምሮ ነው።`,
         opensAt: timeWindow.opensAtStr,
         minutesUntilOpen: timeWindow.minutesUntilOpen,
       });
@@ -279,7 +277,7 @@ exports.startSession = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Session for ${session.title || session.grade} is now OPEN. Ready for scanning.`,
+      message: `✅ ለ${session.title || session.grade} የተዘጋጀው ክፍለ-ጊዜ ተከፍቷል፤ መቃኘት ይችላሉ።`,
       session,
     });
   } catch (err) {
@@ -297,13 +295,13 @@ exports.scanStudentInSession = async (req, res) => {
     const { qrCode } = req.body;
 
     if (!qrCode || typeof qrCode !== 'string' || !qrCode.trim()) {
-      return res.status(400).json({ success: false, message: 'Valid QR code data is required.' });
+      return res.status(400).json({ success: false, message: 'ትክክለኛ የQR ኮድ አልቀረበም።' });
     }
 
     // 1. Verify Session & Status
     const session = await ClassSession.findById(id);
     if (!session) {
-      return res.status(404).json({ success: false, message: 'Session not found.' });
+      return res.status(404).json({ success: false, message: 'ክፍለ-ጊዜው አልተገኘም።' });
     }
 
     const ethTime = getEthiopianTimeInfo();
@@ -316,7 +314,7 @@ exports.scanStudentInSession = async (req, res) => {
       return res.status(400).json({
         success: false,
         status: 'session_closed',
-        message: `⚠️ ይህ ክፍለ-ጊዜ ተዘግቷል። የተመደበው ሰዓት (${session.startTime || ''} - ${session.endTime || ''}) አልቋል። (Session has ended at ${session.endTime}).`,
+        message: `⚠️ ይህ ክፍለ-ጊዜ ተዘግቷል። የተመደበው ሰዓት (${session.startTime || ''} - ${session.endTime || ''}) አልቋል።`,
       });
     }
 
@@ -325,7 +323,7 @@ exports.scanStudentInSession = async (req, res) => {
       return res.status(400).json({
         success: false,
         status: 'too_early',
-        message: `⚠️ ተገኝነት ገና አልተከፈተም። መቃኘት የሚቻለው ከክፍለ-ጊዜው 20 ደቂቃ በፊት (በ ${timeWindow.opensAtStr}) ጀምሮ ነው። (Check-in opens at ${timeWindow.opensAtStr}, ${timeWindow.minutesUntilOpen} min remaining).`,
+        message: `⚠️ ተገኝነት ገና አልተከፈተም። መቃኘት የሚቻለው በ${timeWindow.opensAtStr} (ከክፍለ-ጊዜው 20 ደቂቃ በፊት) ጀምሮ ነው።`,
         opensAt: timeWindow.opensAtStr,
         minutesUntilOpen: timeWindow.minutesUntilOpen,
       });
@@ -340,7 +338,7 @@ exports.scanStudentInSession = async (req, res) => {
     } else if (session.status !== 'open') {
       return res.status(400).json({
         success: false,
-        message: `Session is currently ${session.status.toUpperCase()}. Attendance can only be scanned when the session is OPEN.`,
+        message: `⚠️ ይህ ክፍለ-ጊዜ ክፍት አይደለም።`,
       });
     }
 
@@ -348,7 +346,7 @@ exports.scanStudentInSession = async (req, res) => {
     if (!isTakerAuthorized(req.user, session)) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to take attendance for this session.',
+        message: 'ተገኝነት የመመዝገብ ፈቃድ የለዎትም።',
       });
     }
 
@@ -421,7 +419,7 @@ exports.scanStudentInSession = async (req, res) => {
       return res.status(404).json({
         success: false,
         status: 'not_found',
-        message: `Student QR code not found (${searchId}). Please verify the student identity.`,
+        message: `⚠️ የተማሪው መረጃ አልተገኘም (${searchId})። እባክዎ መታወቂያውን ያረጋግጡ።`,
       });
     }
 
@@ -445,12 +443,12 @@ exports.scanStudentInSession = async (req, res) => {
       if (targetGrades.length > 0 && !targetGrades.some(g => g.toLowerCase() === 'all')) {
         const matchesAny = targetGrades.some(g => isGradeMatch(studentGrade, g));
         if (!matchesAny) {
-          const allowedLabels = targetGrades.map(formatGradeLabel).join(', ');
+          const allowedLabels = targetGrades.map(formatGradeLabel).join('፣ ');
           return res.status(400).json({
             success: false,
             status: 'class_mismatch',
             rejected: true,
-            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${formatGradeLabel(studentGrade)}, which is not in this combined session's eligible classes (${allowedLabels}).`,
+            message: `⚠️ ተገኝነት ውድቅ ተደርጓል፦ ${studentFullName} የ${formatGradeLabel(studentGrade)} ተማሪ ሲሆን ክፍለ-ጊዜው ለ${allowedLabels} የተዘጋጀ ነው።`,
             student: {
               id: student._id,
               studentId: student.studentId,
@@ -467,7 +465,7 @@ exports.scanStudentInSession = async (req, res) => {
         success: false,
         status: 'class_mismatch',
         rejected: true,
-        message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${formatGradeLabel(studentGrade)}, not ${formatGradeLabel(session.grade)}.`,
+        message: `⚠️ ተገኝነት ውድቅ ተደርጓል፦ ${studentFullName} የ${formatGradeLabel(studentGrade)} ተማሪ ነው (ክፍለ-ጊዜው ለ${formatGradeLabel(session.grade)} ነው)።`,
         student: {
           id: student._id,
           studentId: student.studentId,
@@ -489,7 +487,7 @@ exports.scanStudentInSession = async (req, res) => {
           success: false,
           status: 'track_mismatch',
           rejected: true,
-          message: `⚠️ Attendance rejected: ${studentFullName} is registered in ${studentType === 'distance' ? 'የርቀት (Distance)' : 'መደበኛ (Regular)'} program, which is not eligible for this session.`,
+          message: `⚠️ ተገኝነት ውድቅ ተደርጓል፦ ${studentFullName} የ${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'} ትምህርት ተማሪ ነው።`,
           student: {
             id: student._id,
             studentId: student.studentId,
@@ -502,12 +500,11 @@ exports.scanStudentInSession = async (req, res) => {
     } else if (!isCombined) {
       const sessionType = (session.studentType || 'regular').toLowerCase();
       if (sessionType !== 'all' && sessionType !== studentType) {
-        const isSessionDist = sessionType === 'distance';
         return res.status(400).json({
           success: false,
           status: 'track_mismatch',
           rejected: true,
-          message: `⚠️ Attendance rejected: ${studentFullName} is registered in ${isSessionDist ? 'መደበኛ (Regular)' : 'የርቀት (Distance)'} program.`,
+          message: `⚠️ ተገኝነት ውድቅ ተደርጓል፦ ${studentFullName} የ${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'} ትምህርት ተማሪ ነው።`,
           student: {
             id: student._id,
             studentId: student.studentId,
@@ -526,14 +523,14 @@ exports.scanStudentInSession = async (req, res) => {
       if (!isEligible) {
         const studentShiftLabel = formatShiftLabel(student.shift);
         const sessionShiftLabel = targetShifts.length > 0
-          ? targetShifts.map(formatShiftLabel).join(', ')
+          ? targetShifts.map(formatShiftLabel).join('፣ ')
           : formatShiftLabel(session.shift);
 
         return res.status(400).json({
           success: false,
           status: 'shift_mismatch',
           rejected: true,
-          message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${studentShiftLabel}, which is not eligible for this ${sessionShiftLabel} session.`,
+          message: `⚠️ ተገኝነት ውድቅ ተደርጓል፦ ${studentFullName} የ${studentShiftLabel} ተማሪ ነው (ክፍለ-ጊዜው ለ${sessionShiftLabel} ነው)።`,
           student: {
             id: student._id,
             studentId: student.studentId,
@@ -555,13 +552,14 @@ exports.scanStudentInSession = async (req, res) => {
     });
 
     if (existingAttendance) {
+      const statusLabel = existingAttendance.status === 'Late' ? 'ዘግይቷል' : existingAttendance.status === 'Excused' ? 'ፈቃድ' : 'ተገኝቷል';
       return res.status(200).json({
         success: true,
         status: 'duplicate',
         alreadyMarked: true,
         attendanceStatus: existingAttendance.status,
         scannedAt: existingAttendance.scannedAt || existingAttendance.createdAt,
-        message: `ℹ️ ${studentFullName} is already marked as ${existingAttendance.status}.`,
+        message: `ℹ️ ${studentFullName} ቀደም ሲል ተመዝግቧል (${statusLabel})።`,
         student: {
           id: student._id,
           studentId: student.studentId,
@@ -615,13 +613,14 @@ exports.scanStudentInSession = async (req, res) => {
         // Find existing attendance if duplicate
         const existing = await Attendance.findOne({ sessionId: session._id, student: student._id });
         if (existing) {
+          const statusLabel = existing.status === 'Late' ? 'ዘግይቷል' : existing.status === 'Excused' ? 'ፈቃድ' : 'ተገኝቷል';
           return res.status(200).json({
             success: true,
             status: 'duplicate',
             alreadyMarked: true,
             attendanceStatus: existing.status,
             scannedAt: existing.scannedAt || existing.createdAt,
-            message: `ℹ️ ${studentFullName} is already marked as ${existing.status}.`,
+            message: `ℹ️ ${studentFullName} ቀደም ሲል ተመዝግቧል (${statusLabel})።`,
             student: {
               id: student._id,
               studentId: student.studentId,
@@ -645,12 +644,13 @@ exports.scanStudentInSession = async (req, res) => {
     }
     await session.save();
 
+    const finalStatusText = calculatedStatus === 'Late' ? 'ዘግይቶ ተመዝግቧል' : 'ተመዝግቧል';
     res.status(201).json({
       success: true,
       status: calculatedStatus.toLowerCase(),
       attendanceStatus: calculatedStatus,
       scannedAt: now,
-      message: `✅ ${studentFullName} marked ${calculatedStatus.toUpperCase()} (${formatGradeLabel(studentGrade)})`,
+      message: `✅ ${studentFullName} (${formatGradeLabel(studentGrade)}) ${finalStatusText}`,
       student: {
         id: student._id,
         studentId: student.studentId,
@@ -676,19 +676,19 @@ exports.closeSession = async (req, res) => {
     const session = await ClassSession.findById(id);
 
     if (!session) {
-      return res.status(404).json({ success: false, message: 'Class session not found.' });
+      return res.status(404).json({ success: false, message: 'ክፍለ-ጊዜው አልተገኘም።' });
     }
 
     // Authorization check
     if (!isTakerAuthorized(req.user, session)) {
       return res.status(403).json({
         success: false,
-        message: 'You are not authorized to close this session.',
+        message: 'ይህን ክፍለ-ጊዜ የመዝጋት ፈቃድ የለዎትም።',
       });
     }
 
     if (session.status === 'closed') {
-      return res.status(400).json({ success: false, message: 'This session is already closed.' });
+      return res.status(400).json({ success: false, message: 'ይህ ክፍለ-ጊዜ ቀደም ሲል ተዘግቷል።' });
     }
 
     // 1. Find all expected active students in this class and shift
@@ -749,7 +749,7 @@ exports.closeSession = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Session closed successfully. ${absentRecordsToInsert.length} students marked Absent.`,
+      message: `✅ ክፍለ-ጊዜው ተዘግቷል። ${absentRecordsToInsert.length} ያልተገኙ ተማሪዎች ቀሪ ተደርገዋል።`,
       session,
       summary: {
         totalExpected: expectedStudents.length,

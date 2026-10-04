@@ -136,9 +136,9 @@ const normalizeShift = (rawShift) => {
 
 const formatShiftLabel = (shift) => {
   const norm = normalizeShift(shift);
-  if (norm === 'night') return 'የማታ ፈረቃ (Night Shift)';
-  if (norm === 'all') return 'ሁሉም ፈረቃዎች (All Shifts)';
-  return 'የቀን / ቅዳሜና እሁድ ፈረቃ (Day/Weekend Shift)';
+  if (norm === 'night') return 'የማታ ፈረቃ';
+  if (norm === 'all') return 'ሁሉም ፈረቃዎች';
+  return 'የቀን ፈረቃ';
 };
 
 const isShiftAllowed = (studentShiftRaw, sessionShiftRaw, targetShiftsRaw = []) => {
