@@ -78,41 +78,41 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans antialiased text-slate-800 dark:text-slate-200 selection:bg-[var(--brand-gold)] selection:text-slate-950 overflow-x-hidden">
       {/* 🌟 1. HERO SECTION - Clean, Focused Above-the-Fold Typography & CTAs */}
-      <section className="relative pt-8 pb-12 sm:pt-14 sm:pb-18 px-4 bg-gradient-to-b from-blue-50/50 via-slate-50/20 to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 border-b border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
+      <section className="relative pt-6 pb-10 sm:pt-14 sm:pb-18 px-4 bg-gradient-to-b from-blue-50/50 via-slate-50/20 to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 border-b border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
         {/* Ambient soft glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[280px] bg-blue-500/8 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-4 sm:space-y-5">
+        <div className="relative z-10 max-w-3xl mx-auto text-center space-y-3.5 sm:space-y-5">
           {/* Main Hero Title */}
-          <FadeIn delay={0.05}>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
+          <FadeIn delay={0}>
+            <h1 className="text-2xl sm:text-5xl md:text-6xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">
               <span className="text-[#1e3a8a] dark:text-blue-400">{t('sundaySchoolShortTitle', 'ተክለ ሳዊሮስ')}</span>{' '}
               <span>{t('sundaySchoolLabel', 'ሰንበት ትምህርት ቤት')}</span>
             </h1>
           </FadeIn>
 
           {/* Subtitle */}
-          <FadeIn delay={0.1}>
-            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium">
+          <FadeIn delay={0.05}>
+            <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed font-medium px-2">
               {t('heroSubtitle', 'የኦርቶዶክሳዊት ተዋሕዶ ሃይማኖት ትምህርትና የመንፈሳዊ ዕውቀት ይፋዊ የትምህርት ፖርታል')}
             </p>
           </FadeIn>
 
           {/* Dual Action CTAs */}
-          <FadeIn delay={0.15} className="pt-2 space-y-3.5">
+          <FadeIn delay={0.1} className="pt-1 space-y-3">
             {isAnyOpen ? (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full max-w-md mx-auto">
                 {/* Primary CTA: Regular Registration (Church Blue) */}
                 {isRegularOpen ? (
                   <Link
                     href="/register-regular"
-                    className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-white bg-[#1e3a8a] hover:bg-[#163177] active:scale-95 shadow-md shadow-blue-900/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-blue-400/30 min-h-[46px]"
+                    className="w-full sm:flex-1 px-5 py-3 rounded-xl font-black text-xs sm:text-sm text-white bg-[#1e3a8a] hover:bg-[#163177] active:scale-95 shadow-md shadow-blue-900/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-blue-400/30 min-h-[44px]"
                   >
                     <span>{t('regularEnrollBtn', 'የመደበኛ ተማሪ ምዝገባ')}</span>
                     <ArrowRight className="w-4 h-4 text-amber-300" />
                   </Link>
                 ) : (
-                  <div className="w-full sm:flex-1 px-4 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[46px] flex items-center justify-center">
+                  <div className="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[44px] flex items-center justify-center">
                     {t('regularEnrollBtn', 'መደበኛ')} ({t('closedStatus', 'ተዘግቷል')})
                   </div>
                 )}
@@ -121,13 +121,13 @@ const Home = () => {
                 {isDistanceOpen ? (
                   <Link
                     href="/register-distance"
-                    className="w-full sm:flex-1 px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm text-slate-950 bg-amber-400 hover:bg-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 active:scale-95 shadow-md shadow-amber-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-amber-500/50 dark:border-amber-400/50 min-h-[46px]"
+                    className="w-full sm:flex-1 px-5 py-3 rounded-xl font-black text-xs sm:text-sm text-slate-950 bg-amber-400 hover:bg-amber-300 dark:bg-amber-500 dark:hover:bg-amber-400 active:scale-95 shadow-md shadow-amber-500/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 border border-amber-500/50 dark:border-amber-400/50 min-h-[44px]"
                   >
                     <span>{t('distanceEnrollBtn', 'የርቀት ተማሪ ምዝገባ')}</span>
                     <ArrowRight className="w-4 h-4 text-slate-950" />
                   </Link>
                 ) : (
-                  <div className="w-full sm:flex-1 px-4 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[46px] flex items-center justify-center">
+                  <div className="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center min-h-[44px] flex items-center justify-center">
                     {t('distanceEnrollBtn', 'ርቀት')} ({t('closedStatus', 'ተዘግቷል')})
                   </div>
                 )}

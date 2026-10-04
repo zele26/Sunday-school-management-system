@@ -9,29 +9,26 @@ import useAuthStore from '../store/authStore';
 //      routes directly to the same origin and proxies seamlessly to the backend.
 // ------------------------------------------------------------------
 export function getApiBaseUrl() {
-  const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL;
-  if (envUrl && envUrl.trim()) {
-    return envUrl.trim().replace(/\/+$/, '');
-  }
+  let envUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
 
   if (typeof window !== 'undefined') {
-    const { hostname, port } = window.location;
-    if (
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1' ||
-      hostname.startsWith('192.168.') ||
-      hostname.startsWith('10.') ||
-      port === '3000' ||
-      port === '5173' ||
-      port === '8080'
-    ) {
-      return 'http://localhost:5000';
+    const { hostname } = window.location;
+    // If accessed from mobile phone or LAN IP, dynamically route backend requests to the host machine
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      if (envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
+        return envUrl.replace('localhost', hostname).replace('127.0.0.1', hostname);
+      }
+      if (!envUrl) {
+        return `http://${hostname}:5000`;
+      }
     }
-    // In production with same-origin Next.js rewrites:
-    return '';
   }
 
-  return process.env.BACKEND_API_URL || 'http://localhost:5000';
+  if (envUrl) {
+    return envUrl;
+  }
+
+  return 'http://localhost:5000';
 }
 
 export const API_BASE_URL = (() => {
@@ -113,7 +110,7 @@ export async function apiFetch(url, options = {}) {
   // If the response is 401 Unauthorized and we had a token, try refresh
   if (res.status === 401 && token) {
     try {
-      const refreshEndpoint = `${API_BASE_URL}/api/auth/refresh`;
+      const refreshEndpoint = `${baseUrl}/api/auth/refresh`;
       const refreshRes = await fetch(refreshEndpoint, {
         method: 'POST',
         credentials: 'include',

@@ -35,7 +35,15 @@ export function LanguageToggle({ className, variant = 'button', showLabel = fals
 
   if (!mounted) {
     return (
-      <div className={cn('w-10 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse', className)} />
+      <div
+        className={cn(
+          'relative inline-flex items-center justify-center gap-1.5 px-2.5 h-9 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 shadow-xs',
+          className
+        )}
+      >
+        <span className="text-xs leading-none">🇪🇹</span>
+        <span className="text-[11px] font-black tracking-tight uppercase">አማ</span>
+      </div>
     );
   }
 

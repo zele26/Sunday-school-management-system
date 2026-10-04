@@ -87,6 +87,11 @@ const AttendanceManagement = () => {
     grade: 'Grade 8',
     studentType: 'regular',
     shift: 'weekend',
+    isCombinedSession: false,
+    sessionType: 'standard',
+    targetGrades: [],
+    targetStudentTypes: ['regular'],
+    targetShifts: ['weekend'],
     dayOfWeek: 0,
     startTime: '17:00',
     endTime: '19:00',
@@ -122,6 +127,11 @@ const AttendanceManagement = () => {
     grade: 'Grade 8',
     studentType: 'regular',
     shift: 'weekend',
+    isCombinedSession: false,
+    sessionType: 'standard',
+    targetGrades: [],
+    targetStudentTypes: ['regular'],
+    targetShifts: ['weekend'],
     sessionDate: new Date().toISOString().split('T')[0],
     startTime: '17:00',
     endTime: '19:00',
@@ -889,6 +899,7 @@ const AttendanceManagement = () => {
             ) : (
               schedules.map((sch) => {
                 const dayObj = DAYS_OF_WEEK.find((d) => d.value === sch.dayOfWeek);
+                const isComb = sch.isCombinedSession || sch.sessionType === 'assembly' || sch.sessionType === 'holiday' || sch.sessionType === 'combined';
 
                 return (
                   <div
@@ -899,9 +910,24 @@ const AttendanceManagement = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-xs font-black text-[#1e3a8a] dark:text-blue-400">
-                              {formatGradeAmharic(sch.grade)}
-                            </span>
+                            {sch.sessionType === 'assembly' ? (
+                              <span className="text-xs font-black text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800">
+                                🎯 ጠቅላላ ጉባኤ (Assembly)
+                              </span>
+                            ) : sch.sessionType === 'holiday' ? (
+                              <span className="text-xs font-black text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800">
+                                ✨ የበዓል መርሃ-ግብር
+                              </span>
+                            ) : isComb ? (
+                              <span className="text-xs font-black text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800">
+                                👥 ጥምር ክፍሎች
+                              </span>
+                            ) : (
+                              <span className="text-xs font-black text-[#1e3a8a] dark:text-blue-400">
+                                {formatGradeAmharic(sch.grade)}
+                              </span>
+                            )}
+
                             {sch.studentType === 'distance' ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                                 🌐 የርቀት
@@ -909,6 +935,10 @@ const AttendanceManagement = () => {
                             ) : sch.shift === 'night' ? (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                                 🌙 የማታ ፈረቃ
+                              </span>
+                            ) : sch.shift === 'all' ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                🔄 ሁሉም ፈረቃዎች
                               </span>
                             ) : (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
@@ -924,6 +954,21 @@ const AttendanceManagement = () => {
                           ንቁ ፕሮግራም
                         </span>
                       </div>
+
+                      {/* Multi-grade target chips if combined */}
+                      {isComb && sch.targetGrades && sch.targetGrades.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold self-center">የሚሳተፉ ክፍሎች፦</span>
+                          {sch.targetGrades.map((g) => (
+                            <span
+                              key={g}
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                            >
+                              {formatGradeAmharic(g)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="mt-3 space-y-2 text-xs text-slate-600 dark:text-slate-400">
                         <div className="flex items-center gap-2">
@@ -974,6 +1019,11 @@ const AttendanceManagement = () => {
                             grade: sch.grade,
                             studentType: sch.studentType || (sch.grade?.toLowerCase().includes('batch') || sch.grade?.includes('ዙር') ? 'distance' : 'regular'),
                             shift: sch.shift || 'weekend',
+                            isCombinedSession: !!sch.isCombinedSession,
+                            sessionType: sch.sessionType || (sch.isCombinedSession ? 'combined' : 'standard'),
+                            targetGrades: sch.targetGrades || [],
+                            targetStudentTypes: sch.targetStudentTypes || ['regular'],
+                            targetShifts: sch.targetShifts || ['weekend'],
                             dayOfWeek: sch.dayOfWeek,
                             startTime: sch.startTime,
                             endTime: sch.endTime,
@@ -1022,7 +1072,26 @@ const AttendanceManagement = () => {
             </div>
 
             <Button
-              onClick={() => setShowMakeupModal(true)}
+              onClick={() => {
+                setMakeupForm({
+                  title: '',
+                  grade: 'Grade 8',
+                  studentType: 'regular',
+                  shift: 'weekend',
+                  isCombinedSession: false,
+                  sessionType: 'standard',
+                  targetGrades: [],
+                  targetStudentTypes: ['regular'],
+                  targetShifts: ['weekend'],
+                  sessionDate: new Date().toISOString().split('T')[0],
+                  startTime: '17:00',
+                  endTime: '19:00',
+                  lateThresholdMinutes: 15,
+                  location: '',
+                  notes: '',
+                });
+                setShowMakeupModal(true);
+              }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md cursor-pointer flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
@@ -1101,6 +1170,7 @@ const AttendanceManagement = () => {
                 const isClosed = sess.status === 'closed';
                 const isCancelled = sess.status === 'cancelled';
                 const isRescheduled = sess.status === 'rescheduled';
+                const isComb = sess.isCombinedSession || sess.sessionType === 'assembly' || sess.sessionType === 'holiday' || sess.sessionType === 'combined';
 
                 return (
                   <div
@@ -1109,9 +1179,24 @@ const AttendanceManagement = () => {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-black text-[#1e3a8a] dark:text-blue-400">
-                          {formatGradeAmharic(sess.grade)}
-                        </span>
+                        {sess.sessionType === 'assembly' ? (
+                          <span className="text-xs font-black text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800">
+                            🎯 ጠቅላላ ጉባኤ (Assembly)
+                          </span>
+                        ) : sess.sessionType === 'holiday' ? (
+                          <span className="text-xs font-black text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800">
+                            ✨ የበዓል መርሃ-ግብር
+                          </span>
+                        ) : isComb ? (
+                          <span className="text-xs font-black text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800">
+                            👥 ጥምር ክፍሎች
+                          </span>
+                        ) : (
+                          <span className="text-xs font-black text-[#1e3a8a] dark:text-blue-400">
+                            {formatGradeAmharic(sess.grade)}
+                          </span>
+                        )}
+
                         {sess.studentType === 'distance' ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                             🌐 የርቀት
@@ -1119,6 +1204,10 @@ const AttendanceManagement = () => {
                         ) : sess.shift === 'night' ? (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                             🌙 የማታ ፈረቃ
+                          </span>
+                        ) : sess.shift === 'all' ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                            🔄 ሁሉም ፈረቃዎች
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
@@ -1150,6 +1239,21 @@ const AttendanceManagement = () => {
                       <h4 className="text-sm font-black text-slate-900 dark:text-white">
                         {sess.title || `${sess.grade} Session`}
                       </h4>
+
+                      {/* Multi-grade target chips if combined */}
+                      {isComb && sess.targetGrades && sess.targetGrades.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold self-center">የሚሳተፉ ክፍሎች፦</span>
+                          {sess.targetGrades.map((g) => (
+                            <span
+                              key={g}
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                            >
+                              {formatGradeAmharic(g)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <p className="text-xs text-slate-500 flex items-center gap-2">
                         <span>📅 {sess.sessionDate}</span>
@@ -1482,70 +1586,210 @@ const AttendanceManagement = () => {
             </div>
 
             <form onSubmit={handleSaveSchedule} className="space-y-3.5">
-              {/* Row 1: Grade, Track, Shift */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    ክፍል (Class)
-                  </label>
-                  <select
-                    value={scheduleForm.grade}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const isDist = val.toLowerCase().includes('batch') || val.includes('ዙር');
-                      setScheduleForm({
-                        ...scheduleForm,
-                        grade: val,
-                        studentType: isDist ? 'distance' : scheduleForm.studentType,
-                        shift: isDist ? '' : (scheduleForm.shift || 'weekend'),
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
-                  >
-                    {GRADE_OPTIONS.map((g) => (
-                      <option key={g.value} value={g.value}>
-                        {g.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    የትምህርት ዘርፍ (Track)
-                  </label>
-                  <select
-                    value={scheduleForm.studentType}
-                    onChange={(e) => {
-                      const sType = e.target.value;
-                      setScheduleForm({
-                        ...scheduleForm,
-                        studentType: sType,
-                        shift: sType === 'distance' ? '' : (scheduleForm.shift || 'weekend'),
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
-                  >
-                    <option value="regular">🏛️ መደበኛ (Regular)</option>
-                    <option value="distance">🌐 የርቀት (Distance)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    የመማሪያ ፈረቃ (Shift)
-                  </label>
-                  <select
-                    value={scheduleForm.shift}
-                    disabled={scheduleForm.studentType === 'distance'}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, shift: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold disabled:opacity-50"
-                  >
-                    <option value="weekend">☀️ የቀን / ቅዳሜ-እሁድ (Weekend)</option>
-                    <option value="night">🌙 የማታ ፈረቃ (Night)</option>
-                  </select>
+              {/* Session Type Selector */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  የመርሃ-ግብር አይነት (Session Type)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'standard', label: 'መደበኛ (Single Class)', icon: '🏛️' },
+                    { id: 'assembly', label: 'ጠቅላላ ጉባኤ (Assembly)', icon: '🎯' },
+                    { id: 'holiday', label: 'የበዓል መርሃ-ግብር', icon: '✨' },
+                    { id: 'combined', label: 'ጥምር ክፍሎች', icon: '👥' },
+                  ].map((type) => {
+                    const isSelected = (scheduleForm.sessionType || 'standard') === type.id;
+                    return (
+                      <button
+                        type="button"
+                        key={type.id}
+                        onClick={() => {
+                          const isComb = type.id !== 'standard';
+                          let targets = scheduleForm.targetGrades || [];
+                          if (type.id === 'assembly' && targets.length === 0) {
+                            targets = GRADE_OPTIONS.map((g) => g.value);
+                          }
+                          setScheduleForm({
+                            ...scheduleForm,
+                            sessionType: type.id,
+                            isCombinedSession: isComb,
+                            targetGrades: targets,
+                          });
+                        }}
+                        className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#1e3a8a] text-white border-[#1e3a8a] shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{type.icon}</span>
+                        <span className="truncate">{type.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Row 1: Conditional Standard Single Class vs Multi-Grade Combined */}
+              {scheduleForm.sessionType === 'standard' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      ክፍል (Class)
+                    </label>
+                    <select
+                      value={scheduleForm.grade}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const isDist = val.toLowerCase().includes('batch') || val.includes('ዙር');
+                        setScheduleForm({
+                          ...scheduleForm,
+                          grade: val,
+                          studentType: isDist ? 'distance' : scheduleForm.studentType,
+                          shift: isDist ? '' : (scheduleForm.shift || 'weekend'),
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                    >
+                      {GRADE_OPTIONS.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      የትምህርት ዘርፍ (Track)
+                    </label>
+                    <select
+                      value={scheduleForm.studentType}
+                      onChange={(e) => {
+                        const sType = e.target.value;
+                        setScheduleForm({
+                          ...scheduleForm,
+                          studentType: sType,
+                          shift: sType === 'distance' ? '' : (scheduleForm.shift || 'weekend'),
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                    >
+                      <option value="regular">🏛️ መደበኛ (Regular)</option>
+                      <option value="distance">🌐 የርቀት (Distance)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      የመማሪያ ፈረቃ (Shift)
+                    </label>
+                    <select
+                      value={scheduleForm.shift}
+                      disabled={scheduleForm.studentType === 'distance'}
+                      onChange={(e) => setScheduleForm({ ...scheduleForm, shift: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold disabled:opacity-50"
+                    >
+                      <option value="weekend">☀️ የቀን / ቅዳሜ-እሁድ (Weekend)</option>
+                      <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-slate-800 dark:text-slate-200">
+                      የሚሳተፉ ክፍሎች (Target Grades)
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setScheduleForm({ ...scheduleForm, targetGrades: GRADE_OPTIONS.map((g) => g.value) })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#1e3a8a] text-white hover:bg-blue-900 cursor-pointer"
+                      >
+                        ሁሉንም ምረጥ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleForm({ ...scheduleForm, targetGrades: GRADE_OPTIONS.filter((g) => !g.value.includes('Batch')).map((g) => g.value) })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 cursor-pointer"
+                      >
+                        መደበኛ ብቻ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setScheduleForm({ ...scheduleForm, targetGrades: [] })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 cursor-pointer"
+                      >
+                        አፅዳ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {GRADE_OPTIONS.map((g) => {
+                      const isChecked = (scheduleForm.targetGrades || []).includes(g.value);
+                      return (
+                        <button
+                          type="button"
+                          key={g.value}
+                          onClick={() => {
+                            const current = scheduleForm.targetGrades || [];
+                            const updated = isChecked
+                              ? current.filter((x) => x !== g.value)
+                              : [...current, g.value];
+                            setScheduleForm({
+                              ...scheduleForm,
+                              targetGrades: updated,
+                              grade: updated[0] || scheduleForm.grade || 'Grade 8',
+                            });
+                          }}
+                          className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                            isChecked
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <span>{g.label}</span>
+                          {isChecked && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                        ተፈጻሚ ፈረቃ (Allowed Shifts)
+                      </label>
+                      <select
+                        value={scheduleForm.shift}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, shift: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      >
+                        <option value="weekend">☀️ የቀን ፈረቃ ብቻ (Weekend)</option>
+                        <option value="night">🌙 የማታ ፈረቃ ብቻ (Night)</option>
+                        <option value="all">🔄 ሁሉም ፈረቃዎች (All Shifts)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                        የትምህርት ዘርፍ (Allowed Tracks)
+                      </label>
+                      <select
+                        value={scheduleForm.studentType}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, studentType: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      >
+                        <option value="regular">🏛️ መደበኛ ብቻ (Regular)</option>
+                        <option value="distance">🌐 የርቀት ብቻ (Distance)</option>
+                        <option value="all">🌐 ሁሉም ዘርፎች (All Tracks)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Row 2: Day of Week & Times */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -1818,69 +2062,224 @@ const AttendanceManagement = () => {
             </div>
 
             <form onSubmit={handleCreateMakeup} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    ክፍል
-                  </label>
-                  <select
-                    value={makeupForm.grade}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const isDist = val.toLowerCase().includes('batch') || val.includes('ዙር');
-                      setMakeupForm({
-                        ...makeupForm,
-                        grade: val,
-                        studentType: isDist ? 'distance' : makeupForm.studentType,
-                        shift: isDist ? '' : (makeupForm.shift || 'weekend'),
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
-                  >
-                    {GRADE_OPTIONS.map((g) => (
-                      <option key={g.value} value={g.value}>
-                        {g.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Optional Title */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  የክፍለ-ጊዜ ርዕስ (አማራጭ)
+                </label>
+                <input
+                  type="text"
+                  placeholder="ለምሳሌ፡ የመስቀል በዓል ጠቅላላ ጉባኤ ወይም የ8ኛ ክፍል ማካካሻ"
+                  value={makeupForm.title || ''}
+                  onChange={(e) => setMakeupForm({ ...makeupForm, title: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                />
+              </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    የትምህርት ዘርፍ
-                  </label>
-                  <select
-                    value={makeupForm.studentType}
-                    onChange={(e) => {
-                      const sType = e.target.value;
-                      setMakeupForm({
-                        ...makeupForm,
-                        studentType: sType,
-                        shift: sType === 'distance' ? '' : (makeupForm.shift || 'weekend'),
-                      });
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
-                  >
-                    <option value="regular">🏛️ መደበኛ (Regular)</option>
-                    <option value="distance">🌐 የርቀት (Distance)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    የመማሪያ ፈረቃ
-                  </label>
-                  <select
-                    value={makeupForm.shift}
-                    disabled={makeupForm.studentType === 'distance'}
-                    onChange={(e) => setMakeupForm({ ...makeupForm, shift: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold disabled:opacity-50"
-                  >
-                    <option value="weekend">☀️ የቀን ፈረቃ (Weekend)</option>
-                    <option value="night">🌙 የማታ ፈረቃ (Night)</option>
-                  </select>
+              {/* Session Type Selector */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  የክፍለ-ጊዜ አይነት (Session Type)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: 'standard', label: 'መደበኛ (Single Class)', icon: '🏛️' },
+                    { id: 'assembly', label: 'ጠቅላላ ጉባኤ (Assembly)', icon: '🎯' },
+                    { id: 'holiday', label: 'የበዓል መርሃ-ግብር', icon: '✨' },
+                    { id: 'combined', label: 'ጥምር ክፍሎች', icon: '👥' },
+                  ].map((type) => {
+                    const isSelected = (makeupForm.sessionType || 'standard') === type.id;
+                    return (
+                      <button
+                        type="button"
+                        key={type.id}
+                        onClick={() => {
+                          const isComb = type.id !== 'standard';
+                          let targets = makeupForm.targetGrades || [];
+                          if (type.id === 'assembly' && targets.length === 0) {
+                            targets = GRADE_OPTIONS.map((g) => g.value);
+                          }
+                          setMakeupForm({
+                            ...makeupForm,
+                            sessionType: type.id,
+                            isCombinedSession: isComb,
+                            targetGrades: targets,
+                          });
+                        }}
+                        className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <span>{type.icon}</span>
+                        <span className="truncate">{type.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+
+              {/* Conditional Single Class vs Multi-Grade Combined */}
+              {makeupForm.sessionType === 'standard' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      ክፍል
+                    </label>
+                    <select
+                      value={makeupForm.grade}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const isDist = val.toLowerCase().includes('batch') || val.includes('ዙር');
+                        setMakeupForm({
+                          ...makeupForm,
+                          grade: val,
+                          studentType: isDist ? 'distance' : makeupForm.studentType,
+                          shift: isDist ? '' : (makeupForm.shift || 'weekend'),
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                    >
+                      {GRADE_OPTIONS.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      የትምህርት ዘርፍ
+                    </label>
+                    <select
+                      value={makeupForm.studentType}
+                      onChange={(e) => {
+                        const sType = e.target.value;
+                        setMakeupForm({
+                          ...makeupForm,
+                          studentType: sType,
+                          shift: sType === 'distance' ? '' : (makeupForm.shift || 'weekend'),
+                        });
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                    >
+                      <option value="regular">🏛️ መደበኛ (Regular)</option>
+                      <option value="distance">🌐 የርቀት (Distance)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                      የመማሪያ ፈረቃ
+                    </label>
+                    <select
+                      value={makeupForm.shift}
+                      disabled={makeupForm.studentType === 'distance'}
+                      onChange={(e) => setMakeupForm({ ...makeupForm, shift: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold disabled:opacity-50"
+                    >
+                      <option value="weekend">☀️ የቀን ፈረቃ (Weekend)</option>
+                      <option value="night">🌙 የማታ ፈረቃ (Night)</option>
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-slate-800 dark:text-slate-200">
+                      የሚሳተፉ ክፍሎች (Target Grades)
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setMakeupForm({ ...makeupForm, targetGrades: GRADE_OPTIONS.map((g) => g.value) })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-700 text-white hover:bg-emerald-800 cursor-pointer"
+                      >
+                        ሁሉንም ምረጥ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMakeupForm({ ...makeupForm, targetGrades: GRADE_OPTIONS.filter((g) => !g.value.includes('Batch')).map((g) => g.value) })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 cursor-pointer"
+                      >
+                        መደበኛ ብቻ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMakeupForm({ ...makeupForm, targetGrades: [] })}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 cursor-pointer"
+                      >
+                        አፅዳ
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {GRADE_OPTIONS.map((g) => {
+                      const isChecked = (makeupForm.targetGrades || []).includes(g.value);
+                      return (
+                        <button
+                          type="button"
+                          key={g.value}
+                          onClick={() => {
+                            const current = makeupForm.targetGrades || [];
+                            const updated = isChecked
+                              ? current.filter((x) => x !== g.value)
+                              : [...current, g.value];
+                            setMakeupForm({
+                              ...makeupForm,
+                              targetGrades: updated,
+                              grade: updated[0] || makeupForm.grade || 'Grade 8',
+                            });
+                          }}
+                          className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                            isChecked
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                              : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <span>{g.label}</span>
+                          {isChecked && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                        ተፈጻሚ ፈረቃ (Allowed Shifts)
+                      </label>
+                      <select
+                        value={makeupForm.shift}
+                        onChange={(e) => setMakeupForm({ ...makeupForm, shift: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      >
+                        <option value="weekend">☀️ የቀን ፈረቃ ብቻ (Weekend)</option>
+                        <option value="night">🌙 የማታ ፈረቃ ብቻ (Night)</option>
+                        <option value="all">🔄 ሁሉም ፈረቃዎች (All Shifts)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                        የትምህርት ዘርፍ (Allowed Tracks)
+                      </label>
+                      <select
+                        value={makeupForm.studentType}
+                        onChange={(e) => setMakeupForm({ ...makeupForm, studentType: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold"
+                      >
+                        <option value="regular">🏛️ መደበኛ ብቻ (Regular)</option>
+                        <option value="distance">🌐 የርቀት ብቻ (Distance)</option>
+                        <option value="all">🌐 ሁሉም ዘርፎች (All Tracks)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>

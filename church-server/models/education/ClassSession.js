@@ -61,6 +61,27 @@ const classSessionSchema = new mongoose.Schema({
     enum: ['scheduled', 'open', 'closed', 'cancelled', 'rescheduled'],
     default: 'scheduled',
   },
+  isCombinedSession: {
+    type: Boolean,
+    default: false,
+  },
+  sessionType: {
+    type: String,
+    enum: ['standard', 'combined', 'assembly', 'holiday', 'exam'],
+    default: 'standard',
+  },
+  targetGrades: [{
+    type: String,
+    trim: true,
+  }],
+  targetStudentTypes: [{
+    type: String,
+    trim: true,
+  }],
+  targetShifts: [{
+    type: String,
+    trim: true,
+  }],
   isMakeUp: {
     type: Boolean,
     default: false,

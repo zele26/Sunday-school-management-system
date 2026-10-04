@@ -36,6 +36,27 @@ const classScheduleSchema = new mongoose.Schema({
     enum: ['weekend', 'night', 'all', ''],
     default: 'weekend',
   },
+  isCombinedSession: {
+    type: Boolean,
+    default: false,
+  },
+  sessionType: {
+    type: String,
+    enum: ['standard', 'combined', 'assembly', 'holiday', 'exam'],
+    default: 'standard',
+  },
+  targetGrades: [{
+    type: String,
+    trim: true,
+  }],
+  targetStudentTypes: [{
+    type: String,
+    trim: true,
+  }],
+  targetShifts: [{
+    type: String,
+    trim: true,
+  }],
   // Day of week: 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday
   dayOfWeek: {
     type: Number,

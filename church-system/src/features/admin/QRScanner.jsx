@@ -320,7 +320,7 @@ const QRScanner = () => {
           const studentInfo = {
             id: data.student?.id || data.student?._id || 'ID',
             name: data.student?.name || (isAm ? 'ተማሪ' : 'Student'),
-            grade: data.student?.grade || selectedSession.grade,
+            grade: data.student?.grade || data.student?.enrolledGrade || selectedSession.grade,
             studentId: data.student?.studentId || '',
             photoUrl: data.student?.photoUrl || '',
             phone: data.student?.phone || '',
@@ -824,6 +824,7 @@ const QRScanner = () => {
                 const isOpen = sess.status === 'open';
                 const isClosed = sess.status === 'closed';
                 const isScheduled = sess.status === 'scheduled';
+                const isComb = sess.isCombinedSession || sess.sessionType === 'assembly' || sess.sessionType === 'holiday' || sess.sessionType === 'combined';
 
                 return (
                   <div
@@ -842,9 +843,24 @@ const QRScanner = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className="text-xs font-black text-[#0f4c9c] dark:text-blue-400">
-                              {formatGradeAmharic(sess.grade)}
-                            </span>
+                            {sess.sessionType === 'assembly' ? (
+                              <span className="text-xs font-black text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800">
+                                🎯 {isAm ? 'ጠቅላላ ጉባኤ' : 'Assembly'}
+                              </span>
+                            ) : sess.sessionType === 'holiday' ? (
+                              <span className="text-xs font-black text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-800">
+                                ✨ {isAm ? 'የበዓል መርሃ-ግብር' : 'Spiritual Feast'}
+                              </span>
+                            ) : isComb ? (
+                              <span className="text-xs font-black text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-800">
+                                👥 {isAm ? 'ጥምር ክፍሎች' : 'Combined'}
+                              </span>
+                            ) : (
+                              <span className="text-xs font-black text-[#0f4c9c] dark:text-blue-400">
+                                {formatGradeAmharic(sess.grade)}
+                              </span>
+                            )}
+
                             {sess.studentType === 'distance' ? (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 border border-sky-300">
                                 {isAm ? '🌐 የርቀት' : '🌐 Distance'}
@@ -852,6 +868,10 @@ const QRScanner = () => {
                             ) : sess.shift === 'night' ? (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300">
                                 {isAm ? '🌙 የማታ ፈረቃ' : '🌙 Night Shift'}
+                              </span>
+                            ) : sess.shift === 'all' ? (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-300">
+                                {isAm ? '🔄 ሁሉም ፈረቃዎች' : '🔄 All Shifts'}
                               </span>
                             ) : (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300">
@@ -881,6 +901,20 @@ const QRScanner = () => {
                             : isAm ? '⏳ ተይዟል' : '⏳ Scheduled'}
                         </span>
                       </div>
+
+                      {/* Multi-grade target chips if combined */}
+                      {isComb && sess.targetGrades && sess.targetGrades.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {sess.targetGrades.map((g) => (
+                            <span
+                              key={g}
+                              className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                            >
+                              {formatGradeAmharic(g)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="mt-2 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -929,11 +963,21 @@ const QRScanner = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-500">{isAm ? 'ንቁ ክፍለ-ጊዜ፦' : 'Active Session:'}</span>
                 <span className="text-xs font-black text-slate-900 dark:text-white px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 flex-wrap">
-                  <span>🎯 {formatGradeAmharic(selectedSession.grade)}</span>
+                  <span>
+                    {selectedSession.sessionType === 'assembly'
+                      ? '🎯 ' + (isAm ? 'ጠቅላላ ጉባኤ' : 'All-School Assembly')
+                      : selectedSession.sessionType === 'holiday'
+                      ? '✨ ' + (selectedSession.title || (isAm ? 'የበዓል መርሃ-ግብር' : 'Holiday Session'))
+                      : selectedSession.isCombinedSession || selectedSession.sessionType === 'combined'
+                      ? '👥 ' + (selectedSession.title || (isAm ? 'ጥምር ክፍለ-ጊዜ' : 'Combined Session'))
+                      : '🎯 ' + formatGradeAmharic(selectedSession.grade)}
+                  </span>
                   {selectedSession.studentType === 'distance' ? (
                     <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">({isAm ? 'የርቀት' : 'Distance'})</span>
                   ) : selectedSession.shift === 'night' ? (
                     <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">({isAm ? 'የማታ ፈረቃ' : 'Night Shift'})</span>
+                  ) : selectedSession.shift === 'all' ? (
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">({isAm ? 'ሁሉም ፈረቃዎች' : 'All Shifts'})</span>
                   ) : (
                     <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">({isAm ? 'የቀን ፈረቃ' : 'Day Shift'})</span>
                   )}

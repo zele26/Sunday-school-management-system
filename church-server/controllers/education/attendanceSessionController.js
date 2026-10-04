@@ -41,26 +41,71 @@ const normalizeGrade = (g) => {
 // Helper: Check if student grade matches session grade
 const isGradeMatch = (studentGrade, sessionGrade) => {
   if (!studentGrade || !sessionGrade) return false;
+  if (sessionGrade.toLowerCase() === 'all' || sessionGrade.toLowerCase() === 'ጥምር' || sessionGrade.toLowerCase() === 'combined' || sessionGrade === 'ጠቅላላ ጉባኤ') {
+    return true;
+  }
   return normalizeGrade(studentGrade) === normalizeGrade(sessionGrade);
 };
 
-// Helper: Build query for expected active students based on grade, studentType, and shift
+// Helper: Build query for expected active students based on grade, studentType, shift, and multi-grade targetGrades
 const getExpectedStudentsQuery = (sessionOrSchedule) => {
-  const grade = sessionOrSchedule.grade;
-  const studentType = sessionOrSchedule.studentType || 'regular';
-  const shift = sessionOrSchedule.shift || 'weekend';
+  const isCombined = sessionOrSchedule.isCombinedSession ||
+    sessionOrSchedule.sessionType === 'assembly' ||
+    sessionOrSchedule.sessionType === 'holiday' ||
+    sessionOrSchedule.sessionType === 'combined' ||
+    sessionOrSchedule.grade?.toLowerCase() === 'all' ||
+    sessionOrSchedule.grade === 'ጠቅላላ ጉባኤ' ||
+    (Array.isArray(sessionOrSchedule.targetGrades) && sessionOrSchedule.targetGrades.length > 0);
 
-  const query = {
-    $or: [{ grade: grade }, { batch: grade }],
-  };
+  const targetGrades = Array.isArray(sessionOrSchedule.targetGrades) ? sessionOrSchedule.targetGrades : [];
+  const targetTypes = Array.isArray(sessionOrSchedule.targetStudentTypes) ? sessionOrSchedule.targetStudentTypes : [];
+  const targetShifts = Array.isArray(sessionOrSchedule.targetShifts) ? sessionOrSchedule.targetShifts : [];
 
-  if (studentType === 'distance') {
-    query.studentType = 'distance';
-  } else {
-    query.studentType = { $ne: 'distance' };
-    if (shift && shift !== 'all') {
-      query.shift = shift;
+  let query = {};
+
+  // 1. Grade filter
+  if (isCombined) {
+    if (targetGrades.length > 0 && !targetGrades.some(g => g.toLowerCase() === 'all')) {
+      const orConditions = [];
+      targetGrades.forEach(g => {
+        orConditions.push({ grade: g }, { batch: g });
+      });
+      query.$or = orConditions;
     }
+  } else if (sessionOrSchedule.grade && sessionOrSchedule.grade.toLowerCase() !== 'all') {
+    query.$or = [{ grade: sessionOrSchedule.grade }, { batch: sessionOrSchedule.grade }];
+  }
+
+  // 2. Student Type filter (Regular vs Distance)
+  if (targetTypes.length > 0) {
+    const hasRegular = targetTypes.some(t => t.toLowerCase() === 'regular');
+    const hasDistance = targetTypes.some(t => t.toLowerCase() === 'distance');
+    const hasAll = targetTypes.some(t => t.toLowerCase() === 'all');
+
+    if (!hasAll && !(hasRegular && hasDistance)) {
+      if (hasDistance) query.studentType = 'distance';
+      else if (hasRegular) query.studentType = { $ne: 'distance' };
+    }
+  } else {
+    const sType = sessionOrSchedule.studentType || 'regular';
+    if (sType === 'distance') {
+      query.studentType = 'distance';
+    } else if (sType !== 'all') {
+      query.studentType = { $ne: 'distance' };
+    }
+  }
+
+  // 3. Shift filter (Weekend vs Night)
+  if (targetShifts.length > 0) {
+    const hasAllShifts = targetShifts.some(s => s.toLowerCase() === 'all');
+    const hasWeekend = targetShifts.some(s => s.toLowerCase() === 'weekend');
+    const hasNight = targetShifts.some(s => s.toLowerCase() === 'night');
+
+    if (!hasAllShifts && !(hasWeekend && hasNight)) {
+      query.shift = { $in: targetShifts };
+    }
+  } else if (sessionOrSchedule.shift && sessionOrSchedule.shift !== 'all') {
+    query.shift = sessionOrSchedule.shift;
   }
 
   return query;
@@ -110,7 +155,7 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
       });
 
       if (!existingSession) {
-        // Calculate expected active student count for this grade and shift
+        // Calculate expected active student count for this grade/shift/combined targets
         const expectedCount = await Student.countDocuments(getExpectedStudentsQuery(schedule));
 
         const shiftLabel = schedule.studentType === 'distance'
@@ -119,13 +164,31 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
           ? 'የማታ ፈረቃ'
           : 'የቀን ፈረቃ';
 
+        const isComb = schedule.isCombinedSession ||
+          schedule.sessionType === 'assembly' ||
+          schedule.sessionType === 'combined' ||
+          schedule.sessionType === 'holiday';
+
+        let defaultTitle = schedule.name;
+        if (!defaultTitle) {
+          if (schedule.sessionType === 'assembly') defaultTitle = 'ጠቅላላ ጉባኤ (All-School Assembly) - Session';
+          else if (schedule.sessionType === 'holiday') defaultTitle = 'የበዓል መርሃ-ግብር (Spiritual Holiday) - Session';
+          else if (isComb && schedule.targetGrades?.length > 0) defaultTitle = `ጥምር ክፍሎች (${schedule.targetGrades.join(', ')}) - Session`;
+          else defaultTitle = `${schedule.grade} (${shiftLabel}) - Session`;
+        }
+
         await ClassSession.create({
-          title: schedule.name || `${schedule.grade} (${shiftLabel}) - Session`,
+          title: defaultTitle,
           scheduleId: schedule._id,
           grade: schedule.grade,
           gradeId: schedule.gradeId,
           studentType: schedule.studentType || 'regular',
           shift: schedule.shift || 'weekend',
+          isCombinedSession: isComb,
+          sessionType: schedule.sessionType || 'standard',
+          targetGrades: schedule.targetGrades || [],
+          targetStudentTypes: schedule.targetStudentTypes || [],
+          targetShifts: schedule.targetShifts || [],
           course: schedule.course,
           academicYear: schedule.academicYear,
           sessionDate: queryDate,
@@ -229,12 +292,7 @@ exports.startSession = async (req, res) => {
     }
 
     // Calculate current expected students count
-    const expectedCount = await Student.countDocuments({
-      $or: [
-        { grade: session.grade },
-        { batch: session.grade },
-      ],
-    });
+    const expectedCount = await Student.countDocuments(getExpectedStudentsQuery(session));
 
     session.status = 'open';
     session.openedAt = session.openedAt || new Date();
@@ -244,7 +302,7 @@ exports.startSession = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Session for ${session.grade} is now OPEN. Ready for scanning.`,
+      message: `Session for ${session.title || session.grade} is now OPEN. Ready for scanning.`,
       session,
     });
   } catch (err) {
@@ -362,8 +420,41 @@ exports.scanStudentInSession = async (req, res) => {
     const studentFullName = getStudentFullName(student);
     const studentGrade = student.grade || student.batch || '';
 
-    // 4. IMPORTANT BUSINESS RULE: Verify Enrolled Class
-    if (!isGradeMatch(studentGrade, session.grade)) {
+    // 4. IMPORTANT BUSINESS RULE: Verify Enrolled Class (Single vs Combined Session)
+    const isCombined = session.isCombinedSession ||
+      session.sessionType === 'assembly' ||
+      session.sessionType === 'holiday' ||
+      session.sessionType === 'combined' ||
+      session.grade?.toLowerCase() === 'all' ||
+      session.grade === 'ጠቅላላ ጉባኤ' ||
+      (Array.isArray(session.targetGrades) && session.targetGrades.length > 0);
+
+    const targetGrades = Array.isArray(session.targetGrades) ? session.targetGrades : [];
+    const targetTypes = Array.isArray(session.targetStudentTypes) ? session.targetStudentTypes : [];
+    const targetShifts = Array.isArray(session.targetShifts) ? session.targetShifts : [];
+
+    if (isCombined) {
+      if (targetGrades.length > 0 && !targetGrades.some(g => g.toLowerCase() === 'all')) {
+        const matchesAny = targetGrades.some(g => isGradeMatch(studentGrade, g));
+        if (!matchesAny) {
+          const allowedLabels = targetGrades.map(formatGradeLabel).join(', ');
+          return res.status(400).json({
+            success: false,
+            status: 'class_mismatch',
+            rejected: true,
+            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${formatGradeLabel(studentGrade)}, which is not in this combined session's eligible classes (${allowedLabels}).`,
+            student: {
+              id: student._id,
+              studentId: student.studentId,
+              name: studentFullName,
+              enrolledGrade: studentGrade,
+              sessionGrade: session.grade,
+              photoUrl: student.photoUrl,
+            },
+          });
+        }
+      }
+    } else if (!isGradeMatch(studentGrade, session.grade)) {
       return res.status(400).json({
         success: false,
         status: 'class_mismatch',
@@ -381,48 +472,91 @@ exports.scanStudentInSession = async (req, res) => {
     }
 
     // 4b. Verify Track / StudentType (Regular vs Distance)
-    const sessionType = session.studentType || 'regular';
-    const studentType = student.studentType || 'regular';
-    if (sessionType !== studentType) {
-      const isSessionDist = sessionType === 'distance';
-      return res.status(400).json({
-        success: false,
-        status: 'track_mismatch',
-        rejected: true,
-        message: `⚠️ Attendance rejected: ${studentFullName} is registered in ${isSessionDist ? 'መደበኛ (Regular)' : 'የርቀት (Distance)'} program.`,
-        student: {
-          id: student._id,
-          studentId: student.studentId,
-          name: studentFullName,
-          enrolledGrade: studentGrade,
-          photoUrl: student.photoUrl,
-        },
-      });
-    }
-
-    // 4c. Verify Shift Match (Day/Weekend vs Night) for Regular students
-    if (sessionType === 'regular' && session.shift && session.shift !== 'all' && student.shift) {
-      const studentShift = (student.shift || 'weekend').toLowerCase();
-      const sessionShift = session.shift.toLowerCase();
-      if (studentShift !== sessionShift) {
-        const isStudentNight = studentShift === 'night';
-        const isSessionNight = sessionShift === 'night';
+    const studentType = (student.studentType || 'regular').toLowerCase();
+    if (targetTypes.length > 0) {
+      const allowsAll = targetTypes.some(t => t.toLowerCase() === 'all');
+      const allowsType = allowsAll || targetTypes.some(t => t.toLowerCase() === studentType);
+      if (!allowsType) {
         return res.status(400).json({
           success: false,
-          status: 'shift_mismatch',
+          status: 'track_mismatch',
           rejected: true,
-          message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${isStudentNight ? 'የማታ ፈረቃ (Night Shift)' : 'የቀን ፈረቃ (Day/Weekend Shift)'}, not ${isSessionNight ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ'}.`,
+          message: `⚠️ Attendance rejected: ${studentFullName} is registered in ${studentType === 'distance' ? 'የርቀት (Distance)' : 'መደበኛ (Regular)'} program, which is not eligible for this session.`,
           student: {
             id: student._id,
             studentId: student.studentId,
             name: studentFullName,
             enrolledGrade: studentGrade,
-            enrolledShift: student.shift,
-            sessionGrade: session.grade,
-            sessionShift: session.shift,
             photoUrl: student.photoUrl,
           },
         });
+      }
+    } else if (!isCombined) {
+      const sessionType = (session.studentType || 'regular').toLowerCase();
+      if (sessionType !== 'all' && sessionType !== studentType) {
+        const isSessionDist = sessionType === 'distance';
+        return res.status(400).json({
+          success: false,
+          status: 'track_mismatch',
+          rejected: true,
+          message: `⚠️ Attendance rejected: ${studentFullName} is registered in ${isSessionDist ? 'መደበኛ (Regular)' : 'የርቀት (Distance)'} program.`,
+          student: {
+            id: student._id,
+            studentId: student.studentId,
+            name: studentFullName,
+            enrolledGrade: studentGrade,
+            photoUrl: student.photoUrl,
+          },
+        });
+      }
+    }
+
+    // 4c. Verify Shift Match (Day/Weekend vs Night) for Regular students
+    if (studentType === 'regular') {
+      const studentShift = (student.shift || 'weekend').toLowerCase();
+      if (targetShifts.length > 0) {
+        const allowsAllShifts = targetShifts.some(s => s.toLowerCase() === 'all');
+        const allowsShift = allowsAllShifts || targetShifts.some(s => s.toLowerCase() === studentShift);
+        if (!allowsShift) {
+          return res.status(400).json({
+            success: false,
+            status: 'shift_mismatch',
+            rejected: true,
+            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${studentShift === 'night' ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ'}, which is not eligible for this session.`,
+            student: {
+              id: student._id,
+              studentId: student.studentId,
+              name: studentFullName,
+              enrolledGrade: studentGrade,
+              enrolledShift: student.shift,
+              sessionGrade: session.grade,
+              sessionShift: session.shift,
+              photoUrl: student.photoUrl,
+            },
+          });
+        }
+      } else if (!isCombined && session.shift && session.shift !== 'all' && student.shift) {
+        const sessionShift = session.shift.toLowerCase();
+        if (studentShift !== sessionShift) {
+          const isStudentNight = studentShift === 'night';
+          const isSessionNight = sessionShift === 'night';
+          return res.status(400).json({
+            success: false,
+            status: 'shift_mismatch',
+            rejected: true,
+            message: `⚠️ Attendance rejected: ${studentFullName} is enrolled in ${isStudentNight ? 'የማታ ፈረቃ (Night Shift)' : 'የቀን ፈረቃ (Day/Weekend Shift)'}, not ${isSessionNight ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ'}.`,
+            student: {
+              id: student._id,
+              studentId: student.studentId,
+              name: studentFullName,
+              enrolledGrade: studentGrade,
+              enrolledShift: student.shift,
+              sessionGrade: session.grade,
+              sessionShift: session.shift,
+              photoUrl: student.photoUrl,
+            },
+          });
+        }
       }
     }
 
@@ -699,6 +833,11 @@ exports.createSchedule = async (req, res) => {
       grade,
       studentType,
       shift,
+      isCombinedSession,
+      sessionType,
+      targetGrades,
+      targetStudentTypes,
+      targetShifts,
       course,
       academicYear,
       dayOfWeek,
@@ -719,14 +858,28 @@ exports.createSchedule = async (req, res) => {
 
     const sType = studentType || (grade.toLowerCase().includes('batch') || grade.includes('ዙር') ? 'distance' : 'regular');
     const sShift = sType === 'distance' ? '' : (shift || 'weekend');
+    const isComb = isCombinedSession || sessionType === 'assembly' || sessionType === 'holiday' || sessionType === 'combined';
 
     const shiftLabel = sType === 'distance' ? 'የርቀት' : sShift === 'night' ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ';
 
+    let defaultName = name;
+    if (!defaultName) {
+      if (sessionType === 'assembly') defaultName = `ጠቅላላ ጉባኤ (All-School Assembly) - ${getDayName(dayOfWeek)} Timetable`;
+      else if (sessionType === 'holiday') defaultName = `የበዓል መርሃ-ግብር (Spiritual Holiday) - ${getDayName(dayOfWeek)} Timetable`;
+      else if (isComb && Array.isArray(targetGrades) && targetGrades.length > 0) defaultName = `ጥምር ክፍሎች (${targetGrades.join(', ')}) - ${getDayName(dayOfWeek)} Timetable`;
+      else defaultName = `${grade} (${shiftLabel}) - ${getDayName(dayOfWeek)} Timetable`;
+    }
+
     const schedule = await ClassSchedule.create({
-      name: name || `${grade} (${shiftLabel}) - ${getDayName(dayOfWeek)} Timetable`,
+      name: defaultName,
       grade,
       studentType: sType,
       shift: sShift,
+      isCombinedSession: isComb,
+      sessionType: sessionType || 'standard',
+      targetGrades: Array.isArray(targetGrades) ? targetGrades : [],
+      targetStudentTypes: Array.isArray(targetStudentTypes) ? targetStudentTypes : [],
+      targetShifts: Array.isArray(targetShifts) ? targetShifts : [],
       course: course || null,
       academicYear: academicYear || '',
       dayOfWeek: Number(dayOfWeek),
@@ -751,9 +904,15 @@ exports.createSchedule = async (req, res) => {
 exports.updateSchedule = async (req, res) => {
   try {
     const { id } = req.params;
+    const isComb = req.body.isCombinedSession || req.body.sessionType === 'assembly' || req.body.sessionType === 'holiday' || req.body.sessionType === 'combined';
+    const payload = {
+      ...req.body,
+      isCombinedSession: isComb,
+    };
+
     const updated = await ClassSchedule.findByIdAndUpdate(
       id,
-      req.body,
+      payload,
       { new: true, runValidators: true }
     ).populate('assignedTakers', 'fullName email phone');
 
@@ -819,6 +978,11 @@ exports.createMakeUpSession = async (req, res) => {
       grade,
       studentType,
       shift,
+      isCombinedSession,
+      sessionType,
+      targetGrades,
+      targetStudentTypes,
+      targetShifts,
       course,
       sessionDate,
       startTime,
@@ -839,16 +1003,39 @@ exports.createMakeUpSession = async (req, res) => {
     const sType = studentType || (grade.toLowerCase().includes('batch') || grade.includes('ዙር') ? 'distance' : 'regular');
     const sShift = sType === 'distance' ? '' : (shift || 'weekend');
     const shiftLabel = sType === 'distance' ? 'የርቀት' : sShift === 'night' ? 'የማታ ፈረቃ' : 'የቀን ፈረቃ';
+    const isComb = isCombinedSession || sessionType === 'assembly' || sessionType === 'holiday' || sessionType === 'combined';
 
-    const sessionPayload = { grade, studentType: sType, shift: sShift };
+    const sessionPayload = {
+      grade,
+      studentType: sType,
+      shift: sShift,
+      isCombinedSession: isComb,
+      sessionType: sessionType || 'standard',
+      targetGrades: Array.isArray(targetGrades) ? targetGrades : [],
+      targetStudentTypes: Array.isArray(targetStudentTypes) ? targetStudentTypes : [],
+      targetShifts: Array.isArray(targetShifts) ? targetShifts : [],
+    };
     const expectedCount = await Student.countDocuments(getExpectedStudentsQuery(sessionPayload));
 
+    let defaultTitle = title;
+    if (!defaultTitle) {
+      if (sessionType === 'assembly') defaultTitle = 'ጠቅላላ ጉባኤ (All-School Assembly) - Session';
+      else if (sessionType === 'holiday') defaultTitle = 'የበዓል መርሃ-ግብር (Spiritual Holiday) - Session';
+      else if (isComb && Array.isArray(targetGrades) && targetGrades.length > 0) defaultTitle = `ጥምር ክፍሎች (${targetGrades.join(', ')}) - Session`;
+      else defaultTitle = `${grade} (${shiftLabel}) - Make-Up Session`;
+    }
+
     const session = await ClassSession.create({
-      title: title || `${grade} (${shiftLabel}) - Make-Up Session`,
+      title: defaultTitle,
       scheduleId: null,
       grade,
       studentType: sType,
       shift: sShift,
+      isCombinedSession: isComb,
+      sessionType: sessionType || 'standard',
+      targetGrades: Array.isArray(targetGrades) ? targetGrades : [],
+      targetStudentTypes: Array.isArray(targetStudentTypes) ? targetStudentTypes : [],
+      targetShifts: Array.isArray(targetShifts) ? targetShifts : [],
       course: course || null,
       sessionDate,
       startTime,
@@ -858,7 +1045,7 @@ exports.createMakeUpSession = async (req, res) => {
       isMakeUp: true,
       assignedTakers: assignedTakers || [],
       location: location || '',
-      notes: notes || 'Ad-hoc make-up session',
+      notes: notes || 'Ad-hoc make-up / special session',
       stats: { expectedCount, presentCount: 0, lateCount: 0, absentCount: 0, excusedCount: 0 },
     });
 

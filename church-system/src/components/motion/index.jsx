@@ -8,16 +8,16 @@ export const FadeIn = ({
   children,
   direction = 'up',
   delay = 0,
-  duration = 0.5,
+  duration = 0.4,
   className = '',
-  viewport = { once: true, margin: '-50px' },
+  viewport = { once: true, amount: 0, margin: '0px' },
   ...props
 }) => {
   const directions = {
-    up: { y: 24, x: 0 },
-    down: { y: -24, x: 0 },
-    left: { x: 24, y: 0 },
-    right: { x: -24, y: 0 },
+    up: { y: 16, x: 0 },
+    down: { y: -16, x: 0 },
+    left: { x: 16, y: 0 },
+    right: { x: -16, y: 0 },
     none: { x: 0, y: 0 },
   };
 
@@ -44,10 +44,10 @@ export const FadeIn = ({
 // Staggered container for animating lists/grids of items
 export const StaggerContainer = ({
   children,
-  staggerChildren = 0.1,
+  staggerChildren = 0.08,
   delayChildren = 0,
   className = '',
-  viewport = { once: true, margin: '-50px' },
+  viewport = { once: true, amount: 0, margin: '0px' },
   ...props
 }) => {
   return (

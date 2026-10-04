@@ -13,7 +13,14 @@ export function ThemeToggle({ className, variant = 'icon' }) {
 
   if (!mounted) {
     return (
-      <div className={cn('w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800', className)} />
+      <div
+        className={cn(
+          'relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 shadow-sm',
+          className
+        )}
+      >
+        <Moon className="w-4 h-4 text-[#1657b8]" />
+      </div>
     );
   }
 
