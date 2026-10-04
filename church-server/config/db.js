@@ -10,21 +10,24 @@ const connectToDatabase = async () => {
       process.exit(1);
     }
 
-    // Extract database name from MONGO_URI if specified
+    // Target database name resolution:
+    // 1. Explicit DB_NAME environment variable
+    // 2. Database specified in MONGO_URI (ignoring default generic names like 'test')
+    // 3. Fallback based on NODE_ENV ('church_db' for production, 'church_db_dev' for development)
     let uriDbName = null;
     try {
       const uriPath = MONGO_URI.split('?')[0];
       const lastSlashIndex = uriPath.lastIndexOf('/');
       if (lastSlashIndex !== -1 && lastSlashIndex < uriPath.length - 1) {
         const candidate = uriPath.substring(lastSlashIndex + 1).trim();
-        if (candidate && !candidate.includes('@') && !candidate.includes(':')) {
+        if (candidate && !candidate.includes('@') && !candidate.includes(':') && candidate !== 'test') {
           uriDbName = candidate;
         }
       }
     } catch (e) {}
 
-    // Priority: Explicit DB_NAME in env > Database name in URI string > Environment fallback
-    const targetDbName = process.env.DB_NAME || uriDbName || (process.env.NODE_ENV === 'production' ? 'church_db' : 'church_db_dev');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const targetDbName = process.env.DB_NAME || uriDbName || (isProduction ? 'church_db' : 'church_db_dev');
 
     // Mask credentials for safe logging
     const maskedUri = MONGO_URI.replace(/:([^:@]+)@/, ':****@');

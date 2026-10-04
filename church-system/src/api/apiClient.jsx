@@ -28,7 +28,7 @@ export function getApiBaseUrl() {
       if (envUrl && !envUrl.includes('localhost')) {
         return envUrl;
       }
-      return 'https://church-server-dev.onrender.com';
+      return 'https://church-api-3l2c.onrender.com';
     }
 
     // 3. If running on local Wi-Fi / LAN IP (e.g. 192.168.x.x or 10.x.x.x)
