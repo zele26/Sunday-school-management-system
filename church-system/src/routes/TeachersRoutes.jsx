@@ -22,8 +22,8 @@ import TeacherDistanceHub from '../features/teacher/TeacherDistanceHub';
 import TeacherAnalyticsView from '../features/teacher/TeacherAnalyticsView';
 
 export default function TeacherRoutes() {
-  const teacherRoutesContent = (
-    <>
+  return (
+    <Routes>
       <Route index element={<TeacherOverview />} />
       <Route path="distance-hub" element={<TeacherDistanceHub />} />
       <Route path="classes" element={<TeacherClasses />} />
@@ -38,20 +38,10 @@ export default function TeacherRoutes() {
       <Route path="analytics" element={<TeacherAnalyticsView />} />
       <Route path="resources" element={<TeacherResources />} />
       <Route path="assignments" element={<TeacherContent />} />
-
-      {/* Exam routes */}
       <Route path="exams" element={<TeacherExams />} />
       <Route path="exams/:quizId" element={<TeacherExamDetail />} />
       <Route path="results" element={<TeacherResults />} />
-    </>
-  );
-
-  return (
-    <Routes>
-      <Route path="/teacher">
-        {teacherRoutesContent}
-      </Route>
-      {teacherRoutesContent}
+      <Route path="*" element={<TeacherOverview />} />
     </Routes>
   );
 }

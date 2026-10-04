@@ -63,8 +63,8 @@ function AdminPermissionGuard({ permission, children }) {
 }
 
 export default function AdminRoutes() {
-  const adminRoutesContent = (
-    <>
+  return (
+    <Routes>
       <Route index element={<AdminIndexRoute />} />
       <Route path="distance-hub" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_DISTANCE_HUB}><AdminDistanceHub /></AdminPermissionGuard>} />
       <Route path="people" element={<AdminPermissionGuard permission={PERMISSIONS.STUDENTS_VIEW}><PeopleManagement /></AdminPermissionGuard>} />
@@ -103,15 +103,7 @@ export default function AdminRoutes() {
       <Route path="manual-enrollment" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_ENROLLMENTS}><ManualEnrollment /></AdminPermissionGuard>} />
       <Route path="church-memberships" element={<AdminPermissionGuard permission={PERMISSIONS.MEMBERSHIPS_MANAGE}><ChurchMembershipsManagement /></AdminPermissionGuard>} />
       <Route path="academic-enrollments/:enrollmentId" element={<AdminPermissionGuard permission={PERMISSIONS.ACADEMIC_ENROLLMENTS}><AcademicEnrollmentDetails /></AdminPermissionGuard>} />
-    </>
-  );
-
-  return (
-    <Routes>
-      <Route path="/admin">
-        {adminRoutesContent}
-      </Route>
-      {adminRoutesContent}
+      <Route path="*" element={<AdminIndexRoute />} />
     </Routes>
   );
 }
