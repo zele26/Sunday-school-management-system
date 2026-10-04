@@ -9,26 +9,38 @@ import useAuthStore from '../store/authStore';
 //      routes directly to the same origin and proxies seamlessly to the backend.
 // ------------------------------------------------------------------
 export function getApiBaseUrl() {
-  let envUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  const envUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
 
-  if (typeof window !== 'undefined') {
-    const { hostname } = window.location;
-    // If accessed from mobile phone or LAN IP, dynamically route backend requests to the host machine
-    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      if (envUrl && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
-        return envUrl.replace('localhost', hostname).replace('127.0.0.1', hostname);
-      }
-      if (!envUrl) {
-        return `http://${hostname}:5000`;
-      }
-    }
-  }
-
-  if (envUrl) {
+  // 1. If explicit valid remote URL is provided in env, use it directly
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
     return envUrl;
   }
 
-  return 'http://localhost:5000';
+  if (typeof window !== 'undefined') {
+    const { hostname } = window.location;
+
+    // 2. If running on Vercel or any cloud hosting (*.vercel.app or custom cloud domain)
+    if (
+      hostname.endsWith('.vercel.app') ||
+      hostname.includes('onrender.com') ||
+      (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.') && !hostname.startsWith('10.'))
+    ) {
+      if (envUrl && !envUrl.includes('localhost')) {
+        return envUrl;
+      }
+      return 'https://church-server-dev.onrender.com';
+    }
+
+    // 3. If running on local Wi-Fi / LAN IP (e.g. 192.168.x.x or 10.x.x.x)
+    if (hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.endsWith('.local')) {
+      return `http://${hostname}:5000`;
+    }
+
+    // 4. Default localhost in browser
+    return 'http://localhost:5000';
+  }
+
+  return envUrl || 'http://localhost:5000';
 }
 
 export const API_BASE_URL = (() => {
