@@ -35,6 +35,8 @@ const AddStudent = () => {
     woreda: '',
     kebele: '',
     address: '',
+    phone: '',
+    studentPhone: '',
     contactPhone: '',
     studentType: 'regular',
     email: '',
@@ -67,9 +69,17 @@ const AddStudent = () => {
 
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        studentPhone: (formData.phone || formData.studentPhone || formData.contactPhone || '').trim(),
+        phone: (formData.phone || formData.studentPhone || formData.contactPhone || '').trim(),
+        contactPhone: (formData.emergencyPhone || formData.contactPhone || '').trim(),
+        emergencyPhone: (formData.emergencyPhone || '').trim(),
+      };
+
       const res = await apiFetch('/api/admin/students', {
         method: 'POST',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -270,7 +280,7 @@ const AddStudent = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ ቁጥር</label>
-                <Input icon={Phone} name="contactPhone" value={formData.contactPhone} onChange={handleChange} />
+                <Input icon={Phone} name="phone" value={formData.phone} onChange={handleChange} />
               </div>
             </div>
           )}
@@ -278,7 +288,7 @@ const AddStudent = () => {
           {formData.studentType === 'distance' && (
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">ስልክ ቁጥር</label>
-              <Input icon={Phone} name="contactPhone" value={formData.contactPhone} onChange={handleChange} />
+              <Input icon={Phone} name="phone" value={formData.phone} onChange={handleChange} />
             </div>
           )}
 

@@ -403,9 +403,9 @@ const StudentsManagement = () => {
                     ✝️ {s.christianName}
                   </span>
                 )}
-                {s.contactPhone ? (
+                {s.studentPhone || s.phone || s.userId?.phone || s.contactPhone ? (
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 block truncate font-mono">
-                    {s.contactPhone}
+                    {s.studentPhone || s.phone || s.userId?.phone || s.contactPhone}
                   </span>
                 ) : s.email ? (
                   <span className="text-[11px] text-slate-400 dark:text-slate-500 block truncate">
@@ -1031,13 +1031,13 @@ const StudentsManagement = () => {
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400 block font-medium">ስልክ ቁጥር</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block font-mono">
-                    {selectedStudent.contactPhone || selectedStudent.phone || 'ያልተገለጸ'}
+                    {selectedStudent.studentPhone || selectedStudent.phone || selectedStudent.userId?.phone || selectedStudent.contactPhone || 'ያልተገለጸ'}
                   </span>
                 </div>
               </div>
 
               {/* Emergency Contact if available */}
-              {(selectedStudent.emergencyFirstName || selectedStudent.emergencyPhone || selectedStudent.emergencyContactPhoto) && (
+              {(selectedStudent.emergencyFirstName || selectedStudent.emergencyPhone || selectedStudent.parentPhone || selectedStudent.emergencyContactPhoto) && (
                 <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60 text-xs flex items-center gap-3">
                   {selectedStudent.emergencyContactPhoto && (
                     <img
@@ -1052,12 +1052,12 @@ const StudentsManagement = () => {
                       <span>የአደጋ ጊዜ ተጠሪ</span>
                     </p>
                     <p className="text-slate-700 dark:text-slate-300 truncate">
-                      {[selectedStudent.emergencyFirstName, selectedStudent.emergencyLastName].filter(Boolean).join(' ')}{' '}
+                      {[selectedStudent.emergencyFirstName, selectedStudent.emergencyLastName].filter(Boolean).join(' ') || selectedStudent.parentName || 'ተጠሪ'}{' '}
                       {selectedStudent.relationship && `(${selectedStudent.relationship})`}
                     </p>
-                    {selectedStudent.emergencyPhone && (
+                    {(selectedStudent.emergencyPhone || selectedStudent.parentPhone || selectedStudent.contactPhone) && (
                       <p className="font-mono font-semibold text-slate-600 dark:text-slate-400 mt-0.5">
-                        {selectedStudent.emergencyPhone}
+                        {selectedStudent.emergencyPhone || selectedStudent.parentPhone || selectedStudent.contactPhone}
                       </p>
                     )}
                   </div>

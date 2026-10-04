@@ -178,7 +178,7 @@ export default function StudentManagementTable({
     return students.filter((s) => {
       const fullName = `${s.firstName} ${s.middleName || ''} ${s.lastName}`.toLowerCase();
       const sId = (s.studentId || '').toLowerCase();
-      const phone = (s.contactPhone || '').toLowerCase();
+      const phone = (s.studentPhone || s.phone || s.userId?.phone || s.contactPhone || '').toLowerCase();
       const query = search.toLowerCase().trim();
 
       const matchesSearch = !query || fullName.includes(query) || sId.includes(query) || phone.includes(query);
@@ -621,9 +621,9 @@ export default function StudentManagementTable({
                                 </span>
                               )}
                             </div>
-                            {s.contactPhone && (
+                            {(s.studentPhone || s.phone || s.userId?.phone || s.contactPhone) && (
                               <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono block">
-                                {s.contactPhone}
+                                {s.studentPhone || s.phone || s.userId?.phone || s.contactPhone}
                               </span>
                             )}
                           </div>
@@ -961,7 +961,7 @@ export default function StudentManagementTable({
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400 block font-medium">ስልክ ቁጥር</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 mt-0.5 block font-mono">
-                    {activeStudent.contactPhone || 'ያልተገለጸ'}
+                    {activeStudent.studentPhone || activeStudent.phone || activeStudent.userId?.phone || activeStudent.contactPhone || 'ያልተገለጸ'}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 col-span-2">
@@ -972,15 +972,15 @@ export default function StudentManagementTable({
                 </div>
               </div>
 
-              {activeStudent.emergencyFirstName && (
+              {(activeStudent.emergencyFirstName || activeStudent.emergencyPhone || activeStudent.parentPhone || activeStudent.contactPhone) && (
                 <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 text-xs">
                   <p className="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5 mb-1">
                     <ShieldAlert className="w-3.5 h-3.5" />
                     <span>የአደጋ ጊዜ ተጠሪ</span>
                   </p>
                   <p className="text-slate-700 dark:text-slate-300">
-                    {activeStudent.emergencyFirstName} {activeStudent.emergencyLastName} ({getRelationshipLabel(activeStudent.relationship)}) —{' '}
-                    <span className="font-mono font-semibold">{activeStudent.emergencyPhone}</span>
+                    {[activeStudent.emergencyFirstName, activeStudent.emergencyLastName].filter(Boolean).join(' ') || activeStudent.parentName || 'ተጠሪ'} {activeStudent.relationship && `(${getRelationshipLabel(activeStudent.relationship)})`} —{' '}
+                    <span className="font-mono font-semibold">{activeStudent.emergencyPhone || activeStudent.parentPhone || activeStudent.contactPhone}</span>
                   </p>
                 </div>
               )}

@@ -20,7 +20,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
   try {
     const {
       studentId, batch, registrationNumber, studentType,
-      firstName, middleName, lastName, christianName, dob, grade, address, contactPhone,
+      firstName, middleName, lastName, christianName, dob, grade, address, phone, studentPhone, contactPhone,
       email, password,
       age, subcity, woreda, kebele, shift,
       hasConfessionFather, confessionFatherName, confessionFatherPhone,
@@ -48,11 +48,15 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const actualStudentPhone = (studentPhone || phone || contactPhone || '').toString().trim();
+    const actualEmergencyPhone = (emergencyPhone || '').toString().trim();
+
     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
     const newUser = await User.create({
       fullName,
       email: email.toLowerCase(),
       password: hashedPassword,
+      phone: actualStudentPhone,
       role: 'student',
       status: 'approved',
       christianName: (christianName || '').toString().trim(),
@@ -93,10 +97,12 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       emergencyMiddleName: emergencyMiddleName || '',
       emergencyLastName: emergencyLastName || '',
       relationship: relationship || 'Father',
-      contactPhone: emergencyPhone || '',
+      contactPhone: actualEmergencyPhone || actualStudentPhone,
+      parentPhone: actualEmergencyPhone,
+      emergencyPhone: actualEmergencyPhone,
       contactAddress: emergencyAddress || '',
       contactEmail: emergencyEmail || '',
-      studentPhone: contactPhone || '',
+      studentPhone: actualStudentPhone,
     };
 
     const newStudent = await Student.create(studentData);
@@ -161,7 +167,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
       Student.countDocuments(query),
       Student.find(query)
         .select('-photoUrl -emergencyContactPhoto')
-        .populate('userId', 'email fullName status')
+        .populate('userId', 'email fullName status phone')
         .populate('teacher', 'fullName email phone')
         .populate('teachers', 'fullName email phone')
         .populate({
@@ -191,10 +197,12 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
     const distanceCount = statsResult.distance?.[0]?.count || 0;
     const qrCount = statsResult.withQR?.[0]?.count || 0;
 
-    // Attach virtual fullName if missing
+    // Attach virtual fullName and primary phone if missing
     const students = studentsRaw.map((s) => ({
       ...s,
       fullName: s.fullName || [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || 'ተማሪ',
+      phone: s.studentPhone || s.phone || s.userId?.phone || s.contactPhone || '',
+      studentPhone: s.studentPhone || s.phone || s.userId?.phone || '',
     }));
 
     res.json({
@@ -804,15 +812,19 @@ router.put('/:id/add-course', protect, authorize('admin'), async (req, res) => {
 router.get('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const student = await Student.findById(req.params.id)
-      .populate('userId', 'email fullName')
-      .populate('teacher', 'fullName email')
+      .populate('userId', 'email fullName phone status')
+      .populate('teacher', 'fullName email phone')
       .populate('courses', 'name grade description');
 
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    res.json({ success: true, student });
+    const studentObj = student.toObject({ virtuals: true });
+    studentObj.phone = studentObj.studentPhone || studentObj.phone || studentObj.userId?.phone || '';
+    studentObj.studentPhone = studentObj.studentPhone || studentObj.phone || studentObj.userId?.phone || '';
+
+    res.json({ success: true, student: studentObj });
   } catch (err) {
     console.error('Get student error:', err);
     res.status(500).json({ success: false, message: err.message });
@@ -824,7 +836,7 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   try {
     const {
       studentId, batch, registrationNumber,
-      firstName, middleName, lastName, christianName, dob, grade, address, studentPhone, contactPhone,
+      firstName, middleName, lastName, christianName, dob, grade, address, phone, studentPhone, contactPhone,
       educationLevel, profession, gender, studentType,
       age, subcity, woreda, kebele, shift,
       hasConfessionFather, confessionFatherName, confessionFatherPhone,
@@ -879,13 +891,13 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
     if (photoUrl !== undefined) student.photoUrl = photoUrl.trim();
     if (emergencyContactPhoto !== undefined) student.emergencyContactPhoto = emergencyContactPhoto.trim();
 
-    const phoneValue = studentPhone || contactPhone;
+    const phoneValue = studentPhone || phone;
     if (phoneValue !== undefined) student.studentPhone = phoneValue;
 
-    const ePhone = emergencyPhone || contactPhone || student.emergencyPhone;
-    const eEmail = emergencyEmail || contactEmail || student.emergencyEmail;
-    const eAddr = emergencyAddress || contactAddress || student.emergencyAddress;
-    const eFirst = emergencyFirstName || student.emergencyFirstName;
+    const ePhone = emergencyPhone || contactPhone || student.emergencyPhone || student.parentPhone;
+    const eEmail = emergencyEmail || contactEmail || student.emergencyEmail || student.parentEmail;
+    const eAddr = emergencyAddress || contactAddress || student.emergencyAddress || student.contactAddress;
+    const eFirst = emergencyFirstName || student.emergencyFirstName || student.parentName;
     const eMiddle = emergencyMiddleName !== undefined ? emergencyMiddleName : student.emergencyMiddleName;
     const eLast = emergencyLastName !== undefined ? emergencyLastName : student.emergencyLastName;
     const eRel = relationship || student.relationship;
@@ -907,15 +919,32 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
 
     await student.save();
 
-    if (firstName || middleName || lastName) {
-      const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ');
-      await User.findByIdAndUpdate(student.userId, { fullName });
+    if (firstName || middleName || lastName || studentPhone || phone) {
+      const updateUserData = {};
+      if (firstName || middleName || lastName) {
+        updateUserData.fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ');
+      }
+      if (studentPhone || phone) {
+        updateUserData.phone = (studentPhone || phone).trim();
+      }
+      if (student.userId) {
+        await User.findByIdAndUpdate(student.userId, updateUserData);
+      }
     }
+
+    const updatedPopulated = await Student.findById(student._id)
+      .populate('userId', 'email fullName phone status')
+      .populate('teacher', 'fullName email phone')
+      .populate('courses', 'name grade description');
+
+    const resultObj = updatedPopulated.toObject({ virtuals: true });
+    resultObj.phone = resultObj.studentPhone || resultObj.phone || resultObj.userId?.phone || '';
+    resultObj.studentPhone = resultObj.studentPhone || resultObj.phone || resultObj.userId?.phone || '';
 
     res.json({
       success: true,
       message: 'Student updated successfully',
-      student: await student.populate('userId', 'email fullName')
+      student: resultObj
     });
   } catch (err) {
     console.error('Update student error:', err);
