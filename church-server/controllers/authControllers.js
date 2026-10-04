@@ -299,22 +299,90 @@ exports.register = async (req, res) => {
 // ---------- Login (email, phone, or studentId) ----------
 exports.login = async (req, res) => {
   try {
-    const { email, phone, studentId, password } = req.body;
+    const { email, phone, studentId, credential, identifier, password } = req.body;
 
     if (!password) {
       return res.status(400).json({ success: false, message: 'Password is required' });
     }
 
-    let user;
-    if (email) {
-      user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-    } else if (phone) {
-      user = await User.findOne({ phone }).select('+password');
-    } else if (studentId) {
-      const student = await Student.findOne({ studentId });
-      if (student) user = await User.findById(student.userId).select('+password');
-    } else {
+    const rawInput = (email || phone || studentId || credential || identifier || '').toString().trim();
+    if (!rawInput) {
       return res.status(400).json({ success: false, message: 'Email, phone, or student ID required' });
+    }
+
+    let user = null;
+
+    // 1. If it looks like an email (contains @)
+    if (rawInput.includes('@')) {
+      user = await User.findOne({ email: rawInput.toLowerCase() }).select('+password');
+    }
+
+    // 2. If it matches a Student ID / Registration Number format
+    if (!user && (rawInput.toUpperCase().startsWith('TKR-') || rawInput.toUpperCase().startsWith('TKD-') || rawInput.toUpperCase().startsWith('REG-') || studentId)) {
+      const sId = (studentId || rawInput).trim();
+      const studentDoc = await Student.findOne({
+        $or: [
+          { studentId: sId },
+          { studentId: sId.toUpperCase() },
+          { registrationNumber: sId },
+          { registrationNumber: sId.toUpperCase() },
+        ],
+      });
+      if (studentDoc && studentDoc.userId) {
+        user = await User.findById(studentDoc.userId).select('+password');
+      }
+      if (!user) {
+        user = await User.findOne({
+          $or: [{ studentId: sId }, { studentId: sId.toUpperCase() }, { username: sId }],
+        }).select('+password');
+      }
+    }
+
+    // 3. Search by Phone or general credential (User table + Student table)
+    if (!user) {
+      const cleanPhoneDigits = rawInput.replace(/\D/g, '').slice(-9);
+
+      // Check User collection directly
+      user = await User.findOne({
+        $or: [
+          { phone: rawInput },
+          { phoneNumber: rawInput },
+          { username: rawInput },
+          ...(cleanPhoneDigits.length >= 8
+            ? [{ phone: new RegExp(cleanPhoneDigits + '$') }, { phoneNumber: new RegExp(cleanPhoneDigits + '$') }]
+            : []),
+        ],
+      }).select('+password');
+
+      // If still not found in User, check Student collection across all phone fields
+      if (!user) {
+        const studentOrConditions = [
+          { studentPhone: rawInput },
+          { phone: rawInput },
+          { parentPhone: rawInput },
+          { contactPhone: rawInput },
+          { emergencyPhone: rawInput },
+          { studentId: rawInput },
+          { studentId: rawInput.toUpperCase() },
+          { registrationNumber: rawInput },
+        ];
+
+        if (cleanPhoneDigits.length >= 8) {
+          const phoneRegex = new RegExp(cleanPhoneDigits + '$');
+          studentOrConditions.push(
+            { studentPhone: phoneRegex },
+            { phone: phoneRegex },
+            { parentPhone: phoneRegex },
+            { contactPhone: phoneRegex },
+            { emergencyPhone: phoneRegex }
+          );
+        }
+
+        const matchedStudent = await Student.findOne({ $or: studentOrConditions });
+        if (matchedStudent && matchedStudent.userId) {
+          user = await User.findById(matchedStudent.userId).select('+password');
+        }
+      }
     }
 
     if (!user) {
