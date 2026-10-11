@@ -227,7 +227,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 // ---------- Export Students as CSV or JSON ----------
 router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'department_admin'), async (req, res) => {
   try {
-    const { search, grade, studentType, shift, gender, status, hasConfessionFather, selectedIds, format = 'csv' } = req.query;
+    const { search, grade, studentType, shift, gender, status, hasConfessionFather, qr, selectedIds, format = 'csv' } = req.query;
     const conditions = [];
 
     // 1. If explicit selectedIds are passed, restrict to them
@@ -262,6 +262,7 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
             { lastName: { $regex: s, $options: 'i' } },
             { studentId: { $regex: s, $options: 'i' } },
             { studentPhone: { $regex: s, $options: 'i' } },
+            { contactPhone: { $regex: s, $options: 'i' } },
           ]
         });
       }
@@ -269,15 +270,27 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
       // Class / Grade filter (supports multiple or single, or 'Distance')
       if (grade && grade.trim() && grade !== 'all' && grade !== 'All Classes' && grade !== 'ሁሉም' && grade !== 'ሁሉም ክፍሎች') {
         const gradeList = grade.split(',').map((g) => g.trim());
-        const regexes = gradeList.map((g) => new RegExp(`^${g.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i'));
-        conditions.push({
-          $or: [
-            { grade: { $in: gradeList } },
-            { grade: { $in: regexes } },
-            { batch: { $in: gradeList } },
-            { batch: { $in: regexes } }
-          ]
+        const gradeConditions = [];
+        
+        gradeList.forEach((g) => {
+          const escaped = g.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          gradeConditions.push({ grade: g });
+          gradeConditions.push({ grade: new RegExp(`^${escaped}$`, 'i') });
+          gradeConditions.push({ batch: g });
+          gradeConditions.push({ batch: new RegExp(`^${escaped}$`, 'i') });
+          
+          // Also match numeric grade e.g. "Grade 10" matches "10" or "Grade 10"
+          const numMatch = g.match(/\d+/);
+          if (numMatch) {
+            const num = numMatch[0];
+            gradeConditions.push({ grade: num });
+            gradeConditions.push({ grade: new RegExp(`^(Grade\\s*)?${num}$`, 'i') });
+            gradeConditions.push({ batch: num });
+            gradeConditions.push({ batch: new RegExp(`^(Batch\\s*)?${num}$`, 'i') });
+          }
         });
+
+        conditions.push({ $or: gradeConditions });
       }
 
       // Student Track / Type
@@ -293,7 +306,7 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
         } else if (s === 'weekend' || s === 'day' || s.includes('ቀን') || s.includes('ሳምንት')) {
           conditions.push({ shift: { $in: ['weekend', 'Weekend', 'day', 'Day', 'የቀን', 'የሳምንት መጨረሻ', 'የቀን / ሳምንት መጨረሻ'] } });
         } else {
-          conditions.push({ shift: shift.trim() });
+          conditions.push({ shift: new RegExp(`^${shift.trim()}$`, 'i') });
         }
       }
 
@@ -306,12 +319,21 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
       if (hasConfessionFather !== undefined && hasConfessionFather !== '' && hasConfessionFather !== 'all' && hasConfessionFather !== 'ሁሉም') {
         conditions.push({ hasConfessionFather: String(hasConfessionFather) === 'true' });
       }
+
+      // QR Filter
+      if (qr && qr.trim() && qr !== 'all' && qr !== 'ሁሉም') {
+        if (qr === 'with_qr') {
+          conditions.push({ qrCode: { $exists: true, $ne: '' } });
+        } else if (qr === 'without_qr') {
+          conditions.push({ $or: [{ qrCode: { $exists: false } }, { qrCode: '' }, { qrCode: null }] });
+        }
+      }
     }
 
     const finalQuery = conditions.length > 0 ? { $and: conditions } : {};
 
     const students = await Student.find(finalQuery)
-      .select('-photoUrl -emergencyContactPhoto -qrCode')
+      .select('-photoUrl -emergencyContactPhoto')
       .populate('userId', 'email fullName status')
       .populate('teacher', 'fullName email phone')
       .populate('courses', 'name grade')
@@ -378,17 +400,78 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
     ];
 
     const getRelationshipAmharic = (rel) => {
-      switch (rel) {
-        case 'Father': return 'አባት';
-        case 'Mother': return 'እናት';
-        case 'Brother': return 'ወንድም';
-        case 'Sister': return 'እህት';
-        case 'Guardian': return 'ሞግዚት / አሳዳጊ';
-        case 'Spouse': return 'የትዳር አጋር';
-        case 'Relative': return 'ሌላ ዘመድ';
-        case 'Other': return 'ሌላ';
-        default: return rel || '';
-      }
+      if (!rel) return '';
+      const r = String(rel).trim();
+      if (!r) return '';
+      if (/[\u1200-\u137F]/.test(r)) return r;
+      const lower = r.toLowerCase();
+      const map = {
+        'father': 'አባት',
+        'mother': 'እናት',
+        'brother': 'ወንድም',
+        'sister': 'እህት',
+        'guardian': 'ሞግዚት / አሳዳጊ',
+        'spouse': 'የትዳር አጋር',
+        'relative': 'ሌላ ዘመድ',
+        'parent': 'ወላጅ',
+        'uncle': 'አጎት',
+        'aunt': 'አክስት',
+        'grandfather': 'አያት',
+        'grandmother': 'አያት',
+        'grandparent': 'አያት',
+        'family': 'ቤተሰብ',
+        'cousin': 'የአጎት/የአክስት ልጅ',
+        'child': 'ልጅ',
+        'son': 'ወንድ ልጅ',
+        'daughter': 'ሴት ልጅ',
+        'husband': 'ባል',
+        'wife': 'ሚስት',
+        'other': 'ሌላ',
+      };
+      return map[lower] || r;
+    };
+
+    const getSubcityAmharic = (subcity) => {
+      if (!subcity) return '';
+      const s = String(subcity).trim();
+      if (!s) return '';
+      if (/[\u1200-\u137F]/.test(s)) return s;
+      const map = {
+        'bole': 'ቦሌ',
+        'arada': 'አራዳ',
+        'kirkos': 'ቂርቆስ',
+        'cherkos': 'ቂርቆስ',
+        'lideta': 'ልደታ',
+        'yeka': 'የካ',
+        'kolfe keranio': 'ኮልፌ ቀራኒዮ',
+        'kolfe-keranio': 'ኮልፌ ቀራኒዮ',
+        'kolfe': 'ኮልፌ ቀራኒዮ',
+        'keranio': 'ኮልፌ ቀራኒዮ',
+        'akaki kality': 'አቃቂ ቃሊቲ',
+        'akaki-kality': 'አቃቂ ቃሊቲ',
+        'akaki': 'አቃቂ ቃሊቲ',
+        'kality': 'አቃቂ ቃሊቲ',
+        'nifas silk lafto': 'ንፋስ ስልክ ላፍቶ',
+        'nifas-silk-lafto': 'ንፋስ ስልክ ላፍቶ',
+        'nifas silk': 'ንፋስ ስልክ ላፍቶ',
+        'nifassilk': 'ንፋስ ስልክ ላፍቶ',
+        'nefas silk': 'ንፋስ ስልክ ላፍቶ',
+        'nefas silk lafto': 'ንፋስ ስልክ ላፍቶ',
+        'lafto': 'ንፋስ ስልክ ላፍቶ',
+        'gullele': 'ጉለሌ',
+        'gulele': 'ጉለሌ',
+        'addis ketema': 'አዲስ ከተማ',
+        'addis-ketema': 'አዲስ ከተማ',
+        'addisketema': 'አዲስ ከተማ',
+        'lemi kura': 'ለሚ ኩራ',
+        'lemi-kura': 'ለሚ ኩራ',
+        'lemikura': 'ለሚ ኩራ',
+        'outside addis ababa': 'ከአዲስ አበባ ውጪ',
+        'outside addis': 'ከአዲስ አበባ ውጪ',
+        'outside aa': 'ከአዲስ አበባ ውጪ',
+        'outside': 'ከአዲስ አበባ ውጪ',
+      };
+      return map[s.toLowerCase()] || s;
     };
 
     const getEducationLevelAmharic = (edu) => {
@@ -456,7 +539,7 @@ router.get('/export', protect, authorize('admin', 'staff', 'superadmin', 'depart
       'የንስሐ አባት ስልክ': s.confessionFatherPhone || '',
       'ዕድሜ': s.age || '',
       'ጾታ': s.gender === 'Female' ? 'ሴት' : (s.gender === 'Male' ? 'ወንድ' : (s.gender || '')),
-      'ክፍለ ከተማ': s.subcity || '',
+      'ክፍለ ከተማ': getSubcityAmharic(s.subcity),
       'ወረዳ': s.woreda || '',
       'ቀበሌ': s.kebele || '',
       'ፈረቃ': s.shift === 'night' ? 'የማታ' : (s.shift === 'weekend' ? 'የቀን / ሳምንት መጨረሻ' : (s.shift || '')),
