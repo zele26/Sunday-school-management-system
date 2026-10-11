@@ -15,10 +15,19 @@ import {
   Sparkles,
   CheckCircle2,
   RotateCcw,
+  Search,
+  QrCode,
 } from 'lucide-react';
 import { apiFetch } from '../api/apiClient';
 import useAuthStore from '../store/authStore';
-import { formatGradeAmharic, formatShiftAmharic } from '../constants/registrationOptions';
+import {
+  formatGradeAmharic,
+  formatShiftAmharic,
+  formatSubcityAmharic,
+  formatRelationshipAmharic,
+  getEducationLevelLabel,
+  getProfessionLabel,
+} from '../constants/registrationOptions';
 import { formatEthiopianDate } from '../utils/ethiopianDate';
 
 const AVAILABLE_COLUMNS = [
@@ -35,6 +44,8 @@ const AVAILABLE_COLUMNS = [
   { id: 'grade', label: 'ክፍል / ደረጃ (Grade)', group: 'academic', default: true },
   { id: 'studentType', label: 'የትምህርት ዘርፍ (Regular / Distance)', group: 'academic', default: true },
   { id: 'shift', label: 'ፈረቃ (Weekend / Night)', group: 'academic', default: true },
+  { id: 'educationLevel', label: 'የትምህርት ደረጃ (Education Level)', group: 'academic', default: false },
+  { id: 'profession', label: 'የሥራ ዘርፍ / ሙያ (Profession)', group: 'basic', default: false },
   { id: 'teacher', label: 'የተመደበ መምህር (Assigned Teacher)', group: 'academic', default: true },
   { id: 'courses', label: 'የተመዘገቡ ኮርሶች (Enrolled Courses)', group: 'academic', default: false },
   { id: 'status', label: 'የአካውንት ሁኔታ (Account Status)', group: 'academic', default: false },
@@ -62,29 +73,34 @@ export default function ExportStudentsModal({
   fallbackStudents = [],
 }) {
   // Filter states
+  // Filter states initialized from initialFilters
   const [gradeFilter, setGradeFilter] = useState(initialFilters.grade || '');
   const [typeFilter, setTypeFilter] = useState(initialFilters.studentType || '');
   const [shiftFilter, setShiftFilter] = useState(initialFilters.shift || '');
-  const [genderFilter, setGenderFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [confessionFilter, setConfessionFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState(initialFilters.search || '');
+  const [qrFilter, setQrFilter] = useState(initialFilters.qr || '');
+  const [genderFilter, setGenderFilter] = useState(initialFilters.gender || '');
+  const [statusFilter, setStatusFilter] = useState(initialFilters.status || '');
+  const [confessionFilter, setConfessionFilter] = useState(initialFilters.confession || '');
   const [exportScope, setExportScope] = useState(selectedStudentIds.length > 0 ? 'selected' : 'all');
   const [fileFormat, setFileFormat] = useState('xlsx'); // 'xlsx' | 'csv'
 
-  // Sync state whenever modal opens
+  // Sync state whenever modal opens with current initialFilters & selectedStudentIds
   useEffect(() => {
     if (isOpen) {
-      setGradeFilter('');
-      setTypeFilter('');
-      setShiftFilter('');
-      setGenderFilter('');
-      setStatusFilter('');
-      setConfessionFilter('');
-      setExportScope('all');
+      setGradeFilter(initialFilters.grade || '');
+      setTypeFilter(initialFilters.studentType || '');
+      setShiftFilter(initialFilters.shift || '');
+      setSearchFilter(initialFilters.search || '');
+      setQrFilter(initialFilters.qr || '');
+      setGenderFilter(initialFilters.gender || '');
+      setStatusFilter(initialFilters.status || '');
+      setConfessionFilter(initialFilters.confession || '');
+      setExportScope(selectedStudentIds && selectedStudentIds.length > 0 ? 'selected' : 'all');
       setExportError('');
       setExportSuccess(false);
     }
-  }, [isOpen]);
+  }, [isOpen, initialFilters, selectedStudentIds]);
 
   // Selected Columns
   const [selectedColumns, setSelectedColumns] = useState(() =>
@@ -107,6 +123,8 @@ export default function ExportStudentsModal({
     setGradeFilter('');
     setTypeFilter('');
     setShiftFilter('');
+    setSearchFilter('');
+    setQrFilter('');
     setGenderFilter('');
     setStatusFilter('');
     setConfessionFilter('');
@@ -141,6 +159,9 @@ export default function ExportStudentsModal({
       if (gradeFilter) parts.push(gradeFilter.replace(/\s+/g, '_'));
       if (shiftFilter === 'night') parts.push('የማታ');
       else if (shiftFilter === 'weekend') parts.push('የቀን');
+      if (searchFilter) parts.push(`ፍለጋ_${searchFilter.trim().replace(/\s+/g, '_')}`);
+      if (qrFilter === 'with_qr') parts.push('QR_ያላቸው');
+      else if (qrFilter === 'without_qr') parts.push('QR_የሌላቸው');
     }
 
     const dateStr = new Date().toISOString().split('T')[0];
@@ -164,6 +185,8 @@ export default function ExportStudentsModal({
       const effectiveGender = isForceAll ? '' : genderFilter;
       const effectiveStatus = isForceAll ? '' : statusFilter;
       const effectiveConfession = isForceAll ? '' : confessionFilter;
+      const effectiveSearch = isForceAll ? '' : searchFilter;
+      const effectiveQr = isForceAll ? '' : qrFilter;
 
       if (currentScope === 'selected' && selectedStudentIds.length > 0) {
         params.append('selectedIds', selectedStudentIds.join(','));
@@ -174,9 +197,10 @@ export default function ExportStudentsModal({
         if (effectiveGender) params.append('gender', effectiveGender);
         if (effectiveStatus) params.append('status', effectiveStatus);
         if (effectiveConfession) params.append('hasConfessionFather', effectiveConfession);
+        if (effectiveSearch) params.append('search', effectiveSearch);
+        if (effectiveQr) params.append('qr', effectiveQr);
       }
 
-      // Do not append massive JWT token to query string, apiFetch handles Bearer token in headers
       params.append('format', 'json'); // fetch structured JSON to build styled Excel/CSV
 
       let rawData = [];
@@ -208,8 +232,8 @@ export default function ExportStudentsModal({
         lastServerError = err.message || 'Connection error';
       }
 
-      // Secondary Fallback Attempt: If /export did not return data, fetch from /api/admin/students
-      if (!isRawCsv && rawData.length === 0) {
+      // Secondary Fallback Attempt: ONLY if /export endpoint encountered a network or server HTTP error
+      if (!isRawCsv && rawData.length === 0 && lastServerError) {
         try {
           const listParams = new URLSearchParams();
           listParams.append('limit', '5000');
@@ -217,6 +241,7 @@ export default function ExportStudentsModal({
           if (effectiveGrade) listParams.append('grade', effectiveGrade);
           if (effectiveType) listParams.append('studentType', effectiveType);
           if (effectiveShift) listParams.append('shift', effectiveShift);
+          if (effectiveSearch) listParams.append('search', effectiveSearch);
 
           const listResponse = await apiFetch(`/api/admin/students?${listParams.toString()}`, {
             skipCache: true,
@@ -226,6 +251,7 @@ export default function ExportStudentsModal({
           if (listResponse.ok) {
             const listData = await listResponse.json();
             rawData = Array.isArray(listData) ? listData : (listData.students || listData.data || []);
+            lastServerError = null; // Successfully retrieved data from fallback
           } else {
             lastServerError = `HTTP ${listResponse.status}`;
           }
@@ -235,80 +261,94 @@ export default function ExportStudentsModal({
         }
       }
 
-      // Tertiary Final Fallback: if filtered query returned 0, fetch all students
-      if (!isRawCsv && rawData.length === 0) {
-        try {
-          const allResponse = await apiFetch(`/api/admin/students?limit=5000&page=1`, {
-            skipCache: true,
-          });
-          lastStatusCode = allResponse.status;
-          if (allResponse.ok) {
-            const allData = await allResponse.json();
-            rawData = Array.isArray(allData) ? allData : (allData.students || allData.data || []);
-          } else {
-            lastServerError = `HTTP ${allResponse.status}`;
-          }
-        } catch (allErr) {
-          console.error('Final fallback fetch failed:', allErr);
-          lastServerError = allErr.message;
-        }
-      }
-
       // Quaternary Client Fallback: Use loaded table data if network calls failed
-      if (!isRawCsv && rawData.length === 0 && Array.isArray(fallbackStudents) && fallbackStudents.length > 0) {
+      if (!isRawCsv && rawData.length === 0 && lastServerError && Array.isArray(fallbackStudents) && fallbackStudents.length > 0) {
         console.info('Using client fallback students data for export...');
         rawData = [...fallbackStudents];
+        lastServerError = null;
       }
 
-      // Filter client-side ONLY if NOT forceAll and user has active filters
+      // Precise client-side filter pass to guarantee ONLY matching rows are included
       if (!isForceAll && rawData.length > 0) {
         if (currentScope === 'selected' && selectedStudentIds.length > 0) {
-          const matched = rawData.filter((s) =>
-            selectedStudentIds.includes(s._id) ||
-            selectedStudentIds.includes(s.id) ||
-            selectedStudentIds.includes(s.studentId) ||
-            selectedStudentIds.includes(s.registrationNumber)
-          );
-          if (matched.length > 0) rawData = matched;
+          rawData = rawData.filter((s) => {
+            const sIdStr = String(s._id || s.id || '');
+            const stNum = String(s.studentId || '');
+            const regNum = String(s.registrationNumber || '');
+            return (
+              selectedStudentIds.includes(sIdStr) ||
+              selectedStudentIds.includes(stNum) ||
+              selectedStudentIds.includes(regNum)
+            );
+          });
         } else {
+          if (effectiveSearch) {
+            const sLower = effectiveSearch.toLowerCase().trim();
+            rawData = rawData.filter((s) => {
+              const fullName = [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').toLowerCase();
+              const userFullName = (s.userId?.fullName || '').toLowerCase();
+              const email = (s.email || s.userId?.email || '').toLowerCase();
+              const stId = (s.studentId || '').toLowerCase();
+              const phone = (s.studentPhone || s.phone || s.userId?.phone || s.contactPhone || '').toLowerCase();
+              return (
+                fullName.includes(sLower) ||
+                userFullName.includes(sLower) ||
+                email.includes(sLower) ||
+                stId.includes(sLower) ||
+                phone.includes(sLower)
+              );
+            });
+          }
+
           if (effectiveGrade) {
             const gf = effectiveGrade.toLowerCase().trim();
-            const matched = rawData.filter((s) => {
+            const numGf = gf.match(/\d+/)?.[0];
+            rawData = rawData.filter((s) => {
               const g = (s.grade || s.batch || '').toLowerCase().trim();
-              return g === gf || g.includes(gf) || gf.includes(g);
+              if (g === gf) return true;
+              const numG = g.match(/\d+/)?.[0];
+              if (numG && numGf && numG === numGf) return true;
+              return false;
             });
-            if (matched.length > 0) rawData = matched;
           }
+
           if (effectiveType) {
             const tf = effectiveType.toLowerCase().trim();
-            const matched = rawData.filter((s) => (s.studentType || 'regular').toLowerCase().trim() === tf);
-            if (matched.length > 0) rawData = matched;
+            rawData = rawData.filter((s) => (s.studentType || 'regular').toLowerCase().trim() === tf);
           }
+
           if (effectiveShift) {
             const sf = effectiveShift.toLowerCase().trim();
-            const matched = rawData.filter((s) => {
+            rawData = rawData.filter((s) => {
               const sh = (s.shift || '').toLowerCase().trim();
               if (sf === 'night') return sh.includes('night') || sh.includes('ማታ');
               if (sf === 'weekend') return sh.includes('weekend') || sh.includes('ቀን') || sh.includes('ሳምንት');
               return sh === sf;
             });
-            if (matched.length > 0) rawData = matched;
           }
+
           if (effectiveGender) {
-            const matched = rawData.filter((s) => s.gender === effectiveGender);
-            if (matched.length > 0) rawData = matched;
+            rawData = rawData.filter((s) => s.gender === effectiveGender);
           }
+
           if (effectiveStatus) {
-            const matched = rawData.filter((s) => {
+            rawData = rawData.filter((s) => {
               const isDeactivated = s.userId?.status === 'disabled' || s.status === 'disabled';
               return effectiveStatus === 'disabled' ? isDeactivated : !isDeactivated;
             });
-            if (matched.length > 0) rawData = matched;
           }
+
           if (effectiveConfession !== '') {
             const boolVal = effectiveConfession === 'true';
-            const matched = rawData.filter((s) => Boolean(s.hasConfessionFather) === boolVal);
-            if (matched.length > 0) rawData = matched;
+            rawData = rawData.filter((s) => Boolean(s.hasConfessionFather) === boolVal);
+          }
+
+          if (effectiveQr) {
+            if (effectiveQr === 'with_qr') {
+              rawData = rawData.filter((s) => Boolean(s.qrCode));
+            } else if (effectiveQr === 'without_qr') {
+              rawData = rawData.filter((s) => !s.qrCode);
+            }
           }
         }
       }
@@ -432,8 +472,14 @@ export default function ExportStudentsModal({
             case 'address':
               row[colName] = s.address || '-';
               break;
+            case 'educationLevel':
+              row[colName] = getEducationLevelLabel(s.educationLevel, true) || '-';
+              break;
+            case 'profession':
+              row[colName] = getProfessionLabel(s.profession, true) || '-';
+              break;
             case 'subcity':
-              row[colName] = s.subcity || '-';
+              row[colName] = formatSubcityAmharic(s.subcity);
               break;
             case 'woreda':
               row[colName] = s.woreda || '-';
@@ -454,7 +500,7 @@ export default function ExportStudentsModal({
               row[colName] = [s.emergencyFirstName, s.emergencyMiddleName, s.emergencyLastName].filter(Boolean).join(' ') || s.parentName || '-';
               break;
             case 'emergencyRelationship':
-              row[colName] = s.relationship || '-';
+              row[colName] = formatRelationshipAmharic(s.relationship);
               break;
             case 'emergencyPhone':
               row[colName] = s.emergencyPhone || s.contactPhone || s.parentPhone || '-';
@@ -525,7 +571,16 @@ export default function ExportStudentsModal({
 
   if (!isOpen) return null;
 
-  const hasActiveFilters = gradeFilter || typeFilter || shiftFilter || genderFilter || statusFilter || confessionFilter;
+  const hasActiveFilters = Boolean(
+    gradeFilter ||
+    typeFilter ||
+    shiftFilter ||
+    searchFilter ||
+    qrFilter ||
+    genderFilter ||
+    statusFilter ||
+    confessionFilter
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -603,9 +658,9 @@ export default function ExportStudentsModal({
               </button>
             </div>
 
-            {/* Scope Selection (if rows selected) */}
-            {selectedStudentIds.length > 0 && (
-              <div className="flex items-center gap-4 pt-1">
+            {/* Scope Selection */}
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              {selectedStudentIds.length > 0 && (
                 <label className="flex items-center gap-2 cursor-pointer text-xs">
                   <input
                     type="radio"
@@ -619,22 +674,22 @@ export default function ExportStudentsModal({
                     የተመረጡትን {selectedStudentIds.length} ተማሪዎች ብቻ
                   </span>
                 </label>
+              )}
 
-                <label className="flex items-center gap-2 cursor-pointer text-xs">
-                  <input
-                    type="radio"
-                    name="exportScope"
-                    value="all"
-                    checked={exportScope === 'all'}
-                    onChange={() => setExportScope('all')}
-                    className="text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span className="text-slate-600 dark:text-slate-400">
-                    ሁሉንም ተማሪዎች (ጠቅላላ)
-                  </span>
-                </label>
-              </div>
-            )}
+              <label className="flex items-center gap-2 cursor-pointer text-xs">
+                <input
+                  type="radio"
+                  name="exportScope"
+                  value="all"
+                  checked={exportScope === 'all'}
+                  onChange={() => setExportScope('all')}
+                  className="text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className={hasActiveFilters ? 'font-semibold text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400'}>
+                  {hasActiveFilters ? 'የተጣሩትን ተማሪዎች ብቻ (ማጣሪያው ተፈጻሚ ነው)' : 'ሁሉንም ተማሪዎች (ጠቅላላ)'}
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Section 2: Detailed Filters */}
@@ -657,21 +712,86 @@ export default function ExportStudentsModal({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Student Type / Track */}
+            {/* Active Filters Summary Badges */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 text-xs">
+                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300">ተፈጻሚ ማጣሪያዎች፦</span>
+                {searchFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ፍለጋ: <strong>"{searchFilter}"</strong>
+                    <button type="button" onClick={() => setSearchFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {gradeFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ክፍል: <strong>{formatGradeAmharic(gradeFilter)}</strong>
+                    <button type="button" onClick={() => setGradeFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {typeFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ዘርፍ: <strong>{typeFilter === 'distance' ? 'የርቀት' : 'መደበኛ'}</strong>
+                    <button type="button" onClick={() => setTypeFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {shiftFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ፈረቃ: <strong>{shiftFilter === 'night' ? 'የማታ' : 'የሳምንት መጨረሻ'}</strong>
+                    <button type="button" onClick={() => setShiftFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {qrFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    QR: <strong>{qrFilter === 'with_qr' ? 'ያላቸው ብቻ' : 'የሌላቸው'}</strong>
+                    <button type="button" onClick={() => setQrFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {genderFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ጾታ: <strong>{genderFilter === 'Female' ? 'ሴት' : 'ወንድ'}</strong>
+                    <button type="button" onClick={() => setGenderFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {statusFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    ሁኔታ: <strong>{statusFilter === 'disabled' ? 'የታገዱ' : 'ንቁ'}</strong>
+                    <button type="button" onClick={() => setStatusFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+                {confessionFilter && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px]">
+                    የንስሐ አባት: <strong>{confessionFilter === 'true' ? 'አላቸው' : 'የላቸውም'}</strong>
+                    <button type="button" onClick={() => setConfessionFilter('')} className="text-slate-400 hover:text-rose-500">✕</button>
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Search filter */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  የትምህርት ዘርፍ (Track)
+                  ፍለጋ (Search keyword)
                 </label>
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="">ሁሉም ዘርፎች (All Tracks)</option>
-                  <option value="regular">መደበኛ ትምህርት (Regular)</option>
-                  <option value="distance">የርቀት ትምህርት (Distance)</option>
-                </select>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    placeholder="በስም፣ መለያ ወይም ስልክ..."
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 pr-7 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                  />
+                  {searchFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchFilter('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                      title="ፍለጋ አጽዳ"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Class / Grade */}
@@ -694,6 +814,22 @@ export default function ExportStudentsModal({
                 </select>
               </div>
 
+              {/* Student Type / Track */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  የትምህርት ዘርፍ (Track)
+                </label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">ሁሉም ዘርፎች (All Tracks)</option>
+                  <option value="regular">መደበኛ ትምህርት (Regular)</option>
+                  <option value="distance">የርቀት ትምህርት (Distance)</option>
+                </select>
+              </div>
+
               {/* Shift */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -707,6 +843,22 @@ export default function ExportStudentsModal({
                   <option value="">ሁሉም ፈረቃዎች (All Shifts)</option>
                   <option value="weekend">☀️ የቀን / ቅዳሜና እሑድ (Weekend)</option>
                   <option value="night">🌙 የማታ ፈረቃ (Night Shift)</option>
+                </select>
+              </div>
+
+              {/* QR Code Filter */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  የQR ሁኔታ (QR Status)
+                </label>
+                <select
+                  value={qrFilter}
+                  onChange={(e) => setQrFilter(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">ሁሉም (All QR Status)</option>
+                  <option value="with_qr">QR ኮድ ያላቸው ብቻ</option>
+                  <option value="without_qr">QR ኮድ የሌላቸው ብቻ</option>
                 </select>
               </div>
 
@@ -884,7 +1036,15 @@ export default function ExportStudentsModal({
               className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-2 active:scale-98 disabled:opacity-50 cursor-pointer"
             >
               <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
-              <span>{isExporting ? 'በማውረድ ላይ...' : `አሁን አውርድ (${fileFormat.toUpperCase()})`}</span>
+              <span>
+                {isExporting
+                  ? 'በማውረድ ላይ...'
+                  : exportScope === 'selected' && selectedStudentIds.length > 0
+                  ? `የተመረጡትን ${selectedStudentIds.length} አውርድ (${fileFormat.toUpperCase()})`
+                  : hasActiveFilters
+                  ? `የተጣሩትን አውርድ (${fileFormat.toUpperCase()})`
+                  : `ሁሉንም አውርድ (${fileFormat.toUpperCase()})`}
+              </span>
             </button>
           </div>
         </div>

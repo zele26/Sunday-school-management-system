@@ -51,24 +51,130 @@ export const RELATIONSHIP_OPTIONS = [
   { value: 'Other', labelAm: 'ሌላ', labelEn: 'Other' },
 ];
 
+export const SUBCITY_OPTIONS = [
+  { value: 'Bole', labelAm: 'ቦሌ', labelEn: 'Bole' },
+  { value: 'Arada', labelAm: 'አራዳ', labelEn: 'Arada' },
+  { value: 'Kirkos', labelAm: 'ቂርቆስ', labelEn: 'Kirkos' },
+  { value: 'Lideta', labelAm: 'ልደታ', labelEn: 'Lideta' },
+  { value: 'Yeka', labelAm: 'የካ', labelEn: 'Yeka' },
+  { value: 'Kolfe Keranio', labelAm: 'ኮልፌ ቀራኒዮ', labelEn: 'Kolfe Keranio' },
+  { value: 'Akaki Kality', labelAm: 'አቃቂ ቃሊቲ', labelEn: 'Akaki Kality' },
+  { value: 'Nifas Silk Lafto', labelAm: 'ንፋስ ስልክ ላፍቶ', labelEn: 'Nifas Silk Lafto' },
+  { value: 'Gullele', labelAm: 'ጉለሌ', labelEn: 'Gullele' },
+  { value: 'Addis Ketema', labelAm: 'አዲስ ከተማ', labelEn: 'Addis Ketema' },
+  { value: 'Lemi Kura', labelAm: 'ለሚ ኩራ', labelEn: 'Lemi Kura' },
+  { value: 'Outside Addis Ababa', labelAm: 'ከአዲስ አበባ ውጪ', labelEn: 'Outside Addis Ababa' },
+];
+
 export const getEducationLevelLabel = (value, isAmharic = true) => {
   if (!value) return '';
-  const found = EDUCATION_LEVEL_OPTIONS.find(o => o.value.toLowerCase() === value.toLowerCase() || o.labelAm === value || o.labelEn === value);
+  const found = EDUCATION_LEVEL_OPTIONS.find(o => o.value.toLowerCase() === String(value).trim().toLowerCase() || o.labelAm === value || o.labelEn === value);
   if (found) return isAmharic ? found.labelAm : found.labelEn;
   return value;
 };
 
 export const getProfessionLabel = (value, isAmharic = true) => {
   if (!value) return '';
-  const found = PROFESSION_OPTIONS.find(o => o.value.toLowerCase() === value.toLowerCase() || o.labelAm === value || o.labelEn === value);
+  const found = PROFESSION_OPTIONS.find(o => o.value.toLowerCase() === String(value).trim().toLowerCase() || o.labelAm === value || o.labelEn === value);
   if (found) return isAmharic ? found.labelAm : found.labelEn;
   return value;
 };
 
+export const formatRelationshipAmharic = (rel, fallback = '-') => {
+  if (rel === null || rel === undefined) return fallback;
+  const str = String(rel).trim();
+  if (!str || str === '—' || str === '-' || str === 'N/A' || str === 'null' || str === 'undefined') return fallback;
+
+  // Already Amharic characters
+  if (/[\u1200-\u137F]/.test(str)) {
+    return str;
+  }
+
+  const lower = str.toLowerCase();
+  const map = {
+    'father': 'አባት',
+    'mother': 'እናት',
+    'brother': 'ወንድም',
+    'sister': 'እህት',
+    'guardian': 'ሞግዚት / አሳዳጊ',
+    'spouse': 'የትዳር አጋር',
+    'relative': 'ሌላ ዘመድ',
+    'parent': 'ወላጅ',
+    'uncle': 'አጎት',
+    'aunt': 'አክስት',
+    'grandfather': 'አያት',
+    'grandmother': 'አያት',
+    'grandparent': 'አያት',
+    'family': 'ቤተሰብ',
+    'cousin': 'የአጎት/የአክስት ልጅ',
+    'child': 'ልጅ',
+    'son': 'ወንድ ልጅ',
+    'daughter': 'ሴት ልጅ',
+    'husband': 'ባል',
+    'wife': 'ሚስት',
+    'other': 'ሌላ',
+  };
+
+  return map[lower] || str;
+};
+
+export const formatSubcityAmharic = (subcity, fallback = '-') => {
+  if (subcity === null || subcity === undefined) return fallback;
+  const str = String(subcity).trim();
+  if (!str || str === '—' || str === '-' || str === 'N/A' || str === 'null' || str === 'undefined') return fallback;
+
+  // Already Amharic characters
+  if (/[\u1200-\u137F]/.test(str)) {
+    return str;
+  }
+
+  const lower = str.toLowerCase();
+  const map = {
+    'bole': 'ቦሌ',
+    'arada': 'አራዳ',
+    'kirkos': 'ቂርቆስ',
+    'cherkos': 'ቂርቆስ',
+    'lideta': 'ልደታ',
+    'yeka': 'የካ',
+    'kolfe keranio': 'ኮልፌ ቀራኒዮ',
+    'kolfe-keranio': 'ኮልፌ ቀራኒዮ',
+    'kolfe': 'ኮልፌ ቀራኒዮ',
+    'keranio': 'ኮልፌ ቀራኒዮ',
+    'akaki kality': 'አቃቂ ቃሊቲ',
+    'akaki-kality': 'አቃቂ ቃሊቲ',
+    'akaki': 'አቃቂ ቃሊቲ',
+    'kality': 'አቃቂ ቃሊቲ',
+    'nifas silk lafto': 'ንፋስ ስልክ ላፍቶ',
+    'nifas-silk-lafto': 'ንፋስ ስልክ ላፍቶ',
+    'nifas silk': 'ንፋስ ስልክ ላፍቶ',
+    'nifassilk': 'ንፋስ ስልክ ላፍቶ',
+    'nefas silk': 'ንፋስ ስልክ ላፍቶ',
+    'nefas silk lafto': 'ንፋስ ስልክ ላፍቶ',
+    'lafto': 'ንፋስ ስልክ ላፍቶ',
+    'gullele': 'ጉለሌ',
+    'gulele': 'ጉለሌ',
+    'addis ketema': 'አዲስ ከተማ',
+    'addis-ketema': 'አዲስ ከተማ',
+    'addisketema': 'አዲስ ከተማ',
+    'lemi kura': 'ለሚ ኩራ',
+    'lemi-kura': 'ለሚ ኩራ',
+    'lemikura': 'ለሚ ኩራ',
+    'outside addis ababa': 'ከአዲስ አበባ ውጪ',
+    'outside addis': 'ከአዲስ አበባ ውጪ',
+    'outside aa': 'ከአዲስ አበባ ውጪ',
+    'outside': 'ከአዲስ አበባ ውጪ',
+  };
+
+  return map[lower] || str;
+};
+
 export const getRelationshipLabel = (value, isAmharic = true) => {
   if (!value) return '';
-  const found = RELATIONSHIP_OPTIONS.find(o => o.value.toLowerCase() === value.toLowerCase() || o.labelAm === value || o.labelEn === value);
-  if (found) return isAmharic ? found.labelAm : found.labelEn;
+  if (isAmharic) {
+    return formatRelationshipAmharic(value, '');
+  }
+  const found = RELATIONSHIP_OPTIONS.find(o => o.value.toLowerCase() === String(value).trim().toLowerCase() || o.labelAm === value || o.labelEn === value);
+  if (found) return found.labelEn;
   return value;
 };
 

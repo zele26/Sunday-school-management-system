@@ -31,7 +31,7 @@ import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { useLanguage } from '../../hooks/useLanguage';
 import { FadeIn } from '../../components/motion';
 import { Card, Badge, Button } from '../../components/ui';
-import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic } from '../../constants/registrationOptions';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic, formatSubcityAmharic } from '../../constants/registrationOptions';
 
 const StudentProfile = () => {
   const { t, isAmharic } = useLanguage();
@@ -313,7 +313,7 @@ const StudentProfile = () => {
                   {isAmharic ? 'አድራሻ' : 'Address'}
                 </span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 text-right">
-                  {profile.address || profile.subcity || '-'}
+                  {profile.address || (isAmharic ? formatSubcityAmharic(profile.subcity) : profile.subcity) || '-'}
                 </span>
               </div>
             </div>
@@ -410,7 +410,9 @@ const StudentProfile = () => {
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">
                 {isAmharic ? 'ክፍለ ከተማ' : 'Subcity'}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200">{profile.subcity || '-'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {isAmharic ? (formatSubcityAmharic(profile.subcity) || profile.subcity || '-') : (profile.subcity || '-')}
+              </span>
             </div>
             <div>
               <span className="font-medium text-slate-500 dark:text-slate-400 block mb-0.5">

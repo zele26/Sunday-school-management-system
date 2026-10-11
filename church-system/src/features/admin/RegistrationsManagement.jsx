@@ -33,7 +33,7 @@ import {
 } from '../../hooks/queries';
 import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { Sliders, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
-import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic } from '../../constants/registrationOptions';
+import { getEducationLevelLabel, getProfessionLabel, getRelationshipLabel, formatGradeAmharic, formatSubcityAmharic } from '../../constants/registrationOptions';
 import { useLanguage } from '../../hooks/useLanguage';
 
 const RegistrationsManagement = () => {
@@ -549,7 +549,7 @@ const RegistrationsManagement = () => {
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ክፍለ ከተማ</span>
-                      <span className="text-slate-900 dark:text-white">{selectedRegistration.subcity || '—'}</span>
+                      <span className="text-slate-900 dark:text-white">{(isAmharic ? formatSubcityAmharic(selectedRegistration.subcity) : selectedRegistration.subcity) || selectedRegistration.subcity || '—'}</span>
                     </div>
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[11px] block mb-0.5">ወረዳ</span>

@@ -1144,10 +1144,12 @@ export default function StudentManagementTable({
           grade: gradeFilter,
           studentType: typeFilter,
           shift: shiftFilter,
+          search: search,
+          qr: qrFilter,
         }}
         selectedStudentIds={Array.from(selectedIds)}
         totalAvailableCount={stats.total}
-        fallbackStudents={students}
+        fallbackStudents={filteredStudents}
       />
     </div>
   );

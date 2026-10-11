@@ -1614,10 +1614,12 @@ const StudentsManagement = () => {
           grade: gradeFilter,
           studentType: typeFilter,
           shift: shiftFilter,
+          search: search,
+          qr: qrFilter,
         }}
         selectedStudentIds={selectedStudentIds}
         totalAvailableCount={stats.total}
-        fallbackStudents={rawStudents}
+        fallbackStudents={filteredStudents}
       />
     </div>
   );
