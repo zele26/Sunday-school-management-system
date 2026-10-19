@@ -59,13 +59,26 @@ const isGradeMatch = (studentGrade, sessionGrade) => {
 const isTakerAuthorized = (user, session) => {
   if (!user) return false;
   if (user.role === 'admin' || user.role === 'superadmin' || user.isAdmin) return true;
-  if (!session || !session.assignedTakers) return false;
-  
+  if ((user.permissions || []).includes('*') || (user.permissions || []).includes('attendance:*')) return true;
+
   const userIdStr = (user._id || user.id).toString();
-  return session.assignedTakers.some(t => {
-    const id = t._id ? t._id.toString() : t.toString();
-    return id === userIdStr;
-  });
+
+  // If specific takers are assigned to this session, check if user is in assigned list
+  if (session && Array.isArray(session.assignedTakers) && session.assignedTakers.length > 0) {
+    const isAssigned = session.assignedTakers.some(t => {
+      const id = t._id ? t._id.toString() : t.toString();
+      return id === userIdStr;
+    });
+    if (isAssigned) return true;
+  }
+
+  // If no specific takers assigned, allow any user with scan permission or teacher role
+  if (!session || !session.assignedTakers || session.assignedTakers.length === 0) {
+    if ((user.permissions || []).includes('attendance:scan')) return true;
+    if (user.role === 'teacher' || (Array.isArray(user.roles) && user.roles.includes('teacher'))) return true;
+  }
+
+  return false;
 };
 
 // Helper: Get local date string YYYY-MM-DD
@@ -161,10 +174,16 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
     // 2. Query sessions for the date
     let sessionFilter = { sessionDate: queryDate };
     
-    // Non-admin users only see sessions they are assigned to
+    // Non-admin users see sessions they are assigned to, or open sessions if no specific takers are assigned
     const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.isAdmin;
-    if (!isAdmin) {
-      sessionFilter.assignedTakers = req.user._id;
+    const hasUniversalScan = (req.user.permissions || []).includes('attendance:*') || (req.user.permissions || []).includes('*');
+
+    if (!isAdmin && !hasUniversalScan) {
+      sessionFilter.$or = [
+        { assignedTakers: req.user._id },
+        { assignedTakers: { $size: 0 } },
+        { assignedTakers: { $exists: false } },
+      ];
     }
 
     const sessions = await ClassSession.find(sessionFilter)
@@ -973,8 +992,16 @@ exports.createSchedule = async (req, res) => {
       createdBy: req.user._id,
     });
 
+    if (Array.isArray(assignedTakers) && assignedTakers.length > 0) {
+      const User = require('../../models/User');
+      await User.updateMany(
+        { _id: { $in: assignedTakers } },
+        { $addToSet: { permissions: 'attendance:scan' } }
+      ).catch(() => {});
+    }
+
     const populated = await ClassSchedule.findById(schedule._id)
-      .populate('assignedTakers', 'fullName email phone');
+      .populate('assignedTakers', 'fullName email phone role');
 
     res.status(201).json({ success: true, schedule: populated });
   } catch (err) {
@@ -991,11 +1018,19 @@ exports.updateSchedule = async (req, res) => {
       isCombinedSession: isComb,
     };
 
+    if (Array.isArray(req.body.assignedTakers) && req.body.assignedTakers.length > 0) {
+      const User = require('../../models/User');
+      await User.updateMany(
+        { _id: { $in: req.body.assignedTakers } },
+        { $addToSet: { permissions: 'attendance:scan' } }
+      ).catch(() => {});
+    }
+
     const updated = await ClassSchedule.findByIdAndUpdate(
       id,
       payload,
       { new: true, runValidators: true }
-    ).populate('assignedTakers', 'fullName email phone');
+    ).populate('assignedTakers', 'fullName email phone role');
 
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Schedule not found.' });
@@ -1134,7 +1169,18 @@ exports.createMakeUpSession = async (req, res) => {
       stats: { expectedCount, presentCount: 0, lateCount: 0, absentCount: 0, excusedCount: 0 },
     });
 
-    res.status(201).json({ success: true, session });
+    if (Array.isArray(assignedTakers) && assignedTakers.length > 0) {
+      const User = require('../../models/User');
+      await User.updateMany(
+        { _id: { $in: assignedTakers } },
+        { $addToSet: { permissions: 'attendance:scan' } }
+      ).catch(() => {});
+    }
+
+    const populatedSession = await ClassSession.findById(session._id)
+      .populate('assignedTakers', 'fullName email phone role');
+
+    res.status(201).json({ success: true, session: populatedSession || session });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1186,6 +1232,131 @@ exports.cancelSession = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ============================================================================
+// 8. GET AVAILABLE ATTENDANCE TAKERS (Teachers + Multi-Role Students + Ushers)
+// ============================================================================
+exports.getAvailableTakers = async (req, res) => {
+  try {
+    const Teacher = require('../../models/Teacher');
+    const Student = require('../../models/Student');
+    const User = require('../../models/User');
+
+    // 1. Fetch Teachers
+    const teachers = await Teacher.find({ isActive: { $ne: false } })
+      .populate('userId', 'fullName email phone role roles permissions')
+      .lean();
+
+    // 2. Fetch users who are:
+    // a) Users with role/roles 'teacher'
+    // b) Users with attendance scan permission
+    // c) Students with multiple roles (roles.length > 1 or have other roles)
+    // d) Staff members
+    const eligibleUsers = await User.find({
+      status: { $in: ['approved', 'active', 'created'] },
+      $or: [
+        { role: 'teacher' },
+        { roles: 'teacher' },
+        { permissions: 'attendance:scan' },
+        { permissions: '*' },
+        { permissions: 'attendance:*' },
+        { 'roles.1': { $exists: true } }, // Has at least 2 roles in array
+      ],
+    })
+      .select('fullName email phone role roles permissions studentProfileId')
+      .lean();
+
+    // Student profile details (to get grade, studentId for students)
+    const eligibleUserIds = eligibleUsers.map((u) => u._id);
+    const studentRecords = await Student.find({
+      userId: { $in: eligibleUserIds },
+    })
+      .select('studentId firstName lastName grade shift userId')
+      .lean();
+
+    const studentMap = new Map();
+    studentRecords.forEach((s) => {
+      if (s.userId) studentMap.set(s.userId.toString(), s);
+    });
+
+    const takerMap = new Map();
+
+    // Add Teachers first
+    for (const t of teachers) {
+      const u = t.userId || {};
+      const userIdStr = (u._id || t._id).toString();
+      const name = t.fullName || u.fullName || 'መምህር';
+      takerMap.set(userIdStr, {
+        userId: u._id || t._id,
+        _id: u._id || t._id,
+        teacherDocId: t._id,
+        fullName: name,
+        phone: t.phone || u.phone || '',
+        email: t.email || u.email || '',
+        role: 'teacher',
+        roles: u.roles || ['teacher'],
+        type: 'teacher',
+        label: `${name} (መምህር)`,
+      });
+    }
+
+    // Add Eligible Users (Multi-role students, Staff, Ushers)
+    for (const u of eligibleUsers) {
+      const userIdStr = u._id.toString();
+      const studentRec = studentMap.get(userIdStr);
+      const isStudent = u.role === 'student' || (Array.isArray(u.roles) && u.roles.includes('student')) || !!studentRec;
+      const isMultiRole = Array.isArray(u.roles) && u.roles.length > 1;
+      const hasScanPerm = (u.permissions || []).includes('attendance:scan') || (u.permissions || []).includes('*');
+
+      // Skip if already in map as teacher
+      if (takerMap.has(userIdStr)) {
+        continue;
+      }
+
+      if (isStudent && (isMultiRole || hasScanPerm)) {
+        const gradeStr = studentRec?.grade ? ` | ${studentRec.grade}` : '';
+        const codeStr = studentRec?.studentId ? ` [${studentRec.studentId}]` : '';
+        takerMap.set(userIdStr, {
+          userId: u._id,
+          _id: u._id,
+          fullName: u.fullName,
+          phone: u.phone || '',
+          email: u.email || '',
+          role: u.role,
+          roles: u.roles || [u.role],
+          grade: studentRec?.grade || '',
+          studentId: studentRec?.studentId || '',
+          type: 'student_multi',
+          hasScanPermission: hasScanPerm,
+          label: `${u.fullName} (ተማሪ - ባለብዙ ሚና${gradeStr}${codeStr})`,
+        });
+      } else if (u.role === 'staff' || (Array.isArray(u.roles) && u.roles.includes('staff')) || hasScanPerm) {
+        takerMap.set(userIdStr, {
+          userId: u._id,
+          _id: u._id,
+          fullName: u.fullName,
+          phone: u.phone || '',
+          email: u.email || '',
+          role: u.role,
+          roles: u.roles || [u.role],
+          type: 'staff',
+          hasScanPermission: hasScanPerm,
+          label: `${u.fullName} (${u.role === 'staff' ? 'አስተባባሪ / ሰራተኛ' : u.role})`,
+        });
+      }
+    }
+
+    const takers = Array.from(takerMap.values());
+    res.json({
+      success: true,
+      count: takers.length,
+      takers,
+    });
+  } catch (err) {
+    console.error('getAvailableTakers error:', err);
+    res.status(500).json({ success: false, message: err.message, takers: [] });
   }
 };
 

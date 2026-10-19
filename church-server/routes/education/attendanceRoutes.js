@@ -67,6 +67,7 @@ const sessionCtrl = require('../../controllers/education/attendanceSessionContro
 
 // 1. Taker Sessions & QR Workflow
 router.get('/sessions/today', sessionCtrl.getTodayAuthorizedSessions);
+router.get('/available-takers', sessionCtrl.getAvailableTakers);
 router.post('/sessions/:id/start', sessionCtrl.startSession);
 router.post('/sessions/:id/scan', sessionCtrl.scanStudentInSession);
 router.post('/sessions/:id/close', sessionCtrl.closeSession);
