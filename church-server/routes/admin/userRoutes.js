@@ -404,13 +404,17 @@ router.post('/users', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const userRoles = Array.isArray(req.body.roles) && req.body.roles.length > 0
+      ? Array.from(new Set([role, ...req.body.roles]))
+      : [role];
+
     const newUser = await User.create({
       fullName: fullName.trim(),
       email: email ? email.toLowerCase().trim() : undefined,
       phone: phone ? phone.trim() : undefined,
       password: hashedPassword,
       role,
-      roles: [role],
+      roles: userRoles,
       permissions: Array.isArray(permissions) ? permissions : [],
       status,
       departmentId: departmentId || null,
@@ -468,6 +472,7 @@ router.put('/users/:id', async (req, res) => {
       phone,
       password,
       role,
+      roles,
       status,
       departmentId,
       assignedDepartments,
@@ -508,6 +513,14 @@ router.put('/users/:id', async (req, res) => {
     }
     if (assignedDepartments !== undefined && Array.isArray(assignedDepartments)) {
       user.assignedDepartments = assignedDepartments;
+    }
+
+    // Multi-role assignment support
+    if (Array.isArray(roles) && roles.length > 0) {
+      user.roles = Array.from(new Set(roles));
+      if (role && !user.roles.includes(role)) {
+        user.roles.push(role);
+      }
     }
 
     // Role Change & Lifetime History Preservation
@@ -667,6 +680,96 @@ router.put('/users/:id/status', async (req, res) => {
         fullName: user.fullName,
         status: user.status,
       },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Quick Toggle Attendance Scan Access ----------
+router.patch('/users/:id/attendance-scan-access', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const { enabled } = req.body;
+    const shouldEnable = enabled !== undefined ? !!enabled : !(user.permissions || []).includes('attendance:scan');
+
+    let perms = new Set(user.permissions || []);
+    let userRoles = new Set(user.roles || [user.role || 'student']);
+
+    if (shouldEnable) {
+      perms.add('attendance:scan');
+      perms.add('attendance:view');
+      // If user is a student, ensure they have multi-role capacity (add 'staff' to roles)
+      if (user.role === 'student' || userRoles.has('student')) {
+        userRoles.add('staff');
+      }
+    } else {
+      perms.delete('attendance:scan');
+    }
+
+    user.permissions = Array.from(perms);
+    user.roles = Array.from(userRoles);
+    await user.save({ validateBeforeSave: false });
+
+    res.json({
+      success: true,
+      message: shouldEnable
+        ? 'የተማሪ መገኘት መቃኛ ፈቃድ ተሰጥቷል (Attendance scan access granted)'
+        : 'የመገኘት መቃኛ ፈቃድ ተነስቷል (Attendance scan access revoked)',
+      user: {
+        id: user._id,
+        _id: user._id,
+        fullName: user.fullName,
+        role: user.role,
+        roles: user.roles,
+        permissions: user.permissions,
+        hasScanAccess: user.permissions.includes('attendance:scan'),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ---------- Bulk Toggle Attendance Scan Access ----------
+router.post('/users/bulk-attendance-scan-access', async (req, res) => {
+  try {
+    const { userIds, enabled = true } = req.body;
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'User IDs array is required' });
+    }
+
+    if (enabled) {
+      // Grant attendance:scan & attendance:view, and add 'staff' role for multi-role support
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        {
+          $addToSet: {
+            permissions: { $each: ['attendance:scan', 'attendance:view'] },
+            roles: 'staff',
+          },
+        }
+      );
+    } else {
+      // Revoke attendance:scan
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        {
+          $pull: {
+            permissions: 'attendance:scan',
+          },
+        }
+      );
+    }
+
+    res.json({
+      success: true,
+      count: userIds.length,
+      message: enabled
+        ? `${userIds.length} ተጠቃሚዎች የመገኘት መቃኛ ፈቃድ ተሰጥቷቸዋል`
+        : `${userIds.length} ተጠቃሚዎች የመገኘት መቃኛ ፈቃድ ተነስቶባቸዋል`,
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

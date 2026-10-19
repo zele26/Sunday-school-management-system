@@ -24,6 +24,7 @@ import {
   UserX,
   ShieldAlert,
   Power,
+  QrCode,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,6 +52,8 @@ import {
   useBulkDeleteUsers,
   useToggleUserStatus,
   useBulkToggleUsersStatus,
+  useToggleScanAccess,
+  useBulkToggleScanAccess,
 } from '../../hooks/queries/useUsers';
 import { useDepartments } from '../../hooks/queries/useDepartments';
 import { userEditModalSchema, userCreateModalSchema } from '../../schemas';
@@ -58,6 +61,15 @@ import { formatEthiopianDate } from '../../utils/ethiopianDate';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { PermissionSelector } from '../../components/admin/PermissionSelector';
 import { useLanguage } from '../../hooks/useLanguage';
+
+const ALL_ROLES = [
+  { id: 'student', labelAm: '🎓 ተማሪ (Student)', labelEn: 'Student' },
+  { id: 'staff', labelAm: '🛡️ ሰራተኛ / አስተባባሪ (Staff / Usher)', labelEn: 'Staff' },
+  { id: 'teacher', labelAm: '👨‍🏫 መምህር (Teacher)', labelEn: 'Teacher' },
+  { id: 'department_admin', labelAm: '🏛️ የክፍል አስተዳዳሪ (Dept Admin)', labelEn: 'Dept Admin' },
+  { id: 'admin', labelAm: '👑 አስተዳዳሪ (Admin)', labelEn: 'Admin' },
+  { id: 'member', labelAm: '👥 አባል (Member)', labelEn: 'Member' },
+];
 
 
 const UsersManagement = () => {
@@ -73,11 +85,13 @@ const UsersManagement = () => {
 
   // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createRoles, setCreateRoles] = useState(['staff']);
   const [createPermissions, setCreatePermissions] = useState(['attendance:scan', 'attendance:view']);
 
   // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [editRoles, setEditRoles] = useState([]);
   const [editPermissions, setEditPermissions] = useState([]);
 
   // Create Form
@@ -149,6 +163,7 @@ const UsersManagement = () => {
       city: '',
       notes: '',
     });
+    setCreateRoles(['staff']);
     setCreatePermissions(['attendance:scan', 'attendance:view']);
     setShowCreateModal(true);
   };
@@ -167,6 +182,7 @@ const UsersManagement = () => {
       city: u.city || '',
       notes: '',
     });
+    setEditRoles(Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role || 'member']);
     setEditPermissions(Array.isArray(u.permissions) ? u.permissions : []);
     setShowEditModal(true);
   };
@@ -180,9 +196,11 @@ const UsersManagement = () => {
   };
 
   const onSaveCreate = (data) => {
+    const finalRoles = Array.from(new Set([data.role, ...createRoles]));
     createUserMutation.mutate(
       {
         ...data,
+        roles: finalRoles,
         permissions: createPermissions,
       },
       {
@@ -196,11 +214,13 @@ const UsersManagement = () => {
 
   const onSaveEdit = (data) => {
     if (!editingUser) return;
+    const finalRoles = Array.from(new Set([data.role, ...editRoles]));
     updateUserMutation.mutate(
       {
         id: editingUser._id,
         payload: {
           ...data,
+          roles: finalRoles,
           permissions: editPermissions,
         },
       },
@@ -239,6 +259,8 @@ const UsersManagement = () => {
   const bulkDeleteMutation = useBulkDeleteUsers();
   const toggleUserStatusMutation = useToggleUserStatus();
   const bulkToggleStatusMutation = useBulkToggleUsersStatus();
+  const toggleScanAccessMutation = useToggleScanAccess();
+  const bulkToggleScanMutation = useBulkToggleScanAccess();
 
   const users = data?.users || data || [];
   const totalPages = data?.totalPages || 1;
@@ -292,6 +314,22 @@ const UsersManagement = () => {
     if (!confirm(isAmharic ? `${selectedUserIds.length} ተጠቃሚዎችን ማንቃት ይፈልጋሉ?` : `Re-activate ${selectedUserIds.length} users?`)) return;
     bulkToggleStatusMutation.mutate(
       { userIds: selectedUserIds, status: 'approved' },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
+  const handleBulkGrantScan = () => {
+    if (!confirm(isAmharic ? `ለተመረጡት ${selectedUserIds.length} ተጠቃሚዎች የመገኘት መቃኛ (Attendance Scan) ፈቃድ መስጠት ይፈልጋሉ?` : `Grant attendance scan access to ${selectedUserIds.length} users?`)) return;
+    bulkToggleScanMutation.mutate(
+      { userIds: selectedUserIds, hasAccess: true },
+      { onSuccess: () => setRowSelection({}) }
+    );
+  };
+
+  const handleBulkRevokeScan = () => {
+    if (!confirm(isAmharic ? `ከተመረጡት ${selectedUserIds.length} ተጠቃሚዎች የመገኘት መቃኛ (Attendance Scan) ፈቃድ ማንሳት ይፈልጋሉ?` : `Revoke attendance scan access from ${selectedUserIds.length} users?`)) return;
+    bulkToggleScanMutation.mutate(
+      { userIds: selectedUserIds, hasAccess: false },
       { onSuccess: () => setRowSelection({}) }
     );
   };
@@ -426,6 +464,7 @@ const UsersManagement = () => {
         header: isAmharic ? 'የተፈቀዱ ተግባራት' : 'Permissions',
         cell: ({ row }) => {
           const u = row.original;
+          const hasScan = u.permissions?.includes('attendance:scan');
           if (u.role === 'superadmin' || u.role === 'admin') {
             return (
               <Badge variant="gold" size="xs">
@@ -434,13 +473,21 @@ const UsersManagement = () => {
             );
           }
           const perms = Array.isArray(u.permissions) ? u.permissions : [];
-          if (perms.length === 0) {
-            return <span className="text-xs text-slate-400 italic">{isAmharic ? 'መደበኛ' : 'Standard'}</span>;
-          }
           return (
-            <Badge variant="info" size="xs" className="font-medium">
-              🛡️ {perms.length} {isAmharic ? 'ተግባራት' : 'Tasks'}
-            </Badge>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {hasScan && (
+                <Badge variant="success" size="xs" className="font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                  📱 {isAmharic ? 'መቃኛ' : 'Scan'}
+                </Badge>
+              )}
+              {perms.length === 0 ? (
+                <span className="text-xs text-slate-400 italic">{isAmharic ? 'መደበኛ' : 'Standard'}</span>
+              ) : (
+                <Badge variant="info" size="xs" className="font-medium">
+                  🛡️ {perms.length} {isAmharic ? 'ተግባራት' : 'Tasks'}
+                </Badge>
+              )}
+            </div>
           );
         },
       },
@@ -480,9 +527,30 @@ const UsersManagement = () => {
           const u = row.original;
           const isDeactivated = u.status === 'disabled' || u.status === 'inactive' || u.status === 'suspended';
           const isApproved = u.status === 'approved' || u.status === 'active';
+          const hasScan = u.permissions?.includes('attendance:scan');
 
           return (
             <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+              {/* Quick Attendance Scan Access Toggle */}
+              <Button
+                size="xs"
+                variant={hasScan ? 'success' : 'outline'}
+                onClick={() => {
+                  const currentlyHasScan = hasScan;
+                  const actionText = currentlyHasScan 
+                    ? (isAmharic ? 'የመገኘት መቃኛ ፈቃድን ማንሳት' : 'revoke attendance scan access')
+                    : (isAmharic ? 'የመገኘት መቃኛ ፈቃድ መስጠት' : 'grant attendance scan access');
+                  if (confirm(isAmharic ? `ለ"${u.fullName}" ${actionText} ይፈልጋሉ?` : `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} for "${u.fullName}"?`)) {
+                    toggleScanAccessMutation.mutate({ userId: u._id, hasAccess: !currentlyHasScan });
+                  }
+                }}
+                disabled={toggleScanAccessMutation.isPending}
+                title={hasScan ? (isAmharic ? 'የመቃኛ ፈቃድ አለው (ለመሻር ይጫኑ)' : 'Has scan access (click to revoke)') : (isAmharic ? 'የመቃኛ ፈቃድ ስጥ' : 'Grant scan access')}
+              >
+                <QrCode className="w-3.5 h-3.5 mr-1" />
+                {hasScan ? (isAmharic ? 'መቃኛ ✓' : 'Scan ✓') : (isAmharic ? '+መቃኛ' : '+Scan')}
+              </Button>
+
               <Button
                 size="xs"
                 variant="gold"
@@ -570,7 +638,7 @@ const UsersManagement = () => {
         },
       },
     ],
-    [approveUserMutation, rejectUserMutation, deleteUserMutation, toggleUserStatusMutation, isAmharic]
+    [approveUserMutation, rejectUserMutation, deleteUserMutation, toggleUserStatusMutation, toggleScanAccessMutation, isAmharic]
   );
 
 
@@ -719,6 +787,12 @@ const UsersManagement = () => {
             <Button size="xs" variant="success" onClick={handleBulkApprove}>
               <Check className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ አጽድቅ' : 'Bulk Approve'}
             </Button>
+            <Button size="xs" variant="outline" className="text-emerald-700 dark:text-emerald-300 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20" onClick={handleBulkGrantScan} title={isAmharic ? 'የተመረጡትን ተጠቃሚዎች የመገኘት መቃኛ ፈቃድ ስጥ' : 'Grant attendance scan permission'}>
+              <QrCode className="w-3.5 h-3.5 mr-1" /> {isAmharic ? '+መቃኛ ፈቃድ ስጥ' : 'Grant Scan Access'}
+            </Button>
+            <Button size="xs" variant="outline" className="text-rose-700 dark:text-rose-300 border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20" onClick={handleBulkRevokeScan} title={isAmharic ? 'የተመረጡትን ተጠቃሚዎች የመገኘት መቃኛ ፈቃድ አንሳ' : 'Revoke attendance scan permission'}>
+              <X className="w-3.5 h-3.5 mr-1" /> {isAmharic ? '-መቃኛ ፈቃድ አንሳ' : 'Revoke Scan Access'}
+            </Button>
             <Button size="xs" variant="warning" onClick={handleBulkDisable} title={isAmharic ? 'የተመረጡትን አካውንቶች ለጊዜው አቦዝን' : 'Deactivate selected accounts safely'}>
               <UserX className="w-3.5 h-3.5 mr-1" /> {isAmharic ? 'በጅምላ አቦዝን' : 'Bulk Disable'}
             </Button>
@@ -856,6 +930,85 @@ const UsersManagement = () => {
                       ))}
                     </Select>
                   </div>
+                </div>
+
+                {/* Multi-Role Support */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>{isAmharic ? 'ተጨማሪ ሚናዎች (Multiple Roles)' : 'Additional Roles'}</span>
+                    <span className="text-[11px] text-slate-400 font-normal">
+                      {isAmharic ? 'ተማሪ ሆኖ ሰራተኛ ወይም አስተባባሪ ሊሆን ይችላል' : 'Students can hold multiple roles'}
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+                    {ALL_ROLES.map((r) => {
+                      const isChecked = createRoles.includes(r.id);
+                      return (
+                        <label
+                          key={r.id}
+                          className={`flex items-center gap-2 text-xs p-2 rounded-lg cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'bg-[#1657b8]/10 text-[#1657b8] dark:text-blue-300 font-bold border border-[#1657b8]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setCreateRoles((prev) => Array.from(new Set([...prev, r.id])));
+                              } else {
+                                setCreateRoles((prev) => prev.filter((id) => id !== r.id));
+                              }
+                            }}
+                            className="rounded text-[#1657b8] focus:ring-[#1657b8] h-4 w-4"
+                          />
+                          <span>{isAmharic ? r.labelAm : r.labelEn}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Attendance Scan Access Fast-Toggle Card */}
+                <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 flex items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0">
+                      <QrCode className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{isAmharic ? 'የመገኘት መቃኛ ፈቃድ (Attendance Scan Access)' : 'Attendance Scan Access'}</span>
+                        {createPermissions.includes('attendance:scan') && (
+                          <Badge variant="success" size="xs">{isAmharic ? 'ነቅቷል' : 'Enabled'}</Badge>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        {isAmharic
+                          ? 'ተማሪዎችም ሆኑ ሠራተኞች የQR መገኘት እንዲቆጣጠሩ እና በፕሮግራም ዝርዝር ውስጥ እንደ ተረኛ እንዲመረጡ ያደርጋል'
+                          : 'Enables user to scan QR codes and appear in attendance taker assignment lists'}
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={createPermissions.includes('attendance:scan')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setCreatePermissions((prev) => Array.from(new Set([...prev, 'attendance:scan', 'attendance:view'])));
+                          if (!createRoles.includes('staff')) {
+                            setCreateRoles((prev) => [...prev, 'staff']);
+                          }
+                        } else {
+                          setCreatePermissions((prev) => prev.filter((p) => p !== 'attendance:scan'));
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                  </label>
                 </div>
 
                 {/* Granular Permission Selector */}
@@ -1002,6 +1155,85 @@ const UsersManagement = () => {
                     placeholder={isAmharic ? 'ለምሳሌ፡ የተማሪ መገኘት እንዲቆጣጠር ፈቃድ ተሰጥቶታል' : 'e.g. Granted attendance QR scanning task'}
                     icon={Sparkles}
                   />
+                </div>
+
+                {/* Multi-Role Support */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>{isAmharic ? 'ተጨማሪ ሚናዎች (Multiple Roles)' : 'Additional Roles'}</span>
+                    <span className="text-[11px] text-slate-400 font-normal">
+                      {isAmharic ? 'ተማሪ ሆኖ ሰራተኛ ወይም አስተባባሪ ሊሆን ይችላል' : 'Students can hold multiple roles'}
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+                    {ALL_ROLES.map((r) => {
+                      const isChecked = editRoles.includes(r.id);
+                      return (
+                        <label
+                          key={r.id}
+                          className={`flex items-center gap-2 text-xs p-2 rounded-lg cursor-pointer transition-colors ${
+                            isChecked
+                              ? 'bg-[#1657b8]/10 text-[#1657b8] dark:text-blue-300 font-bold border border-[#1657b8]/30'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setEditRoles((prev) => Array.from(new Set([...prev, r.id])));
+                              } else {
+                                setEditRoles((prev) => prev.filter((id) => id !== r.id));
+                              }
+                            }}
+                            className="rounded text-[#1657b8] focus:ring-[#1657b8] h-4 w-4"
+                          />
+                          <span>{isAmharic ? r.labelAm : r.labelEn}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Attendance Scan Access Fast-Toggle Card */}
+                <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 flex items-center justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0">
+                      <QrCode className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>{isAmharic ? 'የመገኘት መቃኛ ፈቃድ (Attendance Scan Access)' : 'Attendance Scan Access'}</span>
+                        {editPermissions.includes('attendance:scan') && (
+                          <Badge variant="success" size="xs">{isAmharic ? 'ነቅቷል' : 'Enabled'}</Badge>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        {isAmharic
+                          ? 'ተማሪዎችም ሆኑ ሠራተኞች የQR መገኘት እንዲቆጣጠሩ እና በፕሮግራም ዝርዝር ውስጥ እንደ ተረኛ እንዲመረጡ ያደርጋል'
+                          : 'Enables user to scan QR codes and appear in attendance taker assignment lists'}
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={editPermissions.includes('attendance:scan')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setEditPermissions((prev) => Array.from(new Set([...prev, 'attendance:scan', 'attendance:view'])));
+                          if (!editRoles.includes('staff')) {
+                            setEditRoles((prev) => [...prev, 'staff']);
+                          }
+                        } else {
+                          setEditPermissions((prev) => prev.filter((p) => p !== 'attendance:scan'));
+                        }
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                  </label>
                 </div>
 
                 {/* Granular Permission Selector */}

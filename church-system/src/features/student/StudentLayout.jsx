@@ -38,7 +38,10 @@ const StudentLayout = ({ children, onLogout }) => {
   const studentId = user?.studentId || '';
   const { t, isAmharic } = useLanguage();
   const { isTelegram, setBackButton, triggerHaptic } = useTelegramWebApp();
-  const canScanAttendance = hasPermission(user, PERMISSIONS.ATTENDANCE_SCAN);
+  const canScanAttendance =
+    hasPermission(user, PERMISSIONS.ATTENDANCE_SCAN) ||
+    (Array.isArray(user?.permissions) && user.permissions.includes('attendance:scan')) ||
+    (Array.isArray(user?.roles) && user.roles.some((r) => ['staff', 'teacher', 'admin', 'attendance_usher'].includes(r?.toLowerCase())));
 
   const [showQrModal, setShowQrModal] = useState(false);
   const [isSavingBadge, setIsSavingBadge] = useState(false);

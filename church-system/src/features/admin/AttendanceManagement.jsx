@@ -80,6 +80,8 @@ const AttendanceManagement = () => {
   const [schedules, setSchedules] = useState([]);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
   const [teachersList, setTeachersList] = useState([]);
+  const [availableTakers, setAvailableTakers] = useState([]);
+  const [takersLoading, setTakersLoading] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
@@ -136,6 +138,7 @@ const AttendanceManagement = () => {
     startTime: '17:00',
     endTime: '19:00',
     lateThresholdMinutes: 15,
+    assignedTakers: [],
     location: '',
     notes: '',
   });
@@ -172,7 +175,7 @@ const AttendanceManagement = () => {
   // 1. Initial Load
   useEffect(() => {
     fetchCourses();
-    fetchTeachers();
+    fetchTakers();
     fetchTodayAttendance();
   }, []);
 
@@ -186,12 +189,44 @@ const AttendanceManagement = () => {
     } catch (err) {}
   };
 
-  const fetchTeachers = async () => {
+  const fetchTakers = async () => {
+    setTakersLoading(true);
+    try {
+      const res = await apiFetch('/api/education/attendance/available-takers');
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data.takers) ? data.takers : [];
+        setAvailableTakers(list);
+        setTeachersList(list.filter((t) => t.type === 'teacher'));
+      } else {
+        await fetchTeachersFallback();
+      }
+    } catch (err) {
+      console.warn('fetchTakers error, using fallback:', err);
+      await fetchTeachersFallback();
+    } finally {
+      setTakersLoading(false);
+    }
+  };
+
+  const fetchTeachersFallback = async () => {
     try {
       const res = await apiFetch('/api/admin/teachers');
       if (res.ok) {
         const data = await res.json();
-        setTeachersList(Array.isArray(data) ? data : data.teachers || []);
+        const list = Array.isArray(data) ? data : data.teachers || [];
+        setTeachersList(list);
+        setAvailableTakers(
+          list.map((t) => ({
+            userId: t.userId?._id || t.userId || t._id,
+            _id: t.userId?._id || t.userId || t._id,
+            fullName: t.fullName,
+            phone: t.phone,
+            role: 'teacher',
+            type: 'teacher',
+            label: `${t.fullName} (መምህር)`,
+          }))
+        );
       }
     } catch (err) {}
   };
@@ -987,18 +1022,29 @@ const AttendanceManagement = () => {
 
                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                           <span className="text-[11px] font-bold text-slate-500 block mb-1">
-                            የተመደቡ መዝጋቢዎች / መምህራን፦
+                            የተመደቡ መዝጋቢዎች (Assigned Takers)፦
                           </span>
                           {sch.assignedTakers && sch.assignedTakers.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
-                              {sch.assignedTakers.map((t) => (
-                                <span
-                                  key={t._id || t}
-                                  className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 border border-blue-200 dark:border-blue-800"
-                                >
-                                  👤 {t.fullName || 'መምህር'}
-                                </span>
-                              ))}
+                              {sch.assignedTakers.map((t) => {
+                                const isStudent = t.role === 'student' || (Array.isArray(t.roles) && t.roles.includes('student'));
+                                return (
+                                  <span
+                                    key={t._id || t}
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border flex items-center gap-1 ${
+                                      isStudent
+                                        ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                        : 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                                    }`}
+                                  >
+                                    <span>{isStudent ? '🎓' : '👨‍🏫'}</span>
+                                    <span>{t.fullName || (isStudent ? 'ባለብዙ ሚና ተማሪ' : 'መምህር')}</span>
+                                    <span className="text-[9px] opacity-75">
+                                      ({isStudent ? 'ተማሪ' : 'መምህር'})
+                                    </span>
+                                  </span>
+                                );
+                              })}
                             </div>
                           ) : (
                             <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
@@ -1271,6 +1317,28 @@ const AttendanceManagement = () => {
                         <p className="text-[11px] text-slate-400 italic">
                           ማስታወሻ፦ {sess.notes}
                         </p>
+                      )}
+
+                      {sess.assignedTakers && sess.assignedTakers.length > 0 && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold">መዝጋቢዎች፦</span>
+                          {sess.assignedTakers.map((t) => {
+                            const isStudent = t.role === 'student' || (Array.isArray(t.roles) && t.roles.includes('student'));
+                            return (
+                              <span
+                                key={t._id || t}
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                                  isStudent
+                                    ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+                                    : 'bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                }`}
+                              >
+                                <span>{isStudent ? '🎓' : '👨‍🏫'}</span>
+                                <span>{t.fullName}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
 
@@ -1867,9 +1935,14 @@ const AttendanceManagement = () => {
 
               {/* Row 4: Assigned Takers */}
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  የተፈቀደላቸው መዝጋቢዎች / መምህራን (Assigned Takers)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    የተፈቀደላቸው መዝጋቢዎች / መምህራንና ባለብዙ ሚና ተማሪዎች (Assigned Takers)
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-bold">
+                    {scheduleForm.assignedTakers?.length || 0} ተመርጠዋል
+                  </span>
+                </div>
                 <select
                   multiple
                   value={scheduleForm.assignedTakers}
@@ -1877,15 +1950,47 @@ const AttendanceManagement = () => {
                     const selected = Array.from(e.target.selectedOptions, (option) => option.value);
                     setScheduleForm({ ...scheduleForm, assignedTakers: selected });
                   }}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs h-24"
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs h-28 focus:ring-2 focus:ring-blue-500 font-medium"
                 >
-                  {teachersList.map((t) => (
-                    <option key={t._id || t.userId} value={t.userId || t._id}>
-                      {t.fullName} ({t.phone || 'Teacher'})
-                    </option>
-                  ))}
+                  {/* Multi-role Students */}
+                  {availableTakers.some((t) => t.type === 'student_multi') && (
+                    <optgroup label="🎓 ባለብዙ ሚና ተማሪዎች (Multi-Role Students with Scan Access)">
+                      {availableTakers
+                        .filter((t) => t.type === 'student_multi')
+                        .map((t) => (
+                          <option key={t.userId || t._id} value={t.userId || t._id}>
+                            🎓 {t.fullName} {t.grade ? `(${t.grade})` : ''} {t.studentId ? `[${t.studentId}]` : ''}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                  {/* Teachers */}
+                  <optgroup label="👨‍🏫 መምህራን (Teachers)">
+                    {availableTakers
+                      .filter((t) => t.type === 'teacher' || (!t.type && (t.userId || t._id)))
+                      .map((t) => (
+                        <option key={t.userId || t._id} value={t.userId || t._id}>
+                          👨‍🏫 {t.fullName} ({t.phone || 'Teacher'})
+                        </option>
+                      ))}
+                  </optgroup>
+                  {/* Staff / Ushers */}
+                  {availableTakers.some((t) => t.type === 'staff') && (
+                    <optgroup label="🛡️ ሰራተኞችና አስተባባሪዎች (Staff / Ushers)">
+                      {availableTakers
+                        .filter((t) => t.type === 'staff')
+                        .map((t) => (
+                          <option key={t.userId || t._id} value={t.userId || t._id}>
+                            🛡️ {t.fullName} ({t.phone || 'Staff'})
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
                 </select>
-                <span className="text-[10px] text-slate-400">Ctrl በመጫን ከአንድ በላይ መዝጋቢዎችን መምረጥ ይችላሉ</span>
+                <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
+                  <span>Ctrl በመጫን ከአንድ በላይ መዝጋቢዎችን መምረጥ ይችላሉ</span>
+                  <span>🎓 ባለብዙ ሚና ተማሪዎችና 👨‍🏫 መምህራን</span>
+                </div>
               </div>
 
               {/* Row 5: Schedule Name / Label (Optional) */}
@@ -2330,6 +2435,66 @@ const AttendanceManagement = () => {
                   onChange={(e) => setMakeupForm({ ...makeupForm, location: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
                 />
+              </div>
+
+              {/* Assigned Takers for Make-Up Session */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    የተፈቀደላቸው መዝጋቢዎች / መምህራንና ባለብዙ ሚና ተማሪዎች (Assigned Takers)
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-bold">
+                    {makeupForm.assignedTakers?.length || 0} ተመርጠዋል
+                  </span>
+                </div>
+                <select
+                  multiple
+                  value={makeupForm.assignedTakers || []}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                    setMakeupForm({ ...makeupForm, assignedTakers: selected });
+                  }}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs h-28 focus:ring-2 focus:ring-emerald-500 font-medium"
+                >
+                  {/* Multi-role Students */}
+                  {availableTakers.some((t) => t.type === 'student_multi') && (
+                    <optgroup label="🎓 ባለብዙ ሚና ተማሪዎች (Multi-Role Students with Scan Access)">
+                      {availableTakers
+                        .filter((t) => t.type === 'student_multi')
+                        .map((t) => (
+                          <option key={t.userId || t._id} value={t.userId || t._id}>
+                            🎓 {t.fullName} {t.grade ? `(${t.grade})` : ''} {t.studentId ? `[${t.studentId}]` : ''}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                  {/* Teachers */}
+                  <optgroup label="👨‍🏫 መምህራን (Teachers)">
+                    {availableTakers
+                      .filter((t) => t.type === 'teacher' || (!t.type && (t.userId || t._id)))
+                      .map((t) => (
+                        <option key={t.userId || t._id} value={t.userId || t._id}>
+                          👨‍🏫 {t.fullName} ({t.phone || 'Teacher'})
+                        </option>
+                      ))}
+                  </optgroup>
+                  {/* Staff / Ushers */}
+                  {availableTakers.some((t) => t.type === 'staff') && (
+                    <optgroup label="🛡️ ሰራተኞችና አስተባባሪዎች (Staff / Ushers)">
+                      {availableTakers
+                        .filter((t) => t.type === 'staff')
+                        .map((t) => (
+                          <option key={t.userId || t._id} value={t.userId || t._id}>
+                            🛡️ {t.fullName} ({t.phone || 'Staff'})
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </select>
+                <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400">
+                  <span>Ctrl በመጫን ከአንድ በላይ መዝጋቢዎችን መምረጥ ይችላሉ</span>
+                  <span>🎓 ባለብዙ ሚና ተማሪዎችና 👨‍🏫 መምህራን</span>
+                </div>
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">

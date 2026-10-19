@@ -245,6 +245,14 @@ export function hasPermission(user, requiredPermission) {
     return true;
   }
 
+  // Teacher has built-in permission for attendance scanning
+  if (
+    (user.role === 'teacher' || (Array.isArray(user.roles) && user.roles.includes('teacher'))) &&
+    (requiredPermission === PERMISSIONS.ATTENDANCE_SCAN || requiredPermission === 'attendance:scan')
+  ) {
+    return true;
+  }
+
   const userPerms = Array.isArray(user.permissions) ? user.permissions : [];
 
   // Universal wildcard

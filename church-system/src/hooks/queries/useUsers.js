@@ -297,4 +297,60 @@ export function useBulkDeleteUsers() {
   });
 }
 
+/**
+ * Toggle individual attendance scan access
+ */
+export function useToggleScanAccess() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, enabled, hasAccess }) => {
+      const isEnabled = enabled !== undefined ? enabled : hasAccess;
+      const res = await apiFetch(`/api/admin/users/${userId}/attendance-scan-access`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: isEnabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'የመገኘት መቃኛ ፈቃድ መቀየር አልተሳካም');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'የመገኘት መቃኛ ፈቃድ ተቀይሯል!');
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['available-takers'] });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'የመገኘት መቃኛ ፈቃድ መቀየር አልተሳካም');
+    },
+  });
+}
+
+/**
+ * Bulk toggle attendance scan access
+ */
+export function useBulkToggleScanAccess() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userIds, enabled, hasAccess }) => {
+      const isEnabled = enabled !== undefined ? enabled : (hasAccess !== undefined ? hasAccess : true);
+      const res = await apiFetch('/api/admin/users/bulk-attendance-scan-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds, enabled: isEnabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'የጅምላ መቃኛ ፈቃድ መቀየር አልተሳካም');
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'የመገኘት መቃኛ ፈቃድ ተቀይሯል!');
+      queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['available-takers'] });
+    },
+    onError: (err) => {
+      toast.error(err.message || 'የጅምላ መቃኛ ፈቃድ መቀየር አልተሳካም');
+    },
+  });
+}
+
 
