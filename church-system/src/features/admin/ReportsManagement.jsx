@@ -129,22 +129,28 @@ const generateCSV = (data, reportType) => {
     }
 
     case 'grade': {
-      const { grade, summary = {}, students = [] } = data;
+      const { grade, summary = {}, students = [], filters = {} } = data;
+      const shiftText = filters.shift === 'night' ? 'የማታ ፈረቃ' : filters.shift === 'weekend' ? 'የቀን / ሳምንት መጨረሻ' : 'ሁሉም ፈረቃ';
+      const typeText = filters.studentType === 'distance' ? 'የርቀት' : filters.studentType === 'regular' ? 'መደበኛ' : 'ሁሉም ዘርፍ';
+      const dateText = filters.startDate && filters.endDate ? `${filters.startDate} እስከ ${filters.endDate}` : filters.startDate ? `ከ ${filters.startDate}` : filters.endDate ? `እስከ ${filters.endDate}` : 'አጠቃላይ (All-Time)';
+
       const rows = [
         ...churchHeader,
         `"=== የክፍል ደረጃ የመገኘትና የክትትል ሪፖርት: ${grade} ==="`,
-        `"የክፍል ደረጃ:",${escapeCSV(grade)}`,
+        `"የክፍል ደረጃ:",${escapeCSV(grade)},"ፈረቃ:",${escapeCSV(shiftText)}`,
+        `"የትምህርት ዓይነት:",${escapeCSV(typeText)},"የቀን ክልል:",${escapeCSV(dateText)}`,
         `"አጠቃላይ የተማሪዎች ብዛት:",${summary.totalStudents ?? students.length}`,
         `"አጠቃላይ የተካሄዱ ክፍለ-ጊዜዎች:",${summary.totalSessions ?? 0}`,
         `"አጠቃላይ የተመዘገቡ መገኘቶች:",${summary.totalAttended ?? 0}`,
         `"አማካይ የክፍሉ የመገኘት ምጣኔ:",${escapeCSV((summary.averageRate ?? 0) + '%')}`,
         '""',
         '"=== የተማሪዎች ዝርዝር የመገኘት መረጃ (STUDENTS ATTENDANCE) ==="',
-        '"ተ.ቁ","የተማሪ መለያ ቁጥር","ሙሉ ስም","የትምህርት ዓይነት","ፈረቃ","ስልክ","ኢሜይል","የተገኘበት","አጠቃላይ ክፍለ ጊዜ","የቀረበት","የመገኘት ምጣኔ %"'
+        '"ተ.ቁ","የተማሪ መለያ ቁጥር","ሙሉ ስም","የትምህርት ዓይነት","ፈረቃ","ስልክ","ኢሜይል","የተገኘበት","የዘገየበት","በፈቃድ","አጠቃላይ ክፍለ ጊዜ","ያመለጠው / የቀረበት","የመገኘት ምጣኔ %","ደረጃ"'
       ];
 
       students.forEach((s, idx) => {
         const rate = s.overallRate ?? (s.overallSessions > 0 ? Math.round((s.overallAttended / s.overallSessions) * 100) : 0);
+        const level = rate >= 75 ? 'በጣም ጥሩ' : rate >= 50 ? 'መካከለኛ' : 'ዝቅተኛ';
         rows.push([
           idx + 1,
           escapeCSV(s.studentCustomId || '—'),
@@ -154,9 +160,12 @@ const generateCSV = (data, reportType) => {
           escapeCSV(s.phone || '—'),
           escapeCSV(s.email || '—'),
           s.overallAttended || 0,
+          s.late || 0,
+          s.excused || 0,
           s.overallSessions || 0,
           s.overallMissed ?? Math.max(0, (s.overallSessions || 0) - (s.overallAttended || 0)),
-          escapeCSV(`${rate}%`)
+          escapeCSV(`${rate}%`),
+          escapeCSV(level)
         ].join(','));
       });
 
@@ -279,13 +288,22 @@ const ReportsManagement = () => {
   const [students, setStudents] = useState([]);
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const grades = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+  const grades = [
+    'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
+    'Batch 1', 'Batch 2'
+  ];
 
   const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+
+  // Enhanced Filter Options: Shift, Student Type, Date Range
+  const [selectedShift, setSelectedShift] = useState('all'); // 'all' | 'weekend' | 'night'
+  const [selectedStudentType, setSelectedStudentType] = useState('all'); // 'all' | 'regular' | 'distance'
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -333,14 +351,21 @@ const ReportsManagement = () => {
           }
           url = `/api/admin/reports/student/${selectedStudent}`;
           break;
-        case 'grade':
+        case 'grade': {
           if (!selectedGrade) {
             toast.error('እባክዎ የክፍል ደረጃ ይምረጡ');
             setLoading(false);
             return;
           }
-          url = `/api/admin/reports/grade/${encodeURIComponent(selectedGrade)}`;
+          const params = new URLSearchParams();
+          if (selectedShift && selectedShift !== 'all') params.append('shift', selectedShift);
+          if (selectedStudentType && selectedStudentType !== 'all') params.append('studentType', selectedStudentType);
+          if (startDate) params.append('startDate', startDate);
+          if (endDate) params.append('endDate', endDate);
+          const q = params.toString() ? `?${params.toString()}` : '';
+          url = `/api/admin/reports/grade/${encodeURIComponent(selectedGrade)}${q}`;
           break;
+        }
         case 'course':
           if (!selectedCourse) {
             toast.error('እባክዎ ኮርስ ይምረጡ');
@@ -357,14 +382,18 @@ const ReportsManagement = () => {
           }
           url = `/api/admin/reports/teacher/${selectedTeacher}`;
           break;
-        case 'date':
+        case 'date': {
           if (!selectedDate) {
             toast.error('እባክዎ ቀን ይምረጡ');
             setLoading(false);
             return;
           }
-          url = `/api/admin/reports/date?date=${selectedDate}`;
+          const params = new URLSearchParams({ date: selectedDate });
+          if (selectedShift && selectedShift !== 'all') params.append('shift', selectedShift);
+          if (selectedGrade && selectedGrade !== 'all') params.append('grade', selectedGrade);
+          url = `/api/admin/reports/date?${params.toString()}`;
           break;
+        }
         default:
           return;
       }
@@ -632,13 +661,32 @@ const ReportsManagement = () => {
   // ─── Grade Report View ───────────────────────────────────────────
   const renderGradeReport = () => {
     if (!data) return null;
-    const { grade, summary = {}, students: gradeStudents = [] } = data;
+    const { grade, summary = {}, students: gradeStudents = [], filters = {} } = data;
     return (
       <div className="space-y-6">
         <ReportHeaderBanner 
           title={`የ${grade} የመገኘትና የክትትል ሪፖርት`}
           subtitle={`አጠቃላይ ተማሪዎች: ${summary.totalStudents ?? gradeStudents.length} | አማካይ የመገኘት ምጣኔ: ${summary.averageRate ?? 0}%`}
         />
+
+        {/* Active Filters Summary Pill Bar */}
+        <div className="flex flex-wrap items-center gap-2 p-3 bg-surface-card rounded-2xl border border-subtle text-xs">
+          <span className="font-bold text-main">የተመረጡ ማጣሪያዎች፦</span>
+          <Badge variant="brand">
+            ክፍል: {formatGradeAmharic(grade)}
+          </Badge>
+          <Badge variant={filters.shift === 'night' ? 'warning' : 'neutral'}>
+            ፈረቃ: {filters.shift === 'night' ? 'የማታ ፈረቃ (Night)' : filters.shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ (Weekend/Day)' : 'ሁሉም ፈረቃ (All Shifts)'}
+          </Badge>
+          <Badge variant={filters.studentType === 'distance' ? 'info' : 'neutral'}>
+            ዘርፍ: {filters.studentType === 'distance' ? 'የርቀት (Distance)' : filters.studentType === 'regular' ? 'መደበኛ (Regular)' : 'ሁሉም ዘርፍ (All Types)'}
+          </Badge>
+          {(filters.startDate || filters.endDate) && (
+            <Badge variant="neutral">
+              ቀን: {filters.startDate && filters.endDate ? `${filters.startDate} እስከ ${filters.endDate}` : filters.startDate ? `ከ ${filters.startDate}` : `እስከ ${filters.endDate}`}
+            </Badge>
+          )}
+        </div>
 
         {/* Summary KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -665,6 +713,11 @@ const ReportsManagement = () => {
             <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
               {summary.totalAttended ?? 0}
             </div>
+            {summary.totalLate > 0 && (
+              <span className="text-[10px] text-amber-500 font-bold block mt-1">
+                ({summary.totalLate} ዘግይቶ የተገኘ)
+              </span>
+            )}
           </Card>
           <Card className="p-4 bg-surface-card border-subtle">
             <span className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
@@ -686,41 +739,45 @@ const ReportsManagement = () => {
             <table className="w-full text-left text-sm text-muted">
               <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
                 <tr>
-                  <th className="py-3 px-4">ተ.ቁ</th>
-                  <th className="py-3 px-4">መለያ ቁጥር</th>
-                  <th className="py-3 px-4">የተማሪ ስም</th>
-                  <th className="py-3 px-4">ዓይነት / ፈረቃ</th>
-                  <th className="py-3 px-4 text-center">የተገኘበት</th>
-                  <th className="py-3 px-4 text-center">ክፍለ ጊዜ</th>
-                  <th className="py-3 px-4 text-center">የመገኘት ምጣኔ</th>
-                  <th className="py-3 px-4 text-center">ደረጃ</th>
+                  <th className="py-3 px-3">ተ.ቁ</th>
+                  <th className="py-3 px-3">መለያ ቁጥር</th>
+                  <th className="py-3 px-3">የተማሪ ስም</th>
+                  <th className="py-3 px-3">ዓይነት / ፈረቃ</th>
+                  <th className="py-3 px-3 text-center">የተገኘበት</th>
+                  <th className="py-3 px-3 text-center">የዘገየበት</th>
+                  <th className="py-3 px-3 text-center">በፈቃድ</th>
+                  <th className="py-3 px-3 text-center">ክፍለ ጊዜ</th>
+                  <th className="py-3 px-3 text-center">የመገኘት ምጣኔ</th>
+                  <th className="py-3 px-3 text-center">ደረጃ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
                 {gradeStudents.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="py-6 text-center text-xs text-muted">በዚህ ክፍል የተመዘገቡ ተማሪዎች የሉም።</td>
+                    <td colSpan="10" className="py-6 text-center text-xs text-muted">በተመረጡት ማጣሪያዎች የተገኘ ተማሪ የለም።</td>
                   </tr>
                 ) : (
                   gradeStudents.map((s, idx) => {
                     const sRate = s.overallRate ?? (s.overallSessions > 0 ? Math.round((s.overallAttended / s.overallSessions) * 100) : 0);
                     return (
                       <tr key={s.studentId || idx} className="hover:bg-surface-page/50 transition-colors">
-                        <td className="py-3 px-4 text-xs text-muted">{idx + 1}</td>
-                        <td className="py-3 px-4 font-mono text-xs font-bold text-brand-primary">{s.studentCustomId || '—'}</td>
-                        <td className="py-3 px-4 font-semibold text-main">{s.studentName}</td>
-                        <td className="py-3 px-4 text-xs">
+                        <td className="py-3 px-3 text-xs text-muted">{idx + 1}</td>
+                        <td className="py-3 px-3 font-mono text-xs font-bold text-brand-primary">{s.studentCustomId || '—'}</td>
+                        <td className="py-3 px-3 font-semibold text-main">{s.studentName}</td>
+                        <td className="py-3 px-3 text-xs">
                           <span className="font-medium text-main">{s.studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}</span>
                           <span className="text-muted ml-1">({s.shift === 'night' ? 'ማታ' : 'ቀን'})</span>
                         </td>
-                        <td className="py-3 px-4 text-center font-bold text-emerald-600 dark:text-emerald-400">{s.overallAttended || 0}</td>
-                        <td className="py-3 px-4 text-center font-medium text-main">{s.overallSessions || 0}</td>
-                        <td className="py-3 px-4 text-center font-bold">
+                        <td className="py-3 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">{s.overallAttended || 0}</td>
+                        <td className="py-3 px-3 text-center font-medium text-amber-600 dark:text-amber-400">{s.late || 0}</td>
+                        <td className="py-3 px-3 text-center font-medium text-blue-600 dark:text-blue-400">{s.excused || 0}</td>
+                        <td className="py-3 px-3 text-center font-medium text-main">{s.overallSessions || 0}</td>
+                        <td className="py-3 px-3 text-center font-bold">
                           <span className={sRate >= 75 ? 'text-emerald-600 dark:text-emerald-400' : sRate >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}>
                             {sRate}%
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-3 text-center">
                           <Badge variant={sRate >= 75 ? 'success' : sRate >= 50 ? 'warning' : 'danger'}>
                             {sRate >= 75 ? 'በጣም ጥሩ' : sRate >= 50 ? 'መካከለኛ' : 'ዝቅተኛ'}
                           </Badge>
@@ -1069,20 +1126,64 @@ const ReportsManagement = () => {
           )}
 
           {reportType === 'grade' && (
-            <div className="flex-1 min-w-[200px]">
-              <Select
-                label="የክፍል ደረጃ ይምረጡ"
-                value={selectedGrade}
-                onChange={(e) => setSelectedGrade(e.target.value)}
-              >
-                <option value="">የክፍል ደረጃ ይምረጡ</option>
-                {grades.map((g) => (
-                  <option key={g} value={g}>
-                    {formatGradeAmharic(g)}
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <>
+              <div className="flex-1 min-w-[170px]">
+                <Select
+                  label="የክፍል ደረጃ ይምረጡ"
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                >
+                  <option value="">የክፍል ደረጃ ይምረጡ</option>
+                  {grades.map((g) => (
+                    <option key={g} value={g}>
+                      {formatGradeAmharic(g)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[170px]">
+                <Select
+                  label="ፈረቃ (Shift)"
+                  value={selectedShift}
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                >
+                  <option value="all">ሁሉም ፈረቃ (All Shifts)</option>
+                  <option value="weekend">ቀን / ቅዳሜና እሁድ (Weekend/Day)</option>
+                  <option value="night">የማታ ፈረቃ (Night)</option>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[160px]">
+                <Select
+                  label="የትምህርት ዓይነት"
+                  value={selectedStudentType}
+                  onChange={(e) => setSelectedStudentType(e.target.value)}
+                >
+                  <option value="all">ሁሉም ዘርፍ (All Types)</option>
+                  <option value="regular">መደበኛ (Regular)</option>
+                  <option value="distance">የርቀት (Distance)</option>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[140px]">
+                <Input
+                  label="ከቀን (Start Date)"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[140px]">
+                <Input
+                  label="እስከ ቀን (End Date)"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </>
           )}
 
           {reportType === 'course' && (
@@ -1120,14 +1221,43 @@ const ReportsManagement = () => {
           )}
 
           {reportType === 'date' && (
-            <div className="flex-1 min-w-[200px]">
-              <Input
-                label="ቀን ይምረጡ"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="flex-1 min-w-[170px]">
+                <Input
+                  label="ቀን ይምረጡ"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[160px]">
+                <Select
+                  label="የክፍል ደረጃ (አማራጭ)"
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                >
+                  <option value="all">ሁሉም ክፍሎች</option>
+                  {grades.map((g) => (
+                    <option key={g} value={g}>
+                      {formatGradeAmharic(g)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[160px]">
+                <Select
+                  label="ፈረቃ (አማራጭ)"
+                  value={selectedShift}
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                >
+                  <option value="all">ሁሉም ፈረቃ</option>
+                  <option value="weekend">ቀን / ቅዳሜና እሁድ</option>
+                  <option value="night">ማታ</option>
+                </Select>
+              </div>
+            </>
           )}
 
           <Button variant="primary" onClick={fetchReport} disabled={loading} className="font-semibold">

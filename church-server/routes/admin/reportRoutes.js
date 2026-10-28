@@ -6,6 +6,9 @@ const Student = require('../../models/Student');
 const Course = require('../../models/Course');
 const Attendance = require('../../models/Attendance');
 const User = require('../../models/User');
+const ClassSession = require('../../models/education/ClassSession');
+
+const escapeRegex = (s) => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const toObjectId = (id) => {
   try {
@@ -104,6 +107,30 @@ router.get('/student/:studentId', async (req, res) => {
       });
     }
 
+    // Also include general grade attendance records (where course is null or not in courseIds)
+    const generalRecords = history.filter((r) => !r.course || !courseIds.some(cid => cid.toString() === (r.course._id || r.course).toString()));
+    if (generalRecords.length > 0) {
+      const generalAttended = generalRecords.filter((r) => r.status === 'Present' || r.status === 'Late').length;
+      const generalMissed = generalRecords.filter((r) => r.status === 'Absent').length;
+      const generalTotal = generalRecords.length;
+      const generalRate = generalTotal > 0 ? Math.round((generalAttended / generalTotal) * 100) : 0;
+
+      courseSummaries.push({
+        courseId: 'general',
+        courseName: 'አጠቃላይ የክፍለ-ጊዜ ተገኝነት (General Sessions)',
+        courseCode: 'GEN',
+        teacherName: 'የሰንበት ት/ቤት',
+        grade: student.grade || '—',
+        totalSessions: generalTotal,
+        attended: generalAttended,
+        missed: generalMissed,
+        rate: generalRate,
+      });
+
+      totalAttendedAll += generalAttended;
+      totalSessionsAll += generalTotal;
+    }
+
     const overallRate = totalSessionsAll > 0 ? Math.round((totalAttendedAll / totalSessionsAll) * 100) : (totalAttendedAll > 0 ? 100 : 0);
     const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.fullName || 'ስም ያልተጠቀሰ';
 
@@ -145,91 +172,205 @@ router.get('/student/:studentId', async (req, res) => {
   }
 });
 
-// ---------- 2. By Grade Report (High-Performance Parallel Aggregations) ----------
+// ---------- 2. By Grade Report (Comprehensive Session & Attendance Aggregations) ----------
 router.get('/grade/:grade', async (req, res) => {
   try {
-    const grade = req.params.grade;
-    const students = await Student.find({ grade })
+    const rawGrade = req.params.grade;
+    const { shift, studentType, startDate, endDate } = req.query;
+
+    // 1. Build grade matching regex (handles 'Grade 9', '9', '9ኛ', 'Batch 1', etc.)
+    const gradeNum = rawGrade.match(/\d+/);
+    const gradeRegex = gradeNum
+      ? new RegExp(`(${gradeNum[0]}|${escapeRegex(rawGrade)})`, 'i')
+      : new RegExp(escapeRegex(rawGrade), 'i');
+
+    const studentQuery = {
+      $or: [
+        { grade: gradeRegex },
+        { batch: gradeRegex },
+      ],
+    };
+
+    // 2. Shift filtering: weekend vs night
+    if (shift && shift !== 'all') {
+      if (shift === 'night') {
+        studentQuery.shift = 'night';
+      } else if (shift === 'weekend' || shift === 'day') {
+        studentQuery.shift = { $in: ['weekend', 'day', '', null] };
+      } else {
+        studentQuery.shift = shift;
+      }
+    }
+
+    // 3. Student type filtering: regular vs distance
+    if (studentType && studentType !== 'all') {
+      studentQuery.studentType = { $regex: new RegExp(`^${escapeRegex(studentType)}$`, 'i') };
+    }
+
+    const students = await Student.find(studentQuery)
       .populate('userId', 'email phone fullName')
       .populate('courses', 'name code')
+      .sort({ firstName: 1, lastName: 1 })
       .lean();
 
     if (!students || students.length === 0) {
       return res.json({
         success: true,
-        grade,
-        summary: { totalStudents: 0, totalSessions: 0, totalAttended: 0, averageRate: 0 },
+        grade: rawGrade,
+        filters: {
+          shift: shift || 'all',
+          studentType: studentType || 'all',
+          startDate: startDate || null,
+          endDate: endDate || null,
+        },
+        summary: {
+          totalStudents: 0,
+          totalSessions: 0,
+          totalAttended: 0,
+          totalLate: 0,
+          totalExcused: 0,
+          totalAbsent: 0,
+          averageRate: 0,
+        },
         students: [],
       });
     }
 
     const studentIds = students.map((s) => s._id);
-    const allCourseIds = Array.from(new Set(
-      students.flatMap((s) => (s.courses || []).map((c) => toObjectId(c._id))).filter(Boolean)
-    ));
 
-    // Parallel Aggregation Pipeline: 
-    // 1. Total distinct sessions per course
-    // 2. Total attendances per student per course
-    const [courseSessionsAgg, studentAttendanceAgg] = await Promise.all([
-      allCourseIds.length > 0 ? Attendance.aggregate([
-        { $match: { course: { $in: allCourseIds } } },
-        { $group: { _id: { course: '$course', date: '$date' } } },
-        { $group: { _id: '$_id.course', totalSessions: { $sum: 1 } } }
-      ]) : [],
-      Attendance.aggregate([
-        { $match: { student: { $in: studentIds }, status: { $ne: 'Absent' } } },
-        {
-          $group: {
-            _id: { student: '$student', course: '$course' },
-            attended: { $sum: 1 }
-          }
+    // 4. Build Date Range Filter
+    const dateQuery = {};
+    let sessionDateQuery = {};
+    if (startDate && endDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      dateQuery.date = { $gte: s, $lte: e };
+      sessionDateQuery = {
+        sessionDate: {
+          $gte: s.toISOString().split('T')[0],
+          $lte: e.toISOString().split('T')[0],
+        },
+      };
+    } else if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      dateQuery.date = { $gte: s };
+      sessionDateQuery = { sessionDate: { $gte: s.toISOString().split('T')[0] } };
+    } else if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      dateQuery.date = { $lte: e };
+      sessionDateQuery = { sessionDate: { $lte: e.toISOString().split('T')[0] } };
+    }
+
+    // 5. Query all Attendance records for these students in this grade / date range
+    const attendanceRecords = await Attendance.find({
+      student: { $in: studentIds },
+      ...dateQuery,
+    }).sort({ date: -1, checkInTime: -1 }).lean();
+
+    // 6. Query ClassSessions held for this grade / shift
+    const sessionQuery = {
+      $or: [
+        { grade: gradeRegex },
+        { targetGrades: gradeRegex },
+        { isCombinedSession: true },
+      ],
+      status: { $in: ['closed', 'open', 'completed', 'active'] },
+      ...sessionDateQuery,
+    };
+    if (shift && shift !== 'all') {
+      if (shift === 'night') {
+        sessionQuery.$and = [
+          { $or: [{ shift: 'night' }, { targetShifts: 'night' }] }
+        ];
+      } else if (shift === 'weekend' || shift === 'day') {
+        sessionQuery.$and = [
+          { $or: [{ shift: { $in: ['weekend', 'day', 'all', '', null] } }, { targetShifts: { $in: ['weekend', 'day', 'all'] } }] }
+        ];
+      }
+    }
+    const classSessions = await ClassSession.find(sessionQuery).select('_id sessionDate title grade shift status').lean().catch(() => []);
+
+    // 7. Calculate total distinct sessions held for this class
+    const distinctSessionKeys = new Set();
+    classSessions.forEach((cs) => {
+      distinctSessionKeys.add(cs._id.toString());
+    });
+    attendanceRecords.forEach((att) => {
+      if (att.sessionId) {
+        distinctSessionKeys.add(att.sessionId.toString());
+      } else if (att.date) {
+        const dateStr = new Date(att.date).toISOString().split('T')[0];
+        const sName = att.session || att.courseName || 'regular';
+        distinctSessionKeys.add(`${dateStr}_${sName}`);
+      }
+    });
+
+    const totalSessionsHeld = distinctSessionKeys.size;
+
+    // 8. Map attendance per student
+    // Group records by session (or date if no sessionId) to ensure clean single-status per session
+    const studentRecordsMap = new Map();
+    for (const att of attendanceRecords) {
+      const sId = att.student.toString();
+      if (!studentRecordsMap.has(sId)) {
+        studentRecordsMap.set(sId, new Map());
+      }
+      const sessionMap = studentRecordsMap.get(sId);
+      const sessionKey = att.sessionId ? att.sessionId.toString() : (att.date ? new Date(att.date).toISOString().split('T')[0] : att._id.toString());
+
+      if (!sessionMap.has(sessionKey)) {
+        sessionMap.set(sessionKey, att);
+      } else {
+        const existing = sessionMap.get(sessionKey);
+        // Non-Absent status ('Present', 'Late', 'Excused') ALWAYS takes priority over 'Absent'
+        if (existing.status === 'Absent' && att.status !== 'Absent') {
+          sessionMap.set(sessionKey, att);
         }
-      ])
-    ]);
-
-    const courseSessionsMap = {};
-    courseSessionsAgg.forEach((c) => {
-      courseSessionsMap[c._id.toString()] = c.totalSessions;
-    });
-
-    const studentAttendanceMap = {};
-    studentAttendanceAgg.forEach((item) => {
-      const key = `${item._id.student?.toString()}_${item._id.course?.toString() || 'null'}`;
-      studentAttendanceMap[key] = item.attended;
-    });
+      }
+    }
 
     const result = [];
     let grandAttended = 0;
     let grandSessions = 0;
+    let grandLate = 0;
+    let grandExcused = 0;
+    let grandAbsent = 0;
 
     for (const student of students) {
-      const courseBreakdown = [];
-      let totalAttended = 0;
-      let totalSessions = 0;
+      const sId = student._id.toString();
+      const sessionMap = studentRecordsMap.get(sId) || new Map();
+      const dedupedRecords = Array.from(sessionMap.values());
 
-      for (const course of (student.courses || [])) {
-        const cIdStr = course._id.toString();
-        const sessions = courseSessionsMap[cIdStr] || 0;
-        const attended = studentAttendanceMap[`${student._id.toString()}_${cIdStr}`] || 0;
-        const rate = sessions > 0 ? Math.round((attended / sessions) * 100) : (attended > 0 ? 100 : 0);
+      let attended = 0;
+      let late = 0;
+      let excused = 0;
+      let absent = 0;
 
-        courseBreakdown.push({
-          courseName: course.name,
-          courseCode: course.code || '',
-          attended,
-          totalSessions: sessions,
-          rate,
-        });
-
-        totalAttended += attended;
-        totalSessions += sessions;
+      for (const r of dedupedRecords) {
+        if (r.status === 'Present') attended++;
+        else if (r.status === 'Late') {
+          attended++;
+          late++;
+        } else if (r.status === 'Excused') excused++;
+        else if (r.status === 'Absent') absent++;
       }
 
-      grandAttended += totalAttended;
-      grandSessions += totalSessions;
+      // Expected sessions for this student:
+      // If sessions were held, it's at least totalSessionsHeld. If student has recorded sessions, use max.
+      const studentTotalSessions = Math.max(totalSessionsHeld, dedupedRecords.length);
+      const missed = Math.max(0, studentTotalSessions - attended - excused);
+      const studentRate = studentTotalSessions > 0 ? Math.round((attended / studentTotalSessions) * 100) : (attended > 0 ? 100 : 0);
 
-      const studentRate = totalSessions > 0 ? Math.round((totalAttended / totalSessions) * 100) : (totalAttended > 0 ? 100 : 0);
+      grandAttended += attended;
+      grandSessions += studentTotalSessions;
+      grandLate += late;
+      grandExcused += excused;
+      grandAbsent += (absent + missed);
+
       const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ') || student.fullName || 'ተማሪ';
 
       result.push({
@@ -240,23 +381,37 @@ router.get('/grade/:grade', async (req, res) => {
         shift: student.shift || 'weekend',
         phone: student.studentPhone || student.contactPhone || '—',
         email: student.userId?.email || '—',
-        courses: courseBreakdown,
-        overallAttended: totalAttended,
-        overallSessions: totalSessions,
-        overallMissed: Math.max(0, totalSessions - totalAttended),
+        attended,
+        late,
+        excused,
+        absent: absent + missed,
+        overallAttended: attended,
+        overallSessions: studentTotalSessions,
+        overallMissed: missed,
         overallRate: studentRate,
       });
     }
 
-    const averageRate = grandSessions > 0 ? Math.round((grandAttended / grandSessions) * 100) : 0;
+    const averageRate = grandSessions > 0
+      ? Math.round((grandAttended / grandSessions) * 100)
+      : (students.length > 0 ? Math.round(result.reduce((acc, s) => acc + s.overallRate, 0) / students.length) : 0);
 
     res.json({
       success: true,
-      grade,
+      grade: rawGrade,
+      filters: {
+        shift: shift || 'all',
+        studentType: studentType || 'all',
+        startDate: startDate || null,
+        endDate: endDate || null,
+      },
       summary: {
         totalStudents: students.length,
-        totalSessions: grandSessions,
+        totalSessions: totalSessionsHeld,
         totalAttended: grandAttended,
+        totalLate: grandLate,
+        totalExcused: grandExcused,
+        totalAbsent: grandAbsent,
         averageRate,
       },
       students: result,
@@ -456,7 +611,7 @@ router.get('/teacher/:teacherId', async (req, res) => {
 // ---------- 5. By Date Report (Indexed Range with .lean()) ----------
 router.get('/date', async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, shift, grade } = req.query;
     if (!date) return res.status(400).json({ success: false, message: 'date query parameter is required (YYYY-MM-DD)' });
 
     const startOfDay = new Date(date);
@@ -464,7 +619,21 @@ router.get('/date', async (req, res) => {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const records = await Attendance.find({ date: { $gte: startOfDay, $lte: endOfDay } })
+    const query = { date: { $gte: startOfDay, $lte: endOfDay } };
+
+    if (shift && shift !== 'all') {
+      if (shift === 'night') query.shift = 'night';
+      else if (shift === 'weekend' || shift === 'day') query.shift = { $in: ['weekend', 'day', '', null] };
+      else query.shift = shift;
+    }
+
+    if (grade && grade !== 'all') {
+      const num = grade.match(/\d+/);
+      const gradeRegex = num ? new RegExp(`(${num[0]}|${escapeRegex(grade)})`, 'i') : new RegExp(escapeRegex(grade), 'i');
+      query.$or = [{ grade: gradeRegex }, { batch: gradeRegex }];
+    }
+
+    const records = await Attendance.find(query)
       .select('student course teacher date checkInTime status shift session studentName grade courseName teacherName')
       .populate('student', 'firstName middleName lastName studentId grade studentType shift')
       .populate('course', 'name code')
@@ -495,7 +664,11 @@ router.get('/date', async (req, res) => {
       success: true,
       date,
       summary: {
-        totalPresent: formattedRecords.length,
+        totalPresent: formattedRecords.filter(r => r.status === 'Present' || r.status === 'Late').length,
+        totalLate: formattedRecords.filter(r => r.status === 'Late').length,
+        totalAbsent: formattedRecords.filter(r => r.status === 'Absent').length,
+        totalExcused: formattedRecords.filter(r => r.status === 'Excused').length,
+        totalRecords: formattedRecords.length,
       },
       records: formattedRecords,
     });
