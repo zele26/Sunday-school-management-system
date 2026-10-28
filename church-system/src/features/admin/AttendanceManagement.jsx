@@ -169,8 +169,16 @@ const AttendanceManagement = () => {
   const [singleExcuseReason, setSingleExcuseReason] = useState('');
   const [singleCourseId, setSingleCourseId] = useState('');
   const [singleDate, setSingleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [singleSessionId, setSingleSessionId] = useState('');
   const [singleSubmitting, setSingleSubmitting] = useState(false);
   const [singleFeedback, setSingleFeedback] = useState(null);
+  const [availableSessionsForDate, setAvailableSessionsForDate] = useState([]);
+  const [sessionsLoadingForDate, setSessionsLoadingForDate] = useState(false);
+
+  // Session Roster quick student search
+  const [rosterStudentSearch, setRosterStudentSearch] = useState('');
+  const [rosterSearchResults, setRosterSearchResults] = useState([]);
+  const [isSearchingRoster, setIsSearchingRoster] = useState(false);
 
   // 1. Initial Load
   useEffect(() => {
@@ -510,6 +518,66 @@ const AttendanceManagement = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Load class sessions for singleDate
+  useEffect(() => {
+    const fetchDateSessions = async () => {
+      if (!singleDate) return;
+      setSessionsLoadingForDate(true);
+      try {
+        const res = await apiFetch(`/api/education/attendance/sessions?startDate=${singleDate}&endDate=${singleDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.sessions || [];
+          setAvailableSessionsForDate(list);
+          if (selectedStudent && list.length > 0) {
+            const sGrade = (selectedStudent.grade || selectedStudent.batch || '').toLowerCase();
+            const matched = list.find((s) => (s.grade || '').toLowerCase() === sGrade || s.isCombinedSession);
+            if (matched) setSingleSessionId(matched._id);
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching sessions for date:', err);
+      } finally {
+        setSessionsLoadingForDate(false);
+      }
+    };
+    fetchDateSessions();
+  }, [singleDate]);
+
+  // Auto-match session when selectedStudent changes
+  useEffect(() => {
+    if (selectedStudent && availableSessionsForDate.length > 0) {
+      const sGrade = (selectedStudent.grade || selectedStudent.batch || '').toLowerCase();
+      const matched = availableSessionsForDate.find((s) => (s.grade || '').toLowerCase() === sGrade || s.isCombinedSession);
+      if (matched && !singleSessionId) {
+        setSingleSessionId(matched._id);
+      }
+    }
+  }, [selectedStudent, availableSessionsForDate]);
+
+  // Roster modal student search
+  useEffect(() => {
+    if (!rosterStudentSearch.trim() || rosterStudentSearch.length < 2) {
+      setRosterSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingRoster(true);
+      try {
+        const res = await apiFetch(`/api/admin/students?search=${encodeURIComponent(rosterStudentSearch)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data.students || [];
+          setRosterSearchResults(list.slice(0, 5));
+        }
+      } catch (err) {
+      } finally {
+        setIsSearchingRoster(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [rosterStudentSearch]);
+
   const handleSingleCheckIn = async (e) => {
     e.preventDefault();
     if (!selectedStudent) {
@@ -519,25 +587,36 @@ const AttendanceManagement = () => {
     setSingleSubmitting(true);
     setSingleFeedback(null);
     try {
+      const selectedSessionObj = availableSessionsForDate.find((s) => s._id === singleSessionId);
       const res = await apiFetch('/api/admin/attendance/manual', {
         method: 'POST',
         body: JSON.stringify({
           studentId: selectedStudent._id,
           courseId: singleCourseId || null,
+          sessionId: singleSessionId || null,
+          session: selectedSessionObj ? (selectedSessionObj.title || selectedSessionObj.grade) : null,
           status: singleStatus,
           date: singleDate,
+          excuseReason: singleExcuseReason || '',
         }),
       });
       const data = await res.json();
       if (res.ok) {
+        const sessionNotice = selectedSessionObj
+          ? ` [${selectedSessionObj.title || selectedSessionObj.grade}]`
+          : '';
         setSingleFeedback({
           type: 'success',
-          text: `የ${selectedStudent.firstName} ${selectedStudent.lastName} ተገኝነት እንደ [${singleStatus}] ተመዝግቧል!`,
+          text: `የ${selectedStudent.firstName} ${selectedStudent.lastName} ተገኝነት ለ${singleDate}${sessionNotice} እንደ [${singleStatus}] ተመዝግቧል!`,
         });
         setSelectedStudent(null);
         setSearchQuery('');
         setSearchResults([]);
+        setSingleExcuseReason('');
         fetchTodayAttendance();
+        if (activeTab === 'sessions') {
+          fetchSessions();
+        }
       } else {
         setSingleFeedback({ type: 'error', text: data.message || 'ተገኝነት መመዝገብ አልተቻለም' });
       }
@@ -548,19 +627,80 @@ const AttendanceManagement = () => {
     }
   };
 
-  // Stats computation
-  const todayStats = useMemo(() => {
-    return {
-      total: todayRecords.length,
-      present: todayRecords.filter((r) => r.status === 'Present').length,
-      late: todayRecords.filter((r) => r.status === 'Late').length,
-      excused: todayRecords.filter((r) => r.status === 'Excused').length,
-      absent: todayRecords.filter((r) => r.status === 'Absent').length,
-    };
+  // Update a student's status directly in the active session roster modal
+  const handleUpdateStudentSessionStatus = async (studentId, status, studentObj = null) => {
+    if (!selectedSessionForRoster) return;
+    try {
+      const res = await apiFetch('/api/admin/attendance/manual', {
+        method: 'POST',
+        body: JSON.stringify({
+          studentId: studentId || studentObj?._id,
+          sessionId: selectedSessionForRoster._id,
+          session: selectedSessionForRoster.title || selectedSessionForRoster.grade,
+          date: selectedSessionForRoster.sessionDate,
+          status,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'የተማሪው ተገኝነት ተመዝግቧል');
+        setRosterStudentSearch('');
+        setRosterSearchResults([]);
+        handleViewSessionRoster(selectedSessionForRoster);
+        fetchSessions();
+        fetchTodayAttendance();
+      } else {
+        toast.error(data.message || 'ተገኝነት ማስተካከል አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የኔትወርክ ስህተት ተፈጥሯል');
+    }
+  };
+
+  // Deduplicate records by student + session to strictly ensure no student has conflicting statuses (such as Present and Absent)
+  const uniqueTodayRecords = useMemo(() => {
+    const map = new Map();
+    for (const r of todayRecords) {
+      const sId = r.student?._id || r.student || r.studentName;
+      const sessId = r.sessionId?._id || r.sessionId || r.session || (r.date ? new Date(r.date).toISOString().split('T')[0] : '');
+      const key = `${sId}__${sessId}`;
+
+      if (!map.has(key)) {
+        map.set(key, r);
+      } else {
+        const existing = map.get(key);
+        // Non-Absent status ('Present', 'Late', 'Excused') ALWAYS takes priority over 'Absent'
+        if (existing.status === 'Absent' && r.status !== 'Absent') {
+          map.set(key, r);
+        } else if (r.status !== 'Absent' && existing.status === 'Absent') {
+          // keep r
+          map.set(key, r);
+        } else {
+          // Keep newest checkInTime
+          const existingTime = existing.checkInTime ? new Date(existing.checkInTime).getTime() : 0;
+          const newTime = r.checkInTime ? new Date(r.checkInTime).getTime() : 0;
+          if (newTime >= existingTime) {
+            map.set(key, r);
+          }
+        }
+      }
+    }
+    return Array.from(map.values());
   }, [todayRecords]);
 
+  // Stats computation using deduplicated records
+  const todayStats = useMemo(() => {
+    return {
+      total: uniqueTodayRecords.length,
+      present: uniqueTodayRecords.filter((r) => r.status === 'Present').length,
+      late: uniqueTodayRecords.filter((r) => r.status === 'Late').length,
+      excused: uniqueTodayRecords.filter((r) => r.status === 'Excused').length,
+      absent: uniqueTodayRecords.filter((r) => r.status === 'Absent').length,
+    };
+  }, [uniqueTodayRecords]);
+
   const filteredTodayRecords = useMemo(() => {
-    return todayRecords.filter((r) => {
+    return uniqueTodayRecords.filter((r) => {
       const matchesSearch =
         !todaySearch ||
         r.studentName?.toLowerCase().includes(todaySearch.toLowerCase()) ||
@@ -570,7 +710,7 @@ const AttendanceManagement = () => {
         todayStatusFilter === 'all' || r.status?.toLowerCase() === todayStatusFilter.toLowerCase();
       return matchesSearch && matchesStatus;
     });
-  }, [todayRecords, todaySearch, todayStatusFilter]);
+  }, [uniqueTodayRecords, todaySearch, todayStatusFilter]);
 
   return (
     <div className="space-y-6 font-sans">
@@ -818,6 +958,7 @@ const AttendanceManagement = () => {
                   <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold">
                     <th className="py-3 px-3">ተማሪ</th>
                     <th className="py-3 px-3">ክፍል</th>
+                    <th className="py-3 px-3">ክፍለ-ጊዜ (Session)</th>
                     <th className="py-3 px-3">ሰዓት</th>
                     <th className="py-3 px-3">ሁኔታ</th>
                     <th className="py-3 px-3">መዝጋቢ</th>
@@ -826,13 +967,13 @@ const AttendanceManagement = () => {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {todayLoading ? (
                     <tr>
-                      <td colSpan="5" className="py-8 text-center text-slate-400">
+                      <td colSpan="6" className="py-8 text-center text-slate-400">
                         በመጫን ላይ...
                       </td>
                     </tr>
                   ) : filteredTodayRecords.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="py-8 text-center text-slate-400">
+                      <td colSpan="6" className="py-8 text-center text-slate-400">
                         ምንም የተመዘገበ ተማሪ አልተገኘም
                       </td>
                     </tr>
@@ -846,6 +987,15 @@ const AttendanceManagement = () => {
                           </span>
                         </td>
                         <td className="py-3 px-3">{formatGradeAmharic(r.grade)}</td>
+                        <td className="py-3 px-3">
+                          {r.sessionId?.title || r.session || r.sessionId?.grade ? (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-[#1e3a8a] dark:text-blue-300 font-bold text-[10px] border border-blue-200 dark:border-blue-800">
+                              {r.sessionId?.title || r.session || formatGradeAmharic(r.sessionId?.grade)}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[10px]">-</span>
+                          )}
+                        </td>
                         <td className="py-3 px-3 font-mono">
                           {r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                         </td>
@@ -1587,7 +1737,37 @@ const AttendanceManagement = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    ቀን
+                  </label>
+                  <input
+                    type="date"
+                    value={singleDate}
+                    onChange={(e) => setSingleDate(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    ክፍለ-ጊዜ (Session)
+                  </label>
+                  <select
+                    value={singleSessionId}
+                    onChange={(e) => setSingleSessionId(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                  >
+                    <option value="">-- አጠቃላይ / ያለ የተለየ ክፍለ-ጊዜ --</option>
+                    {availableSessionsForDate.map((sess) => (
+                      <option key={sess._id} value={sess._id}>
+                        {formatGradeAmharic(sess.grade)} {sess.title ? `(${sess.title})` : ''} [{sess.startTime} - {sess.endTime}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                     ሁኔታ
@@ -1603,19 +1783,22 @@ const AttendanceManagement = () => {
                     <option value="Absent">አልተገኘም (Absent)</option>
                   </select>
                 </div>
+              </div>
 
+              {singleStatus === 'Excused' && (
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    ቀን
+                    የፈቃድ ምክንያት (Excuse Reason)
                   </label>
                   <input
-                    type="date"
-                    value={singleDate}
-                    onChange={(e) => setSingleDate(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                    type="text"
+                    placeholder="የፈቃድ ምክንያት ይጻፉ..."
+                    value={singleExcuseReason}
+                    onChange={(e) => setSingleExcuseReason(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs"
                   />
                 </div>
-              </div>
+              )}
 
               <div className="pt-2 flex justify-end">
                 <Button
@@ -2540,6 +2723,56 @@ const AttendanceManagement = () => {
               </button>
             </div>
 
+            {/* Quick search & check-in within this session */}
+            <div className="relative">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="በዚህ ክፍለ-ጊዜ ተማሪ በስም ወይም መታወቂያ ፈልገው ይመዝግቡ..."
+                  value={rosterStudentSearch}
+                  onChange={(e) => setRosterStudentSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-xs"
+                />
+              </div>
+
+              {rosterSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700">
+                  {rosterSearchResults.map((st) => (
+                    <div
+                      key={st._id}
+                      className="p-2.5 flex items-center justify-between text-xs hover:bg-slate-50 dark:hover:bg-slate-700/60"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block">
+                          {[st.firstName, st.middleName, st.lastName].filter(Boolean).join(' ')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {st.studentId || '-'} • {formatGradeAmharic(st.grade)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStudentSessionStatus(st._id, 'Present', st)}
+                          className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold"
+                        >
+                          ተገኝቷል
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStudentSessionStatus(st._id, 'Late', st)}
+                          className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold"
+                        >
+                          ዘግይቷል
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {sessionRosterLoading ? (
                 <div className="py-12 text-center text-xs text-slate-400">እየተጫነ ነው...</div>
@@ -2549,7 +2782,7 @@ const AttendanceManagement = () => {
                 sessionRoster.map((s, idx) => (
                   <div
                     key={s.studentId}
-                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs"
+                    className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-5 font-mono text-slate-400">{idx + 1}</span>
@@ -2561,25 +2794,34 @@ const AttendanceManagement = () => {
                       </div>
                     </div>
 
-                    <span
-                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                        s.status === 'Present'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                          : s.status === 'Late'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                          : s.status === 'Absent'
-                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                          : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {s.status === 'Present'
-                        ? 'ተገኝቷል'
-                        : s.status === 'Late'
-                        ? 'ዘግይቷል'
-                        : s.status === 'Absent'
-                        ? 'አልተገኘም'
-                        : 'ገና አልተቃኘም'}
-                    </span>
+                    <div className="flex items-center gap-1 self-end sm:self-auto flex-wrap">
+                      {['Present', 'Late', 'Excused', 'Absent'].map((st) => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleUpdateStudentSessionStatus(s.studentId, st)}
+                          className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            s.status === st
+                              ? st === 'Present'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : st === 'Late'
+                                ? 'bg-amber-500 text-white shadow-xs'
+                                : st === 'Excused'
+                                ? 'bg-blue-600 text-white shadow-xs'
+                                : 'bg-rose-600 text-white shadow-xs'
+                              : 'bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                          }`}
+                        >
+                          {st === 'Present'
+                            ? 'ተገኝቷል'
+                            : st === 'Late'
+                            ? 'ዘግይቷል'
+                            : st === 'Excused'
+                            ? 'ፈቃድ'
+                            : 'አልተገኘም'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ))
               )}

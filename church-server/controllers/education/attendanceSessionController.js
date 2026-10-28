@@ -20,6 +20,8 @@ const {
   autoCloseExpiredSessions,
 } = require('../../services/sessionAutoCloseService');
 
+const escapeRegex = (s) => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Helper: Format grade in Amharic for clear and simple feedback
 const formatGradeLabel = (g) => {
   if (!g) return 'ያልታወቀ ክፍል';
@@ -311,10 +313,12 @@ exports.startSession = async (req, res) => {
 exports.scanStudentInSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const { qrCode } = req.body;
+    const { qrCode, studentId, studentIdentifier, searchQuery, studentName, isManual: manualFlag, status: manualStatus, excuseReason } = req.body;
+    const isManual = Boolean(manualFlag || req.body.manual);
+    const rawSearch = (qrCode || studentId || studentIdentifier || searchQuery || studentName || '').toString().trim();
 
-    if (!qrCode || typeof qrCode !== 'string' || !qrCode.trim()) {
-      return res.status(400).json({ success: false, message: 'ትክክለኛ የQR ኮድ አልቀረበም።' });
+    if (!rawSearch) {
+      return res.status(400).json({ success: false, message: 'የተማሪ መለያ፣ ስም ወይም የQR ኮድ አልቀረበም።' });
     }
 
     // 1. Verify Session & Status
@@ -327,8 +331,8 @@ exports.scanStudentInSession = async (req, res) => {
     const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.isAdmin;
     const timeWindow = getSessionTimeWindowStatus(session, ethTime);
 
-    // 1a. Check if session has expired past its scheduled endTime
-    if (timeWindow.state === 'expired' || timeWindow.state === 'closed') {
+    // 1a. Check if session has expired past its scheduled endTime (allow override if admin or manual check-in)
+    if ((timeWindow.state === 'expired' || timeWindow.state === 'closed') && !isAdmin && !isManual) {
       await autoCloseSingleSession(session);
       return res.status(400).json({
         success: false,
@@ -338,7 +342,7 @@ exports.scanStudentInSession = async (req, res) => {
     }
 
     // 1b. Check if taker is scanning too early (> 20 min before start time)
-    if (timeWindow.state === 'too_early' && !isAdmin && !req.body.adminOverride) {
+    if (timeWindow.state === 'too_early' && !isAdmin && !isManual && !req.body.adminOverride) {
       return res.status(400).json({
         success: false,
         status: 'too_early',
@@ -370,7 +374,7 @@ exports.scanStudentInSession = async (req, res) => {
     }
 
     // 3. Decode QR Token & Find Student
-    const trimmedQr = qrCode.trim();
+    const trimmedQr = rawSearch;
     let searchId = trimmedQr;
 
     try {
@@ -469,6 +473,29 @@ exports.scanStudentInSession = async (req, res) => {
     if (certStudentId) queryConditions.push({ _id: certStudentId });
     if (mongoose.Types.ObjectId.isValid(searchId)) queryConditions.push({ _id: searchId }, { userId: searchId });
     if (mongoose.Types.ObjectId.isValid(trimmedQr)) queryConditions.push({ _id: trimmedQr }, { userId: trimmedQr });
+
+    // Step 0: Search by Student name if searchId contains letters
+    if (searchId.length >= 2 && !/^\d+$/.test(searchId)) {
+      const parts = searchId.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        queryConditions.push({
+          firstName: { $regex: new RegExp(`^${escapeRegex(parts[0])}`, 'i') },
+          lastName: { $regex: new RegExp(`^${escapeRegex(parts[parts.length - 1])}`, 'i') },
+        });
+        if (parts.length >= 3) {
+          queryConditions.push({
+            firstName: { $regex: new RegExp(`^${escapeRegex(parts[0])}`, 'i') },
+            middleName: { $regex: new RegExp(`^${escapeRegex(parts[1])}`, 'i') },
+            lastName: { $regex: new RegExp(`^${escapeRegex(parts[2])}`, 'i') },
+          });
+        }
+      }
+      queryConditions.push(
+        { firstName: { $regex: new RegExp(`^${escapeRegex(searchId)}$`, 'i') } },
+        { lastName: { $regex: new RegExp(`^${escapeRegex(searchId)}$`, 'i') } },
+        { christianName: { $regex: new RegExp(`^${escapeRegex(searchId)}$`, 'i') } }
+      );
+    }
 
     // Step 1: Direct find on Student
     let student = await Student.findOne({ $or: queryConditions });
@@ -636,13 +663,115 @@ exports.scanStudentInSession = async (req, res) => {
       }
     }
 
-    // 5. Check for Duplicate Attendance in this session
+    // 5. Check for Duplicate Attendance in this session or on this session date
+    const sessionDateStart = new Date(session.sessionDate);
+    sessionDateStart.setHours(0, 0, 0, 0);
+    const sessionDateEnd = new Date(sessionDateStart);
+    sessionDateEnd.setDate(sessionDateEnd.getDate() + 1);
+
     const existingAttendance = await Attendance.findOne({
-      sessionId: session._id,
-      student: student._id,
-    });
+      $or: [
+        { sessionId: session._id, student: student._id },
+        {
+          student: student._id,
+          date: { $gte: sessionDateStart, $lt: sessionDateEnd },
+          ...(session.course ? { course: session.course } : {}),
+        }
+      ]
+    }).sort({ updatedAt: -1, createdAt: -1 });
+
+    const now = new Date();
+    const startMinutes = parseTimeToMinutes(session.startTime);
+    const lateThresholdMinutes = Number(session.lateThresholdMinutes) >= 0 ? Number(session.lateThresholdMinutes) : 15;
+
+    let calculatedStatus = 'Present';
+    if (manualStatus && ['Present', 'Late', 'Excused', 'Absent'].includes(manualStatus)) {
+      calculatedStatus = manualStatus;
+    } else if (session.sessionDate === ethTime.dateString && startMinutes !== null) {
+      const lateCutoffMinutes = startMinutes + lateThresholdMinutes;
+      if (ethTime.totalMinutes > lateCutoffMinutes) {
+        calculatedStatus = 'Late';
+      }
+    } else if (session.sessionDate < ethTime.dateString) {
+      calculatedStatus = 'Late';
+    }
 
     if (existingAttendance) {
+      // 5a. If student was previously marked 'Absent' (e.g. on session auto-close or manual absent),
+      // and they are now scanning in or manually updated, OVERRIDE 'Absent' with their actual arrival status!
+      const isAbsentOverride = existingAttendance.status === 'Absent' && (!manualStatus || manualStatus !== 'Absent');
+      const isManualStatusChange = (isManual || manualStatus) && manualStatus && existingAttendance.status !== manualStatus;
+
+      if (isAbsentOverride || isManualStatusChange) {
+        const targetStatus = isManualStatusChange ? manualStatus : calculatedStatus;
+        existingAttendance.status = targetStatus;
+        existingAttendance.sessionId = session._id;
+        existingAttendance.session = session.title || session.grade || 'Session';
+        existingAttendance.checkInTime = now;
+        existingAttendance.scannedAt = now;
+        existingAttendance.scanMethod = isManual ? 'manual_override' : 'qr_scan';
+        if (excuseReason) {
+          existingAttendance.excuseReason = excuseReason;
+          existingAttendance.note = excuseReason;
+        }
+        existingAttendance.updatedBy = req.user._id;
+        await existingAttendance.save();
+
+        // STRICT GUARANTEE: Delete any other duplicate records for this student and session/date
+        await Attendance.deleteMany({
+          _id: { $ne: existingAttendance._id },
+          $or: [
+            { sessionId: session._id, student: student._id },
+            {
+              student: student._id,
+              date: { $gte: sessionDateStart, $lt: sessionDateEnd },
+              ...(session.course ? { course: session.course } : {}),
+            }
+          ]
+        });
+
+        // Recalculate stats cleanly
+        const presentCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Present' });
+        const lateCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Late' });
+        const absentCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Absent' });
+        const excusedCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Excused' });
+        session.stats = {
+          ...session.stats,
+          presentCount,
+          lateCount,
+          absentCount,
+          excusedCount,
+        };
+        await session.save();
+
+        const messageText = isAbsentOverride
+          ? `✅ ${studentFullName} ቀደም ሲል ቀሪ የነበረው አሁን [${targetStatus}] ተብሎ ተስተካክሏል።`
+          : `✅ የ${studentFullName} ተገኝነት ወደ [${targetStatus}] ተቀይሯል።`;
+
+        return res.status(200).json({
+          success: true,
+          status: targetStatus.toLowerCase(),
+          attendanceStatus: targetStatus,
+          message: messageText,
+          student: {
+            id: student._id,
+            studentId: student.studentId,
+            name: studentFullName,
+            grade: studentGrade,
+            photoUrl: student.photoUrl,
+            phone: student.studentPhone,
+          },
+          sessionStats: session.stats,
+        });
+      }
+
+      // Purge any accidental duplicates for this student in this session
+      await Attendance.deleteMany({
+        _id: { $ne: existingAttendance._id },
+        sessionId: session._id,
+        student: student._id,
+      });
+
       const statusLabel = existingAttendance.status === 'Late' ? 'ዘግይቷል' : existingAttendance.status === 'Excused' ? 'ፈቃድ' : 'ተገኝቷል';
       return res.status(200).json({
         success: true,
@@ -662,27 +791,12 @@ exports.scanStudentInSession = async (req, res) => {
       });
     }
 
-    // 6. Calculate Present vs Late using accurate Ethiopian / East Africa Time
-    const now = new Date();
-    const startMinutes = parseTimeToMinutes(session.startTime);
-    const lateThresholdMinutes = Number(session.lateThresholdMinutes) >= 0 ? Number(session.lateThresholdMinutes) : 15;
-
-    let calculatedStatus = 'Present';
-
-    if (session.sessionDate === ethTime.dateString && startMinutes !== null) {
-      const lateCutoffMinutes = startMinutes + lateThresholdMinutes;
-      if (ethTime.totalMinutes > lateCutoffMinutes) {
-        calculatedStatus = 'Late';
-      }
-    } else if (session.sessionDate < ethTime.dateString) {
-      calculatedStatus = 'Late';
-    }
-
-    // 7. Save Attendance Record (Gracefully handles duplicate / concurrency)
+    // 6. Save Attendance Record (Gracefully handles duplicate / concurrency)
     let attendanceRecord;
     try {
       attendanceRecord = await Attendance.create({
         sessionId: session._id,
+        session: session.title || session.grade || 'Session',
         student: student._id,
         studentProfileId: student.studentProfileId || null,
         course: session.course || null,
@@ -692,18 +806,42 @@ exports.scanStudentInSession = async (req, res) => {
         shift: student.shift || '',
         teacher: req.user._id,
         teacherName: req.user.fullName || '',
-        date: new Date(session.sessionDate),
+        date: req.body.date ? new Date(req.body.date) : new Date(session.sessionDate),
         checkInTime: now,
         scannedAt: now,
-        scanMethod: 'qr_scan',
+        scanMethod: isManual ? 'manual_override' : 'qr_scan',
         status: calculatedStatus,
+        excuseReason: excuseReason || '',
+        note: excuseReason || '',
         recordedBy: req.user._id,
+      });
+
+      // STRICT GUARANTEE: Delete any other duplicate records for this student and session/date
+      await Attendance.deleteMany({
+        _id: { $ne: attendanceRecord._id },
+        $or: [
+          { sessionId: session._id, student: student._id },
+          {
+            student: student._id,
+            date: { $gte: sessionDateStart, $lt: sessionDateEnd },
+            ...(session.course ? { course: session.course } : {}),
+          }
+        ]
       });
     } catch (createErr) {
       if (createErr.code === 11000) {
         // Find existing attendance if duplicate
         const existing = await Attendance.findOne({ sessionId: session._id, student: student._id });
         if (existing) {
+          // If the duplicate was an Absent record and we are scanning, update it
+          if (existing.status === 'Absent' && calculatedStatus !== 'Absent') {
+            existing.status = calculatedStatus;
+            existing.checkInTime = now;
+            existing.scannedAt = now;
+            existing.scanMethod = isManual ? 'manual_override' : 'qr_scan';
+            await existing.save();
+          }
+
           const statusLabel = existing.status === 'Late' ? 'ዘግይቷል' : existing.status === 'Excused' ? 'ፈቃድ' : 'ተገኝቷል';
           return res.status(200).json({
             success: true,
@@ -785,9 +923,35 @@ exports.closeSession = async (req, res) => {
     // 1. Find all expected active students in this class and shift
     const expectedStudents = await Student.find(getExpectedStudentsQuery(session));
 
-    // 2. Find all existing attendance records for this session
-    const existingRecords = await Attendance.find({ sessionId: session._id });
-    const attendedStudentIdMap = new Set(existingRecords.map(r => r.student.toString()));
+    // 2. Find all existing attendance records for this session or on this session date
+    const sessionDateStart = new Date(session.sessionDate);
+    sessionDateStart.setHours(0, 0, 0, 0);
+    const sessionDateEnd = new Date(sessionDateStart);
+    sessionDateEnd.setDate(sessionDateEnd.getDate() + 1);
+
+    const existingRecords = await Attendance.find({
+      $or: [
+        { sessionId: session._id },
+        {
+          student: { $in: expectedStudents.map(s => s._id) },
+          date: { $gte: sessionDateStart, $lt: sessionDateEnd },
+          ...(session.course ? { course: session.course } : {}),
+        }
+      ]
+    });
+
+    const attendedStudentIdMap = new Set();
+    for (const r of existingRecords) {
+      if (r.student) {
+        attendedStudentIdMap.add(r.student.toString());
+        // If recorded for this class/date without sessionId, link it to this session
+        if (!r.sessionId) {
+          r.sessionId = session._id;
+          r.session = session.title || session.grade;
+          await r.save().catch(() => {});
+        }
+      }
+    }
 
     // 3. For any expected student without a record, auto-create Absent record
     const absentRecordsToInsert = [];
@@ -797,6 +961,7 @@ exports.closeSession = async (req, res) => {
       if (!attendedStudentIdMap.has(student._id.toString())) {
         absentRecordsToInsert.push({
           sessionId: session._id,
+          session: session.title || session.grade || 'Session',
           student: student._id,
           studentProfileId: student.studentProfileId || null,
           course: session.course || null,
@@ -806,7 +971,7 @@ exports.closeSession = async (req, res) => {
           shift: student.shift || '',
           teacher: req.user._id,
           teacherName: req.user.fullName || '',
-          date: new Date(session.sessionDate),
+          date: sessionDateStart,
           checkInTime: now,
           scannedAt: now,
           scanMethod: 'auto_absent_on_close',
@@ -817,10 +982,39 @@ exports.closeSession = async (req, res) => {
     }
 
     if (absentRecordsToInsert.length > 0) {
-      await Attendance.insertMany(absentRecordsToInsert);
+      await Attendance.insertMany(absentRecordsToInsert, { ordered: false }).catch(() => {});
     }
 
-    // 4. Update session status and recalculate final stats
+    // 4. STRICT DEDUPLICATION: Purge any conflicting duplicate records for any student in this session.
+    // If a student has both an Absent record and a Present/Late/Excused record, delete the Absent record!
+    const allSessionRecords = await Attendance.find({ sessionId: session._id }).sort({ updatedAt: -1, createdAt: -1 });
+    const seenStudentRecords = new Map();
+    const idsToDelete = [];
+
+    for (const rec of allSessionRecords) {
+      const sId = rec.student.toString();
+      if (!seenStudentRecords.has(sId)) {
+        seenStudentRecords.set(sId, rec);
+      } else {
+        const prev = seenStudentRecords.get(sId);
+        // If one is Absent and the other is Present/Late/Excused, delete the Absent record
+        if (rec.status === 'Absent' && prev.status !== 'Absent') {
+          idsToDelete.push(rec._id);
+        } else if (prev.status === 'Absent' && rec.status !== 'Absent') {
+          idsToDelete.push(prev._id);
+          seenStudentRecords.set(sId, rec);
+        } else {
+          // If both have identical status, delete the older duplicate
+          idsToDelete.push(rec._id);
+        }
+      }
+    }
+
+    if (idsToDelete.length > 0) {
+      await Attendance.deleteMany({ _id: { $in: idsToDelete } });
+    }
+
+    // 5. Update session status and recalculate final stats cleanly
     const presentCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Present' });
     const lateCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Late' });
     const absentCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Absent' });
@@ -873,12 +1067,33 @@ exports.getSessionLiveRoster = async (req, res) => {
     // Find all expected students matching class, track and shift
     const expectedStudents = await Student.find(getExpectedStudentsQuery(session)).sort({ firstName: 1 });
 
-    // Find all attendance records
-    const attendanceRecords = await Attendance.find({ sessionId: session._id });
+    // Find all attendance records, sorting newest first
+    const attendanceRecords = await Attendance.find({ sessionId: session._id }).sort({ updatedAt: -1, createdAt: -1 });
     const attendanceMap = new Map();
+    const duplicateIdsToRemove = [];
+
+    // Prioritize non-Absent status if duplicate records exist
     attendanceRecords.forEach(att => {
-      attendanceMap.set(att.student.toString(), att);
+      const sId = att.student.toString();
+      if (!attendanceMap.has(sId)) {
+        attendanceMap.set(sId, att);
+      } else {
+        const existing = attendanceMap.get(sId);
+        if (existing.status === 'Absent' && att.status !== 'Absent') {
+          duplicateIdsToRemove.push(existing._id);
+          attendanceMap.set(sId, att);
+        } else if (att.status === 'Absent' && existing.status !== 'Absent') {
+          duplicateIdsToRemove.push(att._id);
+        } else {
+          duplicateIdsToRemove.push(att._id);
+        }
+      }
     });
+
+    // Clean up duplicate records in background
+    if (duplicateIdsToRemove.length > 0) {
+      Attendance.deleteMany({ _id: { $in: duplicateIdsToRemove } }).catch(() => {});
+    }
 
     const roster = expectedStudents.map(student => {
       const att = attendanceMap.get(student._id.toString());

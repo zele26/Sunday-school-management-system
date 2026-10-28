@@ -141,7 +141,47 @@ const QRScanner = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Search students by name or ID
+  useEffect(() => {
+    if (!searchTerm.trim() || searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await apiFetch(`/api/admin/students?search=${encodeURIComponent(searchTerm)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data.students || [];
+          setSearchResults(list.slice(0, 6));
+        }
+      } catch (err) {
+      } finally {
+        setIsSearching(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const handleManualStudentCheckIn = async (student, status = 'Present') => {
+    setSearchTerm('');
+    setSearchResults([]);
+    await processAttendanceRecord(
+      {
+        studentId: student._id,
+        qrCode: student.studentId || student._id,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        name: [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' '),
+        grade: student.grade || student.batch,
+        status,
+        isManual: true,
+      },
+      true
+    );
+  };
 
   // Live session scanned list & stats
   const [recentScans, setRecentScans] = useState([]);
@@ -330,6 +370,10 @@ const QRScanner = () => {
           method: 'POST',
           body: JSON.stringify({
             qrCode: payload.qrCode || payload.studentId || payload._id,
+            studentId: payload.studentId || payload._id,
+            studentName: payload.name || (payload.firstName ? `${payload.firstName || ''} ${payload.lastName || ''}`.trim() : undefined),
+            status: payload.status,
+            isManual: Boolean(isManual || payload.isManual),
           }),
         });
 
@@ -1215,6 +1259,69 @@ const QRScanner = () => {
                   <span>{isAm ? 'ምስል ጫን' : 'Upload'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Manual Student Search & Check-In */}
+          <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#0f4c9c]" />
+              <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                {isAm ? 'ተማሪ በስም ፈልገህ መዝግብ (Manual Check-In)' : 'Manual Student Check-In'}
+              </h4>
+            </div>
+
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={isAm ? 'የተማሪ ስም ወይም መለያ ቁጥር ይጻፉ...' : 'Search student by name or ID...'}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-white"
+              />
+
+              {searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-700">
+                  {searchResults.map((s) => (
+                    <div
+                      key={s._id}
+                      className="p-3 text-left hover:bg-blue-50 dark:hover:bg-slate-700 flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block">
+                          {[s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {s.studentId || '-'} • {formatGradeAmharic(s.grade)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleManualStudentCheckIn(s, 'Present')}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
+                        >
+                          {isAm ? 'ተገኝቷል' : 'Present'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleManualStudentCheckIn(s, 'Late')}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white cursor-pointer"
+                        >
+                          {isAm ? 'ዘግይቷል' : 'Late'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleManualStudentCheckIn(s, 'Excused')}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                        >
+                          {isAm ? 'ፈቃድ' : 'Excused'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

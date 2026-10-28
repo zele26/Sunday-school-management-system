@@ -69,6 +69,38 @@ const connectToDatabase = async () => {
           await attendanceColl.dropIndex(idx.name).catch(() => {});
         }
       }
+
+      // Purge any pre-existing duplicate records where the same student has multiple records for the same session
+      const duplicates = await attendanceColl.aggregate([
+        { $match: { sessionId: { $exists: true, $ne: null } } },
+        {
+          $group: {
+            _id: { sessionId: '$sessionId', student: '$student' },
+            count: { $sum: 1 },
+            docs: { $push: { id: '$_id', status: '$status', updatedAt: '$updatedAt' } }
+          }
+        },
+        { $match: { count: { $gt: 1 } } }
+      ]).toArray().catch(() => []);
+
+      if (duplicates && duplicates.length > 0) {
+        console.log(`🧹 Found ${duplicates.length} duplicate session attendances. Purging redundant records...`);
+        const idsToRemove = [];
+        for (const group of duplicates) {
+          // Keep non-Absent record, or latest updated
+          const nonAbsent = group.docs.find(d => d.status !== 'Absent');
+          const keepId = nonAbsent ? nonAbsent.id : group.docs[group.docs.length - 1].id;
+          for (const d of group.docs) {
+            if (d.id.toString() !== keepId.toString()) {
+              idsToRemove.push(d.id);
+            }
+          }
+        }
+        if (idsToRemove.length > 0) {
+          await attendanceColl.deleteMany({ _id: { $in: idsToRemove } });
+          console.log(`✅ Cleaned up ${idsToRemove.length} duplicate attendance records.`);
+        }
+      }
     } catch (idxErr) {
       // Non-blocking index check
     }
