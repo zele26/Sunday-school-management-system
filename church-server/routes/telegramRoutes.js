@@ -1,6 +1,7 @@
 // routes/telegramRoutes.js
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { protect, authorize } = require('../middleware/auth');
 const User = require('../models/User');
@@ -60,18 +61,41 @@ router.post('/auth', async (req, res) => {
       student = await Student.findOne({ telegramChatId: targetTgId });
     }
 
-    // 2. If student found but user not yet resolved
-    if (student && !user && student.userId) {
-      user = await User.findById(student.userId);
-    }
-
-    // 3. Fallback by phone if provided
-    if (!user && phone) {
-      const cleanDigits = String(phone).replace(/\D/g, '').slice(-9);
+    // 2. If phone is provided or available, try looking up both User and Student
+    const rawPhone = phone || tgUser?.phone_number;
+    if (rawPhone) {
+      const cleanDigits = String(rawPhone).replace(/\D/g, '').slice(-9);
       if (cleanDigits.length >= 8) {
         const phoneRegex = new RegExp(cleanDigits + '$');
-        user = await User.findOne({ phone: phoneRegex });
+        if (!user) {
+          user = await User.findOne({ phone: phoneRegex });
+        }
         if (!student) {
+          student = await Student.findOne({
+            $or: [
+              { studentPhone: phoneRegex },
+              { contactPhone: phoneRegex },
+              { parentPhone: phoneRegex },
+              { emergencyPhone: phoneRegex }
+            ]
+          });
+        }
+      }
+    }
+
+    // 3. Bidirectional resolution between user and student
+    // 3a. If user found but student not yet resolved
+    if (user && !student) {
+      if (user.studentProfileId) {
+        student = await Student.findById(user.studentProfileId);
+      }
+      if (!student) {
+        student = await Student.findOne({ userId: user._id });
+      }
+      if (!student && user.phone) {
+        const cleanDigits = String(user.phone).replace(/\D/g, '').slice(-9);
+        if (cleanDigits.length >= 8) {
+          const phoneRegex = new RegExp(cleanDigits + '$');
           student = await Student.findOne({
             $or: [{ studentPhone: phoneRegex }, { contactPhone: phoneRegex }]
           });
@@ -79,53 +103,129 @@ router.post('/auth', async (req, res) => {
       }
     }
 
-    // If still no account is linked to this Telegram user
+    // 3b. If student found but user not yet resolved
+    if (student && !user) {
+      if (student.userId) {
+        user = await User.findById(student.userId);
+      }
+      if (!user) {
+        user = await User.findOne({ studentProfileId: student._id });
+      }
+      if (!user && (student.studentPhone || student.contactPhone)) {
+        const cleanDigits = String(student.studentPhone || student.contactPhone).replace(/\D/g, '').slice(-9);
+        if (cleanDigits.length >= 8) {
+          user = await User.findOne({ phone: new RegExp(cleanDigits + '$') });
+        }
+      }
+    }
+
+    // 4. If student exists but no User account exists, auto-provision user account for student
+    if (student && !user) {
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const fullName = `${student.firstName || ''} ${student.middleName ? student.middleName + ' ' : ''}${student.lastName || ''}`.trim() || 'Student';
+      const studentEmail = student.email || (student.studentId ? `${student.studentId.toLowerCase().replace(/[^a-z0-9]/g, '')}@sundayschool.local` : undefined);
+
+      user = await User.create({
+        fullName,
+        phone: student.studentPhone || student.contactPhone || undefined,
+        email: studentEmail,
+        password: randomPassword,
+        role: 'student',
+        roles: ['student'],
+        status: 'approved',
+        studentProfileId: student._id,
+        telegramChatId: targetTgId || student.telegramChatId || undefined,
+        telegramUsername: tgUser?.username || student.telegramUsername || undefined,
+      });
+
+      student.userId = user._id;
+      await student.save({ validateBeforeSave: false });
+    }
+
+    // 5. If still neither user nor student found
     if (!user && !student) {
       return res.status(404).json({
         success: false,
         isLinked: false,
-        message: 'Your Telegram account is not linked to any Sunday school student profile yet. Please share your phone number in the Telegram bot first.',
+        message: 'የቴሌግራም አካውንትዎ እስካሁን ከሰንበት ት/ቤት መረጃዎ ጋር አልተገናኘም። እባክዎ በመጀመሪያ በቦቱ በኩል ስልክ ቁጥርዎን ያጋሩ። (Your Telegram account is not linked to any Sunday school student profile yet. Please share your phone number in the Telegram bot first.)',
         telegramUser: tgUser
       });
     }
 
-    // If user document exists, create access token
+    // 6. Ensure bidirectional linkage & save telegramChatId if available
+    let needUserSave = false;
+    let needStudentSave = false;
+
     if (user) {
-      // Ensure student is linked if present
-      if (!student) {
-        student = await Student.findOne({ userId: user._id });
+      if (targetTgId && user.telegramChatId !== targetTgId) {
+        user.telegramChatId = targetTgId;
+        user.telegramLinkedAt = new Date();
+        needUserSave = true;
       }
-
-      const accessToken = generateAccessToken(user._id, user.role);
-
-      return res.json({
-        success: true,
-        isLinked: true,
-        accessToken,
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          roles: user.roles || [user.role],
-          permissions: user.permissions || [],
-          studentId: student?.studentId || undefined,
-          studentProfileId: student?._id || user.studentProfileId || undefined,
-          grade: student?.grade || student?.batch || undefined,
-        },
-        student: student ? {
-          id: student._id,
-          studentId: student.studentId,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          grade: student.grade,
-          studentType: student.studentType,
-        } : null,
-      });
+      if (tgUser?.username && user.telegramUsername !== tgUser.username) {
+        user.telegramUsername = tgUser.username;
+        needUserSave = true;
+      }
+      if (student && !user.studentProfileId) {
+        user.studentProfileId = student._id;
+        needUserSave = true;
+      }
+      if (needUserSave) {
+        await user.save({ validateBeforeSave: false });
+      }
     }
 
-    return res.status(404).json({ success: false, message: 'User account not found' });
+    if (student) {
+      if (targetTgId && student.telegramChatId !== targetTgId) {
+        student.telegramChatId = targetTgId;
+        needStudentSave = true;
+      }
+      if (tgUser?.username && student.telegramUsername !== tgUser.username) {
+        student.telegramUsername = tgUser.username;
+        needStudentSave = true;
+      }
+      if (user && !student.userId) {
+        student.userId = user._id;
+        needStudentSave = true;
+      }
+      if (needStudentSave) {
+        await student.save({ validateBeforeSave: false });
+      }
+    }
+
+    // 7. Generate access token & return full authenticated user and student profile
+    const accessToken = generateAccessToken(user._id, user.role);
+
+    return res.json({
+      success: true,
+      isLinked: true,
+      accessToken,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        roles: user.roles || [user.role],
+        permissions: user.permissions || [],
+        studentId: student?.studentId || user.studentId || undefined,
+        studentProfileId: student?._id || user.studentProfileId || undefined,
+        grade: student?.grade || student?.batch || undefined,
+        shift: student?.shift || undefined,
+        photoUrl: student?.photoUrl || user.profilePicture || undefined,
+      },
+      student: student ? {
+        id: student._id,
+        studentId: student.studentId,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        grade: student.grade,
+        batch: student.batch,
+        shift: student.shift,
+        studentType: student.studentType,
+        photoUrl: student.photoUrl,
+      } : null,
+    });
   } catch (err) {
     console.error('Telegram auth error:', err);
     res.status(500).json({ success: false, message: err.message });
@@ -529,22 +629,62 @@ router.post('/link-current-user', protect, async (req, res) => {
       return res.status(400).json({ success: false, message: 'telegramChatId is required' });
     }
 
-    await User.findByIdAndUpdate(req.user._id, {
-      telegramChatId: String(telegramChatId),
-      telegramUsername: telegramUsername || '',
-      telegramLinkedAt: new Date(),
-    });
+    const targetChatId = String(telegramChatId);
+    const targetUsername = telegramUsername || '';
 
-    await Student.findOneAndUpdate(
-      { userId: req.user._id },
+    // Update User
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
       {
-        telegramChatId: String(telegramChatId),
-        telegramUsername: telegramUsername || '',
-      }
+        telegramChatId: targetChatId,
+        telegramUsername: targetUsername,
+        telegramLinkedAt: new Date(),
+      },
+      { new: true }
     );
 
-    res.json({ success: true, message: 'Telegram account successfully linked!' });
+    // Build conditions to find student profile
+    const studentConds = [{ userId: req.user._id }];
+    if (req.user.studentProfileId) {
+      studentConds.push({ _id: req.user.studentProfileId });
+    }
+    if (req.user.phone) {
+      const cleanDigits = String(req.user.phone).replace(/\D/g, '').slice(-9);
+      if (cleanDigits.length >= 8) {
+        studentConds.push({ studentPhone: new RegExp(cleanDigits + '$') });
+      }
+    }
+
+    // Update Student and link to user
+    const updatedStudent = await Student.findOneAndUpdate(
+      { $or: studentConds },
+      {
+        telegramChatId: targetChatId,
+        telegramUsername: targetUsername,
+        userId: req.user._id,
+      },
+      { new: true }
+    );
+
+    // If User didn't have studentProfileId, update it
+    if (updatedStudent && (!updatedUser.studentProfileId || String(updatedUser.studentProfileId) !== String(updatedStudent._id))) {
+      await User.findByIdAndUpdate(req.user._id, {
+        studentProfileId: updatedStudent._id,
+        studentId: updatedStudent.studentId || undefined,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Telegram account successfully linked!',
+      linkedUser: {
+        id: req.user._id,
+        telegramChatId: targetChatId,
+        studentId: updatedStudent?.studentId,
+      }
+    });
   } catch (err) {
+    console.error('Link current user error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
