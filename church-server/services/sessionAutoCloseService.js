@@ -245,8 +245,34 @@ const autoCloseSingleSession = async (session) => {
 
   try {
     const expectedStudents = await Student.find(getExpectedStudentsQuery(session));
-    const existingRecords = await Attendance.find({ sessionId: session._id });
-    const attendedStudentIdSet = new Set(existingRecords.map((r) => r.student.toString()));
+    const sessionDateStart = new Date(session.sessionDate);
+    sessionDateStart.setHours(0, 0, 0, 0);
+    const sessionDateEnd = new Date(sessionDateStart);
+    sessionDateEnd.setDate(sessionDateEnd.getDate() + 1);
+
+    // Find all existing records for this session or on this session date for these students
+    const existingRecords = await Attendance.find({
+      $or: [
+        { sessionId: session._id },
+        {
+          student: { $in: expectedStudents.map((s) => s._id) },
+          date: { $gte: sessionDateStart, $lt: sessionDateEnd },
+          ...(session.course ? { course: session.course } : {}),
+        },
+      ],
+    });
+
+    const attendedStudentIdSet = new Set();
+    for (const r of existingRecords) {
+      if (r.student) {
+        attendedStudentIdSet.add(r.student.toString());
+        if (!r.sessionId) {
+          r.sessionId = session._id;
+          r.session = session.title || session.grade;
+          await r.save().catch(() => {});
+        }
+      }
+    }
 
     const now = new Date();
     const absentRecords = [];
@@ -255,6 +281,7 @@ const autoCloseSingleSession = async (session) => {
       if (!attendedStudentIdSet.has(student._id.toString())) {
         absentRecords.push({
           sessionId: session._id,
+          session: session.title || session.grade || 'Session',
           student: student._id,
           studentProfileId: student.studentProfileId || null,
           course: session.course || null,
@@ -264,7 +291,7 @@ const autoCloseSingleSession = async (session) => {
           shift: student.shift || '',
           teacher: session.openedBy || session.assignedTakers?.[0] || null,
           teacherName: 'Auto System',
-          date: new Date(session.sessionDate),
+          date: sessionDateStart,
           checkInTime: now,
           scannedAt: now,
           scanMethod: 'auto_absent_on_close',
@@ -275,6 +302,32 @@ const autoCloseSingleSession = async (session) => {
 
     if (absentRecords.length > 0) {
       await Attendance.insertMany(absentRecords, { ordered: false }).catch(() => {});
+    }
+
+    // Purge duplicate records for any student in this session (e.g. if one was Present and one was Absent)
+    const allSessionRecords = await Attendance.find({ sessionId: session._id }).sort({ updatedAt: -1, createdAt: -1 });
+    const seenMap = new Map();
+    const idsToDelete = [];
+
+    for (const rec of allSessionRecords) {
+      const sId = rec.student.toString();
+      if (!seenMap.has(sId)) {
+        seenMap.set(sId, rec);
+      } else {
+        const prev = seenMap.get(sId);
+        if (rec.status === 'Absent' && prev.status !== 'Absent') {
+          idsToDelete.push(rec._id);
+        } else if (prev.status === 'Absent' && rec.status !== 'Absent') {
+          idsToDelete.push(prev._id);
+          seenMap.set(sId, rec);
+        } else {
+          idsToDelete.push(rec._id);
+        }
+      }
+    }
+
+    if (idsToDelete.length > 0) {
+      await Attendance.deleteMany({ _id: { $in: idsToDelete } });
     }
 
     const presentCount = await Attendance.countDocuments({ sessionId: session._id, status: 'Present' });

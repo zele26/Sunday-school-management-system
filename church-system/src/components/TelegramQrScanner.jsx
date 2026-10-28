@@ -144,7 +144,7 @@ export default function TelegramQrScanner({ onScanSuccess, defaultSession = 'Reg
             type="text"
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
-            placeholder="የተማሪ መለያ ቁጥር (ምሳሌ፦ STU-2026-0042 ወይም ስልክ)"
+            placeholder="የተማሪ ስም፣ መለያ ቁጥር ወይም ስልክ (ምሳሌ፦ አበበ ወይም STU-2026-0042)"
             className="w-full bg-slate-950/60 border border-white/15 rounded-xl pl-10 pr-24 py-2.5 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-400"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

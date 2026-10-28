@@ -2599,15 +2599,18 @@ const recordAttendanceFromQr = async ({
   courseId = null,
   status = 'Present',
   session = 'Regular',
+  sessionId = null,
+  date = null,
   recordedBySource = 'Telegram',
 }) => {
   try {
     if (!studentIdentifier || String(studentIdentifier).trim() === '') {
-      return { success: false, message: 'የተማሪ መለያ ቁጥር ያስፈልጋል (Student identifier is required)' };
+      return { success: false, message: 'የተማሪ መለያ ቁጥር ወይም ስም ያስፈልጋል (Student identifier or name is required)' };
     }
 
     const cleanInput = String(studentIdentifier).trim();
     const mongoose = require('mongoose');
+    const ClassSession = require('../models/education/ClassSession');
 
     // 1. Resolve Teacher
     let teacherUser = null;
@@ -2617,7 +2620,7 @@ const recordAttendanceFromQr = async ({
       teacherUser = await User.findOne({ telegramChatId: String(teacherTelegramId) }).catch(() => null);
     }
 
-    // 2. Resolve Student by ID, Student ID, Registration Number, or Phone
+    // 2. Resolve Student by ID, Student ID, Registration Number, Phone, or Name
     const queryOr = [
       { studentId: cleanInput },
       { studentId: cleanInput.toUpperCase() },
@@ -2631,6 +2634,20 @@ const recordAttendanceFromQr = async ({
     if (mongoose.Types.ObjectId.isValid(cleanInput)) {
       queryOr.push({ _id: new mongoose.Types.ObjectId(cleanInput) });
       queryOr.push({ userId: new mongoose.Types.ObjectId(cleanInput) });
+    }
+
+    // Name search if cleanInput contains letters
+    if (cleanInput.length >= 2 && !/^\d+$/.test(cleanInput)) {
+      const parts = cleanInput.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        queryOr.push({
+          firstName: { $regex: new RegExp(`^${parts[0]}`, 'i') },
+          lastName: { $regex: new RegExp(`^${parts[parts.length - 1]}`, 'i') },
+        });
+      }
+      queryOr.push({ firstName: { $regex: new RegExp(`^${cleanInput}$`, 'i') } });
+      queryOr.push({ lastName: { $regex: new RegExp(`^${cleanInput}$`, 'i') } });
+      queryOr.push({ christianName: { $regex: new RegExp(`^${cleanInput}$`, 'i') } });
     }
 
     // Also extract student ID if URL was passed from QR scanner (e.g. /verify-certificate?id=STU-001)
@@ -2653,6 +2670,7 @@ const recordAttendanceFromQr = async ({
         $or: [
           { phone: cleanInput },
           { email: cleanInput },
+          ...(cleanInput.length >= 2 && !/^\d+$/.test(cleanInput) ? [{ fullName: { $regex: new RegExp(cleanInput, 'i') } }] : []),
           ...(mongoose.Types.ObjectId.isValid(cleanInput) ? [{ _id: new mongoose.Types.ObjectId(cleanInput) }] : []),
         ]
       });
@@ -2678,30 +2696,63 @@ const recordAttendanceFromQr = async ({
       return { success: false, message: `የተማሪ መረጃ አልተገኘም (${cleanInput})` };
     }
 
-    // 3. Normalized Status
+    // 3. Resolve Target ClassSession if sessionId or session title provided
+    let targetSession = null;
+    if (sessionId && mongoose.Types.ObjectId.isValid(sessionId)) {
+      targetSession = await ClassSession.findById(sessionId).catch(() => null);
+    }
+    if (!targetSession && session && session !== 'Regular') {
+      const dateStr = date ? new Date(date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      targetSession = await ClassSession.findOne({
+        sessionDate: dateStr,
+        $or: [
+          { title: session },
+          { grade: session },
+        ]
+      }).catch(() => null);
+    }
+
+    // 4. Normalized Status
     let normalizedStatus = 'Present';
     const sLower = String(status).toLowerCase();
     if (sLower === 'late' || sLower === 'አርፍዷል') normalizedStatus = 'Late';
     else if (sLower === 'absent' || sLower === 'አልተገኘም') normalizedStatus = 'Absent';
     else if (sLower === 'excused' || sLower === 'ፈቃድ') normalizedStatus = 'Excused';
 
-    // 4. Date normalizer (Midnight to 23:59 for today's entry)
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    // 5. Date normalizer
+    const targetDate = date ? new Date(date) : (targetSession ? new Date(targetSession.sessionDate) : new Date());
+    targetDate.setHours(0, 0, 0, 0);
+    const targetDateEnd = new Date(targetDate);
+    targetDateEnd.setHours(23, 59, 59, 999);
 
-    let attRecord = await Attendance.findOne({
-      student: student._id,
-      date: { $gte: todayStart, $lte: todayEnd },
-      ...(courseId ? { course: courseId } : {}),
-    });
+    let attRecord = null;
+    if (targetSession) {
+      attRecord = await Attendance.findOne({
+        sessionId: targetSession._id,
+        student: student._id,
+      });
+    }
+    if (!attRecord) {
+      attRecord = await Attendance.findOne({
+        student: student._id,
+        date: { $gte: targetDate, $lte: targetDateEnd },
+        ...(courseId ? { course: courseId } : {}),
+      });
+    }
 
     const teacherName = teacherUser?.fullName || 'መምህር';
+    const sessionLabel = targetSession ? (targetSession.title || targetSession.grade) : (session || 'Regular');
 
     if (attRecord) {
       attRecord.status = normalizedStatus;
       attRecord.checkInTime = new Date();
+      if (targetSession) {
+        attRecord.sessionId = targetSession._id;
+        attRecord.session = sessionLabel;
+      } else if (session) {
+        attRecord.session = sessionLabel;
+      }
+      attRecord.scanMethod = 'manual_override';
       if (teacherUser) {
         attRecord.teacher = teacherUser._id;
         attRecord.teacherName = teacherName;
@@ -2710,21 +2761,49 @@ const recordAttendanceFromQr = async ({
       await attRecord.save();
     } else {
       attRecord = new Attendance({
+        sessionId: targetSession ? targetSession._id : null,
+        session: sessionLabel,
         student: student._id,
         studentName: `${student.firstName} ${student.lastName}`.trim(),
-        grade: student.grade || student.batch || 'Grade 7',
+        grade: student.grade || student.batch || targetSession?.grade || 'Grade 7',
         studentType: student.studentType || 'regular',
-        shift: student.shift || '',
+        shift: student.shift || targetSession?.shift || '',
         status: normalizedStatus,
-        date: new Date(),
+        date: targetSession ? new Date(targetSession.sessionDate) : targetDate,
         checkInTime: new Date(),
-        session: session || 'Regular',
-        course: courseId || null,
+        scanMethod: 'manual_override',
+        course: courseId || targetSession?.course || null,
         teacher: teacherUser ? teacherUser._id : null,
         teacherName: teacherName,
         recordedBy: teacherUser ? teacherUser._id : null,
       });
       await attRecord.save();
+    }
+
+    // STRICT DEDUPLICATION: Purge any conflicting duplicate records for this student on this session or date
+    await Attendance.deleteMany({
+      _id: { $ne: attRecord._id },
+      student: student._id,
+      $or: [
+        ...(targetSession ? [{ sessionId: targetSession._id }] : []),
+        { date: { $gte: targetDate, $lte: targetDateEnd }, ...(courseId ? { course: courseId } : {}) }
+      ]
+    }).catch(() => {});
+
+    // Update session stats if targetSession
+    if (targetSession) {
+      const presentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Present' });
+      const lateCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Late' });
+      const absentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Absent' });
+      const excusedCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Excused' });
+      targetSession.stats = {
+        ...targetSession.stats,
+        presentCount,
+        lateCount,
+        absentCount,
+        excusedCount,
+      };
+      await targetSession.save().catch(() => {});
     }
 
     // Calculate updated attendance rate

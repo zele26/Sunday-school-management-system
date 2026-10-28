@@ -8,6 +8,9 @@ const Student = require('../../models/Student');
 const User = require('../../models/User');
 const StudentProfile = require('../../models/education/StudentProfile');
 const Course = require('../../models/education/Course');
+const ClassSession = require('../../models/education/ClassSession');
+
+const escapeRegex = (s) => String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const getStudentFullName = (s) => {
   if (!s) return 'ተማሪ';
@@ -70,6 +73,7 @@ router.get('/sessions/today', sessionCtrl.getTodayAuthorizedSessions);
 router.get('/available-takers', sessionCtrl.getAvailableTakers);
 router.post('/sessions/:id/start', sessionCtrl.startSession);
 router.post('/sessions/:id/scan', sessionCtrl.scanStudentInSession);
+router.post('/sessions/:id/manual', sessionCtrl.scanStudentInSession);
 router.post('/sessions/:id/close', sessionCtrl.closeSession);
 router.get('/sessions/:id/live-roster', sessionCtrl.getSessionLiveRoster);
 
@@ -376,29 +380,130 @@ router.post('/scan', authorize('admin', 'teacher'), async (req, res) => {
 // ---------- Manual attendance ----------
 router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
   try {
-    const { studentId, courseId, status: forcedStatus, excuseReason, note, date: customDate } = req.body;
-    if (!studentId) {
-      return res.status(400).json({ success: false, message: 'Student ID required' });
+    const {
+      studentId,
+      studentIdentifier,
+      studentName: providedName,
+      courseId,
+      sessionId,
+      session: sessionInput,
+      status: forcedStatus,
+      excuseReason,
+      note,
+      date: customDate,
+    } = req.body;
+
+    const lookupId = studentId || studentIdentifier;
+    if (!lookupId && !providedName) {
+      return res.status(400).json({ success: false, message: 'Student ID or name required' });
     }
 
-    const student = await Student.findById(studentId);
+    let student = null;
+    if (lookupId && mongoose.Types.ObjectId.isValid(lookupId)) {
+      student = await Student.findById(lookupId);
+    }
+    if (!student && lookupId) {
+      student = await Student.findOne({
+        $or: [
+          { studentId: lookupId },
+          { studentId: String(lookupId).toUpperCase() },
+          { registrationNumber: lookupId },
+          { phone: lookupId },
+          { studentPhone: lookupId },
+        ],
+      });
+    }
+
+    // Fallback search by student name
+    if (!student) {
+      const nameToSearch = (providedName || lookupId || '').toString().trim();
+      if (nameToSearch.length >= 2 && !/^\d+$/.test(nameToSearch)) {
+        const parts = nameToSearch.split(/\s+/).filter(Boolean);
+        const nameConditions = [];
+        if (parts.length >= 2) {
+          nameConditions.push({
+            firstName: { $regex: new RegExp(`^${escapeRegex(parts[0])}`, 'i') },
+            lastName: { $regex: new RegExp(`^${escapeRegex(parts[parts.length - 1])}`, 'i') },
+          });
+          if (parts.length >= 3) {
+            nameConditions.push({
+              firstName: { $regex: new RegExp(`^${escapeRegex(parts[0])}`, 'i') },
+              middleName: { $regex: new RegExp(`^${escapeRegex(parts[1])}`, 'i') },
+              lastName: { $regex: new RegExp(`^${escapeRegex(parts[2])}`, 'i') },
+            });
+          }
+        }
+        nameConditions.push(
+          { firstName: { $regex: new RegExp(`^${escapeRegex(nameToSearch)}$`, 'i') } },
+          { lastName: { $regex: new RegExp(`^${escapeRegex(nameToSearch)}$`, 'i') } },
+          { christianName: { $regex: new RegExp(`^${escapeRegex(nameToSearch)}$`, 'i') } }
+        );
+        student = await Student.findOne({ $or: nameConditions });
+      }
+    }
+
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
 
-    const attendanceDate = customDate ? new Date(customDate) : new Date();
-    attendanceDate.setHours(0, 0, 0, 0);
+    // 1. Resolve ClassSession if sessionId provided, or try finding a session matching the student and date
+    let targetSession = null;
+    if (sessionId && mongoose.Types.ObjectId.isValid(sessionId)) {
+      targetSession = await ClassSession.findById(sessionId);
+    }
+
+    if (!targetSession && sessionInput) {
+      if (mongoose.Types.ObjectId.isValid(sessionInput)) {
+        targetSession = await ClassSession.findById(sessionInput);
+      } else {
+        const dateStr = customDate
+          ? new Date(customDate).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
+        targetSession = await ClassSession.findOne({
+          sessionDate: dateStr,
+          $or: [
+            { title: sessionInput },
+            { grade: sessionInput },
+            { grade: student.grade || student.batch },
+          ],
+        });
+      }
+    }
+
+    // Determine the exact attendance date
+    let attendanceDate;
+    if (targetSession && targetSession.sessionDate) {
+      attendanceDate = new Date(targetSession.sessionDate);
+      attendanceDate.setHours(0, 0, 0, 0);
+    } else {
+      attendanceDate = customDate ? new Date(customDate) : new Date();
+      attendanceDate.setHours(0, 0, 0, 0);
+    }
     const nextDay = new Date(attendanceDate);
     nextDay.setDate(nextDay.getDate() + 1);
 
     const targetStatus = forcedStatus || 'Present';
     const targetReason = excuseReason || note || '';
+    const sessionLabel = targetSession
+      ? (targetSession.title || targetSession.grade || 'Session')
+      : (sessionInput || '');
 
-    const alreadyMarked = await Attendance.findOne({
-      student: student._id,
-      date: { $gte: attendanceDate, $lt: nextDay },
-      ...(courseId ? { course: courseId } : {}),
-    });
+    // Check for existing record:
+    // If targetSession is present, check by sessionId + student FIRST
+    let alreadyMarked = null;
+    if (targetSession) {
+      alreadyMarked = await Attendance.findOne({
+        sessionId: targetSession._id,
+        student: student._id,
+      });
+    }
+    if (!alreadyMarked) {
+      alreadyMarked = await Attendance.findOne({
+        student: student._id,
+        date: { $gte: attendanceDate, $lt: nextDay },
+        ...(courseId ? { course: courseId } : {}),
+      });
+    }
 
     if (alreadyMarked) {
       alreadyMarked.status = targetStatus;
@@ -406,12 +511,45 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         alreadyMarked.excuseReason = targetReason;
         alreadyMarked.note = targetReason;
       }
+      if (targetSession) {
+        alreadyMarked.sessionId = targetSession._id;
+        alreadyMarked.session = sessionLabel;
+      } else if (sessionLabel) {
+        alreadyMarked.session = sessionLabel;
+      }
+      alreadyMarked.scanMethod = 'manual_override';
       alreadyMarked.updatedBy = req.user._id;
       await alreadyMarked.save();
 
+      // STRICT DEDUPLICATION: Purge any conflicting duplicate records for this student on this session or date
+      await Attendance.deleteMany({
+        _id: { $ne: alreadyMarked._id },
+        student: student._id,
+        $or: [
+          ...(targetSession ? [{ sessionId: targetSession._id }] : []),
+          { date: { $gte: attendanceDate, $lt: nextDay }, ...(courseId ? { course: courseId } : {}) }
+        ]
+      });
+
+      // Recalculate session stats if targetSession
+      if (targetSession) {
+        const presentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Present' });
+        const lateCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Late' });
+        const absentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Absent' });
+        const excusedCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Excused' });
+        targetSession.stats = {
+          ...targetSession.stats,
+          presentCount,
+          lateCount,
+          absentCount,
+          excusedCount,
+        };
+        await targetSession.save();
+      }
+
       return res.json({
         success: true,
-        message: `የተማሪው ተገኝነት ተቀይሯል፦ ${targetStatus}`,
+        message: `የተማሪው ተገኝነት ተቀይሯል፦ ${targetStatus}${sessionLabel ? ` (${sessionLabel})` : ''}`,
         student: {
           id: student._id,
           name: getStudentFullName(student),
@@ -420,6 +558,13 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
           shift: student.shift || '',
           studentId: student.studentId || '',
         },
+        session: targetSession
+          ? {
+              id: targetSession._id,
+              title: targetSession.title || targetSession.grade,
+              date: targetSession.sessionDate,
+            }
+          : null,
         status: targetStatus,
         updated: true,
       });
@@ -494,17 +639,22 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
 
     try {
       await Attendance.create({
+        sessionId: targetSession ? targetSession._id : (sessionId || null),
+        session: sessionLabel,
         student: student._id,
+        studentProfileId: student.studentProfileId || null,
         studentName: getStudentFullName(student),
-        grade: student.grade || student.batch || '',
+        grade: student.grade || student.batch || targetSession?.grade || '',
         studentType: student.studentType || 'regular',
-        shift: student.shift || '',
-        course: courseId || null,
+        shift: student.shift || targetSession?.shift || '',
+        course: courseId || targetSession?.course || null,
         courseName,
-        teacher,
-        teacherName,
+        teacher: teacher || (targetSession ? req.user._id : null),
+        teacherName: teacherName || req.user.fullName || '',
         date: attendanceDate,
         checkInTime: customDate ? new Date(customDate) : new Date(),
+        scannedAt: new Date(),
+        scanMethod: 'manual_override',
         status: targetStatus,
         excuseReason: targetReason,
         note: targetReason,
@@ -512,11 +662,37 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         academicYear,
         semester,
       });
+
+      // STRICT DEDUPLICATION: Purge any conflicting duplicate records for this student on this session or date
+      await Attendance.deleteMany({
+        _id: { $ne: createdRecord._id },
+        student: student._id,
+        $or: [
+          ...(targetSession ? [{ sessionId: targetSession._id }] : []),
+          { date: { $gte: attendanceDate, $lt: nextDay }, ...(courseId ? { course: courseId } : {}) }
+        ]
+      });
+
+      // Update session stats if targetSession
+      if (targetSession) {
+        const presentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Present' });
+        const lateCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Late' });
+        const absentCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Absent' });
+        const excusedCount = await Attendance.countDocuments({ sessionId: targetSession._id, status: 'Excused' });
+        targetSession.stats = {
+          ...targetSession.stats,
+          presentCount,
+          lateCount,
+          absentCount,
+          excusedCount,
+        };
+        await targetSession.save();
+      }
     } catch (createErr) {
       if (createErr.code === 11000) {
         return res.json({
           success: true,
-          message: 'ለዚህ ቀን ቀደም ሲል ተመዝግቧል',
+          message: 'ለዚህ ቀን/ክፍለ-ጊዜ ቀደም ሲል ተመዝግቧል',
           student: {
             id: student._id,
             name: getStudentFullName(student),
@@ -533,7 +709,7 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
 
     res.json({
       success: true,
-      message: 'ተገኝነት በተሳካ ሁኔታ ተመዝግቧል!',
+      message: `ተገኝነት በተሳካ ሁኔታ ተመዝግቧል!${sessionLabel ? ` (${sessionLabel})` : ''}`,
       student: {
         id: student._id,
         name: getStudentFullName(student),
@@ -542,6 +718,13 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
         shift: student.shift || '',
         studentId: student.studentId || '',
       },
+      session: targetSession
+        ? {
+            id: targetSession._id,
+            title: targetSession.title || targetSession.grade,
+            date: targetSession.sessionDate,
+          }
+        : null,
     });
   } catch (err) {
     console.error('Manual attendance error:', err);
@@ -597,12 +780,45 @@ router.get('/report', authorize('admin', 'teacher'), async (req, res) => {
       query.course = { $in: courseIds };
     }
 
-    const attendances = await Attendance.find(query)
+    const rawAttendances = await Attendance.find(query)
       .populate('student', 'firstName middleName lastName grade studentId shift studentType phone')
       .populate('course', 'name')
       .populate('teacher', 'fullName')
       .populate('recordedBy', 'fullName')
+      .populate('sessionId', 'title grade sessionDate startTime endTime sessionType')
       .sort({ date: -1, checkInTime: -1 });
+
+    // STRICT DEDUPLICATION: If a student has duplicate records for the same session or date,
+    // ensure non-Absent status ('Present', 'Late', 'Excused') ALWAYS takes priority over 'Absent'
+    const deduplicatedMap = new Map();
+    const duplicateIdsToPurge = [];
+
+    for (const a of rawAttendances) {
+      const studentKey = a.student?._id ? a.student._id.toString() : (a.student ? a.student.toString() : (a.studentName || ''));
+      const sessionKey = a.sessionId?._id ? a.sessionId._id.toString() : (a.sessionId || a.session || (a.date ? new Date(a.date).toISOString().split('T')[0] : ''));
+      const dedupeKey = `${studentKey}__${sessionKey}`;
+
+      if (!deduplicatedMap.has(dedupeKey)) {
+        deduplicatedMap.set(dedupeKey, a);
+      } else {
+        const existing = deduplicatedMap.get(dedupeKey);
+        if (existing.status === 'Absent' && a.status !== 'Absent') {
+          duplicateIdsToPurge.push(existing._id);
+          deduplicatedMap.set(dedupeKey, a);
+        } else if (a.status === 'Absent' && existing.status !== 'Absent') {
+          duplicateIdsToPurge.push(a._id);
+        } else {
+          // Keep newest, purge older duplicate
+          duplicateIdsToPurge.push(a._id);
+        }
+      }
+    }
+
+    if (duplicateIdsToPurge.length > 0) {
+      Attendance.deleteMany({ _id: { $in: duplicateIdsToPurge } }).catch(() => {});
+    }
+
+    const attendances = Array.from(deduplicatedMap.values());
 
     const total = attendances.length;
     const present = attendances.filter(a => a.status === 'Present').length;
@@ -739,7 +955,8 @@ router.get('/today', authorize('admin', 'teacher'), async (req, res) => {
 
     const attendances = await Attendance.find(query)
       .populate('student', 'firstName middleName lastName grade')
-      .populate('course', 'name');
+      .populate('course', 'name')
+      .populate('sessionId', 'title grade sessionDate startTime endTime sessionType');
 
     const grouped = {};
     attendances.forEach(att => {
@@ -1115,6 +1332,14 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
           }
           existing.updatedBy = req.user._id;
           await existing.save();
+
+          await Attendance.deleteMany({
+            _id: { $ne: existing._id },
+            student: student._id,
+            date: { $gte: attendanceDate, $lt: nextDay },
+            ...(courseId ? { course: courseId } : {}),
+          }).catch(() => {});
+
           results.push({
             studentId: student._id,
             studentName: getStudentFullName(student),
@@ -1122,7 +1347,7 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
             action: 'updated',
           });
         } else {
-          await Attendance.create({
+          const created = await Attendance.create({
             student: student._id,
             studentName: getStudentFullName(student),
             grade: student.grade || student.batch || '',
@@ -1139,6 +1364,14 @@ router.post('/bulk', authorize('admin', 'teacher'), async (req, res) => {
             note: targetReason,
             recordedBy: req.user._id,
           });
+
+          await Attendance.deleteMany({
+            _id: { $ne: created._id },
+            student: student._id,
+            date: { $gte: attendanceDate, $lt: nextDay },
+            ...(courseId ? { course: courseId } : {}),
+          }).catch(() => {});
+
           results.push({
             studentId: student._id,
             studentName: getStudentFullName(student),

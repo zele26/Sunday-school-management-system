@@ -372,7 +372,7 @@ router.post('/groups/sync', protect, authorize('admin', 'superadmin'), async (re
 // ---------- 10. Teacher Attendance QR Scanner Check-In ----------
 router.post('/attendance/scan-checkin', protect, authorize('teacher', 'admin', 'superadmin'), async (req, res) => {
   try {
-    const { studentIdentifier, studentId, qrData, session, status, courseId } = req.body;
+    const { studentIdentifier, studentId, qrData, session, status, courseId, sessionId, date } = req.body;
     const targetId = studentIdentifier || studentId || qrData;
 
     if (!targetId) {
@@ -388,6 +388,8 @@ router.post('/attendance/scan-checkin', protect, authorize('teacher', 'admin', '
       courseId,
       status: status || 'Present',
       session: session || 'Regular',
+      sessionId: sessionId || null,
+      date: date || null,
       recordedBySource: 'TelegramWebAppScanner',
     });
 
