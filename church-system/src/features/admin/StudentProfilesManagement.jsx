@@ -469,7 +469,7 @@ const StudentProfilesManagement = () => {
                     <Users className="w-3 h-3 text-amber-500" /> የአስቸኳይ ጊዜ ተጠሪ
                   </span>
                   <div className="text-main font-medium truncate">
-                    {selectedProfile.emergencyContact?.name || [selectedProfile.personId?.emergencyFirstName, selectedProfile.personId?.emergencyLastName].filter(Boolean).join(' ') || 'አልተጠቀሰም'}
+                    {selectedProfile.emergencyContact?.name || [selectedProfile.personId?.emergencyFirstName, selectedProfile.personId?.emergencyMiddleName, selectedProfile.personId?.emergencyLastName].filter(Boolean).join(' ') || 'አልተጠቀሰም'}
                   </div>
                   <div className="text-muted truncate">
                     {selectedProfile.emergencyContact?.phone || selectedProfile.personId?.emergencyPhone || 'ስልክ የለም'}{' '}

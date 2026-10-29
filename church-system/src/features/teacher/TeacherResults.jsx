@@ -117,7 +117,7 @@ const TeacherResults = () => {
                   const perf = getPerformance(r);
                   return (
                     <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">{r.student?.firstName} {r.student?.lastName}</td>
+                      <td className="py-3 px-4 font-medium text-slate-900 dark:text-white">{r.student?.fullName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || '-'}</td>
                       <td className="py-3 px-4 font-mono text-xs text-slate-500 dark:text-slate-400">{r.student?.studentId || '-'}</td>
                       <td className="py-3 px-4 text-slate-700 dark:text-slate-300">{r.courseName || 'N/A'}</td>
                       <td className="py-3 px-4">
@@ -156,7 +156,7 @@ const TeacherResults = () => {
               <div className="flex justify-between items-start border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                    የ{selectedResult.student?.firstName} {selectedResult.student?.lastName} መልሶች
+                    የ{selectedResult.student?.fullName || [selectedResult.student?.firstName, selectedResult.student?.middleName, selectedResult.student?.lastName].filter(Boolean).join(' ') || 'ተማሪ'} መልሶች
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     የተማሪ መለያ: {selectedResult.student?.studentId} • ኮርስ: {selectedResult.courseName || 'N/A'}

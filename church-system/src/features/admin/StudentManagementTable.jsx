@@ -979,7 +979,7 @@ export default function StudentManagementTable({
                     <span>የአደጋ ጊዜ ተጠሪ</span>
                   </p>
                   <p className="text-slate-700 dark:text-slate-300">
-                    {[activeStudent.emergencyFirstName, activeStudent.emergencyLastName].filter(Boolean).join(' ') || activeStudent.parentName || 'ተጠሪ'} {activeStudent.relationship && `(${getRelationshipLabel(activeStudent.relationship)})`} —{' '}
+                    {[activeStudent.emergencyFirstName, activeStudent.emergencyMiddleName, activeStudent.emergencyLastName].filter(Boolean).join(' ') || activeStudent.parentName || 'ተጠሪ'} {activeStudent.relationship && `(${getRelationshipLabel(activeStudent.relationship)})`} —{' '}
                     <span className="font-mono font-semibold">{activeStudent.emergencyPhone || activeStudent.parentPhone || activeStudent.contactPhone}</span>
                   </p>
                 </div>
