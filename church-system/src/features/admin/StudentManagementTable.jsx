@@ -1100,7 +1100,7 @@ export default function StudentManagementTable({
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              የተማሪ {activeStudent.firstName} {activeStudent.lastName} ኮርሶች እና መምህራን
+              የተማሪ {[activeStudent.firstName, activeStudent.middleName, activeStudent.lastName].filter(Boolean).join(' ') || activeStudent.fullName} ኮርሶች እና መምህራን
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {activeStudent.teachers && activeStudent.teachers.length > 0 ? (

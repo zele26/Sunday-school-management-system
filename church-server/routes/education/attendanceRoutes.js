@@ -1087,18 +1087,22 @@ router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
 
     const roster = students.map(s => {
       const att = attendanceMap.get(s._id.toString());
+      const studentFullName = [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ').trim() || `${s.firstName || ''} ${s.lastName || ''}`.trim() || 'ተማሪ';
       return {
         _id: s._id,
         studentId: s.studentId,
-        fullName: `${s.firstName || ''} ${s.middleName || ''} ${s.lastName || ''}`.trim(),
-        firstName: s.firstName,
-        lastName: s.lastName,
+        fullName: studentFullName,
+        name: studentFullName,
+        studentName: studentFullName,
+        firstName: s.firstName || '',
+        middleName: s.middleName || '',
+        lastName: s.lastName || '',
         christianName: s.christianName || '',
         photoUrl: s.photoUrl || s.photo || '',
         grade: s.grade || s.batch || '',
         studentType: s.studentType || 'regular',
         shift: s.shift || '',
-        phone: s.phone || '',
+        phone: s.phone || s.studentPhone || '',
         photo: s.photo || '',
         attendanceId: att ? att._id : null,
         status: att ? att.status : null,
