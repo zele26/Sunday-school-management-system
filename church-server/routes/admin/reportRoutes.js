@@ -176,7 +176,7 @@ router.get('/student/:studentId', async (req, res) => {
 router.get('/grade/:grade', async (req, res) => {
   try {
     const rawGrade = req.params.grade;
-    const { shift, studentType, startDate, endDate } = req.query;
+    const { shift, studentType, startDate, endDate, totalSessionsOverride, customSessions } = req.query;
 
     // 1. Build grade matching regex (handles 'Grade 9', '9', '9ኛ', 'Batch 1', etc.)
     const gradeNum = rawGrade.match(/\d+/);
@@ -309,7 +309,9 @@ router.get('/grade/:grade', async (req, res) => {
       }
     });
 
-    const totalSessionsHeld = distinctSessionKeys.size;
+    const parsedOverride = parseInt(totalSessionsOverride || customSessions, 10);
+    const hasManualOverride = !isNaN(parsedOverride) && parsedOverride > 0;
+    const totalSessionsHeld = hasManualOverride ? parsedOverride : distinctSessionKeys.size;
 
     // 8. Map attendance per student
     // Group records by session (or date if no sessionId) to ensure clean single-status per session
@@ -360,8 +362,8 @@ router.get('/grade/:grade', async (req, res) => {
       }
 
       // Expected sessions for this student:
-      // If sessions were held, it's at least totalSessionsHeld. If student has recorded sessions, use max.
-      const studentTotalSessions = Math.max(totalSessionsHeld, dedupedRecords.length);
+      // If manual override is specified, use totalSessionsHeld strictly; otherwise at least totalSessionsHeld
+      const studentTotalSessions = hasManualOverride ? totalSessionsHeld : Math.max(totalSessionsHeld, dedupedRecords.length);
       const missed = Math.max(0, studentTotalSessions - attended - excused);
       const studentRate = studentTotalSessions > 0 ? Math.round((attended / studentTotalSessions) * 100) : (attended > 0 ? 100 : 0);
 
@@ -408,6 +410,7 @@ router.get('/grade/:grade', async (req, res) => {
       summary: {
         totalStudents: students.length,
         totalSessions: totalSessionsHeld,
+        isManuallyAdjusted: hasManualOverride,
         totalAttended: grandAttended,
         totalLate: grandLate,
         totalExcused: grandExcused,

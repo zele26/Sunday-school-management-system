@@ -386,6 +386,27 @@ const AttendanceManagement = () => {
     }
   };
 
+  // Handle Delete Session Permanently
+  const handleDeleteSession = async (sess) => {
+    const confirmMsg = `እርግጠኛ ነዎት ይህን ክፍለ-ጊዜ በቋሚነት መሰረዝ ይፈልጋሉ?\n• ክፍል፦ ${sess.grade}\n• ቀን፦ ${sess.sessionDate}\n• ርዕስ፦ ${sess.title || 'መደበኛ'}\n\nማስታወሻ፦ ከዚህ ክፍለ-ጊዜ ጋር የተያያዙ የተገኝነት መረጃዎች በሙሉ ይሰረዛሉ።`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const res = await apiFetch(`/api/education/attendance/sessions/${sess._id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'ክፍለ-ጊዜው በቋሚነት ተሰርዟል');
+        fetchSessions();
+      } else {
+        toast.error(data.message || 'ክፍለ-ጊዜውን መሰረዝ አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የኔትወርክ ስህተት አጋጥሟል');
+    }
+  };
+
   // Handle Create Make-up Session
   const handleCreateMakeup = async (e) => {
     e.preventDefault();
@@ -1502,7 +1523,7 @@ const AttendanceManagement = () => {
                         <span>የተማሪዎች ዝርዝር</span>
                       </Button>
 
-                      {!isClosed && !isCancelled && (
+                      {!isCancelled && (
                         <>
                           <button
                             type="button"
@@ -1524,13 +1545,23 @@ const AttendanceManagement = () => {
                               setCancelModalSession(sess);
                               setCancelReason('');
                             }}
-                            className="px-3 py-2 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-all cursor-pointer flex items-center gap-1"
+                            className="px-3 py-2 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-amber-700 dark:text-amber-400 transition-all cursor-pointer flex items-center gap-1"
                           >
                             <CalendarX className="w-3.5 h-3.5" />
                             <span>ሰርዝ (Cancel)</span>
                           </button>
                         </>
                       )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSession(sess)}
+                        className="px-3 py-2 text-xs font-bold rounded-xl border border-rose-200 dark:border-rose-800/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 transition-all cursor-pointer flex items-center gap-1"
+                        title="ይህን ክፍለ-ጊዜ በቋሚነት አጥፋ"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>አጥፋ (Delete)</span>
+                      </button>
                     </div>
                   </div>
                 );
