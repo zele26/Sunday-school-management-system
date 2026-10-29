@@ -20,7 +20,10 @@ import {
   Mail,
   Building,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -304,6 +307,49 @@ const ReportsManagement = () => {
   const [selectedStudentType, setSelectedStudentType] = useState('all'); // 'all' | 'regular' | 'distance'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [customSessions, setCustomSessions] = useState('');
+  const [isEditingSessions, setIsEditingSessions] = useState(false);
+  const [tempSessionsInput, setTempSessionsInput] = useState('');
+
+  const handleSaveInPlaceSessions = () => {
+    const num = parseInt(tempSessionsInput, 10);
+    if (isNaN(num) || num <= 0) {
+      toast.error('እባክዎ ትክክለኛ የክፍለ-ጊዜ ቁጥር ያስገቡ');
+      return;
+    }
+    setCustomSessions(String(num));
+    setIsEditingSessions(false);
+    setData((prev) => {
+      if (!prev || !prev.students) return prev;
+      const updatedStudents = prev.students.map((s) => {
+        const overallSessions = num;
+        const missed = Math.max(0, overallSessions - s.attended - s.excused);
+        const overallRate = overallSessions > 0 ? Math.round((s.attended / overallSessions) * 100) : 0;
+        return {
+          ...s,
+          overallSessions,
+          overallMissed: missed,
+          overallRate,
+          level: overallRate >= 75 ? 'ከፍተኛ' : overallRate >= 50 ? 'መካከለኛ' : 'ዝቅተኛ',
+        };
+      });
+      const grandSessions = updatedStudents.length * num;
+      const averageRate = grandSessions > 0
+        ? Math.round((prev.summary.totalAttended / grandSessions) * 100)
+        : 0;
+      return {
+        ...prev,
+        summary: {
+          ...prev.summary,
+          totalSessions: num,
+          isManuallyAdjusted: true,
+          averageRate,
+        },
+        students: updatedStudents,
+      };
+    });
+    toast.success(`የተካሄዱ ክፍለ-ጊዜዎች ቁጥር ወደ ${num} ተቀይሯል!`);
+  };
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -362,6 +408,9 @@ const ReportsManagement = () => {
           if (selectedStudentType && selectedStudentType !== 'all') params.append('studentType', selectedStudentType);
           if (startDate) params.append('startDate', startDate);
           if (endDate) params.append('endDate', endDate);
+          if (customSessions && !isNaN(customSessions) && Number(customSessions) > 0) {
+            params.append('totalSessionsOverride', customSessions);
+          }
           const q = params.toString() ? `?${params.toString()}` : '';
           url = `/api/admin/reports/grade/${encodeURIComponent(selectedGrade)}${q}`;
           break;
@@ -686,6 +735,11 @@ const ReportsManagement = () => {
               ቀን: {filters.startDate && filters.endDate ? `${filters.startDate} እስከ ${filters.endDate}` : filters.startDate ? `ከ ${filters.startDate}` : `እስከ ${filters.endDate}`}
             </Badge>
           )}
+          {(summary.isManuallyAdjusted || customSessions) && (
+            <Badge variant="warning">
+              ክፍለ-ጊዜ: {summary.totalSessions} (በእጅ የተስተካከለ)
+            </Badge>
+          )}
         </div>
 
         {/* Summary KPI Cards */}
@@ -698,13 +752,68 @@ const ReportsManagement = () => {
               {summary.totalStudents ?? gradeStudents.length}
             </div>
           </Card>
-          <Card className="p-4 bg-surface-card border-subtle">
-            <span className="text-xs text-muted font-medium flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-indigo-500" /> የተካሄዱ ክፍለ-ጊዜዎች
-            </span>
-            <div className="text-2xl font-black text-main mt-2">
-              {summary.totalSessions ?? 0}
+          <Card className="p-4 bg-surface-card border-subtle relative group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted font-medium flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-500" /> የተካሄዱ ክፍለ-ጊዜዎች
+              </span>
+              <div className="flex items-center gap-1">
+                {summary.isManuallyAdjusted && (
+                  <Badge variant="warning" size="xs">የተስተካከለ</Badge>
+                )}
+                {!isEditingSessions && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTempSessionsInput(String(summary.totalSessions ?? 0));
+                      setIsEditingSessions(true);
+                    }}
+                    title="ይህንን ቁጥር በእጅ ያስተካክሉ"
+                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {isEditingSessions ? (
+              <div className="flex items-center gap-1.5 mt-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={tempSessionsInput}
+                  onChange={(e) => setTempSessionsInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveInPlaceSessions();
+                    if (e.key === 'Escape') setIsEditingSessions(false);
+                  }}
+                  autoFocus
+                  className="w-20 px-2 py-1 text-base font-black rounded-lg border border-indigo-400 dark:border-indigo-600 bg-white dark:bg-slate-900 text-main focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveInPlaceSessions}
+                  className="p-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer"
+                  title="አስቀምጥ"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingSessions(false)}
+                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 transition-colors cursor-pointer"
+                  title="ሰርዝ"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="text-2xl font-black text-main mt-2 flex items-baseline justify-between">
+                <span>{summary.totalSessions ?? 0}</span>
+                <span className="text-[10px] text-muted font-normal">ክፍለ-ጊዜ</span>
+              </div>
+            )}
           </Card>
           <Card className="p-4 bg-surface-card border-subtle">
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
@@ -1181,6 +1290,17 @@ const ReportsManagement = () => {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-1 min-w-[140px]">
+                <Input
+                  label="ክፍለ-ጊዜ ብዛት (Override)"
+                  type="number"
+                  min="1"
+                  placeholder="በራስ-ሰር (Auto)"
+                  value={customSessions}
+                  onChange={(e) => setCustomSessions(e.target.value)}
                 />
               </div>
             </>
