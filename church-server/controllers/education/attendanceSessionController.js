@@ -1450,6 +1450,28 @@ exports.cancelSession = async (req, res) => {
   }
 };
 
+exports.deleteSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const session = await ClassSession.findById(id);
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'ክፍለ-ጊዜው አልተገኘም' });
+    }
+
+    await ClassSession.findByIdAndDelete(id);
+    // Also remove associated attendance records so they don't count towards held sessions
+    await Attendance.deleteMany({ sessionId: id });
+
+    res.json({
+      success: true,
+      message: 'ክፍለ-ጊዜው እና የተያያዙ መረጃዎች በቋሚነት ተሰርዘዋል',
+    });
+  } catch (err) {
+    console.error('deleteSession error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ============================================================================
 // 8. GET AVAILABLE ATTENDANCE TAKERS (Teachers + Multi-Role Students + Ushers)
 // ============================================================================

@@ -82,6 +82,7 @@ router.get('/sessions', authorize('admin', 'superadmin'), sessionCtrl.getAllSess
 router.post('/sessions/makeup', authorize('admin', 'superadmin'), sessionCtrl.createMakeUpSession);
 router.patch('/sessions/:id/reschedule', authorize('admin', 'superadmin'), sessionCtrl.rescheduleSession);
 router.patch('/sessions/:id/cancel', authorize('admin', 'superadmin'), sessionCtrl.cancelSession);
+router.delete('/sessions/:id', authorize('admin', 'superadmin'), sessionCtrl.deleteSession);
 
 // 3. Admin Timetable & Recurring Schedule Management
 router.get('/schedules', sessionCtrl.getSchedules);
