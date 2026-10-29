@@ -169,7 +169,7 @@ export default function TelegramQrScanner({ onScanSuccess, defaultSession = 'Reg
             <div className="text-xs text-slate-200 space-y-1 pt-1 border-t border-emerald-500/20">
               <div className="flex justify-between">
                 <span className="text-slate-400">ተማሪ፦</span>
-                <span className="font-semibold">{lastResult.student.firstName} {lastResult.student.lastName}</span>
+                <span className="font-semibold">{lastResult.student.fullName || [lastResult.student.firstName, lastResult.student.middleName, lastResult.student.lastName].filter(Boolean).join(' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">መለያ ቁጥር፦</span>

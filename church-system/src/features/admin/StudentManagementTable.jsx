@@ -979,7 +979,7 @@ export default function StudentManagementTable({
                     <span>የአደጋ ጊዜ ተጠሪ</span>
                   </p>
                   <p className="text-slate-700 dark:text-slate-300">
-                    {[activeStudent.emergencyFirstName, activeStudent.emergencyLastName].filter(Boolean).join(' ') || activeStudent.parentName || 'ተጠሪ'} {activeStudent.relationship && `(${getRelationshipLabel(activeStudent.relationship)})`} —{' '}
+                    {[activeStudent.emergencyFirstName, activeStudent.emergencyMiddleName, activeStudent.emergencyLastName].filter(Boolean).join(' ') || activeStudent.parentName || 'ተጠሪ'} {activeStudent.relationship && `(${getRelationshipLabel(activeStudent.relationship)})`} —{' '}
                     <span className="font-mono font-semibold">{activeStudent.emergencyPhone || activeStudent.parentPhone || activeStudent.contactPhone}</span>
                   </p>
                 </div>
@@ -1100,7 +1100,7 @@ export default function StudentManagementTable({
               </button>
             </div>
             <p className="text-xs text-slate-500">
-              የተማሪ {activeStudent.firstName} {activeStudent.lastName} ኮርሶች እና መምህራን
+              የተማሪ {[activeStudent.firstName, activeStudent.middleName, activeStudent.lastName].filter(Boolean).join(' ') || activeStudent.fullName} ኮርሶች እና መምህራን
             </p>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {activeStudent.teachers && activeStudent.teachers.length > 0 ? (

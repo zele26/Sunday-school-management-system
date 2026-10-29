@@ -221,7 +221,7 @@ const TeacherStudents = () => {
                       <span>የአደጋ ጊዜ ተጠሪ</span>
                     </p>
                     <p className="text-slate-700 dark:text-slate-300 truncate">
-                      {[selectedStudent.emergencyFirstName, selectedStudent.emergencyLastName].filter(Boolean).join(' ')}{' '}
+                      {[selectedStudent.emergencyFirstName, selectedStudent.emergencyMiddleName, selectedStudent.emergencyLastName].filter(Boolean).join(' ') || selectedStudent.parentName || '-'}{' '}
                       {selectedStudent.relationship && `(${selectedStudent.relationship})`}
                     </p>
                     {selectedStudent.emergencyPhone && (

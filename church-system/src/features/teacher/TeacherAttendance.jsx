@@ -507,7 +507,7 @@ const TeacherAttendance = () => {
                           {formatEthiopianDate(r.date)}
                         </td>
                         <td className="p-3.5 font-bold text-slate-900 dark:text-white">
-                          {r.studentName || `${r.student?.firstName || ''} ${r.student?.lastName || ''}`}
+                          {r.studentName || r.student?.fullName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || '-'}
                         </td>
                         <td className="p-3.5 font-mono text-slate-500 font-bold">
                           {r.student?.studentId || r.studentId || '-'}

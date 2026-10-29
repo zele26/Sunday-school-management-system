@@ -273,7 +273,7 @@ const TeacherDistanceHub = () => {
             <div key={sub._id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h4 className="font-bold text-xs text-slate-900">{sub.student?.firstName} {sub.student?.lastName}</h4>
+                  <h4 className="font-bold text-xs text-slate-900">{sub.student?.fullName || [sub.student?.firstName, sub.student?.middleName, sub.student?.lastName].filter(Boolean).join(' ') || 'ተማሪ'}</h4>
                   <p className="text-[11px] text-slate-400 font-mono">{sub.assignment?.course?.name}</p>
                 </div>
                 <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">

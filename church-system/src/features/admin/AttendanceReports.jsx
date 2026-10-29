@@ -125,7 +125,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
 
     csvRows.push(
       [
-        `"${r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '')}"`,
+        `"${r.studentName || r.student?.fullName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || ''}"`,
         `"${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}"`,
         `"${shift === 'night' ? 'የማታ' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ' : '-'}"`,
         `"${formatGradeAmharic(r.grade || r.student?.grade)}"`,
@@ -260,7 +260,7 @@ const AttendanceReports = () => {
       // Check text search
       if (!filters.search.trim()) return true;
       const term = filters.search.toLowerCase();
-      const studentName = (r.studentName || `${r.student?.firstName || ''} ${r.student?.lastName || ''}`).toLowerCase();
+      const studentName = (r.studentName || r.student?.fullName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || '').toLowerCase();
       const studentId = (r.studentId || r.student?.studentId || '').toLowerCase();
       const courseName = (r.courseName || r.course?.name || '').toLowerCase();
       return studentName.includes(term) || studentId.includes(term) || courseName.includes(term);
@@ -314,7 +314,7 @@ const AttendanceReports = () => {
         header: ({ column }) => <DataTableColumnHeader column={column} title="ተማሪ" />,
         cell: ({ row }) => {
           const r = row.original;
-          const name = r.studentName || (r.student?.firstName ? `${r.student.firstName} ${r.student.lastName}` : '—');
+          const name = r.studentName || r.student?.fullName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || '—';
           const id = r.student?.studentId || r.studentId;
           return (
             <div className="flex items-center gap-2.5">

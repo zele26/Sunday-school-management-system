@@ -607,7 +607,7 @@ const AttendanceManagement = () => {
           : '';
         setSingleFeedback({
           type: 'success',
-          text: `የ${selectedStudent.firstName} ${selectedStudent.lastName} ተገኝነት ለ${singleDate}${sessionNotice} እንደ [${singleStatus}] ተመዝግቧል!`,
+          text: `የ${[selectedStudent.firstName, selectedStudent.middleName, selectedStudent.lastName].filter(Boolean).join(' ') || selectedStudent.fullName} ተገኝነት ለ${singleDate}${sessionNotice} እንደ [${singleStatus}] ተመዝግቧል!`,
         });
         setSelectedStudent(null);
         setSearchQuery('');
@@ -1625,7 +1625,7 @@ const AttendanceManagement = () => {
                       <tr key={s._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                         <td className="py-3 px-3 font-mono text-slate-400">{idx + 1}</td>
                         <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                          {[s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ')}
+                          {s.fullName || [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') || 'ተማሪ'}
                         </td>
                         <td className="py-3 px-3 font-mono text-slate-500">{s.studentId || '-'}</td>
                         <td className="py-3 px-3">
@@ -1729,7 +1729,7 @@ const AttendanceManagement = () => {
               {selectedStudent && (
                 <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs flex items-center justify-between">
                   <span className="font-bold text-[#1e3a8a] dark:text-blue-300">
-                    🎯 {[selectedStudent.firstName, selectedStudent.lastName].join(' ')} ({selectedStudent.grade})
+                    🎯 {[selectedStudent.firstName, selectedStudent.middleName, selectedStudent.lastName].filter(Boolean).join(' ') || selectedStudent.fullName} ({selectedStudent.grade})
                   </span>
                   <button type="button" onClick={() => setSelectedStudent(null)} className="text-slate-400">
                     <X className="w-4 h-4" />
@@ -2745,7 +2745,7 @@ const AttendanceManagement = () => {
                     >
                       <div>
                         <span className="font-bold text-slate-900 dark:text-white block">
-                          {[st.firstName, st.middleName, st.lastName].filter(Boolean).join(' ')}
+                          {st.fullName || [st.firstName, st.middleName, st.lastName].filter(Boolean).join(' ')}
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
                           {st.studentId || '-'} • {formatGradeAmharic(st.grade)}
