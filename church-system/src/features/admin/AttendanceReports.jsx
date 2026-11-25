@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import {
   ClipboardCheck,
   Download,
@@ -31,7 +32,11 @@ import {
   Edit2,
   Trash2,
   X,
+  FileSpreadsheet,
+  Send,
+  BarChart3,
 } from 'lucide-react';
+import { apiFetch } from '../../api/apiClient';
 import {
   PageHeader,
   Card,
@@ -193,6 +198,76 @@ const AttendanceReports = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [editStatus, setEditStatus] = useState('Present');
   const [editNote, setEditNote] = useState('');
+  const [sendingTelegram, setSendingTelegram] = useState(false);
+
+  const exportAttendanceToExcel = (rowsToExport) => {
+    try {
+      const sheetRows = rowsToExport.map((r, idx) => ({
+        'ተ.ቁ': idx + 1,
+        'ቀን (ኢት)': formatEthiopianDate(r.date),
+        'ቀን (Gregorian)': r.date ? new Date(r.date).toISOString().split('T')[0] : '—',
+        'የተማሪ መለያ': r.student?.studentId || '—',
+        'የተማሪ ስም': r.studentName || [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') || '—',
+        ክፍል: formatGradeAmharic(r.grade || r.student?.grade || ''),
+        ፈረቃ: (r.shift || r.student?.shift) === 'night' ? 'የማታ' : 'የቀን',
+        'ክፍለ-ጊዜ / ኮርስ': r.sessionId?.title || r.session || r.courseName || r.course?.name || '—',
+        ሁኔታ: r.status || 'Present',
+        ማስታወሻ: r.excuseReason || r.note || '',
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetRows), 'Attendance');
+      XLSX.writeFile(wb, `attendance-logs-${getEthiopianLocalDateString()}.xlsx`);
+      toast.success('የExcel (.xlsx) ፋይል በተሳካ ሁኔታ ወርዷል!');
+    } catch (err) {
+      toast.error('Excel ማውረድ አልተቻለም');
+    }
+  };
+
+  const handleSendSummaryToTelegram = async () => {
+    if (totalCount === 0) return;
+    setSendingTelegram(true);
+    try {
+      const dateSpan = filters.startDate || filters.endDate
+        ? `${filters.startDate || '...'} እስከ ${filters.endDate || '...'}`
+        : formatEthiopianDate(new Date());
+      let msg = `📊 *የተገኝነት ሪፖርት ማጠቃለያ*\n`;
+      msg += `📅 ጊዜ፦ ${dateSpan}\n`;
+      if (filters.grade) msg += `🏫 ክፍል፦ ${formatGradeAmharic(filters.grade)}\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+      msg += `📋 ጠቅላላ መዝገቦች፦ *${totalCount}*\n`;
+      msg += `🟢 በሰዓቱ፦ ${presentCount} | 🟡 የዘገዩ፦ ${lateCount}\n`;
+      msg += `🔵 በፈቃድ፦ ${excusedCount} | 🔴 ያልተገኙ፦ ${absentCount}\n`;
+      msg += `📈 *የተገኝነት ምጣኔ፦* *${attendanceRate}%* (በሰዓቱ፦ ${onTimeRate}%)\n`;
+      if (atRiskStudentsInFilter.length > 0) {
+        msg += `\n⚠️ *ዝቅተኛ ተገኝነት (<75%) — ${atRiskStudentsInFilter.length} ተማሪዎች፦*\n`;
+        atRiskStudentsInFilter.slice(0, 8).forEach((s) => {
+          msg += `• *${s.name}* (${formatGradeAmharic(s.grade)}) — ${s.rate}% (❌ ${s.absent})\n`;
+        });
+      }
+
+      const res = await apiFetch('/api/admin/reports/send-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageText: msg,
+          targetGrade: filters.grade || null,
+          targetShift: filters.shift || null,
+          sendToSelf: true,
+          sendToGroups: false,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast.success(json.message || 'ማጠቃለያው ወደ ቴሌግራም ተልኳል!');
+      } else {
+        toast.error(json.message || 'ወደ ቴሌግራም መላክ አልተቻለም');
+      }
+    } catch {
+      toast.error('የቴሌግራም ግንኙነት ስህተት ተፈጥሯል');
+    } finally {
+      setSendingTelegram(false);
+    }
+  };
 
   const handleOpenEdit = (record) => {
     setEditingRecord(record);
@@ -369,6 +444,67 @@ const AttendanceReports = () => {
     });
   }, [filteredRecords]);
 
+  // Daily Trend Analytics (Last 14 active dates)
+  const dailyTrendInFilter = useMemo(() => {
+    const map = new Map();
+    for (const r of filteredRecords) {
+      if (!r.date) continue;
+      const dKey = new Date(r.date).toISOString().split('T')[0];
+      if (!map.has(dKey)) {
+        map.set(dKey, { date: dKey, total: 0, present: 0, late: 0, excused: 0, absent: 0 });
+      }
+      const e = map.get(dKey);
+      e.total++;
+      if (r.status === 'Present') e.present++;
+      else if (r.status === 'Late') e.late++;
+      else if (r.status === 'Excused') e.excused++;
+      else if (r.status === 'Absent') e.absent++;
+    }
+    return Array.from(map.values())
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-14)
+      .map((d) => ({
+        ...d,
+        attended: d.present + d.late,
+        rate: d.total > 0 ? Math.round(((d.present + d.late) / d.total) * 100) : 0,
+      }));
+  }, [filteredRecords]);
+
+  // At-Risk Students (<75% attendance) from filtered logs
+  const atRiskStudentsInFilter = useMemo(() => {
+    const map = new Map();
+    for (const r of filteredRecords) {
+      const sObj = r.student;
+      const key = sObj?._id || r.student || r.studentName;
+      if (!key) continue;
+      const idStr = String(key);
+      if (!map.has(idStr)) {
+        const name = sObj
+          ? [sObj.firstName, sObj.middleName, sObj.lastName].filter(Boolean).join(' ').trim() || sObj.fullName || r.studentName
+          : r.studentName || 'ተማሪ';
+        map.set(idStr, {
+          id: idStr,
+          studentCustomId: sObj?.studentId || '—',
+          name,
+          grade: r.grade || sObj?.grade || '—',
+          attended: 0,
+          excused: 0,
+          absent: 0,
+          total: 0,
+        });
+      }
+      const e = map.get(idStr);
+      e.total++;
+      if (r.status === 'Present' || r.status === 'Late') e.attended++;
+      else if (r.status === 'Excused') e.excused++;
+      else if (r.status === 'Absent') e.absent++;
+    }
+    return Array.from(map.values())
+      .map((s) => ({ ...s, rate: s.total > 0 ? Math.round((s.attended / s.total) * 100) : 0 }))
+      .filter((s) => s.absent > 0 && s.rate < 75)
+      .sort((a, b) => a.rate - b.rate || b.absent - a.absent);
+  }, [filteredRecords]);
+
   const columns = useMemo(
     () => [
       {
@@ -535,11 +671,30 @@ const AttendanceReports = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={handleSendSummaryToTelegram}
+                    disabled={sendingTelegram}
+                    className="gap-1.5 bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{sendingTelegram ? 'በመላክ ላይ...' : 'ወደ ቴሌግራም'}</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => downloadCSV(filteredRecords)}
                     className="gap-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
                   >
                     <Download className="w-3.5 h-3.5 text-amber-600" />
-                    <span>CSV አውርድ</span>
+                    <span>CSV</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => exportAttendanceToExcel(filteredRecords)}
+                    className="gap-1.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <span>Excel</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -1165,6 +1320,80 @@ const AttendanceReports = () => {
                 </div>
               </div>
             </div>
+          </Card>
+
+          {/* Daily Attendance Trend */}
+          <Card variant="default" padding="lg" className="space-y-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm rounded-3xl">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <BarChart3 className="w-4 h-4 text-emerald-500" />
+              <span>የዕለታዊ ተገኝነት ሂደት (Daily Trend)</span>
+            </h3>
+            {dailyTrendInFilter.length === 0 ? (
+              <p className="text-xs text-slate-400 py-4 text-center">በተመረጠው ማጣሪያ መረጃ የለም።</p>
+            ) : (
+              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                {dailyTrendInFilter.map((d) => (
+                  <div key={d.date} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        {formatEthiopianDate(d.date)} <span className="text-[10px] font-normal text-slate-400">({d.date})</span>
+                      </span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        {d.rate}% <span className="text-[10px] font-normal text-slate-400">(✅{d.attended} • ❌{d.absent})</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${d.rate >= 75 ? 'bg-emerald-500' : d.rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                        style={{ width: `${Math.min(100, d.rate)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          {/* At-Risk Students (<75%) Follow-Up */}
+          <Card variant="default" padding="lg" className="space-y-4 bg-white dark:bg-slate-900 border border-rose-200/80 dark:border-rose-900/50 shadow-sm rounded-3xl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-black text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                <span>ዝቅተኛ ተገኝነት ያላቸው (&lt;75%)</span>
+              </h3>
+              <span className="text-xs font-black px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300">
+                {atRiskStudentsInFilter.length} ተማሪዎች
+              </span>
+            </div>
+            {atRiskStudentsInFilter.length === 0 ? (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 py-4 text-center font-semibold">
+                🎉 በተመረጠው ማጣሪያ ከ75% በታች ዝቅተኛ ተገኝነት ያለው ተማሪ የለም!
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {atRiskStudentsInFilter.slice(0, 15).map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, search: s.name }));
+                      setActiveViewTab('table');
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{s.name}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {formatGradeAmharic(s.grade)} • መለያ: {s.studentCustomId} • ❌ {s.absent} ቀሪ
+                      </p>
+                    </div>
+                    <span className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-full shrink-0 ml-2">
+                      {s.rate}%
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       )}

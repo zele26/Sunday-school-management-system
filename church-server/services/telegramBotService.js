@@ -10,7 +10,36 @@ const ExamResult = require('../models/education/ExamResult');
 const Announcement = require('../models/Announcement');
 const Certificate = require('../models/education/Certificate');
 const TelegramGroup = require('../models/TelegramGroup');
+const ClassSession = require('../models/education/ClassSession');
 const { formatEthiopianDate } = require('../utils/ethiopianDate');
+const { getEthiopianTimeInfo } = require('./sessionAutoCloseService');
+
+// Deduplicate attendance records per student + session/date (Present/Late/Excused overrides Absent)
+const deduplicateBotAttendance = (records) => {
+  const map = new Map();
+  for (const r of records) {
+    const sId = r.student?._id ? r.student._id.toString() : (r.student ? r.student.toString() : (r.studentName || ''));
+    const sessKey = r.sessionId?._id
+      ? r.sessionId._id.toString()
+      : (r.sessionId ? r.sessionId.toString() : (r.session || r.courseName || 'general'));
+    const dateKey = r.date ? new Date(r.date).toISOString().split('T')[0] : '';
+    const key = r.sessionId ? `${sId}__${sessKey}` : `${sId}__${sessKey}__${dateKey}`;
+    if (!map.has(key)) {
+      map.set(key, r);
+    } else if (map.get(key).status === 'Absent' && r.status !== 'Absent') {
+      map.set(key, r);
+    }
+  }
+  return Array.from(map.values());
+};
+
+const getStatusBadgeAmharic = (status) => {
+  const s = String(status || 'Present').toLowerCase();
+  if (s === 'late') return '🟡 አርፍዷል';
+  if (s === 'excused') return '🔵 በፈቃድ';
+  if (s === 'absent') return '🔴 አልተገኘም';
+  return '🟢 ተገኝቷል';
+};
 
 let botInstance = null;
 let botInfo = null;
@@ -594,6 +623,8 @@ const initTelegramBot = async () => {
         { command: 'mezmur', description: 'መንፈሳዊ መዝሙራትና የድምፅ ትምህርቶች (Audio Mezmurs & Sermons)' },
         { command: 'ask', description: 'የመንፈሳዊ ትምህርት ረዳት (Spiritual AI Q&A Assistant)' },
         { command: 'checkin', description: 'የመምህራን የተማሪ ክትትል መመዝገቢያ (Teacher Roll-Call Check-in)' },
+        { command: 'report', description: 'የተገኝነት ሪፖርት — ለመምህራንና አስተዳዳሪዎች (Attendance Reports)' },
+        { command: 'absentees', description: 'የዛሬ ያልተገኙ ተማሪዎች ዝርዝር (Today Absentees)' },
         { command: 'certificate', description: 'የምረቃ ሰርተፊኬት ማረጋገጫና ማውረጃ (Graduation Certificate)' },
         { command: 'attendance', description: 'የዕለታዊ ክትትል ታሪክ (Attendance Logs)' },
         { command: 'courses', description: 'የተመዘገቡባቸው ትምህርቶች (Enrolled Courses)' },
@@ -1036,8 +1067,8 @@ const initTelegramBot = async () => {
       handleProfile(msg.chat.id);
     });
 
-    // ---------- 4. /attendance & "📅 የዕለታዊ ክትትል" (Visual Progress Bar) ----------
-    const handleAttendance = async (chatId) => {
+    // ---------- 4. /attendance & "📅 የዕለታዊ ክትትል" (Visual Progress Bar + Period Filters) ----------
+    const handleAttendance = async (chatId, mode = 'all') => {
       try {
         const student = await findLinkedStudent(chatId).catch(() => null);
         if (!student) {
@@ -1048,49 +1079,67 @@ const initTelegramBot = async () => {
           );
         }
 
-        const logs = await Attendance.find({ student: student._id }).sort({ date: -1 }).limit(10).catch(() => []);
-        const total = await Attendance.countDocuments({ student: student._id }).catch(() => 0);
-        const present = await Attendance.countDocuments({
-          student: student._id,
-          status: { $in: ['Present', 'present'] }
-        }).catch(() => 0);
-        const late = await Attendance.countDocuments({
-          student: student._id,
-          status: { $in: ['Late', 'late'] }
-        }).catch(() => 0);
-        const absent = await Attendance.countDocuments({
-          student: student._id,
-          status: { $in: ['Absent', 'absent'] }
-        }).catch(() => 0);
+        const query = { student: student._id };
+        let periodLabel = 'ጠቅላላ (All Time)';
+        if (mode === 'month') {
+          const monthStart = new Date();
+          monthStart.setDate(monthStart.getDate() - 30);
+          monthStart.setHours(0, 0, 0, 0);
+          query.date = { $gte: monthStart };
+          periodLabel = 'ያለፉት 30 ቀናት (Last 30 Days)';
+        }
+
+        const rawLogs = await Attendance.find(query)
+          .populate('sessionId', 'title grade sessionDate startTime')
+          .populate('course', 'name code')
+          .sort({ date: -1, checkInTime: -1 })
+          .lean()
+          .catch(() => []);
+
+        const logs = deduplicateBotAttendance(rawLogs);
+        const total = logs.length;
+        const present = logs.filter((l) => String(l.status || '').toLowerCase() === 'present').length;
+        const late = logs.filter((l) => String(l.status || '').toLowerCase() === 'late').length;
+        const excused = logs.filter((l) => String(l.status || '').toLowerCase() === 'excused').length;
+        const absent = logs.filter((l) => String(l.status || '').toLowerCase() === 'absent').length;
 
         const effectivePresent = present + late;
-        const rate = total > 0 ? Math.round((effectivePresent / total) * 100) : (total === 0 ? 100 : 0);
+        const rate = total > 0 ? Math.round((effectivePresent / total) * 100) : 100;
         const progressBar = generateProgressBar(rate, 10);
+        const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ').trim();
 
         let msg = `╭──────────────────────────────╮\n`;
         msg += `   📅 *የዕለታዊ ክትትል ሁኔታ (Attendance)* 📅\n`;
         msg += `╰──────────────────────────────╯\n\n`;
-        msg += `👤 *ተማሪ፦* ${student.firstName} ${student.lastName}\n`;
-        msg += `📊 *አጠቃላይ የትምህርት ክፍለ-ጊዜያት፦* ${total} ቀናት\n`;
-        msg += `✅ *የተገኙባቸው ቀናት፦* ${present} ቀናት\n`;
-        if (late > 0) msg += `⚠️ *የዘገዩባቸው ቀናት፦* ${late} ቀናት\n`;
-        if (absent > 0) msg += `❌ *ያልተገኙባቸው ቀናት፦* ${absent} ቀናት\n`;
+        msg += `👤 *ተማሪ፦* ${fullName}\n`;
+        msg += `🏫 *ክፍል፦* ${student.grade || student.batch || '—'} | 📆 *ጊዜ፦* ${periodLabel}\n`;
+        msg += `📊 *አጠቃላይ ክፍለ-ጊዜያት፦* ${total} ቀናት\n`;
+        msg += `🟢 *በሰዓቱ የተገኙ፦* ${present} ቀናት\n`;
+        if (late > 0) msg += `🟡 *የዘገዩ (Late)፦* ${late} ቀናት\n`;
+        if (excused > 0) msg += `🔵 *በፈቃድ የቀሩ (Excused)፦* ${excused} ቀናት\n`;
+        if (absent > 0) msg += `🔴 *ያልተገኙ (Absent)፦* ${absent} ቀናት\n`;
         msg += `\n📈 *የተገኝነት ምጣኔ፦* *${rate}%*\n`;
         msg += `\`${progressBar}\`\n`;
+
+        if (total > 0 && rate < 75) {
+          msg += `⚠️ _ማሳሰቢያ፦ የተገኝነት ምጣኔዎ ከ75% በታች ነው። እባክዎ ክትትልዎን ያጠናክሩ!_\n`;
+        } else if (total >= 3 && rate >= 90) {
+          msg += `🌟 _እጅግ በጣም ጥሩ ትጋት! እግዚአብሔር ይባርክዎት!_\n`;
+        }
+
         msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
 
+        const showCount = mode === 'recent15' ? 15 : 6;
         if (logs.length > 0) {
-          msg += `📋 *የቅርብ ጊዜ ክትትሎች፦*\n`;
-          logs.slice(0, 5).forEach((l) => {
-            const status = String(l.status || '').toLowerCase();
-            let statusIcon = '🟢 ተገኝቷል';
-            if (status === 'late') statusIcon = '🟡 አርፍዷል';
-            else if (status === 'absent') statusIcon = '🔴 አልተገኘም';
-
-            msg += `• ${formatEthiopianDate(l.date)} — *${l.courseName || 'መደበኛ ትምህርት'}* [${statusIcon}]\n`;
+          msg += `📋 *የቅርብ ጊዜ ክትትሎች (${Math.min(showCount, logs.length)}/${logs.length})፦*\n`;
+          logs.slice(0, showCount).forEach((l) => {
+            const statusIcon = getStatusBadgeAmharic(l.status);
+            const title = l.sessionId?.title || l.session || l.course?.name || l.courseName || 'መደበኛ ትምህርት';
+            const reasonSuffix = l.excuseReason ? ` _(${l.excuseReason})_` : '';
+            msg += `• ${formatEthiopianDate(l.date)} — *${title}* [${statusIcon}]${reasonSuffix}\n`;
           });
         } else {
-          msg += `💡 _እስካሁን የተመዘገበ የዕለታዊ ክትትል መረጃ የለም።_\n`;
+          msg += `💡 _በዚህ ጊዜ ውስጥ የተመዘገበ የዕለታዊ ክትትል መረጃ የለም።_\n`;
         }
 
         await safeSendMessage(chatId, msg, {
@@ -1098,13 +1147,16 @@ const initTelegramBot = async () => {
           reply_markup: {
             inline_keyboard: [
               [
+                { text: mode === 'month' ? '✅ ያለፉት 30 ቀናት' : '📅 ያለፉት 30 ቀናት', callback_data: 'att_month' },
+                { text: mode === 'all' ? '✅ ጠቅላላ' : '📊 ጠቅላላ', callback_data: 'att_all' },
+                { text: mode === 'recent15' ? '✅ 15 መዝገብ' : '📋 15 መዝገብ', callback_data: 'att_recent15' },
+              ],
+              [
                 buildPortalInlineButton('📊 ሙሉ የክትትል ዝርዝር በፖርታል ክፈት', '/dashboard/attendance')
               ],
               [
                 { text: '📚 ትምህርቶች', callback_data: 'cmd_courses' },
-                { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' }
-              ],
-              [
+                { text: '🏆 የፈተና ውጤት', callback_data: 'cmd_results' },
                 { text: '👤 የእኔ መረጃ', callback_data: 'cmd_profile' }
               ]
             ]
@@ -1609,6 +1661,11 @@ const initTelegramBot = async () => {
       helpMsg += `🔹 \`/portal\` — የተማሪዎች ፖርታል መክፈቻ\n`;
       helpMsg += `🔹 \`/verify <ቁጥር>\` — የሰርተፊኬት ወይም መታወቂያ ትክክለኛነት ያረጋግጣል\n`;
       helpMsg += `🔹 \`/status <ቁጥር>\` — የምዝገባ ሁኔታን ያሳያል\n\n`;
+      helpMsg += `👨‍🏫 *ለመምህራንና አስተዳዳሪዎች፦*\n`;
+      helpMsg += `🔹 \`/report\` — የዛሬ፣ ሳምንታዊ፣ የክፍልና ዝቅተኛ ተገኝነት ሪፖርት (+ CSV)\n`;
+      helpMsg += `🔹 \`/report <ክፍል>\` — የአንድ ክፍል ሪፖርት (ምሳሌ፦ \`/report Grade 9\`)\n`;
+      helpMsg += `🔹 \`/absentees\` — የዛሬ ያልተገኙ ተማሪዎች ዝርዝር\n`;
+      helpMsg += `🔹 \`/checkin <መለያ/ስም>\` — የተማሪ ክትትል መመዝገቢያ\n\n`;
       helpMsg += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
       helpMsg += `🎓 እንዲሁም *"🎓 የተማሪዎች ፖርታል"* የሚለውን በመጫን ሙሉውን የሰንበት ት/ቤት ድረ-ገጽ በቀጥታ በቴሌግራም መክፈት ይችላሉ!`;
 
@@ -2145,6 +2202,433 @@ Start with 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ �
       }
     };
 
+    // ---------- 16. Admin / Teacher /report & /absentees (Live Attendance Reports + CSV Export) ----------
+    const getReportKeyboard = (activeMode = 'today') => ({
+      inline_keyboard: [
+        [
+          { text: activeMode === 'today' ? '✅ ዛሬ (Today)' : '📅 ዛሬ (Today)', callback_data: 'report_today' },
+          { text: activeMode === 'week' ? '✅ ሳምንታዊ (7d)' : '📆 ሳምንታዊ (7d)', callback_data: 'report_week' },
+          { text: activeMode === 'month' ? '✅ ወርሃዊ (30d)' : '🗓️ ወርሃዊ (30d)', callback_data: 'report_month' },
+        ],
+        [
+          { text: activeMode === 'absentees' ? '✅ የዛሬ ቀሪዎች' : '❌ የዛሬ ቀሪዎች', callback_data: 'report_absentees' },
+          { text: activeMode === 'atrisk' ? '✅ ዝቅተኛ (<75%)' : '⚠️ ዝቅተኛ (<75%)', callback_data: 'report_atrisk' },
+        ],
+        [
+          { text: '📥 የዛሬ CSV ላክ', callback_data: 'report_csv_today' },
+          { text: '📥 የሳምንት CSV ላክ', callback_data: 'report_csv_week' },
+        ],
+        [
+          buildPortalInlineButton('📊 ሙሉ ሪፖርት በድረ-ገጽ ክፈት', '/admin/reports')
+        ]
+      ]
+    });
+
+    const handleAdminAttendanceReport = async (chatId, rawArg = '', msg = null, fromUserId = null) => {
+      try {
+        const userId = fromUserId || msg?.from?.id || chatId;
+        const authorized = await isAuthorizedAdmin(chatId, userId, msg);
+        if (!authorized) {
+          return safeSendMessage(
+            chatId,
+            '🔒 *ይህ የሪፖርት ትዕዛዝ ለመምህራንና አስተዳዳሪዎች ብቻ ነው።*\n\nየራስዎን ክትትል ለማየት `/attendance` ይጠቀሙ።',
+            { parse_mode: 'Markdown' }
+          );
+        }
+
+        const arg = String(rawArg || '').trim();
+        const lowerArg = arg.toLowerCase();
+        const ethNow = getEthiopianTimeInfo();
+        const todayStr = ethNow.dateString; // YYYY-MM-DD in Addis Ababa time
+
+        // MODE A: Today's Absentees List
+        if (lowerArg === 'absentees' || lowerArg === 'absent' || lowerArg === 'ቀሪዎች') {
+          const startOfDay = new Date(`${todayStr}T00:00:00.000Z`);
+          startOfDay.setHours(startOfDay.getHours() - 3);
+          const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+          const rawRecords = await Attendance.find({ date: { $gte: startOfDay, $lte: endOfDay } })
+            .populate('student', 'firstName middleName lastName studentId grade batch studentPhone contactPhone')
+            .sort({ grade: 1, date: -1 })
+            .lean();
+
+          const records = deduplicateBotAttendance(rawRecords);
+          const absentees = records.filter((r) => r.status === 'Absent');
+
+          let out = `╭──────────────────────────────╮\n`;
+          out += `   ❌ *የዛሬ ያልተገኙ ተማሪዎች (Absentees)* ❌\n`;
+          out += `╰──────────────────────────────╯\n\n`;
+          out += `📅 *ቀን፦* ${formatEthiopianDate(new Date())} (${todayStr})\n`;
+          out += `👥 *ጠቅላላ ያልተገኙ፦* *${absentees.length}* ተማሪዎች\n`;
+          out += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+          if (absentees.length === 0) {
+            out += `🎉 _ዛሬ የተመዘገበ ያልተገኘ ተማሪ የለም!_\n`;
+          } else {
+            const byGrade = new Map();
+            absentees.forEach((a) => {
+              const g = a.grade || a.student?.grade || a.student?.batch || 'አጠቃላይ';
+              if (!byGrade.has(g)) byGrade.set(g, []);
+              byGrade.get(g).push(a);
+            });
+
+            let shown = 0;
+            for (const [gName, list] of byGrade.entries()) {
+              if (shown >= 35) break;
+              out += `\n🏫 *${gName}* (${list.length})\n`;
+              for (const item of list) {
+                if (shown >= 35) break;
+                const s = item.student;
+                const name = s ? [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') : (item.studentName || 'ተማሪ');
+                const phone = s?.studentPhone || s?.contactPhone || '';
+                out += `• *${name}* (${s?.studentId || '—'})${phone ? ` 📞 ${phone}` : ''}\n`;
+                shown++;
+              }
+            }
+            if (absentees.length > shown) {
+              out += `\n_...እና ሌሎች ${absentees.length - shown} ተማሪዎች (CSV ያውርዱ)_\n`;
+            }
+          }
+
+          return safeSendMessage(chatId, out, {
+            parse_mode: 'Markdown',
+            reply_markup: getReportKeyboard('absentees'),
+          });
+        }
+
+        // MODE B: At-Risk Students (<75% attendance)
+        if (lowerArg === 'atrisk' || lowerArg === 'at-risk' || lowerArg === 'risk' || lowerArg === 'ዝቅተኛ') {
+          const since = new Date();
+          since.setDate(since.getDate() - 60);
+          const rawRecords = await Attendance.find({ date: { $gte: since } })
+            .populate('student', 'firstName middleName lastName studentId grade batch studentPhone contactPhone')
+            .lean();
+
+          const records = deduplicateBotAttendance(rawRecords);
+          const studentMap = new Map();
+          for (const r of records) {
+            const s = r.student;
+            const sId = s?._id ? s._id.toString() : null;
+            if (!sId) continue;
+            if (!studentMap.has(sId)) {
+              studentMap.set(sId, {
+                name: [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
+                customId: s.studentId || '—',
+                grade: s.grade || s.batch || r.grade || '—',
+                phone: s.studentPhone || s.contactPhone || '',
+                attended: 0,
+                absent: 0,
+                total: 0,
+              });
+            }
+            const e = studentMap.get(sId);
+            e.total++;
+            if (r.status === 'Present' || r.status === 'Late') e.attended++;
+            else if (r.status === 'Absent') e.absent++;
+          }
+
+          const atRisk = Array.from(studentMap.values())
+            .map((s) => ({ ...s, rate: s.total > 0 ? Math.round((s.attended / s.total) * 100) : 0 }))
+            .filter((s) => s.total >= 2 && s.rate < 75 && s.absent > 0)
+            .sort((a, b) => a.rate - b.rate || b.absent - a.absent);
+
+          let out = `╭──────────────────────────────╮\n`;
+          out += `   ⚠️ *ዝቅተኛ ተገኝነት ያላቸው (<75%)* ⚠️\n`;
+          out += `╰──────────────────────────────╯\n\n`;
+          out += `📆 *ጊዜ፦* ያለፉት 60 ቀናት (ቢያንስ 2 ክፍለ-ጊዜያት)\n`;
+          out += `🚨 *ክትትል የሚያስፈልጋቸው፦* *${atRisk.length}* ተማሪዎች\n`;
+          out += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+          if (atRisk.length === 0) {
+            out += `🌟 _በአሁኑ ጊዜ ከ75% በታች ዝቅተኛ ተገኝነት ያለው ተማሪ የለም!_\n`;
+          } else {
+            atRisk.slice(0, 20).forEach((s, idx) => {
+              out += `${idx + 1}. *${s.name}* (${s.grade})\n`;
+              out += `   📉 *${s.rate}%* (${s.attended}/${s.total} • ❌ ${s.absent} ቀሪ)${s.phone ? ` • 📞 ${s.phone}` : ''}\n`;
+            });
+            if (atRisk.length > 20) {
+              out += `\n_...እና ሌሎች ${atRisk.length - 20} ተማሪዎች በድረ-ገጽ ሪፖርት ላይ ይመልከቱ።_\n`;
+            }
+          }
+
+          return safeSendMessage(chatId, out, {
+            parse_mode: 'Markdown',
+            reply_markup: getReportKeyboard('atrisk'),
+          });
+        }
+
+        // MODE C: Specific Grade Report (e.g. /report Grade 9, /report 10, /report 9 night, /report Batch 1)
+        const isStandardPeriod = !lowerArg || ['today', 'ዛሬ', 'week', 'ሳምንት', 'month', 'ወር'].includes(lowerArg);
+        if (!isStandardPeriod) {
+          const parsed = parseGradeAndShift(arg);
+          const rawGrade = parsed.grade || arg;
+          const gradeNum = rawGrade.match(/\d+/);
+          const escapeRe = (v) => String(v || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const gradeRegex = gradeNum
+            ? new RegExp(`(${gradeNum[0]}|${escapeRe(rawGrade)})`, 'i')
+            : new RegExp(escapeRe(rawGrade), 'i');
+
+          const studentQuery = { $or: [{ grade: gradeRegex }, { batch: gradeRegex }] };
+          if (parsed.shift === 'night') {
+            studentQuery.shift = { $in: ['night', 'Night', 'የማታ', 'ማታ'] };
+          } else if (parsed.shift === 'day') {
+            studentQuery.shift = { $nin: ['night', 'Night', 'የማታ', 'ማታ'] };
+          }
+
+          const students = await Student.find(studentQuery).lean();
+          if (students.length === 0) {
+            return safeSendMessage(
+              chatId,
+              `⚠️ *"${arg}"* ለሚለው ክፍል የተመዘገቡ ተማሪዎች አልተገኙም።\n\nምሳሌ፦ \`/report Grade 9\` ወይም \`/report 10 night\` ወይም \`/report today\``,
+              { parse_mode: 'Markdown', reply_markup: getReportKeyboard('today') }
+            );
+          }
+
+          const studentIds = students.map((s) => s._id);
+          const rawRecords = await Attendance.find({ student: { $in: studentIds } }).lean();
+          const records = deduplicateBotAttendance(rawRecords);
+
+          const sessionKeys = new Set(
+            records.map((r) => (r.sessionId ? r.sessionId.toString() : r.date ? new Date(r.date).toISOString().split('T')[0] : '')).filter(Boolean)
+          );
+          const totalSessions = sessionKeys.size;
+
+          const present = records.filter((r) => r.status === 'Present').length;
+          const late = records.filter((r) => r.status === 'Late').length;
+          const excused = records.filter((r) => r.status === 'Excused').length;
+          const absent = records.filter((r) => r.status === 'Absent').length;
+          const attended = present + late;
+          const totalRec = records.length;
+          const avgRate = totalRec > 0 ? Math.round((attended / totalRec) * 100) : 0;
+
+          // Find top at-risk students in this grade
+          const byStu = new Map();
+          records.forEach((r) => {
+            const id = r.student?.toString();
+            if (!id) return;
+            if (!byStu.has(id)) byStu.set(id, { att: 0, tot: 0, abs: 0 });
+            const e = byStu.get(id);
+            e.tot++;
+            if (r.status === 'Present' || r.status === 'Late') e.att++;
+            else if (r.status === 'Absent') e.abs++;
+          });
+          const riskList = students
+            .map((s) => {
+              const st = byStu.get(s._id.toString()) || { att: 0, tot: 0, abs: 0 };
+              const r = st.tot > 0 ? Math.round((st.att / st.tot) * 100) : 100;
+              return {
+                name: [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' '),
+                rate: r,
+                abs: st.abs,
+                tot: st.tot,
+              };
+            })
+            .filter((s) => s.tot > 0 && s.rate < 75 && s.abs > 0)
+            .sort((a, b) => a.rate - b.rate)
+            .slice(0, 8);
+
+          let out = `╭──────────────────────────────╮\n`;
+          out += `   🏫 *የክፍል ተገኝነት ሪፖርት (${rawGrade})* 🏫\n`;
+          out += `╰──────────────────────────────╯\n\n`;
+          if (parsed.shift) out += `🕒 *ፈረቃ፦* ${parsed.shift === 'night' ? 'የማታ (Night)' : 'የቀን/ቅዳሜና እሑድ'}\n`;
+          out += `👥 *ጠቅላላ ተማሪዎች፦* ${students.length}\n`;
+          out += `📅 *የተካሄዱ ክፍለ-ጊዜያት፦* ${totalSessions}\n`;
+          out += `🟢 *በሰዓቱ፦* ${present} | 🟡 *አርፍደው፦* ${late}\n`;
+          out += `🔵 *በፈቃድ፦* ${excused} | 🔴 *ቀሪ፦* ${absent}\n\n`;
+          out += `📈 *አማካይ ተገኝነት፦* *${avgRate}%*\n`;
+          out += `\`${generateProgressBar(avgRate, 10)}\`\n`;
+
+          if (riskList.length > 0) {
+            out += `\n⚠️ *ክትትል የሚያስፈልጋቸው (<75%)፦*\n`;
+            riskList.forEach((r) => {
+              out += `• *${r.name}* — ${r.rate}% (❌ ${r.abs} ቀሪ)\n`;
+            });
+          }
+
+          return safeSendMessage(chatId, out, {
+            parse_mode: 'Markdown',
+            reply_markup: getReportKeyboard('grade'),
+          });
+        }
+
+        // MODE D: Period Summary (Today / Week / Month)
+        const mode = (lowerArg === 'week' || lowerArg === 'ሳምንት')
+          ? 'week'
+          : (lowerArg === 'month' || lowerArg === 'ወር')
+          ? 'month'
+          : 'today';
+
+        const todayStart = new Date(`${todayStr}T00:00:00.000Z`);
+        todayStart.setHours(todayStart.getHours() - 3); // Addis Ababa UTC+3 start of day
+        const endDate = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+        const startDate = new Date(todayStart);
+        if (mode === 'week') startDate.setDate(startDate.getDate() - 6);
+        else if (mode === 'month') startDate.setDate(startDate.getDate() - 29);
+
+        const [rawRecords, todaySessions] = await Promise.all([
+          Attendance.find({ date: { $gte: startDate, $lte: endDate } })
+            .populate('student', 'grade batch')
+            .lean(),
+          mode === 'today'
+            ? ClassSession.find({ sessionDate: todayStr })
+                .populate('createdBy', 'fullName')
+                .sort({ startTime: 1 })
+                .lean()
+                .catch(() => [])
+            : Promise.resolve([]),
+        ]);
+
+        const records = deduplicateBotAttendance(rawRecords);
+        const present = records.filter((r) => r.status === 'Present').length;
+        const late = records.filter((r) => r.status === 'Late').length;
+        const excused = records.filter((r) => r.status === 'Excused').length;
+        const absent = records.filter((r) => r.status === 'Absent').length;
+        const total = records.length;
+        const attended = present + late;
+        const rate = total > 0 ? Math.round((attended / total) * 100) : 0;
+
+        // Grade breakdown
+        const gradeStats = new Map();
+        records.forEach((r) => {
+          const g = r.grade || r.student?.grade || r.student?.batch || 'አጠቃላይ';
+          if (!gradeStats.has(g)) gradeStats.set(g, { att: 0, abs: 0, exc: 0, tot: 0 });
+          const e = gradeStats.get(g);
+          e.tot++;
+          if (r.status === 'Present' || r.status === 'Late') e.att++;
+          else if (r.status === 'Excused') e.exc++;
+          else if (r.status === 'Absent') e.abs++;
+        });
+
+        const titleLabel =
+          mode === 'today'
+            ? 'የዛሬ የተገኝነት ሪፖርት (Today)'
+            : mode === 'week'
+            ? 'የሳምንቱ የተገኝነት ሪፖርት (7 Days)'
+            : 'የወሩ የተገኝነት ሪፖርት (30 Days)';
+
+        let out = `╭──────────────────────────────╮\n`;
+        out += `   📊 *${titleLabel}* 📊\n`;
+        out += `╰──────────────────────────────╯\n\n`;
+        out += `📅 *ቀን፦* ${formatEthiopianDate(new Date())} (${todayStr})\n`;
+        out += `📋 *ጠቅላላ መዝገቦች፦* *${total}*\n`;
+        out += `🟢 *በሰዓቱ (Present)፦* ${present}\n`;
+        out += `🟡 *የዘገዩ (Late)፦* ${late}\n`;
+        out += `🔵 *በፈቃድ (Excused)፦* ${excused}\n`;
+        out += `🔴 *ያልተገኙ (Absent)፦* ${absent}\n\n`;
+        out += `📈 *አጠቃላይ ተገኝነት፦* *${rate}%*\n`;
+        out += `\`${generateProgressBar(rate, 10)}\`\n`;
+
+        if (mode === 'today' && todaySessions.length > 0) {
+          out += `\n🗓️ *የዛሬ ክፍለ-ጊዜያት (${todaySessions.length})፦*\n`;
+          todaySessions.slice(0, 8).forEach((s) => {
+            const stIcon = s.status === 'open' ? '🟢 ክፍት' : s.status === 'closed' ? '🔒 የተዘጋ' : s.status === 'cancelled' ? '❌ የተሰረዘ' : '⏳ መርሐ-ግብር';
+            const pCount = (s.stats?.presentCount || 0) + (s.stats?.lateCount || 0);
+            const aCount = s.stats?.absentCount || 0;
+            const creator = s.createdBy?.fullName ? ` • 👤 ${s.createdBy.fullName}` : '';
+            out += `• *${s.title || s.grade}* [${stIcon}] — ✅${pCount} ❌${aCount}${creator}\n`;
+          });
+        }
+
+        if (gradeStats.size > 0) {
+          out += `\n🏫 *በክፍል ዝርዝር፦*\n`;
+          Array.from(gradeStats.entries())
+            .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+            .slice(0, 12)
+            .forEach(([gName, st]) => {
+              const gRate = st.tot > 0 ? Math.round((st.att / st.tot) * 100) : 0;
+              out += `• *${gName}* — *${gRate}%* (✅${st.att} • ❌${st.abs}${st.exc ? ` • 🔵${st.exc}` : ''})\n`;
+            });
+        } else {
+          out += `\n💡 _በዚህ ጊዜ ውስጥ የተመዘገበ የክትትል መረጃ የለም።_\n`;
+        }
+
+        out += `\n💡 _የአንድ ክፍል ሪፖርት ለማየት፦_ \`/report Grade 9\``;
+
+        await safeSendMessage(chatId, out, {
+          parse_mode: 'Markdown',
+          reply_markup: getReportKeyboard(mode),
+        });
+      } catch (err) {
+        console.error('Telegram handleAdminAttendanceReport error:', err);
+        safeSendMessage(chatId, '❌ ሪፖርቱን በማዘጋጀት ላይ ስህተት ተፈጥሯል።').catch(() => {});
+      }
+    };
+
+    const handleSendTelegramCsvReport = async (chatId, scope = 'today', fromUserId = null) => {
+      try {
+        const authorized = await isAuthorizedAdmin(chatId, fromUserId || chatId);
+        if (!authorized) {
+          return safeSendMessage(chatId, '🔒 ይህ አገልግሎት ለመምህራንና አስተዳዳሪዎች ብቻ ነው።');
+        }
+
+        const ethNow = getEthiopianTimeInfo();
+        const todayStr = ethNow.dateString;
+        const todayStart = new Date(`${todayStr}T00:00:00.000Z`);
+        todayStart.setHours(todayStart.getHours() - 3);
+        const endDate = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+        const startDate = new Date(todayStart);
+        if (scope === 'week') startDate.setDate(startDate.getDate() - 6);
+
+        const rawRecords = await Attendance.find({ date: { $gte: startDate, $lte: endDate } })
+          .populate('student', 'firstName middleName lastName studentId grade batch shift studentPhone contactPhone')
+          .populate('sessionId', 'title')
+          .sort({ date: -1, grade: 1 })
+          .lean();
+
+        const records = deduplicateBotAttendance(rawRecords);
+        if (records.length === 0) {
+          return safeSendMessage(chatId, '💡 ለCSV ማውረጃ የሚሆን የተመዘገበ የክትትል መረጃ አልተገኘም።');
+        }
+
+        const csvEscape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        const header = ['Date', 'Student ID', 'Student Name', 'Grade', 'Shift', 'Session', 'Status', 'Phone', 'Note'];
+        const rows = records.map((r) => {
+          const s = r.student;
+          const name = s ? [s.firstName, s.middleName, s.lastName].filter(Boolean).join(' ') : (r.studentName || '');
+          const dateVal = r.date ? new Date(r.date).toISOString().split('T')[0] : todayStr;
+          return [
+            dateVal,
+            s?.studentId || '',
+            name,
+            r.grade || s?.grade || s?.batch || '',
+            r.shift || s?.shift || '',
+            r.sessionId?.title || r.session || r.courseName || 'General',
+            r.status || 'Present',
+            s?.studentPhone || s?.contactPhone || '',
+            r.excuseReason || r.note || '',
+          ].map(csvEscape).join(',');
+        });
+
+        const csvContent = '\uFEFF' + [header.map(csvEscape).join(','), ...rows].join('\n');
+        const filename = `attendance_${scope}_${todayStr}.csv`;
+
+        await botInstance.sendDocument(
+          chatId,
+          Buffer.from(csvContent, 'utf8'),
+          {
+            caption: `📥 *የተገኝነት ሪፖርት (${scope === 'week' ? 'ሳምንታዊ' : 'የዛሬ'} — ${todayStr})*\n📊 ጠቅላላ መዝገቦች፦ ${records.length}`,
+            parse_mode: 'Markdown',
+          },
+          {
+            filename,
+            contentType: 'text/csv',
+          }
+        );
+      } catch (err) {
+        console.error('Telegram handleSendTelegramCsvReport error:', err);
+        safeSendMessage(chatId, '❌ CSV ፋይሉን መላክ አልተቻለም።').catch(() => {});
+      }
+    };
+
+    botInstance.onText(/\/(?:report|attendancereport)(?:@\w+)?(?:\s+(.+))?/, async (msg, match) => {
+      const argText = match && match[1] ? match[1].trim() : '';
+      handleAdminAttendanceReport(msg.chat.id, argText, msg);
+    });
+
+    botInstance.onText(/\/absentees(?:@\w+)?/, async (msg) => {
+      handleAdminAttendanceReport(msg.chat.id, 'absentees', msg);
+    });
+
     botInstance.onText(/\/quiz|📝 ሳምንታዊ ፈተና/, async (msg) => {
       if (msg.chat.type !== 'private') {
         return sendGroupToPrivateRedirect(msg.chat.id, msg.from, 'quiz');
@@ -2198,6 +2682,22 @@ Start with 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ �
 
       try {
         if (isGroup) {
+          const isAdminReportAction = typeof data === 'string' && data.startsWith('report_');
+          if (isAdminReportAction) {
+            const authorized = await isAuthorizedAdmin(chatId, query.from?.id, query.message);
+            if (authorized) {
+              await botInstance.answerCallbackQuery(query.id).catch(() => {});
+              if (data === 'report_today') handleAdminAttendanceReport(chatId, 'today', query.message, query.from?.id);
+              else if (data === 'report_week') handleAdminAttendanceReport(chatId, 'week', query.message, query.from?.id);
+              else if (data === 'report_month') handleAdminAttendanceReport(chatId, 'month', query.message, query.from?.id);
+              else if (data === 'report_absentees') handleAdminAttendanceReport(chatId, 'absentees', query.message, query.from?.id);
+              else if (data === 'report_atrisk') handleAdminAttendanceReport(chatId, 'atrisk', query.message, query.from?.id);
+              else if (data === 'report_csv_today') handleSendTelegramCsvReport(chatId, 'today', query.from?.id);
+              else if (data === 'report_csv_week') handleSendTelegramCsvReport(chatId, 'week', query.from?.id);
+              return;
+            }
+          }
+
           const username = botInfo?.username;
           const cmdParam = (data || '').replace('cmd_', '');
           const dmUrl = username ? `https://t.me/${username}?start=${cmdParam}` : 'https://t.me';
@@ -2219,7 +2719,16 @@ Start with 'በስመ አብ ወወልድ ወመንፈስ ቅዱስ አሐዱ �
         await botInstance.answerCallbackQuery(query.id).catch(() => {});
         if (data === 'cmd_profile') handleProfile(chatId);
         else if (data === 'cmd_certificate') handleCertificate(chatId);
-        else if (data === 'cmd_attendance') handleAttendance(chatId);
+        else if (data === 'cmd_attendance' || data === 'att_all') handleAttendance(chatId, 'all');
+        else if (data === 'att_month') handleAttendance(chatId, 'month');
+        else if (data === 'att_recent15') handleAttendance(chatId, 'recent15');
+        else if (data === 'report_today') handleAdminAttendanceReport(chatId, 'today', query.message, query.from?.id);
+        else if (data === 'report_week') handleAdminAttendanceReport(chatId, 'week', query.message, query.from?.id);
+        else if (data === 'report_month') handleAdminAttendanceReport(chatId, 'month', query.message, query.from?.id);
+        else if (data === 'report_absentees') handleAdminAttendanceReport(chatId, 'absentees', query.message, query.from?.id);
+        else if (data === 'report_atrisk') handleAdminAttendanceReport(chatId, 'atrisk', query.message, query.from?.id);
+        else if (data === 'report_csv_today') handleSendTelegramCsvReport(chatId, 'today', query.from?.id);
+        else if (data === 'report_csv_week') handleSendTelegramCsvReport(chatId, 'week', query.from?.id);
         else if (data === 'cmd_courses') handleCourses(chatId);
         else if (data === 'cmd_results') handleResults(chatId);
         else if (data === 'cmd_announcements') handleAnnouncements(chatId);
@@ -2816,10 +3325,14 @@ const recordAttendanceFromQr = async ({
 
     // Send instant Telegram notification to the student if they have telegramChatId
     if (student.telegramChatId && botInstance) {
+      const fullName = [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ').trim();
+      const statusBadge = getStatusBadgeAmharic(normalizedStatus);
+      const sessionTitle = targetSession?.title || sessionLabel || 'መደበኛ ትምህርት';
       const studentMsg = `🕊️ *የሰንበት ት/ቤት የዕለት ክትትልዎ ተመዝግቧል!*\n\n` +
-        `👤 *ተማሪ፦* ${student.firstName} ${student.lastName}\n` +
+        `👤 *ተማሪ፦* ${fullName}\n` +
         `📅 *ቀን፦* ${formatEthiopianDate(new Date())}\n` +
-        `⚡ *ሁኔታ፦* 🟢 *${normalizedStatus === 'Present' ? 'ተገኝተዋል (Present)' : normalizedStatus}*\n` +
+        `🏫 *ክፍለ-ጊዜ፦* ${sessionTitle}\n` +
+        `⚡ *ሁኔታ፦* *${statusBadge} (${normalizedStatus})*\n` +
         `👨‍🏫 *የመዘገበው መምህር፦* ${teacherName}\n` +
         `📈 *የአጠቃላይ ተገኝነት ምጣኔ፦* *${attendanceRate}%*`;
 
@@ -2847,6 +3360,99 @@ const recordAttendanceFromQr = async ({
   }
 };
 
+/**
+ * Send a formatted attendance report from Web Admin directly to Admin DM and/or Telegram Class Groups
+ */
+const sendAttendanceReportToTelegram = async ({
+  adminUser = null,
+  messageText,
+  targetGrade = null,
+  targetShift = null,
+  sendToSelf = true,
+  sendToGroups = false,
+  targetGroupId = null,
+} = {}) => {
+  if (!botInstance && process.env.TELEGRAM_BOT_TOKEN) {
+    try {
+      await initTelegramBot();
+    } catch (e) {
+      console.warn('Auto-init bot in sendAttendanceReportToTelegram failed:', e.message);
+    }
+  }
+  if (!botInstance) {
+    return { success: false, message: 'ቴሌግራም ቦት አልበራም (Telegram Bot is not active)' };
+  }
+
+  let sentToAdmin = false;
+  let sentGroups = 0;
+  const errors = [];
+
+  // 1. Send to Admin's linked Telegram DM (or fallback to TELEGRAM_ADMIN_IDS)
+  if (sendToSelf) {
+    const adminChatIds = new Set();
+    if (adminUser?.telegramChatId) {
+      adminChatIds.add(String(adminUser.telegramChatId));
+    } else if (adminUser?._id || adminUser?.id) {
+      const dbUser = await User.findById(adminUser._id || adminUser.id).select('telegramChatId').lean().catch(() => null);
+      if (dbUser?.telegramChatId) adminChatIds.add(String(dbUser.telegramChatId));
+    }
+    if (adminChatIds.size === 0) {
+      const envAdmins = (process.env.TELEGRAM_ADMIN_IDS || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      envAdmins.forEach((id) => adminChatIds.add(id));
+    }
+
+    if (adminChatIds.size === 0 && !sendToGroups) {
+      return {
+        success: false,
+        message: 'የቴሌግራም አካውንትዎ አልተገናኘም። እባክዎ መጀመሪያ ከቴሌግራም ቦቱ ጋር ስልክዎን ያገናኙ ወይም የክፍል ግሩፕ ይምረጡ።',
+      };
+    }
+
+    for (const cId of adminChatIds) {
+      try {
+        await safeSendMessage(cId, messageText, { parse_mode: 'Markdown' });
+        sentToAdmin = true;
+      } catch (e) {
+        errors.push(e.message);
+      }
+    }
+  }
+
+  // 2. Optionally send to matching Telegram Class Group(s)
+  if (sendToGroups) {
+    const groupRes = await sendMessageToGroups({
+      messageText,
+      targetGrade,
+      targetShift,
+      targetGroupId,
+      sendToGroups: true,
+      sendToDirectStudents: false,
+    });
+    if (groupRes.success) {
+      sentGroups = groupRes.sentGroups || 0;
+    } else if (groupRes.message) {
+      errors.push(groupRes.message);
+    }
+  }
+
+  if (!sentToAdmin && sentGroups === 0) {
+    return {
+      success: false,
+      message: errors[0] || 'ሪፖርቱን ወደ ቴሌግራም መላክ አልተቻለም (የተገናኘ የቴሌግራም ግሩፕ ወይም አድሚን አልተገኘም)።',
+    };
+  }
+
+  return {
+    success: true,
+    sentToAdmin,
+    sentGroups,
+    message: `ሪፖርቱ በተሳካ ሁኔታ ወደ ቴሌግራም ተልኳል!${sentToAdmin ? ' (ወደ አስተዳዳሪ)' : ''}${sentGroups > 0 ? ` (${sentGroups} ግሩፕ)` : ''}`,
+  };
+};
+
 module.exports = {
   initTelegramBot,
   getBotInstance: () => botInstance,
@@ -2854,6 +3460,7 @@ module.exports = {
   safeSendMessage,
   broadcastToStudents,
   sendMessageToGroups,
+  sendAttendanceReportToTelegram,
   upsertTelegramGroup,
   autoDetectClassAndShift,
   normalizeGradeString,

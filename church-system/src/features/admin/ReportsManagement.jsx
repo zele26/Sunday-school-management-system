@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { 
   FileText, 
   Download, 
@@ -23,7 +24,11 @@ import {
   ChevronRight,
   Edit2,
   Check,
-  X
+  X,
+  Send,
+  AlertTriangle,
+  BarChart3,
+  FileSpreadsheet
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
 import { PageHeader } from '../../components/ui/PageHeader';
@@ -33,7 +38,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Select } from '../../components/ui/Select';
 import { Input } from '../../components/ui/Input';
 import { toast } from '../../utils/toast';
-import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatEthiopianDate, getEthiopianLocalDateString } from '../../utils/ethiopianDate';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
 
 // ─── CSV helpers & Exporter with UTF-8 BOM ───────────────────────────
@@ -278,13 +283,274 @@ const generateCSV = (data, reportType) => {
       return rows.join('\n');
     }
 
+    case 'overview': {
+      const { summary = {}, byGrade = [], atRiskStudents = [], filters = {} } = data;
+      const dateText = filters.startDate && filters.endDate ? `${filters.startDate} እስከ ${filters.endDate}` : 'አጠቃላይ (All-Time)';
+      const rows = [
+        ...churchHeader,
+        '"=== አጠቃላይ የሰንበት ት/ቤት የተገኝነት እና ዝቅተኛ መገኘት ሪፖርት ==="',
+        `"የቀን ክልል:",${escapeCSV(dateText)},"ዝቅተኛ መለኪያ:",${escapeCSV('<' + (filters.threshold || 75) + '%')}`,
+        `"ጠቅላላ መዝገቦች:",${summary.totalRecords ?? 0},"አጠቃላይ ተገኝነት:",${escapeCSV((summary.attendanceRate ?? 0) + '%')}`,
+        `"በሰዓቱ:",${summary.present ?? 0},"የዘገዩ:",${summary.late ?? 0},"በፈቃድ:",${summary.excused ?? 0},"ያልተገኙ:",${summary.absent ?? 0}`,
+        `"ዝቅተኛ መገኘት ያላቸው:",${summary.atRiskCount ?? atRiskStudents.length}`,
+        '""',
+        '"=== በክፍል ደረጃ ማጠቃለያ (BY GRADE) ==="',
+        '"ክፍል","ጠቅላላ","በሰዓቱ","የዘገዩ","በፈቃድ","ያልተገኙ","የመገኘት ምጣኔ %"'
+      ];
+      byGrade.forEach((g) => {
+        rows.push([
+          escapeCSV(formatGradeAmharic(g.grade)),
+          g.total || 0,
+          g.present || 0,
+          g.late || 0,
+          g.excused || 0,
+          g.absent || 0,
+          escapeCSV(`${g.rate || 0}%`)
+        ].join(','));
+      });
+      rows.push('""');
+      rows.push(`"=== ክትትል የሚያስፈልጋቸው ተማሪዎች (<${filters.threshold || 75}%) ==="`);
+      rows.push('"ተ.ቁ","መለያ ቁጥር","ሙሉ ስም","ክፍል","ስልክ","በሰዓቱ","የዘገዩ","በፈቃድ","ያልተገኙ","ጠቅላላ","የመገኘት ምጣኔ %"');
+      atRiskStudents.forEach((s, idx) => {
+        rows.push([
+          idx + 1,
+          escapeCSV(s.studentCustomId || '—'),
+          escapeCSV(s.studentName || '—'),
+          escapeCSV(formatGradeAmharic(s.grade)),
+          escapeCSV(s.phone || '—'),
+          s.present || 0,
+          s.late || 0,
+          s.excused || 0,
+          s.absent || 0,
+          s.total || 0,
+          escapeCSV(`${s.rate || 0}%`)
+        ].join(','));
+      });
+      return rows.join('\n');
+    }
+
     default:
       return '';
   }
 };
 
+// ─── Real Excel (.xlsx) Workbook Exporter ────────────────────────────
+const exportReportToExcel = (data, reportType) => {
+  try {
+    const wb = XLSX.utils.book_new();
+    const todayStr = getEthiopianLocalDateString();
+
+    if (reportType === 'overview') {
+      const summaryRows = [
+        { መለኪያ: 'ጠቅላላ መዝገቦች', ዋጋ: data.summary?.totalRecords ?? 0 },
+        { መለኪያ: 'በሰዓቱ (Present)', ዋጋ: data.summary?.present ?? 0 },
+        { መለኪያ: 'የዘገዩ (Late)', ዋጋ: data.summary?.late ?? 0 },
+        { መለኪያ: 'በፈቃድ (Excused)', ዋጋ: data.summary?.excused ?? 0 },
+        { መለኪያ: 'ያልተገኙ (Absent)', ዋጋ: data.summary?.absent ?? 0 },
+        { መለኪያ: 'አጠቃላይ ተገኝነት %', ዋጋ: `${data.summary?.attendanceRate ?? 0}%` },
+        { መለኪያ: 'ዝቅተኛ መገኘት (<Threshold)', ዋጋ: data.summary?.atRiskCount ?? 0 },
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'Summary');
+
+      const gradeRows = (data.byGrade || []).map((g) => ({
+        ክፍል: formatGradeAmharic(g.grade),
+        ጠቅላላ: g.total,
+        በሰዓቱ: g.present,
+        የዘገዩ: g.late,
+        በፈቃድ: g.excused,
+        ያልተገኙ: g.absent,
+        'ምጣኔ %': `${g.rate}%`,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(gradeRows), 'By Grade');
+
+      const riskRows = (data.atRiskStudents || []).map((s, idx) => ({
+        'ተ.ቁ': idx + 1,
+        መለያ: s.studentCustomId || '—',
+        'ሙሉ ስም': s.studentName,
+        ክፍል: formatGradeAmharic(s.grade),
+        ስልክ: s.phone || '—',
+        በሰዓቱ: s.present,
+        የዘገዩ: s.late,
+        በፈቃድ: s.excused,
+        ያልተገኙ: s.absent,
+        ጠቅላላ: s.total,
+        'ምጣኔ %': `${s.rate}%`,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(riskRows), 'At-Risk Students');
+    } else if (reportType === 'grade') {
+      const rows = (data.students || []).map((s, idx) => ({
+        'ተ.ቁ': idx + 1,
+        መለያ: s.studentCustomId || '—',
+        'ሙሉ ስም': s.studentName,
+        ፈረቃ: s.shift === 'night' ? 'የማታ' : 'የቀን',
+        ስልክ: s.phone || '—',
+        የተገኘበት: s.overallAttended || 0,
+        የዘገየበት: s.late || 0,
+        በፈቃድ: s.excused || 0,
+        የቀረበት: s.overallMissed ?? s.absent ?? 0,
+        'ክፍለ ጊዜ': s.overallSessions || 0,
+        'ምጣኔ %': `${s.overallRate || 0}%`,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Grade Report');
+    } else if (reportType === 'student') {
+      const rows = (data.attendanceHistory || []).map((h, idx) => ({
+        'ተ.ቁ': idx + 1,
+        'ቀን (ኢት)': formatEthiopianDate(h.date),
+        'ቀን (Gregorian)': h.date ? new Date(h.date).toISOString().split('T')[0] : '—',
+        'ክፍለ-ጊዜ / ኮርስ': h.courseName || '—',
+        መምህር: h.teacherName || '—',
+        ሁኔታ: h.status || 'Present',
+        ማስታወሻ: h.note || '',
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Student Attendance');
+    } else if (reportType === 'course') {
+      const rows = (data.students || []).map((s, idx) => ({
+        'ተ.ቁ': idx + 1,
+        መለያ: s.studentCustomId || '—',
+        'ሙሉ ስም': s.studentName,
+        ክፍል: formatGradeAmharic(s.grade),
+        ስልክ: s.phone || '—',
+        የተገኘበት: s.attended || 0,
+        የዘገየበት: s.late || 0,
+        በፈቃድ: s.excused || 0,
+        የቀረበት: s.missed || 0,
+        'ክፍለ ጊዜ': s.totalSessions || 0,
+        'ምጣኔ %': `${s.rate || 0}%`,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Course Report');
+    } else if (reportType === 'teacher') {
+      const rows = [];
+      (data.courses || []).forEach((c) => {
+        (c.students || []).forEach((s) => {
+          rows.push({
+            ኮርስ: c.courseName,
+            መለያ: s.studentCustomId || '—',
+            'ሙሉ ስም': s.studentName,
+            ክፍል: formatGradeAmharic(s.grade || c.grade),
+            የተገኘበት: s.attended || 0,
+            የቀረበት: s.missed || 0,
+            'ክፍለ ጊዜ': s.totalSessions || 0,
+            'ምጣኔ %': `${s.rate || 0}%`,
+          });
+        });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Teacher Report');
+    } else if (reportType === 'date') {
+      const rows = (data.records || []).map((r, idx) => ({
+        'ተ.ቁ': idx + 1,
+        ሰዓት: r.time ? new Date(r.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+        መለያ: r.studentId || '—',
+        'የተማሪ ስም': r.studentName,
+        ክፍል: formatGradeAmharic(r.grade),
+        ፈረቃ: r.shift === 'night' ? 'የማታ' : 'የቀን',
+        'ክፍለ-ጊዜ / ኮርስ': r.courseName || '—',
+        ሁኔታ: r.status || 'Present',
+        ማስታወሻ: r.note || '',
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Daily Attendance');
+    }
+
+    XLSX.writeFile(wb, `${reportType}-attendance-report-${todayStr}.xlsx`);
+    toast.success('የExcel (.xlsx) ሪፖርት በተሳካ ሁኔታ ወርዷል!');
+  } catch (err) {
+    console.error('Excel export error:', err);
+    toast.error('Excel ፋይሉን ማውረድ አልተቻለም');
+  }
+};
+
+// ─── Format Report Summary for Telegram Sharing ──────────────────────
+const buildTelegramReportMessage = (data, reportType) => {
+  const dateLabel = formatEthiopianDate(new Date());
+  if (reportType === 'overview') {
+    const { summary = {}, byGrade = [], atRiskStudents = [], filters = {} } = data;
+    let msg = `📊 *አጠቃላይ የሰንበት ት/ቤት የተገኝነት ሪፖርት*\n`;
+    msg += `📅 ቀን፦ ${dateLabel}\n`;
+    if (filters.startDate || filters.endDate) {
+      msg += `🗓️ ጊዜ፦ ${filters.startDate || '...'} እስከ ${filters.endDate || '...'}\n`;
+    }
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📋 *ጠቅላላ መዝገቦች፦* ${summary.totalRecords ?? 0}\n`;
+    msg += `🟢 በሰዓቱ፦ ${summary.present ?? 0} | 🟡 የዘገዩ፦ ${summary.late ?? 0}\n`;
+    msg += `🔵 በፈቃድ፦ ${summary.excused ?? 0} | 🔴 ያልተገኙ፦ ${summary.absent ?? 0}\n`;
+    msg += `📈 *አጠቃላይ ተገኝነት፦* *${summary.attendanceRate ?? 0}%*\n`;
+    msg += `⚠️ *ዝቅተኛ (<${filters.threshold || 75}%)፦* ${summary.atRiskCount ?? 0} ተማሪዎች\n`;
+    if (byGrade.length > 0) {
+      msg += `\n🏫 *በክፍል ዝርዝር፦*\n`;
+      byGrade.slice(0, 10).forEach((g) => {
+        msg += `• *${formatGradeAmharic(g.grade)}* — *${g.rate}%* (✅${g.attended} ❌${g.absent})\n`;
+      });
+    }
+    if (atRiskStudents.length > 0) {
+      msg += `\n🚨 *ቅድሚያ ክትትል የሚያስፈልጋቸው፦*\n`;
+      atRiskStudents.slice(0, 8).forEach((s) => {
+        msg += `• *${s.studentName}* (${formatGradeAmharic(s.grade)}) — ${s.rate}%${s.phone && s.phone !== '—' ? ` 📞 ${s.phone}` : ''}\n`;
+      });
+    }
+    return msg;
+  }
+
+  if (reportType === 'grade') {
+    const { grade, summary = {}, students = [] } = data;
+    const atRisk = students.filter((s) => s.isAtRisk || (s.overallSessions > 0 && s.overallRate < 75));
+    let msg = `🏫 *የክፍል ተገኝነት ሪፖርት — ${formatGradeAmharic(grade)}*\n`;
+    msg += `📅 ቀን፦ ${dateLabel}\n━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `👥 ተማሪዎች፦ *${summary.totalStudents ?? students.length}* | 📅 ክፍለ-ጊዜያት፦ *${summary.totalSessions ?? 0}*\n`;
+    msg += `🟢 የተገኙ፦ ${summary.totalAttended ?? 0} | 🟡 የዘገዩ፦ ${summary.totalLate ?? 0}\n`;
+    msg += `🔵 በፈቃድ፦ ${summary.totalExcused ?? 0} | 🔴 የቀሩ፦ ${summary.totalAbsent ?? 0}\n`;
+    msg += `📈 *አማካይ ተገኝነት፦* *${summary.averageRate ?? 0}%*\n`;
+    if (atRisk.length > 0) {
+      msg += `\n⚠️ *ዝቅተኛ ተገኝነት (<75%) — ${atRisk.length} ተማሪዎች፦*\n`;
+      atRisk.slice(0, 10).forEach((s) => {
+        msg += `• *${s.studentName}* — ${s.overallRate}% (❌ ${s.overallMissed ?? s.absent ?? 0})\n`;
+      });
+    }
+    return msg;
+  }
+
+  if (reportType === 'date') {
+    const { date, summary = {}, records = [] } = data;
+    const absentees = records.filter((r) => r.status === 'Absent');
+    let msg = `📅 *የዕለታዊ ተገኝነት ሪፖርት*\n`;
+    msg += `🗓️ ቀን፦ ${formatEthiopianDate(date)} (${date})\n━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `📋 ጠቅላላ መዝገቦች፦ *${summary.totalRecords ?? records.length}*\n`;
+    msg += `🟢 በሰዓቱ፦ ${summary.totalOnTime ?? 0} | 🟡 የዘገዩ፦ ${summary.totalLate ?? 0}\n`;
+    msg += `🔵 በፈቃድ፦ ${summary.totalExcused ?? 0} | 🔴 ያልተገኙ፦ ${summary.totalAbsent ?? 0}\n`;
+    msg += `📈 *የተገኝነት ምጣኔ፦* *${summary.attendanceRate ?? 0}%*\n`;
+    if (absentees.length > 0) {
+      msg += `\n❌ *ያልተገኙ ተማሪዎች (${absentees.length})፦*\n`;
+      absentees.slice(0, 12).forEach((a) => {
+        msg += `• *${a.studentName}* (${formatGradeAmharic(a.grade)})\n`;
+      });
+    }
+    return msg;
+  }
+
+  if (reportType === 'student') {
+    const { student = {}, summary = {} } = data;
+    return `👤 *የተማሪ ተገኝነት ሪፖርት*\n` +
+      `ስም፦ *${student.fullName}* (${student.studentId || '—'})\n` +
+      `ክፍል፦ ${formatGradeAmharic(student.grade)}\n━━━━━━━━━━━━━━━━━━━━\n` +
+      `📅 ጠቅላላ ክፍለ-ጊዜያት፦ ${summary.totalSessions ?? 0}\n` +
+      `🟢 በሰዓቱ፦ ${summary.totalPresent ?? 0} | 🟡 የዘገዩ፦ ${summary.totalLate ?? 0}\n` +
+      `🔵 በፈቃድ፦ ${summary.totalExcused ?? 0} | 🔴 የቀሩ፦ ${summary.totalMissed ?? 0}\n` +
+      `📈 *የተገኝነት ምጣኔ፦* *${summary.overallRate ?? 0}%*`;
+  }
+
+  if (reportType === 'course') {
+    const { course = {}, summary = {} } = data;
+    return `📘 *የኮርስ ተገኝነት ሪፖርት — ${course.name || '—'}*\n` +
+      `መምህር፦ ${course.teacherName || '—'} | ክፍል፦ ${formatGradeAmharic(course.grade)}\n━━━━━━━━━━━━━━━━━━━━\n` +
+      `👥 ተማሪዎች፦ ${summary.totalEnrolled ?? 0} | 📅 ክፍለ-ጊዜያት፦ ${summary.totalSessions ?? 0}\n` +
+      `📈 *አማካይ ተገኝነት፦* *${summary.averageRate ?? 0}%* | ⚠️ ዝቅተኛ (<75%)፦ ${summary.atRiskCount ?? 0}`;
+  }
+
+  const { teacher = {}, summary = {} } = data;
+  return `👨‍🏫 *የመምህር ሪፖርት — ${teacher.fullName || '—'}*\n` +
+    `📚 ኮርሶች፦ ${summary.totalCourses ?? 0} | 👥 ተማሪዎች፦ ${summary.totalStudents ?? 0}\n📅 ቀን፦ ${dateLabel}`;
+};
+
 const ReportsManagement = () => {
-  const [reportType, setReportType] = useState('');
+  const [reportType, setReportType] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
 
@@ -300,16 +566,76 @@ const ReportsManagement = () => {
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => getEthiopianLocalDateString());
 
-  // Enhanced Filter Options: Shift, Student Type, Date Range
+  // Enhanced Filter Options: Shift, Student Type, Date Range, Threshold, Table Search
   const [selectedShift, setSelectedShift] = useState('all'); // 'all' | 'weekend' | 'night'
   const [selectedStudentType, setSelectedStudentType] = useState('all'); // 'all' | 'regular' | 'distance'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [atRiskThreshold, setAtRiskThreshold] = useState('75');
   const [customSessions, setCustomSessions] = useState('');
   const [isEditingSessions, setIsEditingSessions] = useState(false);
   const [tempSessionsInput, setTempSessionsInput] = useState('');
+
+  // In-report filtering & Telegram share state
+  const [tableSearch, setTableSearch] = useState('');
+  const [onlyAtRisk, setOnlyAtRisk] = useState(false);
+  const [sendingTelegram, setSendingTelegram] = useState(false);
+  const [telegramTarget, setTelegramTarget] = useState('self'); // 'self' | 'group' | 'both'
+
+  const applyDatePreset = (preset) => {
+    const todayStr = getEthiopianLocalDateString();
+    if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+    const today = new Date(`${todayStr}T12:00:00Z`);
+    if (preset === 'today') {
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === '7d') {
+      const s = new Date(today);
+      s.setUTCDate(s.getUTCDate() - 6);
+      setStartDate(s.toISOString().split('T')[0]);
+      setEndDate(todayStr);
+    } else if (preset === '30d') {
+      const s = new Date(today);
+      s.setUTCDate(s.getUTCDate() - 29);
+      setStartDate(s.toISOString().split('T')[0]);
+      setEndDate(todayStr);
+    }
+  };
+
+  const handleSendToTelegram = async () => {
+    if (!data || !reportType) return;
+    setSendingTelegram(true);
+    try {
+      const messageText = buildTelegramReportMessage(data, reportType);
+      const res = await apiFetch('/api/admin/reports/send-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageText,
+          targetGrade: reportType === 'grade' ? selectedGrade : (selectedGrade && selectedGrade !== 'all' ? selectedGrade : null),
+          targetShift: selectedShift && selectedShift !== 'all' ? selectedShift : null,
+          sendToSelf: telegramTarget === 'self' || telegramTarget === 'both',
+          sendToGroups: telegramTarget === 'group' || telegramTarget === 'both',
+        }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        toast.success(json.message || 'ሪፖርቱ ወደ ቴሌግራም ተልኳል!');
+      } else {
+        toast.error(json.message || 'ወደ ቴሌግራም መላክ አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የቴሌግራም ግንኙነት ስህተት ተፈጥሯል');
+    } finally {
+      setSendingTelegram(false);
+    }
+  };
 
   const handleSaveInPlaceSessions = () => {
     const num = parseInt(tempSessionsInput, 10);
@@ -388,15 +714,34 @@ const ReportsManagement = () => {
 
     let url = '';
     try {
+      setTableSearch('');
+      setOnlyAtRisk(false);
       switch (reportType) {
-        case 'student':
+        case 'overview': {
+          const params = new URLSearchParams();
+          if (selectedShift && selectedShift !== 'all') params.append('shift', selectedShift);
+          if (selectedStudentType && selectedStudentType !== 'all') params.append('studentType', selectedStudentType);
+          if (selectedGrade && selectedGrade !== 'all') params.append('grade', selectedGrade);
+          if (startDate) params.append('startDate', startDate);
+          if (endDate) params.append('endDate', endDate);
+          if (atRiskThreshold) params.append('threshold', atRiskThreshold);
+          const q = params.toString() ? `?${params.toString()}` : '';
+          url = `/api/admin/reports/overview${q}`;
+          break;
+        }
+        case 'student': {
           if (!selectedStudent) {
             toast.error('እባክዎ ተማሪ ይምረጡ');
             setLoading(false);
             return;
           }
-          url = `/api/admin/reports/student/${selectedStudent}`;
+          const params = new URLSearchParams();
+          if (startDate) params.append('startDate', startDate);
+          if (endDate) params.append('endDate', endDate);
+          const q = params.toString() ? `?${params.toString()}` : '';
+          url = `/api/admin/reports/student/${selectedStudent}${q}`;
           break;
+        }
         case 'grade': {
           if (!selectedGrade) {
             toast.error('እባክዎ የክፍል ደረጃ ይምረጡ');
@@ -415,14 +760,19 @@ const ReportsManagement = () => {
           url = `/api/admin/reports/grade/${encodeURIComponent(selectedGrade)}${q}`;
           break;
         }
-        case 'course':
+        case 'course': {
           if (!selectedCourse) {
             toast.error('እባክዎ ኮርስ ይምረጡ');
             setLoading(false);
             return;
           }
-          url = `/api/admin/reports/course/${selectedCourse}`;
+          const params = new URLSearchParams();
+          if (startDate) params.append('startDate', startDate);
+          if (endDate) params.append('endDate', endDate);
+          const q = params.toString() ? `?${params.toString()}` : '';
+          url = `/api/admin/reports/course/${selectedCourse}${q}`;
           break;
+        }
         case 'teacher':
           if (!selectedTeacher) {
             toast.error('እባክዎ መምህር ይምረጡ');
@@ -840,9 +1190,37 @@ const ReportsManagement = () => {
 
         {/* Grade Students Table */}
         <Card className="p-5 space-y-4">
-          <h4 className="font-bold text-sm text-main flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-brand-primary" /> የተማሪዎች ዝርዝር የመገኘት ሁኔታ
-          </h4>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="font-bold text-sm text-main flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-brand-primary" /> የተማሪዎች ዝርዝር የመገኘት ሁኔታ
+              {summary.atRiskCount > 0 && (
+                <Badge variant="danger" size="xs">⚠️ {summary.atRiskCount} ዝቅተኛ (&lt;75%)</Badge>
+              )}
+            </h4>
+            <div className="flex flex-wrap items-center gap-2 print:hidden">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                  placeholder="ስም ወይም መለያ ፈልግ..."
+                  className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-subtle bg-surface-page text-main focus:outline-none focus:ring-2 focus:ring-brand-primary/30 w-44"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setOnlyAtRisk((v) => !v)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                  onlyAtRisk
+                    ? 'bg-rose-600 text-white border-rose-600'
+                    : 'bg-surface-page text-muted border-subtle hover:text-main'
+                }`}
+              >
+                ⚠️ ዝቅተኛ ብቻ (&lt;75%)
+              </button>
+            </div>
+          </div>
 
           <div className="overflow-x-auto rounded-xl border border-subtle">
             <table className="w-full text-left text-sm text-muted">
@@ -855,18 +1233,32 @@ const ReportsManagement = () => {
                   <th className="py-3 px-3 text-center">የተገኘበት</th>
                   <th className="py-3 px-3 text-center">የዘገየበት</th>
                   <th className="py-3 px-3 text-center">በፈቃድ</th>
+                  <th className="py-3 px-3 text-center">የቀረበት</th>
                   <th className="py-3 px-3 text-center">ክፍለ ጊዜ</th>
                   <th className="py-3 px-3 text-center">የመገኘት ምጣኔ</th>
                   <th className="py-3 px-3 text-center">ደረጃ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
-                {gradeStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan="10" className="py-6 text-center text-xs text-muted">በተመረጡት ማጣሪያዎች የተገኘ ተማሪ የለም።</td>
-                  </tr>
-                ) : (
-                  gradeStudents.map((s, idx) => {
+                {(() => {
+                  const q = tableSearch.trim().toLowerCase();
+                  const filtered = gradeStudents.filter((s) => {
+                    const sRate = s.overallRate ?? (s.overallSessions > 0 ? Math.round((s.overallAttended / s.overallSessions) * 100) : 0);
+                    if (onlyAtRisk && !(s.overallSessions > 0 && sRate < 75)) return false;
+                    if (q) {
+                      const hay = `${s.studentName || ''} ${s.studentCustomId || ''} ${s.phone || ''}`.toLowerCase();
+                      if (!hay.includes(q)) return false;
+                    }
+                    return true;
+                  });
+                  if (filtered.length === 0) {
+                    return (
+                      <tr>
+                        <td colSpan="11" className="py-6 text-center text-xs text-muted">በተመረጡት ማጣሪያዎች የተገኘ ተማሪ የለም።</td>
+                      </tr>
+                    );
+                  }
+                  return filtered.map((s, idx) => {
                     const sRate = s.overallRate ?? (s.overallSessions > 0 ? Math.round((s.overallAttended / s.overallSessions) * 100) : 0);
                     return (
                       <tr key={s.studentId || idx} className="hover:bg-surface-page/50 transition-colors">
@@ -880,6 +1272,7 @@ const ReportsManagement = () => {
                         <td className="py-3 px-3 text-center font-bold text-emerald-600 dark:text-emerald-400">{s.overallAttended || 0}</td>
                         <td className="py-3 px-3 text-center font-medium text-amber-600 dark:text-amber-400">{s.late || 0}</td>
                         <td className="py-3 px-3 text-center font-medium text-blue-600 dark:text-blue-400">{s.excused || 0}</td>
+                        <td className="py-3 px-3 text-center font-bold text-rose-600 dark:text-rose-400">{s.overallMissed ?? s.absent ?? 0}</td>
                         <td className="py-3 px-3 text-center font-medium text-main">{s.overallSessions || 0}</td>
                         <td className="py-3 px-3 text-center font-bold">
                           <span className={sRate >= 75 ? 'text-emerald-600 dark:text-emerald-400' : sRate >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}>
@@ -893,8 +1286,8 @@ const ReportsManagement = () => {
                         </td>
                       </tr>
                     );
-                  })
-                )}
+                  });
+                })()}
               </tbody>
             </table>
           </div>
@@ -1095,23 +1488,244 @@ const ReportsManagement = () => {
     );
   };
 
+  // ─── Overview & At-Risk Report View ──────────────────────────────
+  const renderOverviewReport = () => {
+    if (!data) return null;
+    const { summary = {}, byGrade = [], dailyTrend = [], atRiskStudents = [], filters = {} } = data;
+    const q = tableSearch.trim().toLowerCase();
+    const filteredRisk = atRiskStudents.filter((s) => {
+      if (!q) return true;
+      return `${s.studentName || ''} ${s.studentCustomId || ''} ${s.grade || ''} ${s.phone || ''}`.toLowerCase().includes(q);
+    });
+
+    return (
+      <div className="space-y-6">
+        <ReportHeaderBanner
+          title="አጠቃላይ የሰንበት ት/ቤት የተገኝነት እና ዝቅተኛ መገኘት ሪፖርት"
+          subtitle={`የቀን ክልል: ${filters.startDate || 'ሁሉም'} — ${filters.endDate || 'ዛሬ'} | ዝቅተኛ መለኪያ: <${filters.threshold || 75}%`}
+        />
+
+        {/* KPI Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Card className="p-4 bg-surface-card border-subtle">
+            <span className="text-[11px] text-muted font-medium">አጠቃላይ ተገኝነት</span>
+            <div className="text-2xl font-black text-brand-primary mt-1">{summary.attendanceRate ?? 0}%</div>
+            <span className="text-[10px] text-muted">{summary.totalRecords ?? 0} መዝገቦች</span>
+          </Card>
+          <Card className="p-4 bg-surface-card border-subtle">
+            <span className="text-[11px] text-emerald-600 font-medium">በሰዓቱ (Present)</span>
+            <div className="text-2xl font-black text-emerald-600 mt-1">{summary.present ?? 0}</div>
+            <span className="text-[10px] text-muted">በሰዓቱ: {summary.onTimeRate ?? 0}%</span>
+          </Card>
+          <Card className="p-4 bg-surface-card border-subtle">
+            <span className="text-[11px] text-amber-600 font-medium">የዘገዩ (Late)</span>
+            <div className="text-2xl font-black text-amber-600 mt-1">{summary.late ?? 0}</div>
+          </Card>
+          <Card className="p-4 bg-surface-card border-subtle">
+            <span className="text-[11px] text-blue-600 font-medium">በፈቃድ (Excused)</span>
+            <div className="text-2xl font-black text-blue-600 mt-1">{summary.excused ?? 0}</div>
+          </Card>
+          <Card className="p-4 bg-surface-card border-subtle">
+            <span className="text-[11px] text-rose-600 font-medium">ያልተገኙ (Absent)</span>
+            <div className="text-2xl font-black text-rose-600 mt-1">{summary.absent ?? 0}</div>
+          </Card>
+          <Card className="p-4 bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40">
+            <span className="text-[11px] text-rose-600 font-bold flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> ዝቅተኛ (&lt;{filters.threshold || 75}%)
+            </span>
+            <div className="text-2xl font-black text-rose-600 mt-1">{summary.atRiskCount ?? atRiskStudents.length}</div>
+            <span className="text-[10px] text-muted">🌟 ≥90%: {summary.excellentCount ?? 0}</span>
+          </Card>
+        </div>
+
+        {/* Daily Trend + Grade Breakdown */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-5 space-y-4">
+            <h4 className="font-bold text-sm text-main flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-brand-primary" /> የዕለታዊ ተገኝነት ሂደት (Daily Trend)
+            </h4>
+            {dailyTrend.length === 0 ? (
+              <p className="text-xs text-muted py-6 text-center">በዚህ ጊዜ ውስጥ የተመዘገበ መረጃ የለም።</p>
+            ) : (
+              <div className="space-y-2.5">
+                {dailyTrend.map((d) => (
+                  <div key={d.date} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-main">{formatEthiopianDate(d.date)} <span className="text-[10px] text-muted">({d.date})</span></span>
+                      <span className="font-bold text-main">
+                        {d.rate}% <span className="text-[10px] text-muted font-normal">(✅{d.attended} • ❌{d.absent}{d.excused ? ` • 🔵${d.excused}` : ''})</span>
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 bg-surface-page rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${d.rate >= 75 ? 'bg-emerald-500' : d.rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                        style={{ width: `${Math.min(100, d.rate)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-5 space-y-4">
+            <h4 className="font-bold text-sm text-main flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-brand-primary" /> በክፍል ደረጃ ንጽጽር (By Grade)
+            </h4>
+            {byGrade.length === 0 ? (
+              <p className="text-xs text-muted py-6 text-center">የክፍል መረጃ የለም።</p>
+            ) : (
+              <div className="space-y-2.5">
+                {byGrade.map((g) => (
+                  <div key={g.grade} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-main">{formatGradeAmharic(g.grade)}</span>
+                      <span className="font-bold text-main">
+                        {g.rate}% <span className="text-[10px] text-muted font-normal">(✅{g.attended} • 🟡{g.late} • ❌{g.absent})</span>
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 bg-surface-page rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${g.rate >= 75 ? 'bg-indigo-500' : g.rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                        style={{ width: `${Math.min(100, g.rate)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* At-Risk Students Table */}
+        <Card className="p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="font-bold text-sm text-rose-600 dark:text-rose-400 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> ቅድሚያ ክትትል የሚያስፈልጋቸው ተማሪዎች (&lt;{filters.threshold || 75}%) — {filteredRisk.length}
+            </h4>
+            <div className="relative print:hidden">
+              <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                placeholder="ስም፣ ክፍል ወይም ስልክ ፈልግ..."
+                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-subtle bg-surface-page text-main focus:outline-none focus:ring-2 focus:ring-brand-primary/30 w-52"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-subtle">
+            <table className="w-full text-left text-sm text-muted">
+              <thead className="bg-surface-page text-xs font-bold text-main uppercase border-b border-subtle">
+                <tr>
+                  <th className="py-3 px-3">ተ.ቁ</th>
+                  <th className="py-3 px-3">መለያ ቁጥር</th>
+                  <th className="py-3 px-3">የተማሪ ስም</th>
+                  <th className="py-3 px-3">ክፍል</th>
+                  <th className="py-3 px-3">ስልክ</th>
+                  <th className="py-3 px-3 text-center">የተገኘ</th>
+                  <th className="py-3 px-3 text-center">በፈቃድ</th>
+                  <th className="py-3 px-3 text-center">የቀረ</th>
+                  <th className="py-3 px-3 text-center">ጠቅላላ</th>
+                  <th className="py-3 px-3 text-center">ምጣኔ %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-subtle">
+                {filteredRisk.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="py-6 text-center text-xs text-muted">
+                      🎉 በተመረጠው መለኪያ (&lt;{filters.threshold || 75}%) ዝቅተኛ ተገኝነት ያለው ተማሪ አልተገኘም።
+                    </td>
+                  </tr>
+                ) : (
+                  filteredRisk.map((s, idx) => (
+                    <tr key={s.studentId || idx} className="hover:bg-surface-page/50">
+                      <td className="py-2.5 px-3 text-xs">{idx + 1}</td>
+                      <td className="py-2.5 px-3 font-mono text-xs font-bold text-brand-primary">{s.studentCustomId || '—'}</td>
+                      <td className="py-2.5 px-3 font-semibold text-main">{s.studentName}</td>
+                      <td className="py-2.5 px-3 text-xs">{formatGradeAmharic(s.grade)}</td>
+                      <td className="py-2.5 px-3 font-mono text-xs">{s.phone || '—'}</td>
+                      <td className="py-2.5 px-3 text-center font-bold text-emerald-600">{s.attended}</td>
+                      <td className="py-2.5 px-3 text-center text-blue-600">{s.excused}</td>
+                      <td className="py-2.5 px-3 text-center font-bold text-rose-600">{s.absent}</td>
+                      <td className="py-2.5 px-3 text-center">{s.total}</td>
+                      <td className="py-2.5 px-3 text-center">
+                        <Badge variant="danger">{s.rate}%</Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   // ─── Date Report View ────────────────────────────────────────────
   const renderDateReport = () => {
     if (!data) return null;
     const { date, summary = {}, records = [] } = data;
+    const q = tableSearch.trim().toLowerCase();
+    const filteredRecords = records.filter((r) => {
+      if (!q) return true;
+      return `${r.studentName || ''} ${r.studentId || ''} ${r.grade || ''} ${r.courseName || ''} ${r.status || ''}`.toLowerCase().includes(q);
+    });
+
+    const getDateStatusBadge = (status) => {
+      if (status === 'Late') return <Badge variant="warning">🟡 የዘገየ (Late)</Badge>;
+      if (status === 'Excused') return <Badge variant="info">🔵 በፈቃድ (Excused)</Badge>;
+      if (status === 'Absent') return <Badge variant="danger">🔴 አልተገኘም (Absent)</Badge>;
+      return <Badge variant="success"><CheckCircle2 className="w-3 h-3 mr-1" /> ተገኝቷል (Present)</Badge>;
+    };
+
     return (
       <div className="space-y-6">
         <ReportHeaderBanner 
           title={`የዕለታዊ መገኘት ሪፖርት: ${formatEthiopianDate(date)}`}
-          subtitle={`ቀን (በፈረንጆች): ${date} | አጠቃላይ የተገኙ ተማሪዎች: ${summary.totalPresent ?? records.length}`}
+          subtitle={`ቀን (በፈረንጆች): ${date} | ጠቅላላ መዝገቦች: ${summary.totalRecords ?? records.length} | ተገኝነት: ${summary.attendanceRate ?? 0}%`}
         />
 
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <Card className="p-3.5 bg-surface-card border-subtle">
+            <span className="text-xs text-muted">በሰዓቱ (Present)</span>
+            <div className="text-xl font-black text-emerald-600 mt-1">{summary.totalOnTime ?? 0}</div>
+          </Card>
+          <Card className="p-3.5 bg-surface-card border-subtle">
+            <span className="text-xs text-muted">የዘገዩ (Late)</span>
+            <div className="text-xl font-black text-amber-600 mt-1">{summary.totalLate ?? 0}</div>
+          </Card>
+          <Card className="p-3.5 bg-surface-card border-subtle">
+            <span className="text-xs text-muted">በፈቃድ (Excused)</span>
+            <div className="text-xl font-black text-blue-600 mt-1">{summary.totalExcused ?? 0}</div>
+          </Card>
+          <Card className="p-3.5 bg-surface-card border-subtle">
+            <span className="text-xs text-muted">ያልተገኙ (Absent)</span>
+            <div className="text-xl font-black text-rose-600 mt-1">{summary.totalAbsent ?? 0}</div>
+          </Card>
+          <Card className="p-3.5 bg-surface-card border-subtle">
+            <span className="text-xs text-muted">የተገኝነት ምጣኔ</span>
+            <div className="text-xl font-black text-brand-primary mt-1">{summary.attendanceRate ?? 0}%</div>
+          </Card>
+        </div>
+
         <Card className="p-5 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h4 className="font-bold text-sm text-main flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-brand-primary" /> የዕለቱ የተማሪዎች የመገኘት መዝገብ
+              <Calendar className="w-4 h-4 text-brand-primary" /> የዕለቱ የተማሪዎች የመገኘት መዝገብ ({filteredRecords.length})
             </h4>
-            <Badge variant="success">አጠቃላይ የተገኙ: {records.length}</Badge>
+            <div className="relative print:hidden">
+              <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                placeholder="ተማሪ፣ ክፍል ወይም ሁኔታ ፈልግ..."
+                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-subtle bg-surface-page text-main focus:outline-none focus:ring-2 focus:ring-brand-primary/30 w-52"
+              />
+            </div>
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-subtle">
@@ -1124,18 +1738,18 @@ const ReportsManagement = () => {
                   <th className="py-3 px-4">የተማሪ ስም</th>
                   <th className="py-3 px-4">ክፍል</th>
                   <th className="py-3 px-4">ዓይነት / ፈረቃ</th>
-                  <th className="py-3 px-4">ኮርስ</th>
-                  <th className="py-3 px-4">መምህር</th>
+                  <th className="py-3 px-4">ክፍለ-ጊዜ / ኮርስ</th>
+                  <th className="py-3 px-4">ማስታወሻ</th>
                   <th className="py-3 px-4 text-center">ሁኔታ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-subtle">
-                {records.length === 0 ? (
+                {filteredRecords.length === 0 ? (
                   <tr>
                     <td colSpan="9" className="py-6 text-center text-xs text-muted">በዚህ ቀን የተመዘገበ መገኘት የለም።</td>
                   </tr>
                 ) : (
-                  records.map((r, idx) => (
+                  filteredRecords.map((r, idx) => (
                     <tr key={r._id || idx} className="hover:bg-surface-page/50 transition-colors">
                       <td className="py-3 px-4 text-xs text-muted">{idx + 1}</td>
                       <td className="py-3 px-4 font-mono text-xs font-bold text-main">
@@ -1149,13 +1763,11 @@ const ReportsManagement = () => {
                         <span className="text-muted ml-1">({r.shift === 'night' ? 'ማታ' : 'ቀን'})</span>
                       </td>
                       <td className="py-3 px-4 font-medium text-main">
-                        {r.courseName} {r.courseCode && <span className="text-xs text-muted">({r.courseCode})</span>}
+                        {r.courseName} {r.courseCode && r.courseCode !== '—' && <span className="text-xs text-muted">({r.courseCode})</span>}
                       </td>
-                      <td className="py-3 px-4 text-xs text-muted">{r.teacherName || '—'}</td>
+                      <td className="py-3 px-4 text-xs text-muted">{r.note || '—'}</td>
                       <td className="py-3 px-4 text-center">
-                        <Badge variant="success">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> {r.status || 'Present'}
-                        </Badge>
+                        {getDateStatusBadge(r.status)}
                       </td>
                     </tr>
                   ))
@@ -1172,24 +1784,52 @@ const ReportsManagement = () => {
     <div className="space-y-6">
       <PageHeader
         title="የመገኘትና የስርዓት ሪፖርቶች"
-        subtitle="በተማሪ፣ በክፍል፣ በኮርስ፣ በመምህር ወይም በቀን ዝርዝር የትንታኔ ሪፖርቶችን ያመንጩ እና በሲኤስቪ (Excel) ወይም በህትመት ያውርዱ።"
+        subtitle="አጠቃላይ፣ በተማሪ፣ በክፍል፣ በኮርስ፣ በመምህር ወይም በቀን ዝርዝር ሪፖርቶችን ያመንጩ፣ በExcel/CSV ያውርዱ ወይም ወደ ቴሌግራም ይላኩ።"
         icon={FileText}
         actions={
           data && (
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-surface-card border border-subtle rounded-lg px-2 py-1">
+                <select
+                  value={telegramTarget}
+                  onChange={(e) => setTelegramTarget(e.target.value)}
+                  className="text-xs bg-transparent text-main focus:outline-none"
+                  title="የቴሌግራም መድረሻ"
+                >
+                  <option value="self">ወደ እኔ (Admin DM)</option>
+                  <option value="group">ወደ ክፍል ግሩፕ</option>
+                  <option value="both">ሁለቱም</option>
+                </select>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSendToTelegram}
+                  disabled={sendingTelegram}
+                  className="shadow-sm font-semibold"
+                >
+                  <Send className="w-3.5 h-3.5 mr-1" /> {sendingTelegram ? 'በመላክ ላይ...' : 'ወደ ቴሌግራም ላክ'}
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 onClick={handlePrint}
                 className="shadow-sm"
               >
-                <Printer className="w-4 h-4 mr-1.5" /> 🖨️ አትም (Print / PDF)
+                <Printer className="w-4 h-4 mr-1.5" /> አትም / PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => downloadCSV(generateCSV(data, reportType), `${reportType}-report-${getEthiopianLocalDateString()}.csv`)}
+                className="shadow-sm"
+              >
+                <Download className="w-4 h-4 mr-1.5" /> CSV
               </Button>
               <Button
                 variant="success"
-                onClick={() => downloadCSV(generateCSV(data, reportType), `${reportType}-report-${new Date().toISOString().split('T')[0]}.csv`)}
+                onClick={() => exportReportToExcel(data, reportType)}
                 className="shadow-sm font-semibold"
               >
-                <Download className="w-4 h-4 mr-1.5" /> ⬇ በኤክሴል / CSV አውርድ
+                <FileSpreadsheet className="w-4 h-4 mr-1.5" /> Excel (.xlsx)
               </Button>
             </div>
           )
@@ -1197,9 +1837,9 @@ const ReportsManagement = () => {
       />
 
       {/* Filters Card */}
-      <Card className="p-5 print:hidden">
+      <Card className="p-5 space-y-4 print:hidden">
         <div className="flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[220px]">
             <Select
               label="የሪፖርት ዓይነት"
               value={reportType}
@@ -1208,30 +1848,103 @@ const ReportsManagement = () => {
                 setData(null);
               }}
             >
-              <option value="">-- የሪፖርት ዓይነት ይምረጡ --</option>
-              <option value="student">በተማሪ (By Student)</option>
-              <option value="grade">በክፍል ደረጃ (By Grade)</option>
-              <option value="course">በኮርስ (By Course)</option>
-              <option value="teacher">በመምህር (By Teacher)</option>
-              <option value="date">በቀን (By Date)</option>
+              <option value="overview">📊 አጠቃላይ እና ዝቅተኛ መገኘት (Overview & At-Risk)</option>
+              <option value="grade">🏫 በክፍል ደረጃ (By Grade)</option>
+              <option value="date">📅 በቀን (By Date)</option>
+              <option value="student">👤 በተማሪ (By Student)</option>
+              <option value="course">📘 በኮርስ (By Course)</option>
+              <option value="teacher">👨‍🏫 በመምህር (By Teacher)</option>
             </Select>
           </div>
 
+          {reportType === 'overview' && (
+            <>
+              <div className="flex-1 min-w-[160px]">
+                <Select
+                  label="የክፍል ደረጃ (አማራጭ)"
+                  value={selectedGrade || 'all'}
+                  onChange={(e) => setSelectedGrade(e.target.value)}
+                >
+                  <option value="all">ሁሉም ክፍሎች</option>
+                  {grades.map((g) => (
+                    <option key={g} value={g}>{formatGradeAmharic(g)}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <Select
+                  label="ፈረቃ (Shift)"
+                  value={selectedShift}
+                  onChange={(e) => setSelectedShift(e.target.value)}
+                >
+                  <option value="all">ሁሉም ፈረቃ</option>
+                  <option value="weekend">ቀን / ቅዳሜና እሁድ</option>
+                  <option value="night">የማታ ፈረቃ</option>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[140px]">
+                <Select
+                  label="የትምህርት ዓይነት"
+                  value={selectedStudentType}
+                  onChange={(e) => setSelectedStudentType(e.target.value)}
+                >
+                  <option value="all">ሁሉም ዘርፍ</option>
+                  <option value="regular">መደበኛ (Regular)</option>
+                  <option value="distance">የርቀት (Distance)</option>
+                </Select>
+              </div>
+              <div className="w-28">
+                <Input
+                  label="ዝቅተኛ መለኪያ (%)"
+                  type="number"
+                  min="10"
+                  max="100"
+                  value={atRiskThreshold}
+                  onChange={(e) => setAtRiskThreshold(e.target.value)}
+                />
+              </div>
+              <div className="flex-1 min-w-[135px]">
+                <Input
+                  label="ከቀን"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex-1 min-w-[135px]">
+                <Input
+                  label="እስከ ቀን"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           {reportType === 'student' && (
-            <div className="flex-1 min-w-[220px]">
-              <Select
-                label="ተማሪ ይምረጡ"
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-              >
-                <option value="">ተማሪ ይምረጡ</option>
-                {students.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.firstName} {s.middleName || ''} {s.lastName || ''} ({s.studentId ? s.studentId : formatGradeAmharic(s.grade)})
-                  </option>
-                ))}
-              </Select>
-            </div>
+            <>
+              <div className="flex-1 min-w-[220px]">
+                <Select
+                  label="ተማሪ ይምረጡ"
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                >
+                  <option value="">ተማሪ ይምረጡ</option>
+                  {students.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.firstName} {s.middleName || ''} {s.lastName || ''} ({s.studentId ? s.studentId : formatGradeAmharic(s.grade)})
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[135px]">
+                <Input label="ከቀን (አማራጭ)" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div className="flex-1 min-w-[135px]">
+                <Input label="እስከ ቀን (አማራጭ)" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+            </>
           )}
 
           {reportType === 'grade' && (
@@ -1384,6 +2097,28 @@ const ReportsManagement = () => {
             <Search className="w-4 h-4 mr-1.5" /> {loading ? 'በማመንጨት ላይ...' : 'ሪፖርት አውጣ'}
           </Button>
         </div>
+
+        {/* Quick Date Range Presets */}
+        {['overview', 'grade', 'student', 'course'].includes(reportType) && (
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-subtle text-xs">
+            <span className="text-muted font-medium">ፈጣን የቀን ምርጫ፦</span>
+            {[
+              { id: 'today', label: 'ዛሬ' },
+              { id: '7d', label: 'ያለፉት 7 ቀናት' },
+              { id: '30d', label: 'ያለፉት 30 ቀናት' },
+              { id: 'all', label: 'ሁሉም ጊዜ' },
+            ].map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => applyDatePreset(p.id)}
+                className="px-2.5 py-1 rounded-md border border-subtle bg-surface-page hover:bg-brand-primary/10 hover:border-brand-primary/40 text-main transition-colors cursor-pointer"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Loading state */}
@@ -1398,6 +2133,7 @@ const ReportsManagement = () => {
       {/* Render Report Content */}
       {!loading && data && (
         <div className="report-content-area">
+          {reportType === 'overview' && renderOverviewReport()}
           {reportType === 'student' && renderStudentReport()}
           {reportType === 'grade' && renderGradeReport()}
           {reportType === 'course' && renderCourseReport()}
