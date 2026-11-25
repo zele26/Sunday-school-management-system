@@ -14,6 +14,7 @@ import {
   Users,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   XCircle,
   RefreshCw,
   Printer,
@@ -27,6 +28,9 @@ import {
   Globe,
   Sun,
   Moon,
+  Edit2,
+  Trash2,
+  X,
 } from 'lucide-react';
 import {
   PageHeader,
@@ -36,12 +40,17 @@ import {
   DataTable,
   DataTableColumnHeader,
 } from '../../components/ui';
-import { useAttendanceReport } from '../../hooks/queries/useAttendance';
+import {
+  useAttendanceReport,
+  useUpdateAttendance,
+  useDeleteAttendance,
+} from '../../hooks/queries/useAttendance';
 import { useCourses } from '../../hooks/queries/useCourses';
 import { useTeachers } from '../../hooks/queries/useTeachers';
-import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatEthiopianDate, getEthiopianLocalDateString } from '../../utils/ethiopianDate';
 import { formatGradeAmharic, GRADE_FILTER_OPTIONS } from '../../constants/registrationOptions';
 import { FadeIn, StaggerContainer, StaggerItem, MotionCard } from '../../components/motion';
+import { toast } from '../../utils/toast';
 
 const GRADE_OPTIONS = GRADE_FILTER_OPTIONS.filter(g => g.value !== '');
 
@@ -59,6 +68,13 @@ const getStatusBadge = (status) => {
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
           <Clock className="w-3.5 h-3.5 text-amber-500" />
           <span>ዘግይቷል</span>
+        </span>
+      );
+    case 'Excused':
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <AlertCircle className="w-3.5 h-3.5 text-blue-500" />
+          <span>በፈቃድ</span>
         </span>
       );
     case 'Absent':
@@ -115,6 +131,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
     'ቀን',
     'የመግቢያ ሰዓት',
     'ሁኔታ',
+    'ምክንያት / ማስታወሻ',
     'የትምህርት ዘመን',
     'ሴሚስተር',
   ];
@@ -122,6 +139,7 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
   rows.forEach((r) => {
     const studentType = r.studentType || r.student?.studentType || 'regular';
     const shift = r.shift || r.student?.shift || (studentType === 'distance' ? '-' : 'weekend');
+    const noteText = (r.excuseReason || r.note || '').replace(/"/g, '""');
 
     csvRows.push(
       [
@@ -129,11 +147,12 @@ const downloadCSV = (rows, filename = 'attendance-report.csv') => {
         `"${studentType === 'distance' ? 'የርቀት' : 'መደበኛ'}"`,
         `"${shift === 'night' ? 'የማታ' : shift === 'weekend' ? 'የቀን / ቅዳሜና እሁድ' : '-'}"`,
         `"${formatGradeAmharic(r.grade || r.student?.grade)}"`,
-        `"${r.courseName || r.course?.name || 'አጠቃላይ'}"`,
+        `"${r.courseName || r.course?.name || r.sessionId?.title || r.session || 'አጠቃላይ'}"`,
         `"${r.teacherName || r.teacher?.fullName || '—'}"`,
         `"${formatEthiopianDate(r.date)}"`,
         `"${r.checkInTime ? new Date(r.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}"`,
         `"${r.status || ''}"`,
+        `"${noteText}"`,
         `"${r.academicYear || ''}"`,
         `"${r.semester || ''}"`,
       ].join(',')
@@ -167,6 +186,46 @@ const AttendanceReports = () => {
   const { data: courses = [] } = useCourses();
   const { data: teachers = [] } = useTeachers();
   const { data: records = [], isLoading, isFetching, refetch } = useAttendanceReport(filters);
+  const updateAttendanceMutation = useUpdateAttendance();
+  const deleteAttendanceMutation = useDeleteAttendance();
+
+  // Inline Edit Modal State
+  const [editingRecord, setEditingRecord] = useState(null);
+  const [editStatus, setEditStatus] = useState('Present');
+  const [editNote, setEditNote] = useState('');
+
+  const handleOpenEdit = (record) => {
+    setEditingRecord(record);
+    setEditStatus(record.status || 'Present');
+    setEditNote(record.excuseReason || record.note || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRecord) return;
+    try {
+      await updateAttendanceMutation.mutateAsync({
+        id: editingRecord._id,
+        status: editStatus,
+        note: editNote,
+        excuseReason: editNote,
+      });
+      toast.success('የመገኘት መዝገቡ በተሳካ ሁኔታ ተስተካክሏል');
+      setEditingRecord(null);
+    } catch (err) {
+      toast.error(err.message || 'ማስተካከል አልተቻለም');
+    }
+  };
+
+  const handleDeleteRecord = async (record) => {
+    const name = record.studentName || record.student?.fullName || 'ተማሪ';
+    if (!window.confirm(`የ${name} የመገኘት መዝገብን መሰረዝ እርግጠኛ ነዎት?`)) return;
+    try {
+      await deleteAttendanceMutation.mutateAsync(record._id);
+      toast.success('የመገኘት መዝገቡ ተሰርዟል');
+    } catch (err) {
+      toast.error(err.message || 'መሰረዝ አልተቻለም');
+    }
+  };
 
   // Available courses cascaded by selected grade/studentType
   const availableCoursesForFilter = useMemo(() => {
@@ -214,10 +273,10 @@ const AttendanceReports = () => {
     });
   };
 
-  // Quick Date Preset helper
+  // Quick Date Preset helper (Ethiopian local date)
   const applyDatePreset = (preset) => {
     const today = new Date();
-    const formatDate = (d) => d.toISOString().split('T')[0];
+    const formatDate = (d) => getEthiopianLocalDateString(d);
 
     if (preset === 'today') {
       const todayStr = formatDate(today);
@@ -271,6 +330,7 @@ const AttendanceReports = () => {
   const totalCount = filteredRecords.length;
   const presentCount = filteredRecords.filter((r) => r.status === 'Present').length;
   const lateCount = filteredRecords.filter((r) => r.status === 'Late').length;
+  const excusedCount = filteredRecords.filter((r) => r.status === 'Excused').length;
   const absentCount = filteredRecords.filter((r) => r.status === 'Absent').length;
   const regularCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType || 'regular') === 'regular').length;
   const distanceCount = filteredRecords.filter((r) => (r.studentType || r.student?.studentType) === 'distance').length;
@@ -293,6 +353,7 @@ const AttendanceReports = () => {
       const total = classRecords.length;
       const present = classRecords.filter((r) => r.status === 'Present').length;
       const late = classRecords.filter((r) => r.status === 'Late').length;
+      const excused = classRecords.filter((r) => r.status === 'Excused').length;
       const absent = classRecords.filter((r) => r.status === 'Absent').length;
       const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
       return {
@@ -301,6 +362,7 @@ const AttendanceReports = () => {
         total,
         present,
         late,
+        excused,
         absent,
         rate,
       };
@@ -388,7 +450,47 @@ const AttendanceReports = () => {
       {
         accessorKey: 'status',
         header: ({ column }) => <DataTableColumnHeader column={column} title="ሁኔታ" />,
-        cell: ({ getValue }) => getStatusBadge(getValue()),
+        cell: ({ row }) => {
+          const r = row.original;
+          const reason = r.excuseReason || r.note;
+          return (
+            <div className="space-y-0.5">
+              {getStatusBadge(r.status)}
+              {reason && (
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={reason}>
+                  📝 {reason}
+                </p>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: 'actions',
+        header: 'ድርጊት',
+        cell: ({ row }) => {
+          const r = row.original;
+          return (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleOpenEdit(r)}
+                title="ሁኔታ አስተካክል"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950/60 text-slate-600 dark:text-slate-300 hover:text-[#1657b8] dark:hover:text-blue-300 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteRecord(r)}
+                title="መዝገብ ሰርዝ"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          );
+        },
       },
     ],
     []
@@ -476,7 +578,7 @@ const AttendanceReports = () => {
       </FadeIn>
 
       {/* 🌟 2. Interactive KPI Summary Cards Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Records */}
         <MotionCard hoverY={-2}>
           <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between h-full">
@@ -567,8 +669,30 @@ const AttendanceReports = () => {
           </div>
         </MotionCard>
 
+        {/* Excused */}
+        <MotionCard hoverY={-2}>
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-800/60 shadow-sm flex flex-col justify-between h-full">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-full border border-blue-300 dark:border-blue-700">
+                {totalCount > 0 ? Math.round((excusedCount / totalCount) * 100) : 0}%
+              </span>
+            </div>
+            <div>
+              <p className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400 tracking-tight">
+                {excusedCount}
+              </p>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                በፈቃድ የቀሩ
+              </p>
+            </div>
+          </div>
+        </MotionCard>
+
         {/* Absent */}
-        <MotionCard hoverY={-2} className="col-span-2 sm:col-span-1">
+        <MotionCard hoverY={-2}>
           <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col justify-between h-full">
             <div className="flex items-center justify-between mb-2">
               <div className="w-9 h-9 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center">
@@ -734,6 +858,7 @@ const AttendanceReports = () => {
               <option value="">ሁሉም ሁኔታዎች</option>
               <option value="Present">✅ ተገኝቷል</option>
               <option value="Late">🕒 ዘግይቷል</option>
+              <option value="Excused">📋 በፈቃድ</option>
               <option value="Absent">❌ አልተገኘም</option>
             </select>
           </div>
@@ -946,9 +1071,10 @@ const AttendanceReports = () => {
                       style={{ width: `${Math.min(item.rate, 100)}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                  <div className="flex items-center justify-between flex-wrap gap-1 text-[10px] font-bold text-slate-500">
                     <span className="text-emerald-600">✓ {item.present} በሰዓቱ</span>
                     <span className="text-amber-600">🕒 {item.late} ያረፈዱ</span>
+                    <span className="text-blue-600">📋 {item.excused} ፈቃድ</span>
                     <span className="text-rose-600">✗ {item.absent} የቀሩ</span>
                   </div>
                 </div>
@@ -1040,6 +1166,92 @@ const AttendanceReports = () => {
               </div>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* 🌟 Inline Edit Attendance Modal */}
+      {editingRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  የመገኘት ሁኔታ አስተካክል
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editingRecord.studentName || editingRecord.student?.fullName} • {formatEthiopianDate(editingRecord.date)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingRecord(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  ሁኔታ (Status)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'Present', label: '✅ ተገኝቷል (Present)', active: 'bg-emerald-600 text-white border-emerald-600' },
+                    { value: 'Late', label: '🕒 ዘግይቷል (Late)', active: 'bg-amber-500 text-white border-amber-500' },
+                    { value: 'Excused', label: '📋 በፈቃድ (Excused)', active: 'bg-blue-600 text-white border-blue-600' },
+                    { value: 'Absent', label: '❌ አልተገኘም (Absent)', active: 'bg-rose-600 text-white border-rose-600' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setEditStatus(opt.value)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        editStatus === opt.value
+                          ? `${opt.active} shadow-sm`
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  ምክንያት / ማስታወሻ (Note / Excuse Reason)
+                </label>
+                <textarea
+                  rows={3}
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  placeholder="ለምሳሌ፡ በህመም ምክንያት ፈቃድ ጠይቋል..."
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-[#1657b8]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingRecord(null)}
+                  className="rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  ተመለስ
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={updateAttendanceMutation.isPending}
+                  className="bg-[#1657b8] hover:bg-[#124796] text-white rounded-xl text-xs font-black shadow-md cursor-pointer"
+                >
+                  {updateAttendanceMutation.isPending ? 'በማስቀመጥ ላይ...' : 'ለውጡን አስቀምጥ'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

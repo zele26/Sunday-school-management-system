@@ -69,21 +69,47 @@ router.get('/my-students', async (req, res) => {
 router.get('/attendance', async (req, res) => {
   try {
     const { startDate, endDate, courseId } = req.query;
-    const teacherStudents = await Student.find({ teacher: req.user._id }).select('_id');
-    const studentIds = teacherStudents.map(s => s._id);
+    const teacherDoc = await Teacher.findOne({ userId: req.user._id }).select('_id');
+    const teacherIds = [req.user._id];
+    if (teacherDoc) teacherIds.push(teacherDoc._id);
 
-    const query = { student: { $in: studentIds } };
-    if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
-    }
+    const [teacherCourses, teacherStudents] = await Promise.all([
+      Course.find({ $or: [{ teacher: { $in: teacherIds } }, { instructors: { $in: teacherIds } }] }).select('_id'),
+      Student.find({ $or: [{ teacher: { $in: teacherIds } }, { teachers: { $in: teacherIds } }] }).select('_id'),
+    ]);
+
+    const courseIds = teacherCourses.map((c) => c._id);
+    const studentIds = teacherStudents.map((s) => s._id);
+
+    const query = {};
     if (courseId) {
       query.course = courseId;
+    } else {
+      const orClauses = [{ teacher: { $in: teacherIds } }, { recordedBy: req.user._id }];
+      if (courseIds.length > 0) orClauses.push({ course: { $in: courseIds } });
+      if (studentIds.length > 0) orClauses.push({ student: { $in: studentIds } });
+      query.$or = orClauses;
+    }
+
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) {
+        const s = new Date(startDate);
+        s.setHours(0, 0, 0, 0);
+        query.date.$gte = s;
+      }
+      if (endDate) {
+        const e = new Date(endDate);
+        e.setHours(23, 59, 59, 999);
+        query.date.$lte = e;
+      }
     }
 
     const attendances = await Attendance.find(query)
-      .populate('student', 'firstName middleName lastName christianName photoUrl grade')
-      .populate('course', 'name')
-      .sort({ date: -1 });
+      .populate('student', 'firstName middleName lastName christianName photoUrl grade studentId')
+      .populate('course', 'name nameAmharic grade')
+      .populate('sessionId', 'title grade sessionDate startTime endTime')
+      .sort({ date: -1, checkInTime: -1 });
 
     res.json(attendances);
   } catch (err) {
@@ -95,13 +121,18 @@ router.get('/attendance', async (req, res) => {
 router.get('/attendance-summary', async (req, res) => {
   try {
     const { courseId } = req.query;
+    const teacherDoc = await Teacher.findOne({ userId: req.user._id }).select('_id');
+    const teacherIds = [req.user._id];
+    if (teacherDoc) teacherIds.push(teacherDoc._id);
 
-    const courseFilter = { teacher: req.user._id };
+    const courseFilter = {
+      $or: [{ teacher: { $in: teacherIds } }, { instructors: { $in: teacherIds } }],
+    };
     if (courseId) {
       courseFilter._id = courseId;
     }
 
-    const courses = await Course.find(courseFilter).select('name');
+    const courses = await Course.find(courseFilter).select('name nameAmharic grade studentType shift').lean();
     if (!courses.length) {
       return res.json([]);
     }
@@ -109,32 +140,96 @@ router.get('/attendance-summary', async (req, res) => {
     const summaries = [];
 
     for (const course of courses) {
-      const distinctDates = await Attendance.distinct('date', { course: course._id });
-      const totalClasses = distinctDates.length;
-
-      const students = await Student.find({ courses: course._id })
-        .select('firstName lastName _id')
+      // Fetch all attendance records for this course
+      const courseAttendances = await Attendance.find({ course: course._id })
+        .select('student status date sessionId')
         .lean();
 
-      const studentSummaries = [];
+      const uniqueSessionDays = new Set(
+        courseAttendances.map((a) =>
+          a.sessionId
+            ? a.sessionId.toString()
+            : (a.date ? new Date(a.date).toISOString().split('T')[0] : '')
+        ).filter(Boolean)
+      );
+      const totalClasses = uniqueSessionDays.size;
 
-      for (const student of students) {
-        const attendedCount = await Attendance.countDocuments({
-          student: student._id,
-          course: course._id,
-        });
+      // Match students enrolled directly in the course, or fallback to course's grade/track
+      let students = await Student.find({ courses: course._id })
+        .select('firstName middleName lastName studentId grade shift _id')
+        .sort({ firstName: 1, lastName: 1 })
+        .lean();
 
-        studentSummaries.push({
-          studentId: student._id,
-          studentName: `${student.firstName} ${student.lastName}`,
-          attended: attendedCount,
-          totalClasses,
-        });
+      if (students.length === 0 && course.grade) {
+        const gradeNum = course.grade.match(/\d+/);
+        const studentFilter = {
+          $or: gradeNum
+            ? [
+                { grade: { $regex: new RegExp(`(${gradeNum[0]}|${course.grade})`, 'i') } },
+                { batch: { $regex: new RegExp(`(${gradeNum[0]}|${course.grade})`, 'i') } },
+              ]
+            : [{ grade: course.grade }, { batch: course.grade }],
+        };
+        if (course.studentType) {
+          studentFilter.studentType = course.studentType;
+        }
+        students = await Student.find(studentFilter)
+          .select('firstName middleName lastName studentId grade shift _id')
+          .sort({ firstName: 1, lastName: 1 })
+          .lean();
       }
+
+      // Group attendance records by student
+      const byStudent = new Map();
+      for (const a of courseAttendances) {
+        const sId = a.student?.toString();
+        if (!sId) continue;
+        if (!byStudent.has(sId)) {
+          byStudent.set(sId, { present: 0, late: 0, excused: 0, absent: 0, total: 0 });
+        }
+        const entry = byStudent.get(sId);
+        entry.total += 1;
+        if (a.status === 'Present') entry.present += 1;
+        else if (a.status === 'Late') entry.late += 1;
+        else if (a.status === 'Excused') entry.excused += 1;
+        else if (a.status === 'Absent') entry.absent += 1;
+      }
+
+      const studentSummaries = students.map((student) => {
+        const sStats = byStudent.get(student._id.toString()) || { present: 0, late: 0, excused: 0, absent: 0, total: 0 };
+        const attended = sStats.present + sStats.late;
+        const denominator = Math.max(totalClasses, sStats.total);
+        const attendanceRate = denominator > 0 ? Math.round((attended / denominator) * 100) : null;
+
+        return {
+          studentId: student._id,
+          studentCode: student.studentId || '',
+          studentName: [student.firstName, student.middleName, student.lastName].filter(Boolean).join(' ').trim(),
+          grade: student.grade || '',
+          present: sStats.present,
+          late: sStats.late,
+          excused: sStats.excused,
+          absent: sStats.absent,
+          attended,
+          totalClasses: denominator,
+          attendanceRate,
+          isAtRisk: attendanceRate !== null && attendanceRate < 75,
+        };
+      });
+
+      const ratesWithData = studentSummaries.filter((s) => s.attendanceRate !== null);
+      const averageRate = ratesWithData.length > 0
+        ? Math.round(ratesWithData.reduce((acc, s) => acc + s.attendanceRate, 0) / ratesWithData.length)
+        : 0;
+      const atRiskCount = studentSummaries.filter((s) => s.isAtRisk).length;
 
       summaries.push({
         courseId: course._id,
         courseName: course.name,
+        grade: course.grade || '',
+        totalClasses,
+        averageRate,
+        atRiskCount,
         students: studentSummaries,
       });
     }

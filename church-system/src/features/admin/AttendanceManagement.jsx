@@ -36,9 +36,10 @@ import {
   CalendarCheck,
   CalendarX,
   Sliders,
+  RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
-import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatEthiopianDate, getEthiopianLocalDateString } from '../../utils/ethiopianDate';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
 import { PageHeader, Card, Button, Badge } from '../../components/ui';
 import { FadeIn, MotionCard } from '../../components/motion';
@@ -70,11 +71,15 @@ const AttendanceManagement = () => {
   const [activeTab, setActiveTab] = useState('today'); // 'today' | 'schedules' | 'sessions' | 'rollcall' | 'single'
 
   // --- TAB 1: TODAY'S LIVE OVERVIEW ---
-  const [todayDate, setTodayDate] = useState(new Date().toISOString().split('T')[0]);
+  const [todayDate, setTodayDate] = useState(() => getEthiopianLocalDateString());
   const [todayRecords, setTodayRecords] = useState([]);
   const [todayLoading, setTodayLoading] = useState(true);
   const [todaySearch, setTodaySearch] = useState('');
   const [todayStatusFilter, setTodayStatusFilter] = useState('all');
+  const [editingTodayRecord, setEditingTodayRecord] = useState(null);
+  const [editTodayStatus, setEditTodayStatus] = useState('Present');
+  const [editTodayNote, setEditTodayNote] = useState('');
+  const [isUpdatingRecord, setIsUpdatingRecord] = useState(false);
 
   // --- TAB 2: RECURRING TIMETABLES (ClassSchedule) ---
   const [schedules, setSchedules] = useState([]);
@@ -108,7 +113,7 @@ const AttendanceManagement = () => {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [sessionFilterGrade, setSessionFilterGrade] = useState('all');
   const [sessionFilterStatus, setSessionFilterStatus] = useState('all');
-  const [sessionStartDate, setSessionStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [sessionStartDate, setSessionStartDate] = useState(() => getEthiopianLocalDateString());
   const [sessionEndDate, setSessionEndDate] = useState('');
   const [selectedSessionForRoster, setSelectedSessionForRoster] = useState(null);
   const [sessionRoster, setSessionRoster] = useState([]);
@@ -118,6 +123,7 @@ const AttendanceManagement = () => {
   const [rescheduleModalSession, setRescheduleModalSession] = useState(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleStartTime, setRescheduleStartTime] = useState('');
+  const [rescheduleEndTime, setRescheduleEndTime] = useState('');
   const [rescheduleReason, setRescheduleReason] = useState('');
 
   const [cancelModalSession, setCancelModalSession] = useState(null);
@@ -134,7 +140,7 @@ const AttendanceManagement = () => {
     targetGrades: [],
     targetStudentTypes: ['regular'],
     targetShifts: ['weekend'],
-    sessionDate: new Date().toISOString().split('T')[0],
+    sessionDate: getEthiopianLocalDateString(),
     startTime: '17:00',
     endTime: '19:00',
     lateThresholdMinutes: 15,
@@ -146,7 +152,7 @@ const AttendanceManagement = () => {
   // --- TAB 4: CLASS ROLL CALL ---
   const [selectedGrade, setSelectedGrade] = useState('Grade 10');
   const [selectedCourseId, setSelectedCourseId] = useState('');
-  const [rollCallDate, setRollCallDate] = useState(new Date().toISOString().split('T')[0]);
+  const [rollCallDate, setRollCallDate] = useState(() => getEthiopianLocalDateString());
   const [courses, setCourses] = useState([]);
   const [roster, setRoster] = useState([]);
   const [rosterLoading, setRosterLoading] = useState(false);
@@ -168,7 +174,7 @@ const AttendanceManagement = () => {
   const [singleStatus, setSingleStatus] = useState('Present');
   const [singleExcuseReason, setSingleExcuseReason] = useState('');
   const [singleCourseId, setSingleCourseId] = useState('');
-  const [singleDate, setSingleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [singleDate, setSingleDate] = useState(() => getEthiopianLocalDateString());
   const [singleSessionId, setSingleSessionId] = useState('');
   const [singleSubmitting, setSingleSubmitting] = useState(false);
   const [singleFeedback, setSingleFeedback] = useState(null);
@@ -184,7 +190,6 @@ const AttendanceManagement = () => {
   useEffect(() => {
     fetchCourses();
     fetchTakers();
-    fetchTodayAttendance();
   }, []);
 
   const fetchCourses = async () => {
@@ -239,17 +244,66 @@ const AttendanceManagement = () => {
     } catch (err) {}
   };
 
-  const fetchTodayAttendance = async () => {
+  const fetchTodayAttendance = useCallback(async (dateOverride) => {
+    const targetDate = typeof dateOverride === 'string' && dateOverride ? dateOverride : todayDate;
     setTodayLoading(true);
     try {
-      const res = await apiFetch(`/api/admin/attendance/report?startDate=${todayDate}&endDate=${todayDate}`);
+      const res = await apiFetch(`/api/admin/attendance/report?startDate=${targetDate}&endDate=${targetDate}`);
       if (res.ok) {
         const data = await res.json();
         setTodayRecords(data.attendances || []);
       }
     } catch (err) {
+      console.warn('Error loading today attendance:', err);
     } finally {
       setTodayLoading(false);
+    }
+  }, [todayDate]);
+
+  useEffect(() => {
+    fetchTodayAttendance(todayDate);
+  }, [todayDate, fetchTodayAttendance]);
+
+  const handleSaveTodayRecordEdit = async () => {
+    if (!editingTodayRecord) return;
+    setIsUpdatingRecord(true);
+    try {
+      const res = await apiFetch(`/api/admin/attendance/${editingTodayRecord._id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status: editTodayStatus,
+          note: editTodayNote,
+          excuseReason: editTodayNote,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('የተማሪው የተገኝነት ሁኔታ ተስተካክሏል');
+        setEditingTodayRecord(null);
+        fetchTodayAttendance(todayDate);
+      } else {
+        toast.error(data.message || 'ማስተካከል አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የኔትወርክ ስህተት አጋጥሟል');
+    } finally {
+      setIsUpdatingRecord(false);
+    }
+  };
+
+  const handleDeleteTodayRecord = async (record) => {
+    if (!window.confirm(`የ${record.studentName} የመገኘት መዝገብን መሰረዝ እርግጠኛ ነዎት?`)) return;
+    try {
+      const res = await apiFetch(`/api/admin/attendance/${record._id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success('መዝገቡ ተሰርዟል');
+        fetchTodayAttendance(todayDate);
+      } else {
+        toast.error(data.message || 'መሰረዝ አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የኔትወርክ ስህተት አጋጥሟል');
     }
   };
 
@@ -349,6 +403,7 @@ const AttendanceManagement = () => {
         body: JSON.stringify({
           newDate: rescheduleDate,
           newStartTime: rescheduleStartTime,
+          newEndTime: rescheduleEndTime,
           reason: rescheduleReason,
         }),
       });
@@ -362,6 +417,28 @@ const AttendanceManagement = () => {
       }
     } catch (err) {
       toast.error('የኔትወርክ ስህተት');
+    }
+  };
+
+  // Handle Reopen Closed Session
+  const handleReopenSession = async (sess) => {
+    const confirmMsg = `ይህን የተዘጋ ክፍለ-ጊዜ (${sess.title || sess.grade}) እንደገና መክፈት ይፈልጋሉ?\n\nበራስ-ሰር የተመዘገቡ ቀሪዎች (Auto-Absent) ተነስተው እንደገና መቃኘት ይቻላል።`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const res = await apiFetch(`/api/education/attendance/sessions/${sess._id}/reopen`, {
+        method: 'POST',
+        body: JSON.stringify({ removeAutoAbsents: true }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'ክፍለ-ጊዜው እንደገና ተከፍቷል');
+        fetchSessions();
+        fetchTodayAttendance(todayDate);
+      } else {
+        toast.error(data.message || 'ክፍለ-ጊዜውን እንደገና መክፈት አልተቻለም');
+      }
+    } catch (err) {
+      toast.error('የኔትወርክ ስህተት አጋጥሟል');
     }
   };
 
@@ -920,16 +997,13 @@ const AttendanceManagement = () => {
                 <input
                   type="date"
                   value={todayDate}
-                  onChange={(e) => {
-                    setTodayDate(e.target.value);
-                    fetchTodayAttendance();
-                  }}
+                  onChange={(e) => setTodayDate(e.target.value)}
                   className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                 />
                 <button
                   type="button"
-                  onClick={fetchTodayAttendance}
-                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 transition-colors"
+                  onClick={() => fetchTodayAttendance(todayDate)}
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                 >
                   <RefreshCw className={`w-4 h-4 ${todayLoading ? 'animate-spin' : ''}`} />
                 </button>
@@ -983,18 +1057,19 @@ const AttendanceManagement = () => {
                     <th className="py-3 px-3">ሰዓት</th>
                     <th className="py-3 px-3">ሁኔታ</th>
                     <th className="py-3 px-3">መዝጋቢ</th>
+                    <th className="py-3 px-3 text-right">ድርጊት</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {todayLoading ? (
                     <tr>
-                      <td colSpan="6" className="py-8 text-center text-slate-400">
+                      <td colSpan="7" className="py-8 text-center text-slate-400">
                         በመጫን ላይ...
                       </td>
                     </tr>
                   ) : filteredTodayRecords.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="py-8 text-center text-slate-400">
+                      <td colSpan="7" className="py-8 text-center text-slate-400">
                         ምንም የተመዘገበ ተማሪ አልተገኘም
                       </td>
                     </tr>
@@ -1040,8 +1115,37 @@ const AttendanceManagement = () => {
                               ? 'ፈቃድ'
                               : 'አልተገኘም'}
                           </span>
+                          {(r.excuseReason || r.note) && (
+                            <span className="block text-[10px] text-slate-400 mt-0.5 max-w-[140px] truncate" title={r.excuseReason || r.note}>
+                              📝 {r.excuseReason || r.note}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-3 text-slate-400">{r.recordedBy?.fullName || r.teacherName || 'አስተዳዳሪ'}</td>
+                        <td className="py-3 px-3 text-right">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingTodayRecord(r);
+                                setEditTodayStatus(r.status || 'Present');
+                                setEditTodayNote(r.excuseReason || r.note || '');
+                              }}
+                              title="ሁኔታ አስተካክል"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-blue-950/60 text-slate-600 dark:text-slate-300 hover:text-[#1e3a8a] dark:hover:text-blue-300 transition-colors cursor-pointer"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteTodayRecord(r)}
+                              title="መዝገብ ሰርዝ"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-950/60 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1300,7 +1404,7 @@ const AttendanceManagement = () => {
                   targetGrades: [],
                   targetStudentTypes: ['regular'],
                   targetShifts: ['weekend'],
-                  sessionDate: new Date().toISOString().split('T')[0],
+                  sessionDate: getEthiopianLocalDateString(),
                   startTime: '17:00',
                   endTime: '19:00',
                   lateThresholdMinutes: 15,
@@ -1523,6 +1627,18 @@ const AttendanceManagement = () => {
                         <span>የተማሪዎች ዝርዝር</span>
                       </Button>
 
+                      {isClosed && (
+                        <button
+                          type="button"
+                          onClick={() => handleReopenSession(sess)}
+                          className="px-3 py-2 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 transition-all cursor-pointer flex items-center gap-1"
+                          title="የተዘጋውን ክፍለ-ጊዜ እንደገና ክፈት"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>እንደገና ክፈት (Reopen)</span>
+                        </button>
+                      )}
+
                       {!isCancelled && (
                         <>
                           <button
@@ -1531,6 +1647,7 @@ const AttendanceManagement = () => {
                               setRescheduleModalSession(sess);
                               setRescheduleDate(sess.sessionDate);
                               setRescheduleStartTime(sess.startTime);
+                              setRescheduleEndTime(sess.endTime || '');
                               setRescheduleReason('');
                             }}
                             className="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all cursor-pointer flex items-center gap-1"
@@ -2266,16 +2383,29 @@ const AttendanceManagement = () => {
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  አዲሱ መጀመሪያ ሰዓት
-                </label>
-                <input
-                  type="time"
-                  value={rescheduleStartTime}
-                  onChange={(e) => setRescheduleStartTime(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    አዲሱ መጀመሪያ ሰዓት
+                  </label>
+                  <input
+                    type="time"
+                    value={rescheduleStartTime}
+                    onChange={(e) => setRescheduleStartTime(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    አዲሱ ማብቂያ ሰዓት
+                  </label>
+                  <input
+                    type="time"
+                    value={rescheduleEndTime}
+                    onChange={(e) => setRescheduleEndTime(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold"
+                  />
+                </div>
               </div>
 
               <div>
@@ -2865,6 +2995,92 @@ const AttendanceManagement = () => {
               >
                 ዝጋ
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🌟 MODAL: INLINE EDIT TODAY'S ATTENDANCE RECORD */}
+      {editingTodayRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  የተገኝነት ሁኔታ አስተካክል
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editingTodayRecord.studentName} • {formatGradeAmharic(editingTodayRecord.grade)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingTodayRecord(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  ሁኔታ (Status)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'Present', label: '✅ ተገኝቷል (Present)', active: 'bg-emerald-600 text-white border-emerald-600' },
+                    { value: 'Late', label: '🕒 ዘግይቷል (Late)', active: 'bg-amber-500 text-white border-amber-500' },
+                    { value: 'Excused', label: '📋 በፈቃድ (Excused)', active: 'bg-blue-600 text-white border-blue-600' },
+                    { value: 'Absent', label: '❌ አልተገኘም (Absent)', active: 'bg-rose-600 text-white border-rose-600' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setEditTodayStatus(opt.value)}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        editTodayStatus === opt.value
+                          ? `${opt.active} shadow-sm`
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  ምክንያት / ማስታወሻ (Note / Excuse Reason)
+                </label>
+                <textarea
+                  rows={3}
+                  value={editTodayNote}
+                  onChange={(e) => setEditTodayNote(e.target.value)}
+                  placeholder="ለምሳሌ፡ በህመም ምክንያት ፈቃድ ጠይቋል..."
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-[#1e3a8a]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingTodayRecord(null)}
+                  className="rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  ተመለስ
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveTodayRecordEdit}
+                  disabled={isUpdatingRecord}
+                  className="bg-[#1e3a8a] hover:bg-[#163177] text-white rounded-xl text-xs font-black shadow-md cursor-pointer"
+                >
+                  {isUpdatingRecord ? 'በማስቀመጥ ላይ...' : 'ለውጡን አስቀምጥ'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

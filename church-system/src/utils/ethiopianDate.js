@@ -103,6 +103,27 @@ export const formatEthiopianDate = (dateInput, format = 'long') => {
 };
 
 /**
+ * Returns today's (or given date's) YYYY-MM-DD date string in Ethiopian / East Africa Time (Africa/Addis_Ababa, UTC+3).
+ * Avoids the UTC off-by-one-day bug between midnight and 3:00 AM EAT.
+ */
+export const getEthiopianLocalDateString = (d = new Date()) => {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Africa/Addis_Ababa',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(d);
+    const year = parts.find((p) => p.type === 'year')?.value;
+    const month = parts.find((p) => p.type === 'month')?.value;
+    const day = parts.find((p) => p.type === 'day')?.value;
+    if (year && month && day) return `${year}-${month}-${day}`;
+  } catch {}
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+
+/**
  * Helper to get today's Ethiopian date
  */
 export const getEthiopianToday = () => {
