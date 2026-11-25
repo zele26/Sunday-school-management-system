@@ -160,6 +160,7 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
           lateThresholdMinutes: schedule.lateThresholdMinutes || 15,
           earlyCheckInWindowMinutes: schedule.earlyCheckInWindowMinutes || 20,
           assignedTakers: schedule.assignedTakers || [],
+          createdBy: schedule.createdBy || null,
           location: schedule.location || '',
           status: 'scheduled',
           stats: {
@@ -191,8 +192,14 @@ exports.getTodayAuthorizedSessions = async (req, res) => {
     const sessions = await ClassSession.find(sessionFilter)
       .populate('assignedTakers', 'fullName email phone role')
       .populate('course', 'name code')
+      .populate('createdBy', 'fullName email role')
       .populate('openedBy', 'fullName')
       .populate('closedBy', 'fullName')
+      .populate({
+        path: 'scheduleId',
+        select: 'name createdBy',
+        populate: { path: 'createdBy', select: 'fullName email role' },
+      })
       .sort({ startTime: 1 });
 
     // Refresh live stats and time window status for each session
@@ -1072,8 +1079,14 @@ exports.getSessionLiveRoster = async (req, res) => {
     const { id } = req.params;
     const session = await ClassSession.findById(id)
       .populate('assignedTakers', 'fullName email phone')
+      .populate('createdBy', 'fullName email role')
       .populate('openedBy', 'fullName')
-      .populate('closedBy', 'fullName');
+      .populate('closedBy', 'fullName')
+      .populate({
+        path: 'scheduleId',
+        select: 'name createdBy',
+        populate: { path: 'createdBy', select: 'fullName email role' },
+      });
 
     if (!session) {
       return res.status(404).json({ success: false, message: 'Session not found.' });
@@ -1148,6 +1161,7 @@ exports.getSchedules = async (req, res) => {
     const schedules = await ClassSchedule.find()
       .populate('assignedTakers', 'fullName email phone role')
       .populate('course', 'name code')
+      .populate('createdBy', 'fullName email role')
       .sort({ grade: 1, shift: 1, dayOfWeek: 1, startTime: 1 });
 
     res.json({ success: true, count: schedules.length, schedules });
@@ -1233,7 +1247,8 @@ exports.createSchedule = async (req, res) => {
     }
 
     const populated = await ClassSchedule.findById(schedule._id)
-      .populate('assignedTakers', 'fullName email phone role');
+      .populate('assignedTakers', 'fullName email phone role')
+      .populate('createdBy', 'fullName email role');
 
     res.status(201).json({ success: true, schedule: populated });
   } catch (err) {
@@ -1262,7 +1277,9 @@ exports.updateSchedule = async (req, res) => {
       id,
       payload,
       { new: true, runValidators: true }
-    ).populate('assignedTakers', 'fullName email phone role');
+    )
+      .populate('assignedTakers', 'fullName email phone role')
+      .populate('createdBy', 'fullName email role');
 
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Schedule not found.' });
@@ -1311,8 +1328,17 @@ exports.getAllSessions = async (req, res) => {
     }
 
     const sessions = await ClassSession.find(filter)
-      .populate('assignedTakers', 'fullName email phone')
+      .populate('assignedTakers', 'fullName email phone role roles')
       .populate('course', 'name')
+      .populate('createdBy', 'fullName email role')
+      .populate('openedBy', 'fullName')
+      .populate('closedBy', 'fullName')
+      .populate('cancelledBy', 'fullName')
+      .populate({
+        path: 'scheduleId',
+        select: 'name createdBy',
+        populate: { path: 'createdBy', select: 'fullName email role' },
+      })
       .sort({ sessionDate: -1, startTime: 1 });
 
     res.json({ success: true, count: sessions.length, sessions });
@@ -1396,6 +1422,7 @@ exports.createMakeUpSession = async (req, res) => {
       status: 'scheduled',
       isMakeUp: true,
       assignedTakers: assignedTakers || [],
+      createdBy: req.user._id,
       location: location || '',
       notes: notes || 'Ad-hoc make-up / special session',
       stats: { expectedCount, presentCount: 0, lateCount: 0, absentCount: 0, excusedCount: 0 },
@@ -1410,7 +1437,8 @@ exports.createMakeUpSession = async (req, res) => {
     }
 
     const populatedSession = await ClassSession.findById(session._id)
-      .populate('assignedTakers', 'fullName email phone role');
+      .populate('assignedTakers', 'fullName email phone role')
+      .populate('createdBy', 'fullName email role');
 
     res.status(201).json({ success: true, session: populatedSession || session });
   } catch (err) {

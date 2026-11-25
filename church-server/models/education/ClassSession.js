@@ -95,6 +95,11 @@ const classSessionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   openedAt: {
     type: Date,
     default: null,
@@ -163,6 +168,7 @@ classSessionSchema.index({ sessionDate: 1, grade: 1 });
 classSessionSchema.index({ sessionDate: 1, status: 1 });
 classSessionSchema.index({ assignedTakers: 1, sessionDate: 1, status: 1 });
 classSessionSchema.index({ scheduleId: 1, sessionDate: 1 });
+classSessionSchema.index({ createdBy: 1 });
 classSessionSchema.index({ status: 1 });
 
 module.exports = mongoose.models.ClassSession || mongoose.model('ClassSession', classSessionSchema);

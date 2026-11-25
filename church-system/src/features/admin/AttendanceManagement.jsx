@@ -1295,6 +1295,15 @@ const AttendanceManagement = () => {
                           </div>
                         )}
 
+                        {sch.createdBy?.fullName && (
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                            <UserCheck className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                            <span>
+                              የፈጠረው፦ <strong className="text-slate-700 dark:text-slate-200">{sch.createdBy.fullName}</strong>
+                            </span>
+                          </div>
+                        )}
+
                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                           <span className="text-[11px] font-bold text-slate-500 block mb-1">
                             የተመደቡ መዝጋቢዎች (Assigned Takers)፦
@@ -1593,6 +1602,46 @@ const AttendanceManagement = () => {
                           ማስታወሻ፦ {sess.notes}
                         </p>
                       )}
+
+                      {/* Creator & Session Audit Info */}
+                      {(() => {
+                        const creatorName = sess.createdBy?.fullName || sess.scheduleId?.createdBy?.fullName;
+                        const isFromSchedule = Boolean(sess.scheduleId);
+                        if (!creatorName && !sess.openedBy?.fullName && !sess.closedBy?.fullName && !sess.cancelledBy?.fullName) {
+                          return null;
+                        }
+                        return (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                            {creatorName && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/70 font-bold">
+                                <UserCheck className="w-3 h-3" />
+                                <span>
+                                  የፈጠረው፦ {creatorName}
+                                  {isFromSchedule ? ' (ሳምንታዊ ፕሮግራም)' : ''}
+                                </span>
+                              </span>
+                            )}
+                            {sess.openedBy?.fullName && (
+                              <span className="inline-flex items-center gap-1 text-[10px]">
+                                <Play className="w-3 h-3 text-emerald-500" />
+                                <span>የከፈተው፦ <strong>{sess.openedBy.fullName}</strong></span>
+                              </span>
+                            )}
+                            {sess.closedBy?.fullName && (
+                              <span className="inline-flex items-center gap-1 text-[10px]">
+                                <Square className="w-3 h-3 text-slate-400" />
+                                <span>የዘጋው፦ <strong>{sess.closedBy.fullName}</strong></span>
+                              </span>
+                            )}
+                            {sess.cancelledBy?.fullName && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-rose-500">
+                                <CalendarX className="w-3 h-3" />
+                                <span>የሰረዘው፦ <strong>{sess.cancelledBy.fullName}</strong></span>
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {sess.assignedTakers && sess.assignedTakers.length > 0 && (
                         <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -2873,6 +2922,11 @@ const AttendanceManagement = () => {
                 </h3>
                 <p className="text-xs text-slate-500">
                   {formatGradeAmharic(selectedSessionForRoster.grade)} ({selectedSessionForRoster.sessionDate})
+                  {(selectedSessionForRoster.createdBy?.fullName || selectedSessionForRoster.scheduleId?.createdBy?.fullName) && (
+                    <span className="ml-2 text-indigo-600 dark:text-indigo-400 font-bold">
+                      • የፈጠረው፦ {selectedSessionForRoster.createdBy?.fullName || selectedSessionForRoster.scheduleId?.createdBy?.fullName}
+                    </span>
+                  )}
                 </p>
               </div>
               <button
