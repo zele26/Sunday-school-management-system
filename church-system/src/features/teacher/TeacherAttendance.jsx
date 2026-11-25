@@ -1,7 +1,7 @@
 'use client';
 
 // src/features/teacher/TeacherAttendance.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ClipboardList,
@@ -13,27 +13,34 @@ import {
   AlertCircle,
   XCircle,
   Download,
-  BookOpen,
   RefreshCw,
-  FileSpreadsheet,
-  Check,
   QrCode,
+  FileText,
 } from 'lucide-react';
 import { apiFetch } from '../../api/apiClient';
-import { formatEthiopianDate } from '../../utils/ethiopianDate';
+import { formatEthiopianDate, getEthiopianLocalDateString } from '../../utils/ethiopianDate';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
-import { Card, CardHeader, CardTitle, CardContent, Button, Badge } from '../../components/ui';
+import { Button } from '../../components/ui';
 import { FadeIn } from '../../components/motion';
+
+const normalizeCourseShift = (rawShift) => {
+  if (!rawShift) return 'weekend';
+  const s = String(rawShift).toLowerCase();
+  if (s.includes('night') || s.includes('ማታ')) return 'night';
+  return 'weekend';
+};
 
 const TeacherAttendance = () => {
   const [activeTab, setActiveTab] = useState('rollcall'); // 'rollcall' | 'history'
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState('');
-  const [rollCallDate, setRollCallDate] = useState(new Date().toISOString().split('T')[0]);
+  const [rollCallDate, setRollCallDate] = useState(() => getEthiopianLocalDateString());
 
   // Roll call state
   const [roster, setRoster] = useState([]);
   const [rosterStatuses, setRosterStatuses] = useState({});
+  const [rosterReasons, setRosterReasons] = useState({});
+  const [rosterSearch, setRosterSearch] = useState('');
   const [rosterLoading, setRosterLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
@@ -43,6 +50,12 @@ const TeacherAttendance = () => {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyStartDate, setHistoryStartDate] = useState('');
   const [historyEndDate, setHistoryEndDate] = useState('');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('all');
+
+  const selectedCourse = useMemo(
+    () => courses.find((c) => c._id === selectedCourseId) || null,
+    [courses, selectedCourseId]
+  );
 
   useEffect(() => {
     fetchMyCourses();
@@ -64,22 +77,35 @@ const TeacherAttendance = () => {
     }
   };
 
-  // Fetch student roster when course changes
+  // Fetch student roster scoped to selected course (grade + studentType + shift)
   const fetchRoster = async () => {
     if (!selectedCourseId) return;
     setRosterLoading(true);
     setFeedbackMessage(null);
     try {
-      const res = await apiFetch(`/api/admin/attendance/roster?courseId=${selectedCourseId}&date=${rollCallDate}`);
+      const params = new URLSearchParams({
+        courseId: selectedCourseId,
+        date: rollCallDate,
+      });
+      if (selectedCourse?.grade) params.append('grade', selectedCourse.grade);
+      if (selectedCourse?.studentType) params.append('studentType', selectedCourse.studentType);
+      if (selectedCourse?.studentType !== 'distance' && selectedCourse?.shift) {
+        params.append('shift', normalizeCourseShift(selectedCourse.shift));
+      }
+
+      const res = await apiFetch(`/api/admin/attendance/roster?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         const list = data.roster || [];
         setRoster(list);
         const initialMap = {};
+        const initialReasons = {};
         list.forEach((s) => {
           initialMap[s._id] = s.status || 'Unmarked';
+          initialReasons[s._id] = s.excuseReason || s.note || '';
         });
         setRosterStatuses(initialMap);
+        setRosterReasons(initialReasons);
       }
     } catch (err) {
       console.warn('Failed to fetch roster:', err);
@@ -103,6 +129,8 @@ const TeacherAttendance = () => {
     const recordsPayload = roster.map((s) => ({
       studentId: s._id,
       status: rosterStatuses[s._id] === 'Unmarked' ? 'Absent' : (rosterStatuses[s._id] || 'Absent'),
+      excuseReason: rosterReasons[s._id] || '',
+      note: rosterReasons[s._id] || '',
     }));
 
     try {
@@ -135,13 +163,21 @@ const TeacherAttendance = () => {
     setFeedbackMessage(null);
 
     try {
+      const payload = {
+        courseId: selectedCourseId,
+        date: rollCallDate,
+        defaultStatus: 'Absent',
+        grade: selectedCourse?.grade || undefined,
+        studentType: selectedCourse?.studentType || 'regular',
+        shift:
+          selectedCourse?.studentType === 'distance'
+            ? undefined
+            : normalizeCourseShift(selectedCourse?.shift),
+      };
+
       const res = await apiFetch('/api/admin/attendance/mark-unscanned-absent', {
         method: 'POST',
-        body: JSON.stringify({
-          courseId: selectedCourseId,
-          date: rollCallDate,
-          defaultStatus: 'Absent',
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
@@ -163,7 +199,7 @@ const TeacherAttendance = () => {
   const handleMarkAll = (status) => {
     const updated = {};
     roster.forEach((s) => {
-      if (s.status === 'Excused' && status !== 'Excused') {
+      if (rosterStatuses[s._id] === 'Excused' && status !== 'Excused') {
         updated[s._id] = 'Excused';
       } else {
         updated[s._id] = status;
@@ -171,6 +207,35 @@ const TeacherAttendance = () => {
     });
     setRosterStatuses(updated);
   };
+
+  // Live Roll Call Stats & Filtered Roster
+  const rollCallStats = useMemo(() => {
+    let present = 0;
+    let late = 0;
+    let excused = 0;
+    let absent = 0;
+    let unmarked = 0;
+    roster.forEach((s) => {
+      const st = rosterStatuses[s._id] || s.status || 'Unmarked';
+      if (st === 'Present') present++;
+      else if (st === 'Late') late++;
+      else if (st === 'Excused') excused++;
+      else if (st === 'Absent') absent++;
+      else unmarked++;
+    });
+    return { total: roster.length, present, late, excused, absent, unmarked };
+  }, [roster, rosterStatuses]);
+
+  const filteredRoster = useMemo(() => {
+    const q = rosterSearch.trim().toLowerCase();
+    if (!q) return roster;
+    return roster.filter(
+      (s) =>
+        s.fullName?.toLowerCase().includes(q) ||
+        s.studentId?.toLowerCase().includes(q) ||
+        s.christianName?.toLowerCase().includes(q)
+    );
+  }, [roster, rosterSearch]);
 
   // Fetch History
   const fetchHistory = async () => {
@@ -198,6 +263,41 @@ const TeacherAttendance = () => {
       fetchHistory();
     }
   }, [activeTab, selectedCourseId]);
+
+  const filteredHistory = useMemo(() => {
+    if (historyStatusFilter === 'all') return records;
+    return records.filter((r) => r.status === historyStatusFilter);
+  }, [records, historyStatusFilter]);
+
+  const handleExportHistoryCSV = () => {
+    if (!filteredHistory.length) return;
+    const headers = ['ቀን', 'ተማሪ', 'መለያ ቁጥር', 'ኮርስ / ክፍለ-ጊዜ', 'ሁኔታ', 'ማስታወሻ'];
+    const rows = filteredHistory.map((r) => {
+      const name =
+        r.studentName ||
+        r.student?.fullName ||
+        [r.student?.firstName, r.student?.middleName, r.student?.lastName].filter(Boolean).join(' ') ||
+        '-';
+      const note = (r.excuseReason || r.note || '').replace(/"/g, '""');
+      return [
+        `"${formatEthiopianDate(r.date)}"`,
+        `"${name}"`,
+        `"${r.student?.studentId || r.studentId || '-'}"`,
+        `"${r.courseName || r.course?.name || r.sessionId?.title || r.session || '-'}"`,
+        `"${r.status || ''}"`,
+        `"${note}"`,
+      ].join(',');
+    });
+    const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `teacher-attendance-${getEthiopianLocalDateString()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6 font-sans">
@@ -274,50 +374,100 @@ const TeacherAttendance = () => {
       {/* TAB 1: ROLL CALL */}
       {activeTab === 'rollcall' && (
         <FadeIn className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-300">ቀን፦</label>
-              <input
-                type="date"
-                value={rollCallDate}
-                onChange={(e) => setRollCallDate(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-              />
+          {/* Controls & Live Summary Strip */}
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-300">ቀን፦</label>
+                  <input
+                    type="date"
+                    value={rollCallDate}
+                    onChange={(e) => setRollCallDate(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+                <div className="relative min-w-[200px]">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={rosterSearch}
+                    onChange={(e) => setRosterSearch(e.target.value)}
+                    placeholder="ተማሪ በስም ወይም መለያ ፈልግ..."
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-[#1e3a8a]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAutoMarkAbsent}
+                  disabled={isSubmitting || roster.length === 0}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  title="ያላስነበቡትንና ያልተገኙትን ተማሪዎች በሙሉ አልተገኘም ብለህ መዝግብ"
+                >
+                  <span>⚡ ያልተገኙትን &quot;አልተገኘም&quot; አድርግ</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMarkAll('Present')}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 transition-colors cursor-pointer"
+                >
+                  ✓ ሁሉንም ተገኝቷል አድርግ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMarkAll('Absent')}
+                  className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
+                >
+                  ✗ ሁሉንም አልተገኘም አድርግ
+                </button>
+                <button
+                  type="button"
+                  onClick={fetchRoster}
+                  disabled={rosterLoading}
+                  className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                  title="አድስ"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${rosterLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleAutoMarkAbsent}
-                disabled={isSubmitting || roster.length === 0}
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-black shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                title="ያላስነበቡትንና ያልተገኙትን ተማሪዎች በሙሉ አልተገኘም ብለህ መዝግብ"
-              >
-                <span>⚡ ያልተገኙትን "አልተገኘም" አድርግ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMarkAll('Present')}
-                className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 transition-colors cursor-pointer"
-              >
-                ✓ ሁሉንም ተገኝቷል አድርግ
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMarkAll('Absent')}
-                className="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-400 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
-              >
-                ✗ ሁሉንም አልተገኘም አድርግ
-              </button>
-            </div>
+            {/* Live Roll Call Tally Pills */}
+            {roster.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold">
+                <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  ጠቅላላ፦ {rollCallStats.total}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  ✓ ተገኝተዋል፦ {rollCallStats.present}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  🕒 ዘግይተዋል፦ {rollCallStats.late}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  📋 በፈቃድ፦ {rollCallStats.excused}
+                </span>
+                <span className="px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                  ✗ አልተገኙም፦ {rollCallStats.absent}
+                </span>
+                {rollCallStats.unmarked > 0 && (
+                  <span className="px-2.5 py-1 rounded-full bg-slate-200/70 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                    ⚪ ያልተመዘገቡ፦ {rollCallStats.unmarked}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {feedbackMessage && (
             <div
               className={`p-4 rounded-2xl text-xs font-bold flex items-center gap-2 ${
                 feedbackMessage.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+                  : 'bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
               }`}
             >
               {feedbackMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -332,9 +482,11 @@ const TeacherAttendance = () => {
                 <div className="w-7 h-7 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <span>ተማሪዎችን በመጫን ላይ...</span>
               </div>
-            ) : roster.length === 0 ? (
+            ) : filteredRoster.length === 0 ? (
               <div className="py-14 text-center text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 m-5">
-                በዚህ ኮርስ የተመዘገበ ተማሪ የለም።
+                {roster.length === 0
+                  ? 'በዚህ ኮርስ የተመዘገበ ተማሪ የለም።'
+                  : 'በፍለጋው ውስጥ የሚዛመድ ተማሪ አልተገኘም።'}
               </div>
             ) : (
               <div>
@@ -350,7 +502,7 @@ const TeacherAttendance = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {roster.map((s, idx) => {
+                      {filteredRoster.map((s, idx) => {
                         const curStatus = rosterStatuses[s._id] || (s.status || 'Unmarked');
                         return (
                           <tr key={s._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
@@ -385,7 +537,7 @@ const TeacherAttendance = () => {
                               {s.status === 'Present' || s.status === 'Late' ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 text-[10px] font-bold">
                                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                                  <span>በQR ተገኝቷል</span>
+                                  <span>{s.status === 'Late' ? 'ዘግይቶ ተመዝግቧል' : 'ተመዝግቧል'}</span>
                                 </span>
                               ) : s.status === 'Excused' ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 text-[10px] font-bold">
@@ -401,28 +553,43 @@ const TeacherAttendance = () => {
                               )}
                             </td>
                             <td className="p-3.5">
-                              <div className="flex items-center justify-center gap-1.5">
-                                {[
-                                  { value: 'Present', label: 'ተገኝቷል', activeBg: 'bg-emerald-600 text-white' },
-                                  { value: 'Late', label: 'ዘግይቷል', activeBg: 'bg-amber-500 text-white' },
-                                  { value: 'Excused', label: 'ፈቃድ', activeBg: 'bg-blue-600 text-white' },
-                                  { value: 'Absent', label: 'አልተገኘም', activeBg: 'bg-rose-600 text-white' },
-                                ].map((opt) => (
-                                  <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() =>
-                                      setRosterStatuses((prev) => ({ ...prev, [s._id]: opt.value }))
-                                    }
-                                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                      curStatus === opt.value
-                                        ? `${opt.activeBg} shadow-xs`
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                ))}
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                  {[
+                                    { value: 'Present', label: 'ተገኝቷል', activeBg: 'bg-emerald-600 text-white' },
+                                    { value: 'Late', label: 'ዘግይቷል', activeBg: 'bg-amber-500 text-white' },
+                                    { value: 'Excused', label: 'ፈቃድ', activeBg: 'bg-blue-600 text-white' },
+                                    { value: 'Absent', label: 'አልተገኘም', activeBg: 'bg-rose-600 text-white' },
+                                  ].map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() =>
+                                        setRosterStatuses((prev) => ({ ...prev, [s._id]: opt.value }))
+                                      }
+                                      className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        curStatus === opt.value
+                                          ? `${opt.activeBg} shadow-xs`
+                                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                                      }`}
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                {curStatus === 'Excused' && (
+                                  <div className="flex items-center justify-center">
+                                    <input
+                                      type="text"
+                                      value={rosterReasons[s._id] || ''}
+                                      onChange={(e) =>
+                                        setRosterReasons((prev) => ({ ...prev, [s._id]: e.target.value }))
+                                      }
+                                      placeholder="የፈቃድ ምክንያት (አማራጭ)..."
+                                      className="w-full max-w-[260px] px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/30 text-[11px] text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -432,7 +599,10 @@ const TeacherAttendance = () => {
                   </table>
                 </div>
 
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    ያልተመረጡ ተማሪዎች ሲቀመጡ በራስ-ሰር &quot;አልተገኘም&quot; ይባላሉ
+                  </span>
                   <Button
                     onClick={handleSaveRollCall}
                     disabled={isSubmitting || roster.length === 0}
@@ -451,31 +621,58 @@ const TeacherAttendance = () => {
       {/* TAB 2: HISTORY */}
       {activeTab === 'history' && (
         <FadeIn className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-wrap items-center gap-3">
-            <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">ከቀን፦</label>
-              <input
-                type="date"
-                value={historyStartDate}
-                onChange={(e) => setHistoryStartDate(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-              />
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">ከቀን፦</label>
+                <input
+                  type="date"
+                  value={historyStartDate}
+                  onChange={(e) => setHistoryStartDate(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">እስከ ቀን፦</label>
+                <input
+                  type="date"
+                  value={historyEndDate}
+                  onChange={(e) => setHistoryEndDate(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">ሁኔታ፦</label>
+                <select
+                  value={historyStatusFilter}
+                  onChange={(e) => setHistoryStatusFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
+                >
+                  <option value="all">ሁሉም</option>
+                  <option value="Present">ተገኝቷል</option>
+                  <option value="Late">ዘግይቷል</option>
+                  <option value="Excused">በፈቃድ</option>
+                  <option value="Absent">አልተገኘም</option>
+                </select>
+              </div>
+              <button
+                onClick={fetchHistory}
+                className="px-4 py-2 rounded-xl bg-[#1e3a8a] text-white text-xs font-bold hover:bg-[#163177] transition-all cursor-pointer"
+              >
+                አጣራ
+              </button>
             </div>
-            <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">እስከ ቀን፦</label>
-              <input
-                type="date"
-                value={historyEndDate}
-                onChange={(e) => setHistoryEndDate(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
-              />
-            </div>
-            <button
-              onClick={fetchHistory}
-              className="mt-5 px-4 py-2 rounded-xl bg-[#1e3a8a] text-white text-xs font-bold hover:bg-[#163177] transition-all cursor-pointer"
-            >
-              አጣራ
-            </button>
+
+            {filteredHistory.length > 0 && (
+              <button
+                type="button"
+                onClick={handleExportHistoryCSV}
+                className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-600" />
+                <span>CSV አውርድ ({filteredHistory.length})</span>
+              </button>
+            )}
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
@@ -484,7 +681,7 @@ const TeacherAttendance = () => {
                 <div className="w-7 h-7 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <span>መረጃ በመጫን ላይ...</span>
               </div>
-            ) : records.length === 0 ? (
+            ) : filteredHistory.length === 0 ? (
               <div className="py-14 text-center text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 m-5">
                 ምንም የተገኝነት ታሪክ አልተገኘም።
               </div>
@@ -496,12 +693,13 @@ const TeacherAttendance = () => {
                       <th className="p-3.5">ቀን</th>
                       <th className="p-3.5">ተማሪ</th>
                       <th className="p-3.5">መለያ ቁጥር</th>
-                      <th className="p-3.5">ኮርስ</th>
+                      <th className="p-3.5">ኮርስ / ክፍለ-ጊዜ</th>
                       <th className="p-3.5">ሁኔታ</th>
+                      <th className="p-3.5">ማስታወሻ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {records.map((r) => (
+                    {filteredHistory.map((r) => (
                       <tr key={r._id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                         <td className="p-3.5 font-semibold text-slate-900 dark:text-white">
                           {formatEthiopianDate(r.date)}
@@ -512,17 +710,19 @@ const TeacherAttendance = () => {
                         <td className="p-3.5 font-mono text-slate-500 font-bold">
                           {r.student?.studentId || r.studentId || '-'}
                         </td>
-                        <td className="p-3.5 text-slate-600 dark:text-slate-300">{r.courseName || r.course?.name || '-'}</td>
+                        <td className="p-3.5 text-slate-600 dark:text-slate-300">
+                          {r.courseName || r.course?.name || r.sessionId?.title || r.session || '-'}
+                        </td>
                         <td className="p-3.5">
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                               r.status === 'Present'
-                                ? 'bg-emerald-50 text-emerald-700'
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
                                 : r.status === 'Late'
-                                ? 'bg-amber-50 text-amber-700'
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
                                 : r.status === 'Excused'
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'bg-rose-50 text-rose-700'
+                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
                             }`}
                           >
                             {r.status === 'Present'
@@ -533,6 +733,16 @@ const TeacherAttendance = () => {
                               ? 'ፈቃድ'
                               : 'አልተገኘም'}
                           </span>
+                        </td>
+                        <td className="p-3.5 text-slate-500 dark:text-slate-400">
+                          {r.excuseReason || r.note ? (
+                            <span className="inline-flex items-center gap-1 text-[11px]">
+                              <FileText className="w-3 h-3 text-slate-400" />
+                              <span>{r.excuseReason || r.note}</span>
+                            </span>
+                          ) : (
+                            '—'
+                          )}
                         </td>
                       </tr>
                     ))}

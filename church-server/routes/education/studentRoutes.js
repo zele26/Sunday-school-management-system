@@ -156,10 +156,31 @@ router.put('/profile', async (req, res) => {
 // ---------- My Attendance ----------
 const getStudentAttendance = async (req, res) => {
   try {
-    const attendance = await Attendance.find({ student: req.student._id })
-      .populate('course', 'name')
-      .sort({ date: -1 });
-    res.json(attendance);
+    const rawAttendance = await Attendance.find({ student: req.student._id })
+      .populate('course', 'name nameAmharic grade')
+      .populate('sessionId', 'title grade sessionDate startTime endTime sessionType')
+      .sort({ date: -1, checkInTime: -1 });
+
+    // Deduplicate conflicting records for the same session/date (prioritize Present/Late/Excused over Absent)
+    const dedupeMap = new Map();
+    for (const a of rawAttendance) {
+      const sessKey = a.sessionId?._id
+        ? a.sessionId._id.toString()
+        : (a.session || a.course?._id?.toString() || (a.date ? new Date(a.date).toISOString().split('T')[0] : a._id.toString()));
+      const dateKey = a.date ? new Date(a.date).toISOString().split('T')[0] : '';
+      const key = `${sessKey}__${dateKey}`;
+
+      if (!dedupeMap.has(key)) {
+        dedupeMap.set(key, a);
+      } else {
+        const existing = dedupeMap.get(key);
+        if (existing.status === 'Absent' && a.status !== 'Absent') {
+          dedupeMap.set(key, a);
+        }
+      }
+    }
+
+    res.json(Array.from(dedupeMap.values()));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

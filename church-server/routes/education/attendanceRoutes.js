@@ -80,6 +80,7 @@ router.get('/sessions/:id/live-roster', sessionCtrl.getSessionLiveRoster);
 // 2. Admin Sessions Management
 router.get('/sessions', authorize('admin', 'superadmin'), sessionCtrl.getAllSessions);
 router.post('/sessions/makeup', authorize('admin', 'superadmin'), sessionCtrl.createMakeUpSession);
+router.post('/sessions/:id/reopen', authorize('admin', 'superadmin'), sessionCtrl.reopenSession);
 router.patch('/sessions/:id/reschedule', authorize('admin', 'superadmin'), sessionCtrl.rescheduleSession);
 router.patch('/sessions/:id/cancel', authorize('admin', 'superadmin'), sessionCtrl.cancelSession);
 router.delete('/sessions/:id', authorize('admin', 'superadmin'), sessionCtrl.deleteSession);
@@ -639,7 +640,7 @@ router.post('/manual', authorize('admin', 'teacher'), async (req, res) => {
     }
 
     try {
-      await Attendance.create({
+      const createdRecord = await Attendance.create({
         sessionId: targetSession ? targetSession._id : (sessionId || null),
         session: sessionLabel,
         student: student._id,
@@ -992,7 +993,7 @@ router.get('/today', authorize('admin', 'teacher'), async (req, res) => {
 router.put('/:id', authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, note } = req.body;
+    const { status, note, excuseReason } = req.body;
 
     if (!status || !['Present', 'Absent', 'Late', 'Excused'].includes(status)) {
       return res.status(400).json({
@@ -1001,20 +1002,46 @@ router.put('/:id', authorize('admin'), async (req, res) => {
       });
     }
 
+    const updateFields = {
+      status,
+      updatedBy: req.user._id,
+      updatedAt: new Date(),
+    };
+    if (note !== undefined) updateFields.note = note;
+    if (excuseReason !== undefined) {
+      updateFields.excuseReason = excuseReason;
+      if (note === undefined) updateFields.note = excuseReason;
+    }
+
     const attendance = await Attendance.findByIdAndUpdate(
       id,
-      { 
-        status,
-        ...(note && { note }),
-        updatedBy: req.user._id,
-        updatedAt: new Date()
-      },
+      updateFields,
       { new: true }
-    ).populate('student', 'firstName middleName lastName grade')
-     .populate('course', 'name');
+    ).populate('student', 'firstName middleName lastName grade studentId')
+     .populate('course', 'name')
+     .populate('sessionId', 'title grade sessionDate');
 
     if (!attendance) {
       return res.status(404).json({ success: false, message: 'Attendance record not found' });
+    }
+
+    // Recalculate linked ClassSession stats if this record belongs to a session
+    const sessId = attendance.sessionId?._id || attendance.sessionId;
+    if (sessId) {
+      const [presentCount, lateCount, absentCount, excusedCount] = await Promise.all([
+        Attendance.countDocuments({ sessionId: sessId, status: 'Present' }),
+        Attendance.countDocuments({ sessionId: sessId, status: 'Late' }),
+        Attendance.countDocuments({ sessionId: sessId, status: 'Absent' }),
+        Attendance.countDocuments({ sessionId: sessId, status: 'Excused' }),
+      ]);
+      await ClassSession.findByIdAndUpdate(sessId, {
+        $set: {
+          'stats.presentCount': presentCount,
+          'stats.lateCount': lateCount,
+          'stats.absentCount': absentCount,
+          'stats.excusedCount': excusedCount,
+        },
+      }).catch(() => {});
     }
 
     res.json({ success: true, message: 'Attendance updated successfully', attendance });
@@ -1032,6 +1059,25 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ success: false, message: 'Attendance record not found' });
     }
+
+    // Recalculate linked ClassSession stats if this record belonged to a session
+    if (attendance.sessionId) {
+      const [presentCount, lateCount, absentCount, excusedCount] = await Promise.all([
+        Attendance.countDocuments({ sessionId: attendance.sessionId, status: 'Present' }),
+        Attendance.countDocuments({ sessionId: attendance.sessionId, status: 'Late' }),
+        Attendance.countDocuments({ sessionId: attendance.sessionId, status: 'Absent' }),
+        Attendance.countDocuments({ sessionId: attendance.sessionId, status: 'Excused' }),
+      ]);
+      await ClassSession.findByIdAndUpdate(attendance.sessionId, {
+        $set: {
+          'stats.presentCount': presentCount,
+          'stats.lateCount': lateCount,
+          'stats.absentCount': absentCount,
+          'stats.excusedCount': excusedCount,
+        },
+      }).catch(() => {});
+    }
+
     res.json({ success: true, message: 'Attendance record deleted successfully' });
   } catch (err) {
     console.error('Delete attendance error:', err);
@@ -1043,31 +1089,67 @@ router.delete('/:id', authorize('admin'), async (req, res) => {
 router.get('/roster', authorize('admin', 'teacher'), async (req, res) => {
   try {
     const { grade, courseId, date, studentType, shift } = req.query;
-    const query = {};
+    let effectiveGrade = grade ? grade.trim() : '';
+    let effectiveStudentType = studentType ? studentType.trim() : '';
+    let effectiveShift = shift ? shift.trim() : '';
+    let courseObj = null;
 
-    if (grade && grade.trim()) {
-      const num = grade.match(/\d+/);
-      if (num) {
-        query.$or = [
-          { grade: { $regex: new RegExp(`(${num[0]}|${grade})`, 'i') } },
-          { batch: { $regex: new RegExp(`(${num[0]}|${grade})`, 'i') } },
-        ];
-      } else {
-        query.$or = [
-          { grade: { $regex: new RegExp(grade, 'i') } },
-          { batch: { $regex: new RegExp(grade, 'i') } },
-        ];
+    if (courseId && mongoose.Types.ObjectId.isValid(courseId)) {
+      courseObj = await Course.findById(courseId).lean();
+      if (courseObj) {
+        if (!effectiveGrade && courseObj.grade) effectiveGrade = courseObj.grade;
+        if (!effectiveStudentType && courseObj.studentType) effectiveStudentType = courseObj.studentType;
+        if (!effectiveShift && courseObj.shift) {
+          const s = String(courseObj.shift).toLowerCase();
+          if (s.includes('night') || s.includes('ማታ')) effectiveShift = 'night';
+          else if (s.includes('day') || s.includes('weekend') || s.includes('ቀን')) effectiveShift = 'weekend';
+        }
       }
     }
-    if (studentType && studentType.trim()) {
-      query.studentType = { $regex: new RegExp(`^${studentType.trim()}$`, 'i') };
+
+    const query = {};
+    const andConditions = [];
+
+    if (effectiveGrade) {
+      const num = effectiveGrade.match(/\d+/);
+      if (num) {
+        andConditions.push({
+          $or: [
+            { grade: { $regex: new RegExp(`(${num[0]}|${escapeRegex(effectiveGrade)})`, 'i') } },
+            { batch: { $regex: new RegExp(`(${num[0]}|${escapeRegex(effectiveGrade)})`, 'i') } },
+          ],
+        });
+      } else {
+        andConditions.push({
+          $or: [
+            { grade: { $regex: new RegExp(escapeRegex(effectiveGrade), 'i') } },
+            { batch: { $regex: new RegExp(escapeRegex(effectiveGrade), 'i') } },
+          ],
+        });
+      }
+    } else if (courseObj) {
+      andConditions.push({ courses: courseObj._id });
     }
-    if (shift && shift.trim()) {
-      query.shift = { $regex: new RegExp(shift.trim(), 'i') };
+
+    if (effectiveStudentType) {
+      andConditions.push({ studentType: { $regex: new RegExp(`^${escapeRegex(effectiveStudentType)}$`, 'i') } });
+    }
+    if (effectiveShift && effectiveStudentType.toLowerCase() !== 'distance') {
+      if (effectiveShift.toLowerCase() === 'night') {
+        andConditions.push({ shift: { $in: ['night', 'Night', 'የማታ', 'ማታ'] } });
+      } else if (effectiveShift.toLowerCase() === 'weekend' || effectiveShift.toLowerCase() === 'day') {
+        andConditions.push({ shift: { $nin: ['night', 'Night', 'የማታ', 'ማታ'] } });
+      } else {
+        andConditions.push({ shift: { $regex: new RegExp(escapeRegex(effectiveShift), 'i') } });
+      }
+    }
+
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     const students = await Student.find(query)
-      .select('firstName middleName lastName christianName studentId grade batch studentType shift phone qrCode photo photoUrl')
+      .select('firstName middleName lastName christianName studentId grade batch studentType shift phone studentPhone qrCode photo photoUrl')
       .sort({ firstName: 1, lastName: 1 });
 
     const attendanceDate = date ? new Date(date) : new Date();
@@ -1138,13 +1220,24 @@ router.post(['/mark-unscanned-absent', '/finalize-session'], authorize('admin', 
     let effectiveStudentType = studentType ? studentType.trim() : '';
     let effectiveShift = shift ? shift.trim() : '';
 
-    if (courseId && (!effectiveGrade || !effectiveStudentType)) {
+    if (courseId && (!effectiveGrade || !effectiveStudentType || !effectiveShift)) {
       const courseObj = await Course.findById(courseId);
       if (courseObj) {
         if (!effectiveGrade && courseObj.grade) effectiveGrade = courseObj.grade;
         if (!effectiveStudentType && courseObj.studentType) effectiveStudentType = courseObj.studentType;
-        if (!effectiveShift && courseObj.shift) effectiveShift = courseObj.shift;
+        if (!effectiveShift && courseObj.shift) {
+          const s = String(courseObj.shift).toLowerCase();
+          if (s.includes('night') || s.includes('ማታ')) effectiveShift = 'night';
+          else if (s.includes('day') || s.includes('weekend') || s.includes('ቀን')) effectiveShift = 'weekend';
+        }
       }
+    }
+
+    // Normalize shift value if provided in Amharic or 'day'
+    if (effectiveShift) {
+      const s = effectiveShift.toLowerCase();
+      if (s.includes('night') || s.includes('ማታ')) effectiveShift = 'night';
+      else if (s.includes('day') || s.includes('weekend') || s.includes('ቀን')) effectiveShift = 'weekend';
     }
 
     // 🛡️ CRITICAL SAFETY GUARDRAIL: Require grade, studentType, and shift (if regular)
@@ -1188,7 +1281,11 @@ router.post(['/mark-unscanned-absent', '/finalize-session'], authorize('admin', 
     studentQuery.studentType = { $regex: new RegExp(`^${effectiveStudentType}$`, 'i') };
 
     if (effectiveStudentType.toLowerCase() === 'regular' && effectiveShift) {
-      studentQuery.shift = { $regex: new RegExp(`^${effectiveShift}$`, 'i') };
+      if (effectiveShift === 'night') {
+        studentQuery.shift = { $in: ['night', 'Night', 'የማታ', 'ማታ'] };
+      } else {
+        studentQuery.shift = { $nin: ['night', 'Night', 'የማታ', 'ማታ'] };
+      }
     }
 
     const students = await Student.find(studentQuery);

@@ -51,6 +51,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { formatGradeAmharic } from '../../constants/registrationOptions';
+import { getEthiopianLocalDateString } from '../../utils/ethiopianDate';
 import { toast } from '../../utils/toast';
 import { useLanguage } from '../../hooks/useLanguage';
 
@@ -128,6 +129,9 @@ const QRScanner = () => {
   const [showRosterModal, setShowRosterModal] = useState(false);
   const [sessionRoster, setSessionRoster] = useState([]);
   const [rosterLoading, setRosterLoading] = useState(false);
+  const [rosterSearch, setRosterSearch] = useState('');
+  const [rosterStatusFilter, setRosterStatusFilter] = useState('all');
+  const [updatingRosterId, setUpdatingRosterId] = useState(null);
   const [manualMode, setManualMode] = useState(false);
 
   // Manual session configuration (Fallback mode)
@@ -238,13 +242,48 @@ const QRScanner = () => {
     fetchTodaySessions();
   }, [fetchTodaySessions]);
 
-  // Update selected session object when ID changes
+  // Update selected session object when ID changes & hydrate live scanned stream from server
   useEffect(() => {
     if (selectedSessionId && todaySessions.length > 0) {
       const found = todaySessions.find((s) => s._id === selectedSessionId);
       if (found) setSelectedSession(found);
     }
   }, [selectedSessionId, todaySessions]);
+
+  useEffect(() => {
+    let active = true;
+    const hydrateStream = async () => {
+      if (!selectedSessionId || manualMode) return;
+      try {
+        const res = await apiFetch(`/api/education/attendance/sessions/${selectedSessionId}/live-roster`);
+        if (!res.ok || !active) return;
+        const data = await res.json();
+        const rosterList = data.roster || [];
+        const scanned = rosterList
+          .filter((s) => ['Present', 'Late', 'Excused'].includes(s.status))
+          .sort((a, b) => new Date(b.scannedAt || 0) - new Date(a.scannedAt || 0))
+          .map((s) => ({
+            id: s.studentId,
+            name: s.name,
+            grade: s.grade,
+            studentId: s.code || '',
+            photoUrl: s.photoUrl || '',
+            phone: s.phone || '',
+            timestamp: s.scannedAt
+              ? new Date(s.scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+              : '—',
+            status: s.status,
+            alreadyRecorded: false,
+            isMismatch: false,
+          }));
+        if (active) setRecentScans(scanned);
+      } catch {}
+    };
+    hydrateStream();
+    return () => {
+      active = false;
+    };
+  }, [selectedSessionId, manualMode]);
 
   // Load courses for fallback mode
   useEffect(() => {
@@ -333,6 +372,8 @@ const QRScanner = () => {
   const handleOpenRoster = async () => {
     if (!selectedSession) return;
     setShowRosterModal(true);
+    setRosterSearch('');
+    setRosterStatusFilter('all');
     setRosterLoading(true);
     try {
       const res = await apiFetch(`/api/education/attendance/sessions/${selectedSession._id}/live-roster`);
@@ -347,6 +388,83 @@ const QRScanner = () => {
     }
   };
 
+  // One-tap mark student directly inside Live Roster modal
+  const handleRosterQuickMark = async (student, status) => {
+    if (!selectedSession) return;
+    setUpdatingRosterId(student.studentId);
+    try {
+      const res = await apiFetch(`/api/education/attendance/sessions/${selectedSession._id}/scan`, {
+        method: 'POST',
+        body: JSON.stringify({
+          studentId: student.studentId,
+          qrCode: student.code || student.studentId,
+          studentName: student.name,
+          status,
+          isManual: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        playFeedback('success', soundEnabled);
+        toast.success(data.message || `${student.name} → ${status}`);
+        setSessionRoster((prev) =>
+          prev.map((row) =>
+            row.studentId === student.studentId
+              ? { ...row, status, scannedAt: new Date().toISOString() }
+              : row
+          )
+        );
+        if (data.sessionStats) {
+          const updatedSess = { ...selectedSession, status: selectedSession.status === 'scheduled' ? 'open' : selectedSession.status, stats: data.sessionStats };
+          setSelectedSession(updatedSess);
+          selectedSessionRef.current = updatedSess;
+          setTodaySessions((prev) => prev.map((s) => (s._id === updatedSess._id ? updatedSess : s)));
+        }
+        if (['Present', 'Late', 'Excused'].includes(status)) {
+          const scanItem = {
+            id: student.studentId,
+            name: student.name,
+            grade: student.grade || selectedSession.grade,
+            studentId: student.code || '',
+            photoUrl: student.photoUrl || '',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            status,
+            alreadyRecorded: false,
+            isMismatch: false,
+          };
+          setRecentScans((prev) => [scanItem, ...prev.filter((x) => x.id !== student.studentId).slice(0, 49)]);
+        } else {
+          setRecentScans((prev) => prev.filter((x) => x.id !== student.studentId));
+        }
+      } else {
+        playFeedback('error', soundEnabled);
+        toast.error(data.message || (isAm ? 'ሁኔታውን ማስተካከል አልተቻለም' : 'Could not update status'));
+      }
+    } catch (err) {
+      playFeedback('error', soundEnabled);
+      toast.error(isAm ? 'የኔትወርክ ስህተት አጋጥሟል' : 'Network error');
+    } finally {
+      setUpdatingRosterId(null);
+    }
+  };
+
+  const filteredSessionRoster = useMemo(() => {
+    return sessionRoster.filter((s) => {
+      const matchesStatus =
+        rosterStatusFilter === 'all' ||
+        (rosterStatusFilter === 'unscanned'
+          ? s.status === 'Not Scanned Yet'
+          : s.status === rosterStatusFilter);
+      const q = rosterSearch.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        s.name?.toLowerCase().includes(q) ||
+        s.code?.toLowerCase().includes(q) ||
+        s.phone?.toLowerCase().includes(q);
+      return matchesStatus && matchesSearch;
+    });
+  }, [sessionRoster, rosterSearch, rosterStatusFilter]);
+
   // Process Attendance Record (Session Mode or Fallback)
   const processAttendanceRecord = async (payload, isManual = false) => {
     const currentSession = selectedSessionRef.current || selectedSession;
@@ -355,7 +473,7 @@ const QRScanner = () => {
 
     // 1. Session-Driven Attendance (Primary)
     if (!isManualMode && currentSession) {
-      if (currentSession.status === 'closed') {
+      if (currentSession.status === 'closed' && !isManual) {
         toast.error(
           isAm
             ? 'ይህ ክፍለ-ጊዜ ተዘግቷል። ተጨማሪ ተገኝነት መመዝገብ አይቻልም።'
@@ -414,21 +532,32 @@ const QRScanner = () => {
               `${studentInfo.name} — ${
                 data.attendanceStatus === 'Late'
                   ? isAm ? '🕒 አርፍዶ ተመዝግቧል' : '🕒 Marked Late'
+                  : data.attendanceStatus === 'Excused'
+                  ? isAm ? '📋 በፈቃድ ተመዝግቧል' : '📋 Marked Excused'
+                  : data.attendanceStatus === 'Absent'
+                  ? isAm ? '❌ አልተገኘም ተብሏል' : '❌ Marked Absent'
                   : isAm ? '✅ ተገኝቷል' : '✅ Marked Present'
               }`
             );
 
-            // Update live stats locally and ensure status is open
-            if (currentSession.stats) {
-              const updatedStats = { ...currentSession.stats };
-              if (data.attendanceStatus === 'Late') {
-                updatedStats.lateCount = (updatedStats.lateCount || 0) + 1;
-              } else {
-                updatedStats.presentCount = (updatedStats.presentCount || 0) + 1;
+            // Update live stats cleanly (prefer authoritative server sessionStats)
+            if (data.sessionStats || currentSession.stats) {
+              let updatedStats = data.sessionStats;
+              if (!updatedStats) {
+                updatedStats = { ...currentSession.stats };
+                if (data.attendanceStatus === 'Late') updatedStats.lateCount = (updatedStats.lateCount || 0) + 1;
+                else if (data.attendanceStatus === 'Excused') updatedStats.excusedCount = (updatedStats.excusedCount || 0) + 1;
+                else if (data.attendanceStatus === 'Absent') updatedStats.absentCount = (updatedStats.absentCount || 0) + 1;
+                else updatedStats.presentCount = (updatedStats.presentCount || 0) + 1;
               }
-              const updatedSession = { ...currentSession, status: 'open', stats: updatedStats };
+              const updatedSession = {
+                ...currentSession,
+                status: currentSession.status === 'scheduled' ? 'open' : currentSession.status,
+                stats: updatedStats,
+              };
               setSelectedSession(updatedSession);
               selectedSessionRef.current = updatedSession;
+              setTodaySessions((prev) => prev.map((s) => (s._id === updatedSession._id ? updatedSession : s)));
             }
           }
 
@@ -480,7 +609,7 @@ const QRScanner = () => {
           studentType: studentTypeFilter,
           shift: studentTypeFilter === 'regular' ? shiftFilter : undefined,
           grade: gradeFilter,
-          status: 'Present',
+          status: payload.status || 'Present',
         }),
       });
 
@@ -491,13 +620,14 @@ const QRScanner = () => {
           [payload.firstName, payload.middleName, payload.lastName].filter(Boolean).join(' ') ||
           (isAm ? 'ተማሪ' : 'Student');
 
+        const resolvedStatus = data.alreadyRecorded ? 'Already Checked' : (data.status || payload.status || 'Present');
         const studentInfo = {
           id: data.student?.id || data.student?._id || payload.studentId || 'ID',
           name: studentFullName,
           grade: data.student?.grade || payload.grade || gradeFilter,
           studentId: data.student?.studentId || payload.studentId || '',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          status: data.alreadyRecorded ? 'Already Checked' : 'Present',
+          status: resolvedStatus,
           alreadyRecorded: !!data.alreadyRecorded,
           message: data.message,
           isMismatch: false,
@@ -745,7 +875,7 @@ const QRScanner = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Attendance_${selectedSession?.grade || 'Session'}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Attendance_${selectedSession?.grade || 'Session'}_${getEthiopianLocalDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1606,56 +1736,96 @@ const QRScanner = () => {
                 </button>
               </div>
 
-              {/* Table / List */}
+              {/* Search & Status Filter Bar inside Live Roster */}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={rosterSearch}
+                    onChange={(e) => setRosterSearch(e.target.value)}
+                    placeholder={isAm ? 'ተማሪ በስም ወይም መለያ ፈልግ...' : 'Search student by name or ID...'}
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-white outline-none focus:border-[#0f4c9c]"
+                  />
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto">
+                  {[
+                    { id: 'all', label: isAm ? 'ሁሉም' : 'All' },
+                    { id: 'unscanned', label: isAm ? 'ያልተቃኙ' : 'Pending' },
+                    { id: 'Present', label: isAm ? 'ተገኝተዋል' : 'Present' },
+                    { id: 'Late', label: isAm ? 'ዘግይተዋል' : 'Late' },
+                    { id: 'Excused', label: isAm ? 'ፈቃድ' : 'Excused' },
+                    { id: 'Absent', label: isAm ? 'ቀሪ' : 'Absent' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setRosterStatusFilter(tab.id)}
+                      className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        rosterStatusFilter === tab.id
+                          ? 'bg-[#0f4c9c] text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Table / List with Interactive One-Tap Check-In */}
               <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                 {rosterLoading ? (
                   <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4 animate-spin text-[#0f4c9c]" />
                     <span>{isAm ? 'ሮስተር እየተጫነ ነው...' : 'Loading roster...'}</span>
                   </div>
-                ) : sessionRoster.length === 0 ? (
+                ) : filteredSessionRoster.length === 0 ? (
                   <div className="py-8 text-center text-xs text-slate-400">
-                    {isAm ? 'በዚህ ክፍል የተመዘገበ ተማሪ አልተገኘም' : 'No students found in this class'}
+                    {isAm ? 'በዚህ ማጣሪያ ውስጥ ተማሪ አልተገኘም' : 'No students match this filter'}
                   </div>
                 ) : (
-                  sessionRoster.map((s, idx) => (
+                  filteredSessionRoster.map((s, idx) => (
                     <div
                       key={s.studentId}
-                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-3 text-xs"
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-5 text-center font-mono text-slate-400 font-bold">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-5 text-center font-mono text-slate-400 font-bold shrink-0">
                           {idx + 1}
                         </span>
-                        <div>
-                          <span className="font-bold text-slate-900 dark:text-white block">
+                        <div className="min-w-0">
+                          <span className="font-bold text-slate-900 dark:text-white block truncate">
                             {s.name}
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 block truncate">
                             {s.code ? `ID: ${s.code}` : ''} {s.phone ? `• ${s.phone}` : ''}
                           </span>
                         </div>
                       </div>
 
-                      <span
-                        className={`text-[10px] font-black px-2.5 py-1 rounded-full ${
-                          s.status === 'Present'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : s.status === 'Late'
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                            : s.status === 'Absent'
-                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                            : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {s.status === 'Present'
-                          ? isAm ? '✓ ተገኝቷል' : 'Present'
-                          : s.status === 'Late'
-                          ? isAm ? '🕒 አርፍዷል' : 'Late'
-                          : s.status === 'Absent'
-                          ? isAm ? '✗ አልተገኘም' : 'Absent'
-                          : isAm ? '⏳ ገና አልተቃኘም' : 'Not Scanned Yet'}
-                      </span>
+                      <div className="flex items-center gap-1 flex-wrap shrink-0">
+                        {[
+                          { value: 'Present', label: isAm ? 'ተገኝቷል' : 'Present', active: 'bg-emerald-600 text-white' },
+                          { value: 'Late', label: isAm ? 'ዘግይቷል' : 'Late', active: 'bg-amber-500 text-white' },
+                          { value: 'Excused', label: isAm ? 'ፈቃድ' : 'Excused', active: 'bg-blue-600 text-white' },
+                          { value: 'Absent', label: isAm ? 'ቀሪ' : 'Absent', active: 'bg-rose-600 text-white' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            disabled={updatingRosterId === s.studentId}
+                            onClick={() => handleRosterQuickMark(s, opt.value)}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer disabled:opacity-50 ${
+                              s.status === opt.value
+                                ? `${opt.active} shadow-xs`
+                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../../api/apiClient';
 
 export const ATTENDANCE_REPORT_QUERY_KEY = ['attendance-report'];
@@ -25,5 +25,44 @@ export function useAttendanceReport(filters = {}, enabled = true) {
       return Array.isArray(data) ? data : data.attendances || data.records || data.attendance || data.data || [];
     },
     enabled,
+  });
+}
+
+export function useUpdateAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status, note, excuseReason }) => {
+      const res = await apiFetch(`/api/admin/attendance/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, note, excuseReason }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'የመገኘት መረጃን ማስተካከል አልተቻለም');
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ATTENDANCE_REPORT_QUERY_KEY });
+    },
+  });
+}
+
+export function useDeleteAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const res = await apiFetch(`/api/admin/attendance/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || 'የመገኘት መረጃን መሰረዝ አልተቻለም');
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ATTENDANCE_REPORT_QUERY_KEY });
+    },
   });
 }

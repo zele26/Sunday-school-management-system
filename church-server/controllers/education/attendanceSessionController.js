@@ -359,13 +359,13 @@ exports.scanStudentInSession = async (req, res) => {
       });
     }
 
-    if (session.status === 'scheduled') {
+    if (session.status === 'scheduled' || session.status === 'rescheduled') {
       session.status = 'open';
       if (!session.openedAt) {
         session.openedAt = new Date();
       }
       await session.save();
-    } else if (session.status !== 'open') {
+    } else if (session.status !== 'open' && !(isAdmin && isManual)) {
       return res.status(400).json({
         success: false,
         message: `⚠️ ይህ ክፍለ-ጊዜ ክፍት አይደለም።`,
@@ -872,15 +872,30 @@ exports.scanStudentInSession = async (req, res) => {
       throw createErr;
     }
 
-    // 8. Update Live Session Stats
-    if (calculatedStatus === 'Present') {
-      session.stats.presentCount = (session.stats.presentCount || 0) + 1;
-    } else if (calculatedStatus === 'Late') {
-      session.stats.lateCount = (session.stats.lateCount || 0) + 1;
-    }
+    // 8. Update Live Session Stats accurately across all statuses
+    const [presentCount, lateCount, absentCount, excusedCount] = await Promise.all([
+      Attendance.countDocuments({ sessionId: session._id, status: 'Present' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Late' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Absent' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Excused' }),
+    ]);
+    session.stats = {
+      ...session.stats,
+      presentCount,
+      lateCount,
+      absentCount,
+      excusedCount,
+    };
     await session.save();
 
-    const finalStatusText = calculatedStatus === 'Late' ? 'ዘግይቶ ተመዝግቧል' : 'ተመዝግቧል';
+    const finalStatusText =
+      calculatedStatus === 'Late'
+        ? 'ዘግይቶ ተመዝግቧል'
+        : calculatedStatus === 'Excused'
+        ? 'በፈቃድ ተመዝግቧል'
+        : calculatedStatus === 'Absent'
+        ? 'ቀሪ ተብሎ ተመዝግቧል'
+        : 'ተመዝግቧል';
     res.status(201).json({
       success: true,
       status: calculatedStatus.toLowerCase(),
@@ -1118,7 +1133,9 @@ exports.getSessionLiveRoster = async (req, res) => {
         shift: student.shift,
         photoUrl: student.photoUrl,
         phone: student.studentPhone,
+        attendanceId: att ? att._id : null,
         status: att ? att.status : (session.status === 'closed' ? 'Absent' : 'Not Scanned Yet'),
+        excuseReason: att ? (att.excuseReason || att.note || '') : '',
         scannedAt: att ? att.scannedAt || att.checkInTime : null,
         scanMethod: att ? att.scanMethod : null,
       };
@@ -1439,15 +1456,80 @@ exports.rescheduleSession = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Session not found.' });
     }
 
-    session.sessionDate = newDate || session.sessionDate;
-    if (newStartTime) session.startTime = newStartTime;
+    const oldDate = session.sessionDate;
+    const oldTime = `${session.startTime}-${session.endTime}`;
+    if (newDate) {
+      session.rescheduledToDate = newDate;
+      session.sessionDate = newDate;
+    }
+    if (newStartTime) {
+      session.startTime = newStartTime;
+      session.rescheduledToTime = newStartTime;
+    }
     if (newEndTime) session.endTime = newEndTime;
-    session.notes = `${session.notes ? session.notes + ' | ' : ''}Rescheduled from original date. Reason: ${reason || 'N/A'}`;
+    session.notes = `${session.notes ? session.notes + ' | ' : ''}Rescheduled from ${oldDate} (${oldTime}). Reason: ${reason || 'N/A'}`;
     session.status = 'rescheduled';
     await session.save();
 
     res.json({ success: true, message: 'Session rescheduled successfully.', session });
   } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.reopenSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { removeAutoAbsents = true } = req.body || {};
+
+    const session = await ClassSession.findById(id);
+    if (!session) {
+      return res.status(404).json({ success: false, message: 'ክፍለ-ጊዜው አልተገኘም።' });
+    }
+
+    if (session.status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'የተሰረዘ ክፍለ-ጊዜን እንደገና መክፈት አይቻልም።' });
+    }
+
+    let removedAutoAbsentsCount = 0;
+    if (removeAutoAbsents) {
+      const delRes = await Attendance.deleteMany({
+        sessionId: session._id,
+        status: 'Absent',
+        scanMethod: 'auto_absent_on_close',
+      });
+      removedAutoAbsentsCount = delRes.deletedCount || 0;
+    }
+
+    const [expectedCount, presentCount, lateCount, absentCount, excusedCount] = await Promise.all([
+      Student.countDocuments(getExpectedStudentsQuery(session)),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Present' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Late' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Absent' }),
+      Attendance.countDocuments({ sessionId: session._id, status: 'Excused' }),
+    ]);
+
+    session.status = 'open';
+    session.closedAt = null;
+    session.closedBy = null;
+    session.openedBy = req.user._id;
+    session.stats = {
+      expectedCount,
+      presentCount,
+      lateCount,
+      absentCount,
+      excusedCount,
+    };
+    await session.save();
+
+    res.json({
+      success: true,
+      message: `✅ ክፍለ-ጊዜው እንደገና ተከፍቷል።${removedAutoAbsentsCount > 0 ? ` ${removedAutoAbsentsCount} በራስ-ሰር የተመዘገቡ ቀሪዎች ተነስተዋል።` : ''}`,
+      session,
+      removedAutoAbsentsCount,
+    });
+  } catch (err) {
+    console.error('reopenSession error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
