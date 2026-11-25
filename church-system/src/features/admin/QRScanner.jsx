@@ -1013,6 +1013,18 @@ const QRScanner = () => {
                           </>
                         )}
                       </div>
+
+                      {(sess.createdBy?.fullName || sess.scheduleId?.createdBy?.fullName) && (
+                        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <UserCheck className="w-3 h-3 text-indigo-500 shrink-0" />
+                          <span className="truncate">
+                            {isAm ? 'የፈጠረው፦' : 'Created by:'}{' '}
+                            <strong className="text-slate-700 dark:text-slate-200">
+                              {sess.createdBy?.fullName || sess.scheduleId?.createdBy?.fullName}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Stats Tally */}
